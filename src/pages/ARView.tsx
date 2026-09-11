@@ -3,7 +3,7 @@ import { Button } from '../design/elements';
 import type React from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
-import { HERO_CARS, rupees } from '../data/catalog';
+import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import {
   detectAR,
@@ -15,11 +15,12 @@ import {
 } from '../lib/three/arSession';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import {
-  IconAR, IconBrake, IconCheck, IconChevronLeft, IconChevronRight, IconClose,
+  IconAR, IconBrake, IconChevronLeft, IconChevronRight, IconClose,
   IconDrift, IconFlag, IconHorn, IconInfo, IconMinus, IconPlus, IconRotate,
 } from '../design/elements/Icons';
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
+import { RaceResult } from '../design/components/RaceResult';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 export default function ARView() {
@@ -51,6 +52,9 @@ export default function ARView() {
   const [stats, setStats] = useState<RaceStats | null>(null);
   const [scanInfo, setScanInfo] = useState({ coverage: 0, hazards: 0 });
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
+  /* Read before finishRace writes the new best, or every run is a personal
+     best by the time the result screen asks. */
+  const [isBest, setIsBest] = useState(false);
   const [proximityAlert, setProximityAlert] = useState(false);
   const [pinnedCount, setPinnedCount] = useState(0);
   const [lastHitMessage, setLastHitMessage] = useState<string | null>(null);
@@ -63,6 +67,7 @@ export default function ARView() {
 
   const onFinish = useCallback(
     (o: RaceOutcome) => {
+      setIsBest(o.score > useStore.getState().bestScore);
       finishRace({ score: o.score, groceries: o.groceries, seconds: o.seconds });
       setOutcome(o);
       /* Close the session on finish. Previously only `outcome` was set, so the
@@ -548,69 +553,27 @@ export default function ARView() {
 
       {/* Results screen */}
       {outcome && (
-        <div className="result">
-          <p className="result__kick">{outcome.finished ? 'FINISHED' : 'TIME UP'}</p>
-          <h1 className="result__t">{outcome.finished ? 'You raced it home' : 'So close!'}</h1>
-          <div className="result__g">
-            <div><b className="t-num">{outcome.score.toLocaleString('en-IN')}</b><span>POINTS</span></div>
-            <div><b className="t-num">{outcome.groceries}</b><span>GROCERIES</span></div>
-            <div><b className="t-num">{outcome.seconds}s</b><span>TIME</span></div>
-          </div>
-          {tier && (
-            <div className="result__rw">
-              <IconCheck size={26} />
-              <div className="grow">
-                <b>{tier.label}</b>
-                <span>{tier.value > 0 ? `${rupees(tier.value)} off your next order` : 'Applied at checkout'}</span>
-              </div>
-            </div>
-          )}
-          <div style={{ display: 'grid', gap: 8 }}>
-            {tier && (
-              <Button variant="primary" size="lg" block
-                type="button"
-                onClick={() => {
-                  claimReward(tier.id);
-                  nav('/cart');
-                }}
-              >
-                Claim reward
-              </Button>
-            )}
-            {!tier && (
-              <Button variant="primary" size="lg" block
-                type="button"
-                onClick={() => {
-                  setOutcome(null);
-                  void launch();
-                }}
-                disabled={racesLeft <= 0}
-              >
-                Race again
-              </Button>
-            )}
-            <div className="result__more">
-              {tier && (
-                <Button variant="outline"
-                  type="button"
-                  onClick={() => {
-                    setOutcome(null);
-                    void launch();
-                  }}
-                  disabled={racesLeft <= 0}
-                >
-                  Race again
-                </Button>
-              )}
-              <Button variant="outline" type="button" onClick={() => nav('/hot-wheels')}>
-                Shop the drop
-              </Button>
-              <Button variant="outline" type="button" onClick={() => nav('/campaign')}>
-                Campaign
-              </Button>
-            </div>
-          </div>
-        </div>
+        <RaceResult
+          outcome={outcome}
+          car={car}
+          tier={tier}
+          isBest={isBest}
+          totalPoints={useStore.getState().totalPoints}
+          racesLeft={racesLeft}
+          toast={toast}
+          onClaim={(t) => {
+            claimReward(t.id);
+            toast(`${t.label} applied to your cart`);
+            nav('/cart');
+          }}
+          onRaceAgain={() => {
+            setOutcome(null);
+            void launch();
+          }}
+          onLeaderboard={() => nav('/leaderboard')}
+          onExit={() => nav('/hot-wheels')}
+          exitLabel="Shop cars"
+        />
       )}
     </>
   );

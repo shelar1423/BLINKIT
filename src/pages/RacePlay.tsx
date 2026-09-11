@@ -1,21 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
-import { HERO_CARS, rupees } from '../data/catalog';
+import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconRotate } from '../design/elements/Icons';
+import { RaceResult } from '../design/components/RaceResult';
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 import { useToast } from '../App';
 
-const REWARD_ART: Record<string, string> = {
-  start: '/rewards/25-02-free-delivery-badge.webp',
-  check: '/rewards/25-01-gold-coin.webp',
-  pit: '/rewards/25-03-wallet-reward-token.webp',
-  podium: '/rewards/25-06-premium-membership-icon.webp',
-};
 
 export default function RacePlay() {
   const nav = useNavigate();
@@ -41,6 +36,9 @@ export default function RacePlay() {
   });
   const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
+  /* Read before finishRace writes the new best, or every run is a personal
+     best by the time the result screen asks. */
+  const [isBest, setIsBest] = useState(false);
   /* Tilt is an upgrade, not a gate. Touch steering already works, so this only
      has to be offered once and then go away for good. */
   const [tiltAsked, setTiltAsked] = useState(false);
@@ -61,6 +59,7 @@ export default function RacePlay() {
 
   const onFinish = useCallback(
     (o: RaceOutcome) => {
+      setIsBest(o.score > useStore.getState().bestScore);
       finishRace({ score: o.score, groceries: o.groceries, seconds: o.seconds });
       setOutcome(o);
     },
@@ -357,84 +356,24 @@ export default function RacePlay() {
       )}
 
       {outcome && (
-        <div className="result">
-          <div className="result__herowrap">
-            <img className="result__hero" src="/campaign/08-race-complete-illustration.webp" alt="" />
-          </div>
-          <p className="result__kick">{outcome.finished ? 'FINISHED' : 'TIME UP'}</p>
-          <h1 className="result__t">
-            {outcome.finished ? 'You raced it home' : 'So close!'}
-          </h1>
-          <div className="result__g">
-            <div>
-              <b className="t-num">{outcome.score.toLocaleString('en-IN')}</b>
-              <span>POINTS</span>
-            </div>
-            <div>
-              <b className="t-num">{outcome.groceries}</b>
-              <span>GROCERIES</span>
-            </div>
-            <div>
-              <b className="t-num">{outcome.seconds}s</b>
-              <span>TIME</span>
-            </div>
-          </div>
-
-          {tier ? (
-            <div className="result__rw">
-              <img src={REWARD_ART[tier.id]} alt="" />
-              <div className="grow">
-                <b>{tier.label}</b>
-                <span>{tier.value > 0 ? `${rupees(tier.value)} off your next order` : 'Applied at checkout'}</span>
-              </div>
-            </div>
-          ) : (
-            <p className="result__note">
-              You need 1,000 points for a reward. Closest yet: {outcome.score.toLocaleString('en-IN')}.
-            </p>
-          )}
-
-          <div style={{ display: 'grid', gap: 8, marginTop: 4 }}>
-            {tier && (
-              <Button variant="primary" size="lg" block
-                type="button"
-                onClick={() => {
-                  claimReward(tier.id);
-                  toast(`${tier.label} applied to your cart`);
-                  nav('/cart');
-                }}
-              >
-                Claim reward
-              </Button>
-            )}
-            {!tier && (
-              <Button variant="hwBlue" size="lg" block
-                type="button"
-                disabled={useStore.getState().racesLeft <= 0}
-                onClick={() => window.location.reload()}
-              >
-                Race again ({useStore.getState().racesLeft} left)
-              </Button>
-            )}
-            <div className="result__more">
-              {tier && (
-                <Button variant="outline"
-                  type="button"
-                  disabled={useStore.getState().racesLeft <= 0}
-                  onClick={() => window.location.reload()}
-                >
-                  Race again
-                </Button>
-              )}
-              <Button variant="outline" type="button" onClick={() => nav('/leaderboard')}>
-                Leaderboard
-              </Button>
-              <Button variant="outline" type="button" onClick={() => nav('/campaign')}>
-                Campaign
-              </Button>
-            </div>
-          </div>
-        </div>
+        <RaceResult
+          outcome={outcome}
+          car={car}
+          tier={tier}
+          isBest={isBest}
+          totalPoints={useStore.getState().totalPoints}
+          racesLeft={useStore.getState().racesLeft}
+          toast={toast}
+          onClaim={(t) => {
+            claimReward(t.id);
+            toast(`${t.label} applied to your cart`);
+            nav('/cart');
+          }}
+          onRaceAgain={() => window.location.reload()}
+          onLeaderboard={() => nav('/leaderboard')}
+          onExit={() => nav('/campaign')}
+          exitLabel="Campaign"
+        />
       )}
     </div>
   );

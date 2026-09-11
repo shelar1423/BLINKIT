@@ -1089,59 +1089,270 @@ input, select, textarea { font: inherit; color: inherit; }
    ink text and green for the win. An earlier pass had this dark and glowing,
    which is a games convention, not Blinkit's.
    ============================================================ */
+/* ============================================================
+   Race result.
+
+   A dark stage carrying the score, then everything else stepping down from it.
+   The old screen set every block at the same width, the same grey and the same
+   volume, so nothing in it was the point.
+   ============================================================ */
 .result {
   /* above .arov (200): the AR overlay must never stack over the result */
   position: fixed; inset: 0; z-index: 260;
-  display: grid; align-content: start; gap: 12px;
-  padding: 28px 16px calc(24px + var(--safe-b));
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 0 16px calc(24px + var(--safe-b));
   background: var(--appbase);
   color: var(--ink);
   overflow-y: auto;
 }
+/* Nothing here may be compressed to fit the viewport — it scrolls instead.
+   Flex and grid children both shrink below their content by default, and the
+   stage was losing 79px of its own height to it. */
+.result > * { flex: none; }
 
-.result__herowrap { display: grid; place-items: center; }
-.result__hero { width: 100%; max-width: 240px; margin: 0 auto; }
-
-.result__kick {
-  text-align: center; font-size: var(--f-2xs); font-weight: 800;
-  letter-spacing: 0.16em; color: var(--green);
+/* ---------- the stage ---------- */
+.rstage {
+  position: relative;
+  margin: 0 -16px;
+  padding: calc(var(--safe-t) + 30px) 16px 22px;
+  background: radial-gradient(120% 90% at 50% 0%, #1B3157 0%, #0E1B33 52%, #070E1E 100%);
+  color: #fff;
+  text-align: center;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  /* No `overflow: hidden` here: on a flex or grid child it resolves the
+     automatic minimum size to zero, which is what let the stage be squashed
+     shorter than the score standing in it. Nothing needs clipping — the
+     chequer sits inside the square top corners. */
 }
-.result__t {
-  font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
-  text-align: center; line-height: 1.15; margin-top: 2px; color: var(--ink);
+/* chequered flag along the top edge, drawn rather than shipped as an image */
+.rstage__chequer {
+  position: absolute; left: 0; right: 0; top: 0; height: 10px;
+  background:
+    repeating-linear-gradient(90deg, #fff 0 10px, transparent 10px 20px) 0 0 / 20px 5px,
+    repeating-linear-gradient(90deg, transparent 0 10px, #fff 10px 20px) 0 5px / 20px 5px,
+    #101828;
+  background-repeat: repeat-x;
+}
+.rstage__kick {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px; padding: 5px 12px;
+  font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.rstage__car {
+  width: min(62%, 220px); margin: 8px auto 2px; display: block;
+  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.55));
+}
+.rstage__score {
+  font-size: clamp(56px, 20vw, 86px); font-weight: 800;
+  letter-spacing: -0.05em; line-height: 1;
+  color: var(--yellow);
+  text-shadow: 0 6px 26px rgba(248, 203, 70, 0.3);
+}
+.rstage__unit {
+  font-size: var(--f-sm); font-weight: 700; letter-spacing: 0.22em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.55);
+  margin-top: 4px;
+}
+.rstage__pb {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px;
+  background: var(--yellow); color: #1F1F1F;
+  border-radius: 999px; padding: 6px 13px;
+  font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.04em;
 }
 
-.result__g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
-.result__g > div {
+/* ---------- one stat strip, not three boxes ---------- */
+.rstrip {
+  display: flex; align-items: stretch;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--r);
-  padding: 12px 8px; text-align: center;
+  border-radius: var(--r-md);
+  padding: 12px 4px;
 }
-.result__g b {
-  display: block; font-size: var(--f-xl); font-weight: 800;
-  font-variant-numeric: tabular-nums; color: var(--ink);
+.rstrip > div { flex: 1; display: grid; justify-items: center; gap: 2px; color: var(--mut); }
+.rstrip > div svg { color: var(--hw-b); }
+.rstrip b {
+  font-size: var(--f-lg); font-weight: 800; color: var(--ink);
+  font-variant-numeric: tabular-nums; margin-top: 2px;
 }
-.result__g span {
-  font-size: 9px; font-weight: 700; letter-spacing: 0.08em; color: var(--mut);
-}
+.rstrip span { font-size: var(--f-2xs); font-weight: 600; }
+.rstrip > i { width: 1px; background: var(--line); margin: 2px 0; }
 
-/* the reward reads the way a saving does elsewhere in the app: green on a
-   green tint, hairline, not a glowing slab */
-.result__rw {
-  display: flex; align-items: center; gap: 11px;
-  background: var(--green-tint);
+/* ---------- the reward, as a ticket ---------- */
+.coupon {
+  position: relative;
+  background: var(--surface);
   border: 1px solid #BEE3C4;
-  border-radius: var(--r); padding: 12px;
+  border-radius: var(--r-md);
+  overflow: hidden;
 }
-.result__rw img { width: 36px; height: 36px; object-fit: contain; }
-.result__rw b { display: block; font-size: var(--f-base); font-weight: 800; color: var(--green-dk); }
-.result__rw span { font-size: var(--f-xs); color: var(--green-dk); opacity: 0.85; }
+.coupon__top { display: flex; align-items: center; gap: 12px; padding: 14px; }
+.coupon__art {
+  width: 54px; height: 54px; flex: 0 0 54px;
+  border-radius: 50%; background: var(--green-tint);
+  display: grid; place-items: center;
+}
+.coupon__art img { width: 68%; height: 68%; object-fit: contain; }
+.coupon__k {
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--green);
+}
+.coupon__v { display: block; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; margin-top: 1px; }
+.coupon__s { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 2px; }
+/* The perforation: a dashed rule with a notch bitten out of each side, which
+   is what makes it read as a ticket you tear rather than a card you scroll. */
+.coupon__tear {
+  display: block; position: relative;
+  border-top: 1px dashed #BEE3C4;
+  margin: 0 14px;
+}
+.coupon__tear::before,
+.coupon__tear::after {
+  content: '';
+  position: absolute; top: -9px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--appbase);
+  border: 1px solid #BEE3C4;
+}
+.coupon__tear::before { left: -23px; }
+.coupon__tear::after { right: -23px; }
+.coupon__foot { padding: 14px; }
 
-.result__note { text-align: center; color: var(--mut); font-size: var(--f-sm); }
+/* ---------- no reward yet: the track to the next one ---------- */
+.rtrack {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 14px;
+}
+.rtrack__k {
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--mut);
+}
+.rtrack__bar {
+  position: relative;
+  height: 8px; border-radius: 999px; background: var(--surface-2);
+  margin: 14px 0 16px;
+}
+.rtrack__bar > i {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--hw-b), #3E8BFF);
+}
+.rtrack__pip {
+  position: absolute; top: 50%;
+  width: 12px; height: 12px; margin: -6px 0 0 -6px;
+  border-radius: 50%; background: var(--surface);
+  border: 2px solid var(--line-2);
+}
+.rtrack__pip.is-on { background: var(--hw-b); border-color: var(--hw-b); }
+.rtrack__s { font-size: var(--f-sm); color: var(--mut); }
+.rtrack__s b { color: var(--ink); font-weight: 800; }
 
-.result__more { display: flex; gap: 8px; margin-top: 2px; }
-.result__more > * { flex: 1; }
+/* ---------- actions ---------- */
+.racts { display: grid; gap: 8px; }
+.racts__row { display: flex; gap: 8px; }
+.racts__row > * { flex: 1; }
+
+/* ============================================================
+   Racing rewards.
+
+   The same dark stage as the race result, so arriving here from a race is
+   continuous with the screen you came from — and then a track, where the rail
+   filling up IS the progress bar rather than one sitting above the list.
+   ============================================================ */
+.rwpage { padding-bottom: 0; }
+.rwhero {
+  position: relative;
+  padding: 26px 16px 22px;
+  background: radial-gradient(120% 90% at 50% 0%, #1B3157 0%, #0E1B33 55%, #070E1E 100%);
+  color: #fff; text-align: center;
+}
+.rwhero__chequer {
+  position: absolute; left: 0; right: 0; top: 0; height: 8px;
+  background:
+    repeating-linear-gradient(90deg, #fff 0 8px, transparent 8px 16px) 0 0 / 16px 4px,
+    repeating-linear-gradient(90deg, transparent 0 8px, #fff 8px 16px) 0 4px / 16px 4px,
+    #101828;
+  background-repeat: repeat-x;
+}
+.rwhero__k {
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.18em;
+  text-transform: uppercase; color: rgba(255, 255, 255, 0.55);
+}
+.rwhero__v {
+  font-size: clamp(46px, 16vw, 64px); font-weight: 800;
+  letter-spacing: -0.05em; line-height: 1.05; margin-top: 4px;
+  color: var(--yellow);
+  text-shadow: 0 6px 26px rgba(248, 203, 70, 0.28);
+}
+.rwhero__s {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 10px;
+  font-size: var(--f-sm); color: rgba(255, 255, 255, 0.72);
+}
+.rwhero__s b { color: #fff; font-weight: 800; }
+
+.rwbody { padding-top: 14px; padding-bottom: 20px; display: grid; gap: 14px; }
+
+/* ---------- the track ---------- */
+.rwtrack {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 4px 12px 4px 44px;
+}
+/* the unfilled rail */
+.rwtrack::before {
+  content: '';
+  position: absolute; left: 25px; top: 26px; bottom: 26px;
+  width: 3px; border-radius: 3px; background: var(--surface-2);
+}
+/* and the part the points have reached */
+.rwtrack__fill {
+  position: absolute; left: 25px; top: 26px;
+  width: 3px; border-radius: 3px;
+  background: linear-gradient(180deg, var(--green), #52C46A);
+  max-height: calc(100% - 52px);
+}
+.rwstop {
+  position: relative;
+  display: flex; align-items: center; gap: 11px;
+  padding: 13px 0;
+  border-top: 1px solid var(--line);
+}
+.rwstop:first-of-type { border-top: 0; }
+.rwstop__pin {
+  position: absolute; left: -27px; top: 50%; transform: translateY(-50%);
+  width: 21px; height: 21px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--surface); border: 2px solid var(--line-2);
+  color: var(--mut-2);
+}
+.rwstop.is-on .rwstop__pin { background: var(--green); border-color: var(--green); color: #fff; }
+.rwstop__art {
+  width: 40px; height: 40px; flex: 0 0 40px;
+  border-radius: 50%; background: var(--surface-2);
+  display: grid; place-items: center;
+}
+.rwstop__art img { width: 70%; height: 70%; object-fit: contain; }
+/* A tier you have not reached is quiet — it is context, not an offer. */
+.rwstop:not(.is-on) .rwstop__art img { filter: grayscale(1); opacity: 0.5; }
+.rwstop__t { display: block; font-size: var(--f-base); font-weight: 700; }
+.rwstop:not(.is-on) .rwstop__t { color: var(--mut); }
+.rwstop__s { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 1px; }
+.rwstop__gap {
+  flex: none; text-align: right;
+  font-size: var(--f-sm); font-weight: 800; color: var(--mut-2);
+  font-variant-numeric: tabular-nums;
+}
+.rwstop__gap small {
+  display: block; font-size: 9px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--mut-2);
+}
 
 /* ---------- car picker ---------- */
 /* Five cars in a scrolling row rather than a 3x2 grid. The grid cost two full
