@@ -167,7 +167,16 @@ input, select, textarea { font: inherit; color: inherit; }
    edge), then unframed text beneath it — price, saving, name, age, rating,
    delivery. The break in the frame is what makes ADD read as the one thing you
    can press without leaving the grid. */
-.pcard { display: flex; flex-direction: column; gap: 3px; text-align: left; position: relative; }
+/* `isolation: isolate` is load-bearing. The badge, the heart and the ADD all
+   carry a z-index to order themselves against the image INSIDE the card — but
+   `position: relative` alone does not open a stacking context, so those 2s and
+   3s were competing at page level and winning against the sticky filter bar,
+   which sits at 2. Contained here, they order within the card and the card
+   orders as one box against the page. */
+.pcard {
+  display: flex; flex-direction: column; gap: 3px; text-align: left;
+  position: relative; isolation: isolate;
+}
 /* A tinted panel rather than a white box with a hairline: the product shot and
    the white ADD both sit on it, and against #fff neither had an edge to read
    against. This is what Blinkit's own cards do. */
@@ -1566,7 +1575,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .catpage { display: flex; align-items: flex-start; gap: 0; }
 .catrail {
   flex: 0 0 92px;
-  position: sticky; top: var(--hdr-h);
+  /* same band as the filter bar it shares an edge with, so neither the grid
+     nor a card's overhang can paint across the rail while the page scrolls */
+  position: sticky; top: var(--hdr-h); z-index: 12;
   /* its own scroller, so a long group list never drags the page with it */
   max-height: calc(100vh - var(--hdr-h));
   overflow-y: auto;
@@ -1629,7 +1640,8 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex; align-items: center; gap: 8px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
-  position: sticky; top: var(--hdr-h); z-index: 2;
+  /* above the grid it pins over, below the page header at 30 */
+  position: sticky; top: var(--hdr-h); z-index: 12;
   background: var(--surface);
   overflow-x: auto; scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
