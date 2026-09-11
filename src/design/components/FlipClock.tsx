@@ -76,37 +76,44 @@ export type FlipClockProps = {
   parts: DropParts;
   /** "Ends in" / "Starts in" */
   lead: string;
-  /** A quiet line under the flaps — the dates, so they stay on the surface. */
-  note?: string;
+  /** The drop window, set beside the lead so it reads as a fact, not a footnote. */
+  dates?: string;
   onClick?: () => void;
 };
 
-export function FlipClock({ parts, lead, note, onClick }: FlipClockProps) {
+export function FlipClock({ parts, lead, dates, onClick }: FlipClockProps) {
+  /* Hours and minutes only. Seconds turned the board into something that
+     demanded attention once a second for information nobody acts on at that
+     resolution, and days split the same number across two units — 58 hours
+     reads as a race clock, "2 days 10 hours" reads as a calendar. */
+  const totalHours = parts.days * 24 + parts.hours;
   const cells: [string, string][] = [
-    ...(parts.days > 0 ? ([[PAD(parts.days), 'DAYS']] as [string, string][]) : []),
-    [PAD(parts.hours), 'HRS'],
+    [String(totalHours).padStart(2, '0'), 'HRS'],
     [PAD(parts.mins), 'MIN'],
-    [PAD(parts.secs), 'SEC'],
   ];
 
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag className="dropclock" type={onClick ? 'button' : undefined} onClick={onClick}>
-      <span className="dropclock__lead">{lead}</span>
+      <span className="dropclock__head">
+        <span className="dropclock__lead">{lead}</span>
+        {dates && <span className="dropclock__dates">{dates}</span>}
+      </span>
       <span className="dropclock__row">
         {cells.map(([v, l]) => (
           <span className="dropclock__cell" key={l}>
-            {/* Two flaps per unit, so the tens digit sits still while the units
-                digit flips — which is what a real board does. */}
+            {/* One flap per digit, so the tens sits still while the units
+                turns — and a long count (61 days out, before the drop opens)
+                simply grows a third flap rather than overflowing. */}
             <span className="dropclock__flaps">
-              <FlipCell value={v[0]} />
-              <FlipCell value={v[1]} />
+              {[...v].map((ch, i) => (
+                <FlipCell key={i} value={ch} />
+              ))}
             </span>
             <small>{l}</small>
           </span>
         ))}
       </span>
-      {note && <span className="dropclock__note">{note}</span>}
     </Tag>
   );
 }

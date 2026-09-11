@@ -23,20 +23,22 @@ export const DaysOut: Story = {
   args: {
     parts: { days: 2, hours: 10, mins: 56, secs: 36 },
     lead: 'Ends in',
-    note: 'Limited drop · 12–14 Nov · Tap for details',
+    dates: '12–14 Nov',
   },
 };
 
-/** Final day: the days flaps drop away rather than showing 00. */
+/** Final hours, where the count drops to two digits. */
 export const FinalHours: Story = {
-  args: { parts: { days: 0, hours: 6, mins: 4, secs: 9 }, lead: 'Ends in' },
+  args: { parts: { days: 0, hours: 6, mins: 4, secs: 9 }, lead: 'Ends in', dates: '12–14 Nov' },
 };
 
+/** Before the drop opens the count runs to four figures of hours, so the
+ *  board has to grow a flap rather than overflow its row. */
 export const BeforeItOpens: Story = {
-  args: { parts: { days: 61, hours: 3, mins: 12, secs: 0 }, lead: 'Starts in' },
+  args: { parts: { days: 61, hours: 3, mins: 12, secs: 0 }, lead: 'Starts in', dates: '12–14 Nov' },
 };
 
-/** Widest digit in every slot — the board must not shift as it ticks. */
+/** Widest digit in every slot — the board must not shift as it turns. */
 export const WidestDigits: Story = {
-  args: { parts: { days: 88, hours: 88, mins: 88, secs: 88 }, lead: 'Ends in' },
+  args: { parts: { days: 2, hours: 23, mins: 58, secs: 0 }, lead: 'Ends in', dates: '12–14 Nov' },
 };

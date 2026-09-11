@@ -62,7 +62,7 @@ export default function Home() {
           <FlipClock
             parts={parts}
             lead={drop.phase === 'ended' ? 'Drop ended' : drop.lead}
-            note={`Limited drop · ${DROP_DATES} · Tap for details`}
+            dates={DROP_DATES}
             onClick={() => setDetails(true)}
           />
 

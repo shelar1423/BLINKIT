@@ -1103,22 +1103,38 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ---------- drop countdown: a split-flap board ---------- */
+/* No panel. The flaps are already objects sitting on the band — boxing them
+   inside a second surface made the countdown look like a widget dropped onto
+   the campaign rather than part of it. */
 .dropclock {
   display: block; width: 100%;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: var(--r-md);
-  padding: 7px 10px 8px;
+  background: none; border: 0;
+  padding: 2px 0 0;
   text-align: center;
   color: #fff;
 }
+.dropclock__head {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-bottom: 7px;
+}
 .dropclock__lead {
-  display: block;
   font-size: var(--f-2xs); font-weight: 800;
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--yellow);
 }
-.dropclock__row { display: flex; align-items: flex-start; justify-content: center; gap: 12px; margin-top: 6px; }
+/* The dates were a 9px grey line under everything and were being lost. Set as
+   a solid chip beside the lead, they read at a glance and stop competing with
+   the flaps for the same greyed-out register. */
+.dropclock__dates {
+  background: var(--yellow);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 3px 9px 4px;
+  font-size: var(--f-2xs); font-weight: 800;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.dropclock__row { display: flex; align-items: flex-start; justify-content: center; gap: 16px; }
 .dropclock__cell { display: block; }
 .dropclock__flaps { display: flex; gap: 3px; }
 .dropclock__cell small {
@@ -1191,11 +1207,6 @@ input, select, textarea { font: inherit; color: inherit; }
   .flip__leaf { display: none; }
 }
 
-.dropclock__note {
-  display: block; margin-top: 4px;
-  font-size: 9px; font-weight: 600; letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.58);
-}
 
 /* ---------- campaign sponsor strip ----------
    "· POWERED BY ·" in small letterspaced caps between two hairlines, the
