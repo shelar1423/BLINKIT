@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { DELIVERY_ADDRESS } from '../../data/catalog';
@@ -147,8 +148,28 @@ export function PageHeader({
   onBack?: () => void;
 }) {
   const nav = useNavigate();
+  /* Publish the header's real height so anything sticking underneath can pin
+     to it. The token it used to rely on was a guess — 68px against a header
+     that is 59px here and taller again on a notched phone, where the safe-area
+     inset is part of its padding. The 9px difference was a slot the category
+     grid scrolled through. */
+  const el = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const node = el.current;
+    if (!node) return;
+    const publish = () =>
+      document.documentElement.style.setProperty('--phdr-h', `${Math.round(node.getBoundingClientRect().height)}px`);
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(node);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--phdr-h');
+    };
+  }, []);
+
   return (
-    <header className="phdr">
+    <header className="phdr" ref={el}>
       <button className="phdr__back" type="button" aria-label="Go back" onClick={() => (onBack ? onBack() : nav(-1))}>
         <IconChevronLeft size={22} />
       </button>

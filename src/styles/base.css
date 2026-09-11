@@ -1797,9 +1797,9 @@ input, select, textarea { font: inherit; color: inherit; }
   flex: 0 0 92px;
   /* same band as the filter bar it shares an edge with, so neither the grid
      nor a card's overhang can paint across the rail while the page scrolls */
-  position: sticky; top: var(--hdr-h); z-index: 12;
+  position: sticky; top: var(--phdr-h, var(--hdr-h)); z-index: 12;
   /* its own scroller, so a long group list never drags the page with it */
-  max-height: calc(100vh - var(--hdr-h));
+  max-height: calc(100vh - var(--phdr-h, var(--hdr-h)));
   overflow-y: auto;
   background: #fff;
   padding: 8px 0 24px;
@@ -1861,7 +1861,7 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   /* above the grid it pins over, below the page header at 30 */
-  position: sticky; top: var(--hdr-h); z-index: 12;
+  position: sticky; top: var(--phdr-h, var(--hdr-h)); z-index: 12;
   background: var(--surface);
   overflow-x: auto; scrollbar-width: none;
   -webkit-overflow-scrolling: touch;

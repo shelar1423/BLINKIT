@@ -831,6 +831,31 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
    tracked: walking will not produce parallax, and the UI says so.
    ============================================================ */
 
+/** Where a granted iOS motion permission is remembered. */
+export const MOTION_OK = 'hw-motion-granted';
+
+/**
+ * Can the camera be opened without a tap?
+ *
+ * Only on iOS is this ever false: `DeviceOrientationEvent.requestPermission`
+ * must be called from inside a user gesture, and an auto-start has none. Asking
+ * anyway does not merely fail quietly — it leaves the session with no gyro at
+ * all, so the camera never tilts and the placement reticle sits pinned to the
+ * bottom edge of the frame where it cannot be aimed. Better to show the button
+ * and let the tap carry the permission.
+ */
+export function canAutoStart(): boolean {
+  const DOE = window.DeviceOrientationEvent as (typeof window.DeviceOrientationEvent & {
+    requestPermission?: () => Promise<'granted' | 'denied'>;
+  }) | undefined;
+  if (!DOE || typeof DOE.requestPermission !== 'function') return true;
+  try {
+    return localStorage.getItem(MOTION_OK) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { trackSize?: number }): Promise<ARHandle> {
   /* Assumed surface height below the phone. 0.34 m was far too shallow: with no
      depth sensing the reticle is placed along the view ray at GROUND / fwd.y, so
@@ -855,8 +880,21 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     requestPermission?: () => Promise<'granted' | 'denied'>;
   }) | undefined;
   try {
-    if (DOE && typeof DOE.requestPermission === 'function') gyro = (await DOE.requestPermission()) === 'granted';
-    else gyro = !!DOE;
+    if (DOE && typeof DOE.requestPermission === 'function') {
+      gyro = (await DOE.requestPermission()) === 'granted';
+      /* Remembered so the screen can tell whether opening the camera without a
+         tap is safe. iOS only hands out motion access from inside a user
+         gesture, and once granted it stays granted for the origin. */
+      if (gyro) {
+        try {
+          localStorage.setItem(MOTION_OK, '1');
+        } catch {
+          /* private mode */
+        }
+      }
+    } else {
+      gyro = !!DOE;
+    }
   } catch {
     gyro = false;
   }
@@ -1026,8 +1064,21 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
    * Returning null there meant nothing appeared at all until you tilted down
    * and hunted for the reticle.
    */
+  /** Assumed downward tilt before the gyro has said anything: 32 degrees, which
+   *  is roughly how a phone is held when pointed at a table in front of you. */
+  const ASSUMED_TILT = 0.56;
+
   function aim(): { point: THREE.Vector3; dist: number; provisional: boolean } {
-    fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    if (haveOrientation) {
+      fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
+    } else {
+      /* No orientation yet — either it has not arrived or it was never granted.
+         An identity camera looks dead level, and a horizontal disc on the floor
+         then projects to the very bottom edge of the frame, right where it
+         cannot be aimed or tapped. Assume the tilt instead, so something
+         aimable is always in the middle of the picture. */
+      fwd.set(0, -Math.sin(ASSUMED_TILT), -Math.cos(ASSUMED_TILT));
+    }
     /* Cast from where the camera actually is. This is the origin on a fresh
        session, but the chase cam moves the camera during a race and reset()
        leaves it there — so casting from (0,0,0) aimed at a point the camera

@@ -9,6 +9,7 @@ import {
   detectAR,
   startARSession,
   startCameraSession,
+  canAutoStart,
   type ARHandle,
   type ARPhase,
   type ARSupport,
@@ -149,13 +150,22 @@ export default function ARView() {
   }, [car.glb, onFinish, toast, support, inspect]);
 
   /* Arriving with ?go=1 means the tap that got here already said "view in your
-     space". Try to open the camera straight away rather than showing a second
-     button with the same words on it. Once only: a failure leaves the gate
-     showing, and retrying it in a loop would just re-prompt for permission. */
+     space", so open the camera rather than showing a second button with the
+     same words on it.
+
+     Except on a first visit on iOS. Motion access is only granted from inside a
+     user gesture, and an effect on mount has none — asking there does not fail
+     quietly, it leaves the session with no gyro at all, so the camera never
+     tilts, the reticle sits pinned to the bottom edge of the frame, and nothing
+     can be aimed or tapped into place. That is exactly the "works the second
+     time" symptom: by then the permission has been granted through a real tap
+     and is remembered. So when the grant is not already in hand, the button
+     stays and its tap carries both permissions. */
   useEffect(() => {
     if (!autoStart || triedAuto.current) return;
     if (!(support?.kind === 'webxr' || support?.kind === 'camera')) return;
     if (!car.glb || !overlay.current || handle.current) return;
+    if (!canAutoStart()) return;
     triedAuto.current = true;
     void launch(true);
   }, [autoStart, support, car.glb, launch]);
