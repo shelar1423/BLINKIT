@@ -120,11 +120,31 @@ export default function Product() {
   const next = deck[at < 0 ? 0 : (at + 1) % deck.length];
   const prev = deck[at < 0 ? deck.length - 1 : (at - 1 + deck.length) % deck.length];
 
-  /** Live drag offset in px. 0 whenever nothing is happening, so the resting
-   *  page carries no transform and the sticky header behaves normally. */
-  const [dx, setDx] = useState(0);
+  /* The drag is driven straight onto the two nodes rather than through state.
+     A setState per pointermove is a React render per frame of a gesture that is
+     only ever moving one transform, and it showed: the sheet stepped across
+     instead of sliding. State is only used for the resting/gliding flags. */
+  const deckEl = useRef<HTMLDivElement>(null);
+  const trackEl = useRef<HTMLDivElement>(null);
+  const dx = useRef(0);
+  const raf = useRef(0);
   const [gliding, setGliding] = useState(false);
   const grab = useRef<{ x: number; y: number; axis: 'undecided' | 'x' | 'y' } | null>(null);
+
+  const paint = useCallback(() => {
+    raf.current = 0;
+    const t = dx.current ? `translate3d(${dx.current}px,0,0)` : '';
+    if (deckEl.current) deckEl.current.style.transform = t;
+    if (trackEl.current) trackEl.current.style.transform = t;
+  }, []);
+
+  const setDx = useCallback(
+    (v: number) => {
+      dx.current = v;
+      if (!raf.current) raf.current = requestAnimationFrame(paint);
+    },
+    [paint],
+  );
 
   /** Slide the deck out and land on `to`. */
   const go = useCallback(
@@ -135,21 +155,30 @@ export default function Product() {
         nav(`/hot-wheels/${to}`, { replace: true });
       }, GLIDE_MS);
     },
-    [nav],
+    [nav, setDx],
   );
 
   /* A new product means a new sheet: drop the drag, stop gliding, and start at
      the top rather than wherever the previous product was scrolled to. */
   useEffect(() => {
     setGliding(false);
-    setDx(0);
+    dx.current = 0;
+    paint();
     setView(0);
     setDetailsOpen(false);
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [id, paint]);
+
+  /* Places inside the sheet that own a horizontal gesture of their own. The 3D
+     viewer binds its own pointer handlers to rotate the model, and the chip row
+     and the recommendation rail are both scrollers — a drag that starts in any
+     of them was driving that control AND sliding the whole deck at the same
+     time, which is what made the swipe feel like it was fighting back. */
+  const OWNS_GESTURE = '.pdp__stage, .pdp__chips, .prail, .actionbar';
 
   const onDown = (e: React.PointerEvent) => {
-    if (gliding || e.pointerType === 'mouse' && e.button !== 0) return;
+    if (gliding || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if ((e.target as Element | null)?.closest?.(OWNS_GESTURE)) return;
     grab.current = { x: e.clientX, y: e.clientY, axis: 'undecided' };
   };
 
@@ -173,8 +202,9 @@ export default function Product() {
     grab.current = null;
     if (!g || g.axis !== 'x') return;
     const far = window.innerWidth * COMMIT;
-    if (dx < -far) go(next.id, 1);
-    else if (dx > far) go(prev.id, -1);
+    const at = dx.current;
+    if (at < -far) go(next.id, 1);
+    else if (at > far) go(prev.id, -1);
     else {
       setGliding(true);
       setDx(0);
@@ -232,8 +262,6 @@ export default function Product() {
     }
   };
 
-  const shift = { transform: dx ? `translateX(${dx}px)` : undefined } as React.CSSProperties;
-
   return (
     <>
       {/* The neighbours ride in a fixed layer pinned to the app column, so the
@@ -242,7 +270,7 @@ export default function Product() {
         {/* The window stays put; only the track inside it moves. Translating
             the window itself dragged its own clip rect along, so the arriving
             sheet was cut off at exactly the edge it was travelling towards. */}
-        <div className={'pdpstack__track' + (gliding ? ' is-gliding' : '')} style={shift}>
+        <div className={'pdpstack__track' + (gliding ? ' is-gliding' : '')} ref={trackEl}>
           <PeekSheet product={prev} side="prev" />
           <PeekSheet product={next} side="next" />
         </div>
@@ -256,7 +284,7 @@ export default function Product() {
 
       <div
         className={'pdpdeck' + (gliding ? ' is-gliding' : '')}
-        style={shift}
+        ref={deckEl}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}

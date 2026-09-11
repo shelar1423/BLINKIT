@@ -852,11 +852,23 @@ input, select, textarea { font: inherit; color: inherit; }
 .pdp__tools { position: absolute; right: 10px; bottom: 10px; display: grid; gap: 6px; z-index: 3; }
 .pdp__tool { width: 36px; height: 36px; border-radius: var(--r); background: rgba(255,255,255,0.94);
   border: 1px solid var(--line); color: var(--ink); display: grid; place-items: center; box-shadow: var(--sh-1); }
-.pdp__flag { position: absolute; left: 10px; top: 10px; z-index: 3; display: inline-flex; align-items: center; gap: 5px;
+/* Both of these sat at the top of the stage, which is where the sheet header
+   now floats — the badge ran under the close chevron and the hint ran under
+   the heart, search and share. They clear the header's height instead. */
+.pdp__flag {
+  position: absolute; left: 10px; top: calc(var(--shdr-h) + 6px); z-index: 3;
+  display: inline-flex; align-items: center; gap: 5px;
   background: rgba(31,31,31,0.82); color: #fff; font-size: var(--f-2xs); font-weight: 700;
-  padding: 4px 8px; border-radius: var(--r-xs); }
-.pdp__hint { position: absolute; left: 0; right: 0; top: 14px; text-align: center; font-size: var(--f-2xs);
-  color: var(--mut-2); font-weight: 600; letter-spacing: 0.04em; pointer-events: none; }
+  padding: 4px 8px; border-radius: var(--r-xs);
+}
+/* The stage floor already carries the AR button on the left and the reset tool
+   on the right, both 36px tall at bottom:10 — so the hint sits in the band
+   above them rather than across them. */
+.pdp__hint {
+  position: absolute; left: 0; right: 0; bottom: 54px; text-align: center;
+  font-size: var(--f-2xs);
+  color: var(--mut-2); font-weight: 600; letter-spacing: 0.04em; pointer-events: none;
+}
 
 /* view pager — one dot per view that actually exists */
 .pdp__pager { background: #fff; display: flex; justify-content: center; gap: 7px; padding: 4px 0 14px; }
@@ -969,6 +981,9 @@ input, select, textarea { font: inherit; color: inherit; }
   touch-action: pan-y;
 }
 .pdpdeck.is-gliding, .pdpstack__track.is-gliding { transition: transform 260ms cubic-bezier(0.25, 0.8, 0.3, 1); }
+/* Promote both sliding nodes: without a layer of their own the browser repaints
+   the whole sheet — 3D canvas, images, shadows — on every frame of the drag. */
+.pdpdeck, .pdpstack__track { will-change: transform; }
 
 /* The neighbours ride in a fixed layer pinned to the app column, so the sliver
    stays on the right edge while the current sheet scrolls under it. */
