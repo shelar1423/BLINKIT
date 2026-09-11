@@ -76,8 +76,15 @@ export function createProductViewer(container: HTMLElement, glbUrl: string, opts
 
   let car: THREE.Group | null = null;
   let radius = 3;
+  /* The stage behind the car is a photograph of a garage shot from one fixed
+     camera, so this has to behave like a turntable: spin freely, but stay at
+     the height the photo was taken from. Letting pitch roam lifted the car off
+     the platform it is supposed to be standing on. */
+  const PITCH_MIN = 0.16;
+  const PITCH_MAX = 0.30;
+  const PITCH_HOME = 0.22;
   let yaw = -0.7;
-  let pitch = 0.24;
+  let pitch = PITCH_HOME;
   let zoom = 1;
   let auto = true;
   let disposed = false;
@@ -87,8 +94,8 @@ export function createProductViewer(container: HTMLElement, glbUrl: string, opts
   let pinch0 = 0;
   let zoom0 = 1;
 
-  const MIN_ZOOM = 0.62;
-  const MAX_ZOOM = 1.9;
+  const MIN_ZOOM = 0.78;
+  const MAX_ZOOM = 1.55;
 
   function frame() {
     const w = container.clientWidth || 1;
@@ -141,7 +148,7 @@ export function createProductViewer(container: HTMLElement, glbUrl: string, opts
   const onMove = (e: PointerEvent) => {
     if (!dragging) return;
     yaw += (e.clientX - lastX) * 0.01;
-    pitch = Math.max(-0.15, Math.min(0.85, pitch + (e.clientY - lastY) * 0.006));
+    pitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, pitch + (e.clientY - lastY) * 0.004));
     lastX = e.clientX;
     lastY = e.clientY;
   };
@@ -200,7 +207,7 @@ export function createProductViewer(container: HTMLElement, glbUrl: string, opts
   return {
     reset() {
       yaw = -0.7;
-      pitch = 0.24;
+      pitch = PITCH_HOME;
       zoom = 1;
       auto = true;
     },

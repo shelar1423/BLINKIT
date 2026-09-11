@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
@@ -5,10 +6,32 @@ import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useStore, MAX_RACE_ATTEMPTS } from '../store/useStore';
 import { useToast } from '../App';
 
+/** The drop closes at the end of 14 Nov; shown as a live countdown. */
+function useDropCountdown() {
+  const [label, setLabel] = useState('');
+  useEffect(() => {
+    const end = new Date();
+    end.setHours(23, 59, 59, 999);
+    end.setDate(end.getDate() + 2);
+    const tick = () => {
+      const ms = Math.max(0, end.getTime() - Date.now());
+      const d = Math.floor(ms / 86400000);
+      const h = Math.floor((ms % 86400000) / 3600000);
+      const m = Math.floor((ms % 3600000) / 60000);
+      setLabel(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m`);
+    };
+    tick();
+    const t = window.setInterval(tick, 30000);
+    return () => window.clearInterval(t);
+  }, []);
+  return label;
+}
+
 export default function Home() {
   const nav = useNavigate();
   const { toast } = useToast();
   const racesLeft = useStore((s) => s.racesLeft);
+  const dropEndsIn = useDropCountdown();
 
   return (
     <>
@@ -18,7 +41,13 @@ export default function Home() {
              block, exactly how Blinkit carries a festival theme down the page,
              and the scalloped edge hands back to the white product feed. --- */}
         <section className="ctake" aria-label="Hot Wheels x Blinkit campaign">
-          <img className="ctake__track" src="/campaign/track-divider.webp" alt="" aria-hidden="true" />
+          <span className="ctake__trackwrap" aria-hidden="true">
+            <img className="ctake__track" src="/campaign/track-divider.webp" alt="" />
+            {/* One pass, on arrival. A car looping forever would become wallpaper
+                and compete with the content underneath; a single run reads as a
+                flourish and then gets out of the way. */}
+            <img className="ctake__runner" src="/cars/hollowback-diecast.webp" alt="" />
+          </span>
 
           <div className="ctake__mast">
             <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
@@ -31,7 +60,18 @@ export default function Home() {
           <h2 className="ctake__t">
             <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
           </h2>
-          <p className="ctake__kick">LIMITED DROP &middot; 12&ndash;14 NOV</p>
+          {/* A date in small caps is easy to scroll past. A countdown states the
+              same thing as pressure, which is what a limited drop needs to say. */}
+          <div className="ctake__when">
+            <span className="ctake__when-pill">
+              <i />
+              LIMITED DROP
+            </span>
+            <span className="ctake__when-t">
+              Ends in <b>{dropEndsIn}</b>
+            </span>
+            <span className="ctake__when-d">12&ndash;14 Nov</span>
+          </div>
 
           {/* A row of offer cards, each with its hook on a tab over the top
               edge — the "Starting at ₹29" device. A campaign card carries a
