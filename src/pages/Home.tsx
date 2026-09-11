@@ -42,7 +42,7 @@ export default function Home() {
               <span className="ctile__l">Rewards</span>
               <img src="/campaign/04-rewards-shortcut-card.webp" alt="" loading="lazy" />
             </button>
-            <button className="ctile" type="button" onClick={() => nav('/leaderboard')}>
+            <button className="ctile ctile--wide" type="button" onClick={() => nav('/leaderboard')}>
               <span className="ctile__l">Leaderboard</span>
               <img src="/campaign/21-friend-challenge-card.webp" alt="" loading="lazy" />
             </button>

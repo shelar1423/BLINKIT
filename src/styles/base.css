@@ -296,7 +296,11 @@ input, select, textarea { font: inherit; color: inherit; }
   opacity: 0.92;
 }
 .ctake__mast { display: flex; align-items: center; justify-content: center; gap: 9px; }
-.ctake__hw { height: 21px; width: auto; }
+/* The mark ships as a flat #ED1C24. Red on the campaign blue technically
+   clears contrast, but two saturated hues at the same luminance vibrate against
+   each other. White is cleaner and reads at 13.4:1 — and a knocked-out white
+   mark is how Hot Wheels itself sets the logo on dark packaging. */
+.ctake__hw { height: 22px; width: auto; filter: brightness(0) invert(1); }
 .ctake__x { font-size: 12px; opacity: 0.65; font-weight: 600; }
 .ctake__bm { font-size: 16px; }
 .ctake__kick {
@@ -333,7 +337,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctile__l {
   position: relative; z-index: 2;
   font-size: var(--f-md); font-weight: 800; line-height: 1.15;
-  color: #7E0F0C; letter-spacing: -0.2px;
+  color: #6E0C0A; letter-spacing: -0.2px;
 }
 .ctile--tall .ctile__l { font-size: var(--f-xl); }
 .ctile__s {
@@ -342,10 +346,23 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .ctile img {
   position: absolute; z-index: 1;
-  right: -6px; bottom: -4px;
-  width: 78%; height: auto; object-fit: contain;
+  right: -4px; bottom: -4px;
+  width: 76%; height: auto; object-fit: contain;
 }
-.ctile--tall img { width: 106%; right: -9px; bottom: -8px; }
+.ctile--tall img { width: 104%; right: -8px; bottom: -6px; }
+
+/* The label sits over the artwork, so it needs its own ground. A soft wash of
+   the tile's own colour from the top-left keeps the type legible without
+   putting a visible plate on the card. */
+.ctile::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(148deg, #FFF7E2 0%, rgba(255, 247, 226, 0.92) 18%, rgba(255, 247, 226, 0) 48%);
+  pointer-events: none;
+}
+/* the leaderboard card is 2:1 in a square tile, so it needs lifting off the
+   floor or it reads as a sliver stuck to the bottom edge */
+.ctile--wide img { bottom: 14%; right: -2px; width: 92%; }
 .ctile:active { transform: scale(0.985); }
 
 /* scalloped hand-off to the white feed */

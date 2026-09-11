@@ -103,9 +103,7 @@ export function BottomNav() {
             The Hot Wheels takeover puts the race there — one tap from anywhere,
             without touching the permanent tabs. */}
         <button className="bnav__fab" type="button" onClick={() => nav('/race')} aria-label="Race It Home">
-          <span className="bnav__fab-t">
-            race<b>it</b>
-          </span>
+          <img className="bnav__fab-mark" src="/brand/hot-wheels.svg" alt="" />
         </button>
       </div>
     </>
