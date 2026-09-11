@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { ShiftResult } from '../gearbox';
+import { RoomHazards, RoomScan } from './roomScan';
 import { color } from '../../design/constants';
 import { RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
@@ -92,6 +93,8 @@ type Opts = {
   onObstacleHit?: (info: { type: string; pointsLost: number }) => void;
   onObstacleCountChange?: (count: number) => void;
   onProximityAlert?: (alert: boolean) => void;
+  /** Surface mapping progress while the circuit sits on the table. */
+  onScan?: (s: { coverage: number; hazards: number }) => void;
 };
 
 /* ---------- shared scene furniture ---------- */
@@ -861,6 +864,13 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const setSize = (m: number) => {
     sizeM = inspect ? Math.max(0.03, Math.min(1.2, m)) : Math.max(0.25, Math.min(4, m));
     applySize();
+    /* A resized circuit covers different ground, so what was mapped no longer
+       describes it. Re-centre and start again rather than leaving hazards
+       standing where the track no longer is. */
+    if (!inspect && phase === 'placed') {
+      scan.setArea(anchor.position, sizeM * 1.15);
+      hazards.refresh();
+    }
   };
   applySize();
   const startBanner = create3DStartBanner();
@@ -871,6 +881,20 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     anchor.add(startBanner);
   }
   setPhase('ready');
+
+  /* Surface map. The circuit is dropped on a real table, so the real things on
+     that table are what the car has to get around. Sampling runs while the
+     circuit is sitting there being sized, which is exactly when the player is
+     already moving the phone over the surface. */
+  const scan = new RoomScan();
+  const hazards = new RoomHazards(scan, color.ink.int, color.hwO.int);
+  hazards.visible = false;
+  scene.add(hazards.root);
+  const scanCanvas = document.createElement('canvas');
+  scanCanvas.width = 160;
+  scanCanvas.height = 120;
+  const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
+  let lastScan = 0;
 
   // Vision Obstacle Collision System (real-time camera video frame edge sampling)
   const vision = new VisionObstacleSystem(scene, camera);
@@ -974,6 +998,10 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     anchor.visible = true;
     reticle.visible = false;
     startBanner.visible = true;
+    if (!inspect) {
+      scan.setArea(anchor.position, sizeM * 1.15);
+      hazards.visible = true;
+    }
     setPhase('placed');
   }
 
@@ -995,6 +1023,8 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const detachGestures = adjustGestures(opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize);
 
   // FPP chase-cam state for camera mode
+  const probe = new THREE.Vector3();
+  let mapHitCooldown = 0;
   const fpTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   const fpCamPos = new THREE.Vector3();
   const fpCamLook = new THREE.Vector3();
@@ -1005,6 +1035,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     window.removeEventListener('deviceorientation', onOrient, true);
     window.removeEventListener('resize', onResize);
     detachGestures();
+    hazards.dispose();
     vision.dispose();
     stream.getTracks().forEach((t) => t.stop());
     video.pause();
@@ -1062,6 +1093,16 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       const bo = reticle.getObjectByName('burnout');
       if (bo) bo.rotation.y = -now * 0.00035;
     }
+    if (phase === 'placed' && !inspect && scanCtx) {
+      /* 10 Hz. The map wants many looks from slightly different angles more
+         than it wants every frame, and the race has to keep its budget. */
+      if (now - lastScan > 100) {
+        lastScan = now;
+        scan.sample(video, scanCtx, camera);
+        hazards.refresh();
+        opts.onScan?.({ coverage: scan.coverage, hazards: scan.blockedCount });
+      }
+    }
     if (phase === 'racing') {
       engine.update(dt);
 
@@ -1079,6 +1120,21 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       if (collided) {
         engine.applyObstacleBounce(100);
       }
+
+      /* The surface map is the real obstacle now. Look a little ahead of the
+         nose rather than at the car itself, so the car stops against the thing
+         it hit instead of inside it, and only while actually moving — a car
+         sitting still on a cell would otherwise bounce forever. */
+      if (engine.getSpeed() > 0.5 && mapHitCooldown <= 0) {
+        probe.copy(worldCarFwd).multiplyScalar(0.06).add(worldCarPos);
+        if (scan.isBlockedWorld(probe.x, probe.z)) {
+          mapHitCooldown = 0.7;
+          engine.applyObstacleBounce(100);
+          opts.onObstacleHit?.({ type: 'room', pointsLost: 100 });
+        }
+      }
+      if (mapHitCooldown > 0) mapHitCooldown -= dt;
+
       opts.onProximityAlert?.(vision.proximityAlert);
 
       // FPP chase camera: override gyro and set camera directly behind the car
@@ -1119,6 +1175,12 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       // undo the chase cam: orientation alone drives the camera outside a race
       camera.position.set(0, 0, 0);
       fpInited = false;
+      /* The map described the old spot. Clear it rather than leave hazards
+         floating where the circuit no longer is. */
+      hazards.visible = false;
+      scan.reset();
+      hazards.refresh();
+      opts.onScan?.({ coverage: 0, hazards: 0 });
       setPhase('ready');
     },
     startRace,

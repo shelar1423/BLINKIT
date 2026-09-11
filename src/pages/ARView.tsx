@@ -48,6 +48,7 @@ export default function ARView() {
   const [phase, setPhase] = useState<ARPhase | null>(null);
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<RaceStats | null>(null);
+  const [scanInfo, setScanInfo] = useState({ coverage: 0, hazards: 0 });
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
   const [proximityAlert, setProximityAlert] = useState(false);
   const [pinnedCount, setPinnedCount] = useState(0);
@@ -91,18 +92,25 @@ export default function ARView() {
         onFinish,
         onError: (m) => toast(m),
         onObstacleHit: (hit) => {
-          const msg = hit.type === 'cv_detected' ? '⚠️ Real Object Hit! (-100 pts)' : '📦 Pinned Hazard Hit! (-100 pts)';
+          const msg =
+            hit.type === 'room'
+              ? 'Hit something real (-100)'
+              : hit.type === 'cv_detected'
+                ? '⚠️ Real Object Hit! (-100 pts)'
+                : '📦 Pinned Hazard Hit! (-100 pts)';
           setLastHitMessage(msg);
           toast(msg);
           setTimeout(() => setLastHitMessage(null), 2200);
         },
         onObstacleCountChange: setPinnedCount,
+        onScan: setScanInfo,
         onProximityAlert: setProximityAlert,
         onEnd: () => {
           setPhase(null);
           setStats(null);
           setPinnedCount(0);
           setProximityAlert(false);
+          setScanInfo({ coverage: 0, hazards: 0 });
           handle.current = null;
         },
       });
@@ -337,11 +345,25 @@ export default function ARView() {
             )}
             {phase === 'placed' && (
               <p className="arov__hint">
-                {inspect ? `${car.name.replace('Hot Wheels ', '')} in your space` : 'Circuit placed!'}
+                {inspect
+                  ? `${car.name.replace('Hot Wheels ', '')} in your space`
+                  : scanInfo.coverage < 0.75
+                    ? `Reading your surface… ${Math.round(scanInfo.coverage * 100)}%`
+                    : scanInfo.hazards > 0
+                      ? 'Your track is ready'
+                      : 'Clear run — nothing in the way'}
                 <small>
-                  {inspect
-                    ? 'Pinch to resize · Drag to move · Walk around it'
-                    : "Pinch to resize · Drag to move · Tap 'Start race' to drive"}
+                  {inspect ? (
+                    'Pinch to resize · Drag to move · Walk around it'
+                  ) : scanInfo.coverage < 0.75 ? (
+                    'Pan slowly across the surface so we can find what is on it'
+                  ) : scanInfo.hazards > 0 ? (
+                    <>
+                      <strong>{scanInfo.hazards} real obstacles</strong> marked — drive around them or lose 100 each
+                    </>
+                  ) : (
+                    'Put something on the surface to race around it'
+                  )}
                 </small>
               </p>
             )}
