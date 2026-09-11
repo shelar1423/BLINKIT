@@ -318,7 +318,7 @@ export default function ARView() {
                 <button type="button" onClick={() => handle.current?.nudgeScale(1 / 1.25)} aria-label="Smaller">
                   <IconMinus size={16} />
                 </button>
-                <span>TRACK SIZE</span>
+                <span>{inspect ? 'CAR SIZE' : 'TRACK SIZE'}</span>
                 <button type="button" onClick={() => handle.current?.nudgeScale(1.25)} aria-label="Bigger">
                   <IconPlus size={16} />
                 </button>

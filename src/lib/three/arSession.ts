@@ -228,7 +228,7 @@ function makeEngine(opts: Opts, onDone: () => void) {
 
 /** Wire drag-to-move / pinch-to-size / twist-to-turn onto the DOM overlay. */
 function adjustGestures(
-  ov: HTMLElement,
+  _ov: HTMLElement,
   anchor: THREE.Object3D,
   camera: THREE.Camera,
   get: () => { phase: ARPhase; size: number },
@@ -275,15 +275,31 @@ function adjustGestures(
     base.dist = 0;
   };
 
-  ov.addEventListener('pointerdown', onDown);
-  ov.addEventListener('pointermove', onMove);
-  ov.addEventListener('pointerup', onUp);
-  ov.addEventListener('pointercancel', onUp);
+  /* These have to live on window, not on the overlay root.
+     `.arov` is pointer-events:none so that taps fall through to the scene, which
+     means it is never a hit target and never receives a pointer event — these
+     listeners were silently dead there, so pinch-to-resize and drag-to-move
+     never fired. Only the chips and buttons inside it, which re-enable
+     pointer-events, ever worked. Guard against the controls so a tap on a
+     button is not also read as a drag. */
+  const fromControl = (e: PointerEvent) =>
+    !!(e.target as HTMLElement | null)?.closest('button,a,input,.arov__drive,.arov__size');
+  const guard = (fn: (e: PointerEvent) => void) => (e: PointerEvent) => {
+    if (fromControl(e)) return;
+    fn(e);
+  };
+  const dOn = guard(onDown);
+  const mOn = guard(onMove);
+
+  window.addEventListener('pointerdown', dOn);
+  window.addEventListener('pointermove', mOn);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
   return () => {
-    ov.removeEventListener('pointerdown', onDown);
-    ov.removeEventListener('pointermove', onMove);
-    ov.removeEventListener('pointerup', onUp);
-    ov.removeEventListener('pointercancel', onUp);
+    window.removeEventListener('pointerdown', dOn);
+    window.removeEventListener('pointermove', mOn);
+    window.removeEventListener('pointerup', onUp);
+    window.removeEventListener('pointercancel', onUp);
     pts = {};
   };
 }
@@ -545,6 +561,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   const onTapPlace = (e: PointerEvent) => {
     // Ignore clicks on HTML controls if visible
     if ((e.target as HTMLElement | null)?.closest('button,a,input,.arov__drive,.arov__size')) return;
+    /* Inspect has no race to start and nothing to place — a stray tap must not
+       launch one from a product page. Gestures still move and scale the car. */
+    if (inspect) return;
     if (phase === 'ready' || phase === 'searching') {
       place();
     } else if (phase === 'placed') {
@@ -993,6 +1012,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   // DOM-level tap-to-place & tap-to-start
   const onTapPlace = (e: PointerEvent) => {
     if ((e.target as HTMLElement | null)?.closest('button,a,input,.arov__drive,.arov__size')) return;
+    /* Inspect has no race to start and nothing to place — a stray tap must not
+       launch one from a product page. Gestures still move and scale the car. */
+    if (inspect) return;
     if (phase === 'ready' || phase === 'searching') {
       placeAtTap(e.clientX, e.clientY);
     } else if (phase === 'placed') {
