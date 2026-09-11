@@ -30,6 +30,11 @@ export const AllVariants: Story = {
       <Button variant="primary">Add to Cart &mdash; commerce</Button>
       <Button variant="flame">Race Now &mdash; campaign</Button>
       <Button variant="dark">Back to home</Button>
+      <div style={{ background: '#122E86', padding: 12, borderRadius: 12 }}>
+        <Button variant="light" block>
+          Race now &mdash; on the campaign ground
+        </Button>
+      </div>
       <Button variant="outline">Continue shopping</Button>
       <div style={{ background: '#080B12', padding: 12, borderRadius: 12 }}>
         <Button variant="ghostDark" block>
@@ -58,6 +63,17 @@ export const ColourRule: Story = {
         <Button variant="flame" block>Race Now</Button>
         <Button variant="flame" block>Open Camera Race</Button>
         <Button variant="flame" block>Invite a friend</Button>
+      </div>
+      {/* The third case: a primary action standing ON the campaign, where none
+          of the three palettes above survives. */}
+      <div style={{ display: 'grid', gap: 8, background: '#122E86', padding: 12, borderRadius: 12 }}>
+        <b style={{ fontSize: 12, color: '#fff' }}>On the campaign ground &rarr; light (white)</b>
+        <Button variant="light" block>Race now</Button>
+        <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5 }}>
+          Green is commerce, red competes with the wordmark, and the campaign
+          yellow is already the drop-window chip &mdash; a yellow button there
+          became the same object as a label.
+        </p>
       </div>
     </div>
   ),

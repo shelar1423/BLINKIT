@@ -92,6 +92,15 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn--primary:not(:disabled):active { background: var(--green-dk); }
 .btn--dark { background: var(--ink); color: #fff; }
 .btn--dark:not(:disabled):active { background: #000; }
+/* the button you press on a campaign ground — see ButtonVariant for why this
+   is white rather than green, red or yellow */
+.btn--light {
+  background: #fff; color: var(--ink); font-weight: 800;
+  border-radius: 999px;
+  padding: 0 26px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
+}
+.btn--light:not(:disabled):active { background: #F1F3F6; }
 /* campaign CTA — Hot Wheels flame red, never used for commerce actions */
 .btn--flame { background: var(--hw-r); color: #fff; }
 .btn--flame:not(:disabled):active { background: var(--hw-r-dk); }
@@ -279,6 +288,11 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative;
   margin-top: -1px;
   padding: 28px var(--gut) 12px;
+}
+/* Without the track divider overhead there is nothing to clear, so the band
+   starts where the header ends and the two read as one surface. */
+.ctake--flat {
+  padding-top: 14px;
   /* The reference storefronts all sit on one saturated colour — hot pink for
      Promise Day, deep red for Diwali, a bright blue for the ice cream. This
      was a muted navy, which is why it read as pale. */
@@ -378,25 +392,17 @@ input, select, textarea { font: inherit; color: inherit; }
 .mystery__plate:active { transform: scale(0.99); }
 
 /* ---- the call to action ----
-   A bare pill on the campaign ground, the way the reference storefront sets
-   "Play now" — no card. A panel around it would put a second surface between
-   the artwork and the one thing there is to do, which is what it replaced. */
+   Positioning only. The button itself is the design library's, so it carries
+   the app's type scale and weight rather than a set of one-off numbers — which
+   is what made it read as the wrong font at the wrong size. */
 .mystery__go {
-  display: flex; align-items: center; gap: 9px;
-  margin: -40px auto 0;
+  /* `auto` margins cannot centre an inline-flex box, which is what .btn is —
+     it needs to be block-level first, and sized to its content so it does not
+     stretch edge to edge. */
+  display: flex; width: fit-content;
+  margin: -42px auto 0;
   position: relative; z-index: 2;
-  /* Flame red, not the campaign yellow. As a yellow pill this was the same
-     object as the 12-14 Nov chip in the corner — same fill, same radius, same
-     weight — so the one thing to press looked like a label. Red is also what
-     the race CTA already is everywhere else in the app. */
-  background: linear-gradient(180deg, #F5333B, var(--hw-r));
-  color: #fff;
-  border: 0; border-radius: 999px;
-  padding: 13px 26px 13px 22px;
-  font-size: 17px; font-weight: 800; letter-spacing: -0.2px;
-  box-shadow: 0 10px 24px rgba(160, 12, 18, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
-.mystery__go svg { flex: 0 0 auto; }
 .mystery__go:active { transform: scale(0.97); }
 
 /* The rule as a line of type, not a panel. */
@@ -416,7 +422,9 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: center; gap: 6px;
   width: calc(100% + var(--gut) * 2);
   margin: 8px calc(var(--gut) * -1) -14px;
-  padding: 11px var(--gut) 12px;
+  /* the chequered edge occupies the last 12px of the band, so the copy
+     needs clearance or it sits right on the flag */
+  padding: 14px var(--gut) 28px;
   background: rgba(0, 0, 0, 0.26);
   border: 0;
   color: #fff;

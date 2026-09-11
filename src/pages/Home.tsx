@@ -8,8 +8,21 @@ import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Sheet } from '../design/components/Sheet';
+import { Button } from '../design/elements';
 import { IconChevronRight, IconFlag, IconTicket, IconTrophy } from '../design/elements/Icons';
 import { useToast } from '../App';
+
+/**
+ * The length of Hot Wheels track across the top of the campaign band, with the
+ * car that runs it once on arrival.
+ *
+ * Off for now: it drew a hard line between the app header and the campaign,
+ * and the band is meant to read as one surface running down from the header.
+ * Everything it needs is still here — the markup below, .ctake__trackwrap /
+ * .ctake__track / .ctake__runner and the runby keyframes in base.css — so this
+ * is a one-word change to bring back.
+ */
+const SHOW_TRACK_DIVIDER = false;
 
 export default function Home() {
   const nav = useNavigate();
@@ -25,14 +38,16 @@ export default function Home() {
         {/* --- campaign takeover: the header's flame red runs straight into this
              block, exactly how Blinkit carries a festival theme down the page,
              and the scalloped edge hands back to the white product feed. --- */}
-        <section className="ctake" aria-label="Hot Wheels x Blinkit campaign">
-          <span className="ctake__trackwrap" aria-hidden="true">
-            <img className="ctake__track" src="/campaign/track-divider.webp" alt="" />
-            {/* One pass, on arrival. A car looping forever would become wallpaper
-                and compete with the content underneath; a single run reads as a
-                flourish and then gets out of the way. */}
-            <img className="ctake__runner" src="/cars/hollowback-diecast.webp" alt="" />
-          </span>
+        <section className={'ctake' + (SHOW_TRACK_DIVIDER ? '' : ' ctake--flat')} aria-label="Hot Wheels x Blinkit campaign">
+          {SHOW_TRACK_DIVIDER && (
+            <span className="ctake__trackwrap" aria-hidden="true">
+              <img className="ctake__track" src="/campaign/track-divider.webp" alt="" />
+              {/* One pass, on arrival. A car looping forever would become wallpaper
+                  and compete with the content underneath; a single run reads as a
+                  flourish and then gets out of the way. */}
+              <img className="ctake__runner" src="/cars/hollowback-diecast.webp" alt="" />
+            </span>
+          )}
 
           {/* Texture. These storefronts hang string lights, stars, diyas and
               gift boxes off the band — decoration is most of what makes them
@@ -105,10 +120,10 @@ export default function Home() {
             {/* No card. On the reference storefront the CTA is a bare pill
                 sitting straight on the campaign ground — boxing it put a
                 second surface between the artwork and the one thing to do. */}
-            <button className="mystery__go" type="button" onClick={() => nav('/race')}>
+            <Button variant="light" className="mystery__go" onClick={() => nav('/race')}>
               <IconFlag size={17} />
               Race now
-            </button>
+            </Button>
 
             {/* What the cloth is hiding and when it comes off. This was a
                 points counter against the unlock threshold, which made the

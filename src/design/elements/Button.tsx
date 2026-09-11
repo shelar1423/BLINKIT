@@ -11,10 +11,18 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
    The variants also carry the build's colour rule:
      primary -> Blinkit green, for commerce (add, checkout, pay)
      flame   -> Hot Wheels red, for the campaign (race, AR, invite)
-   Mixing those two up is the mistake this enum exists to prevent.
+     light   -> white, for a primary action sitting ON the campaign ground
+   Mixing the first two up is the mistake this enum exists to prevent.
+
+   `light` exists because none of the others survive on the saturated
+   campaign band: green is reserved for commerce, red competes with the
+   flame-and-chrome wordmark a few pixels above it, and the campaign yellow is
+   already spent on the drop-window chip, so a yellow CTA became the same
+   object as a label. White is what Blinkit's own campaign screens use for the
+   button you are meant to press.
    ============================================================ */
 
-export type ButtonVariant = 'primary' | 'flame' | 'dark' | 'outline' | 'ghostDark';
+export type ButtonVariant = 'primary' | 'flame' | 'light' | 'dark' | 'outline' | 'ghostDark';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
