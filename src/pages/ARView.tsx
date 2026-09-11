@@ -201,13 +201,17 @@ export default function ARView() {
       return {
         cls: 'is-ok',
         title: 'Full AR Available',
-        body: 'Detects your floor or table and anchors the Hot Wheels track in your space.',
+        body: inspect
+          ? 'Detects your floor or table and stands the car on it, anchored in place.'
+          : 'Detects your floor or table and anchors the Hot Wheels track in your space.',
       };
     if (support.kind === 'camera')
       return {
         cls: 'is-ok',
-        title: 'Camera AR + Computer Vision (iOS Safari & Chrome)',
-        body: 'Real-time camera edge sensor detects physical objects (bottles, laptops, walls). Tap screen while racing to drop 3D hazard boxes on real obstacles!',
+        title: inspect ? 'Camera AR (iOS Safari & Chrome)' : 'Camera AR + Computer Vision (iOS Safari & Chrome)',
+        body: inspect
+          ? 'Opens your camera so you can stand the car on a real surface and walk around it at true 1:64 scale.'
+          : 'Real-time camera edge sensor detects physical objects (bottles, laptops, walls). Tap screen while racing to drop 3D hazard boxes on real obstacles!',
       };
     if (support.kind === 'insecure')
       return {
@@ -218,7 +222,7 @@ export default function ARView() {
     return {
       cls: 'is-bad',
       title: 'Not supported on this browser',
-      body: support.reason + ' You can play the 3D race directly.',
+      body: support.reason + (inspect ? ' Use the 3D viewer on the product page instead.' : ' You can play the 3D race directly.'),
     };
   };
   const s = statusCard();
@@ -278,10 +282,14 @@ export default function ARView() {
             </div>
 
             {/* Scanning / Placement guidance */}
-            {!inspect && phase === 'searching' && (
+            {phase === 'searching' && (
               <p className="arov__hint">
-                Point at your floor or table
-                <small>Or just tap &apos;Place in front of me&apos;</small>
+                {inspect ? 'Scanning for a surface…' : 'Point at your floor or table'}
+                <small>
+                  {inspect
+                    ? 'Point at a table or floor — a dotted grid appears once it is found'
+                    : "Or just tap 'Place in front of me'"}
+                </small>
               </p>
             )}
             {phase === 'ready' && (
@@ -386,9 +394,11 @@ export default function ARView() {
 
             {/* Action buttons */}
             <div className="arov__acts">
-              {!inspect && (phase === 'ready' || phase === 'searching') && (
+              {(phase === 'ready' || phase === 'searching') && (
                 <Button variant="flame" block type="button" onClick={() => handle.current?.placeNow()}>
-                  {phase === 'ready' ? 'Place track here' : 'Place in front of me'}
+                  {phase === 'ready'
+                    ? inspect ? 'Place car here' : 'Place track here'
+                    : 'Place in front of me'}
                 </Button>
               )}
               {phase === 'placed' && (
@@ -408,7 +418,7 @@ export default function ARView() {
         )}
       </div>
 
-      <PageHeader title="Race in your space" subtitle={car.name} onBack={() => nav(-1)} />
+      <PageHeader title={inspect ? 'View in your space' : 'Race in your space'} subtitle={car.name} onBack={() => nav(-1)} />
       <main className="page">
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 12 }}>
           <img
@@ -432,41 +442,62 @@ export default function ARView() {
           >
             <IconAR size={17} />
             {busy
-              ? 'Starting AR…'
+              ? 'Starting camera…'
+              : inspect
+              ? 'View in your space'
               : support?.kind === 'camera'
               ? 'Open Camera Race'
               : 'Race in your space'}
           </Button>
 
-          <Button variant="outline" block
-            type="button"
-            onClick={() => {
-              selectCar(car.id);
-              nav('/race');
-            }}
-          >
-            <IconFlag size={16} />
-            Play 3D Browser Race instead
-          </Button>
+          {inspect ? (
+            <Button variant="outline" block type="button" onClick={() => nav(-1)}>
+              Back to product
+            </Button>
+          ) : (
+            <Button variant="outline" block
+              type="button"
+              onClick={() => {
+                selectCar(car.id);
+                nav('/race');
+              }}
+            >
+              <IconFlag size={16} />
+              Play 3D Browser Race instead
+            </Button>
+          )}
 
           <div className="card" style={{ padding: 12 }}>
             <div className="row" style={{ gap: 8, marginBottom: 6 }}>
               <span style={{ color: 'var(--mut)' }}>
                 <IconInfo size={16} />
               </span>
-              <b style={{ fontSize: 'var(--f-md)' }}>How to Play in AR</b>
+              <b style={{ fontSize: 'var(--f-md)' }}>{inspect ? 'How it works' : 'How to Play in AR'}</b>
             </div>
             <ul className="howto">
-              <li><b>Open Camera</b>: Works directly in Safari on iPhone (or Chrome on Android).</li>
-              <li><b>Scan Surface</b>: Point at your floor or a flat desk — an animated radar ring locks onto the surface.</li>
-              <li><b>Drop Track</b>: Point at the floor and tap &apos;Place track here&apos;.</li>
-              <li><b>Adjust</b>: Pinch to resize the circuit, drag to reposition.</li>
-              <li><b>Drive</b>: Press GO, steer left/right, handbrake to drift around corners, and collect groceries!</li>
+              {inspect ? (
+                <>
+                  <li><b>Open camera</b>: Works directly in Safari on iPhone, or Chrome on Android.</li>
+                  <li><b>Scan</b>: Point at a table or floor — a dotted grid spreads across the surface once it is found.</li>
+                  <li><b>Place</b>: Tap &apos;Place car here&apos; to stand it on that spot.</li>
+                  <li><b>Look</b>: Pinch to resize, drag to move, and walk around it. It renders at true 1:64 scale, about 7 cm long.</li>
+                </>
+              ) : (
+                <>
+                  <li><b>Open Camera</b>: Works directly in Safari on iPhone (or Chrome on Android).</li>
+                  <li><b>Scan Surface</b>: Point at your floor or a flat desk — an animated radar ring locks onto the surface.</li>
+                  <li><b>Drop Track</b>: Point at the floor and tap &apos;Place track here&apos;.</li>
+                  <li><b>Adjust</b>: Pinch to resize the circuit, drag to reposition.</li>
+                  <li><b>Drive</b>: Press GO, steer left/right, handbrake to drift around corners, and collect groceries!</li>
+                </>
+              )}
             </ul>
           </div>
 
           <p className="t-xs" style={{ lineHeight: 1.6, color: 'var(--mut)' }}>
-            Rendered with high-detail 3D Hot Wheels scale model, road asphalt textures, and interactive chase camera tracking.
+            {inspect
+              ? 'The real die-cast model, rendered at true 1:64 scale — about 7 cm long, the size it is in the box.'
+              : 'Rendered with high-detail 3D Hot Wheels scale model, road asphalt textures, and interactive chase camera tracking.'}
           </p>
         </div>
       </main>

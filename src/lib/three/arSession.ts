@@ -151,19 +151,30 @@ function makeReticle() {
     g.add(tick);
   }
 
-  // surface dots, so a scanning surface still reads as scanned
+  /* Dotted scan grid: a square lattice spread across the surface, densest at
+     the centre and thinning toward the edge, so the surface visibly reads as
+     detected rather than merely having a ring drawn on it. */
   const pts: number[] = [];
-  for (let x = -4; x <= 4; x++) {
-    for (let z = -4; z <= 4; z++) {
+  const cols: number[] = [];
+  const c0 = new THREE.Color(color.yellow.hex);
+  const STEP = 0.055;
+  const SPAN = 9;
+  for (let x = -SPAN; x <= SPAN; x++) {
+    for (let z = -SPAN; z <= SPAN; z++) {
       const d = Math.hypot(x, z);
-      if (d <= 4.2 && d >= 2.6) pts.push(x * 0.066, 0, z * 0.066);
+      if (d > SPAN) continue;
+      pts.push(x * STEP, 0, z * STEP);
+      // fade out toward the rim so the grid has no hard edge
+      const k = Math.max(0.12, 1 - (d / SPAN) ** 1.6);
+      cols.push(c0.r * k, c0.g * k, c0.b * k);
     }
   }
   const ptsGeo = new THREE.BufferGeometry();
   ptsGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  ptsGeo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
   const gridPoints = new THREE.Points(
     ptsGeo,
-    new THREE.PointsMaterial({ color: color.yellow.int, size: 0.011, transparent: true, opacity: 0.7 }),
+    new THREE.PointsMaterial({ vertexColors: true, size: 0.0115, transparent: true, opacity: 0.85 }),
   );
   gridPoints.name = 'gridPoints';
 
@@ -395,19 +406,6 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
         return;
       }
       inspectRoot.add(c);
-      // nothing to place in inspect mode — see the camera session for why
-      const cam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
-      const pos = new THREE.Vector3();
-      const quat = new THREE.Quaternion();
-      cam.getWorldPosition(pos);
-      cam.getWorldQuaternion(quat);
-      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(quat).setY(0).normalize();
-      if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, -1);
-      anchor.position.copy(pos).addScaledVector(fwd, 0.45).setY(pos.y - 0.22);
-      anchor.rotation.set(0, Math.atan2(fwd.x, fwd.z), 0);
-      anchor.visible = true;
-      reticle.visible = false;
-      setPhase('placed');
     })
     .catch(() => opts.onError('The car model failed to load for AR.'));
 
@@ -620,7 +618,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
-    if (!inspect && frame && hitSource && localSpace && (phase === 'searching' || phase === 'ready')) {
+    if (frame && hitSource && localSpace && (phase === 'searching' || phase === 'ready')) {
       const hits = frame.getHitTestResults(hitSource);
       const pose = hits.length ? hits[0].getPose(localSpace) : null;
       if (pose) {
@@ -878,18 +876,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
         return;
       }
       inspectRoot.add(c);
-      /* Inspect has nothing to place — there is no circuit, just the car. Making
-         someone aim a reticle and tap "Place track here" to look at a product
-         was asking them to complete a step that does not apply. It drops in
-         front of the viewer the moment it loads; drag and pinch still work. */
-      const ahead = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0);
-      if (ahead.lengthSq() < 1e-6) ahead.set(0, 0, -1);
-      ahead.normalize();
-      anchor.position.copy(ahead).multiplyScalar(0.45).setY(-0.22);
-      anchor.rotation.y = 0;
-      anchor.visible = true;
-      reticle.visible = false;
-      setPhase('placed');
     })
     .catch(() => opts.onError('The car model failed to load.'));
 
@@ -1010,7 +996,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
-    if (!inspect && (phase === 'ready' || phase === 'searching')) {
+    if (phase === 'ready' || phase === 'searching') {
       const a = aim();
       /* Only draw the reticle when the phone is actually pointed at a surface.
          A flat ground-plane marker sits 32 degrees below the view axis when the
