@@ -558,26 +558,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   opts.overlayRoot.addEventListener('beforexrselect', blockSelect);
 
   // Screen tap handler (works even if DOM overlay is suppressed like in WebXR Viewer)
-  const onTapPlace = (e: PointerEvent) => {
-    // Ignore clicks on HTML controls if visible
-    if ((e.target as HTMLElement | null)?.closest('button,a,input,.arov__drive,.arov__size')) return;
-    /* Inspect has no race to start and nothing to place — a stray tap must not
-       launch one from a product page. Gestures still move and scale the car. */
-    if (inspect) return;
-    if (phase === 'ready' || phase === 'searching') {
-      place();
-    } else if (phase === 'placed') {
-      startRace();
-    } else if (phase === 'racing') {
-      // Screen tap while racing pins a real-world obstacle!
-      pinObstacleAtTap(e.clientX, e.clientY);
-    }
-  };
-  opts.overlayRoot.addEventListener('pointerup', onTapPlace);
-  window.addEventListener('pointerup', onTapPlace);
   let detachTapPlace: (() => void) | null = () => {
-    opts.overlayRoot.removeEventListener('pointerup', onTapPlace);
-    window.removeEventListener('pointerup', onTapPlace);
   };
 
   // Request transient input hit-test for tap-position placement
@@ -758,11 +739,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       anchor.visible = false;
       setPhase(hitSource ? 'searching' : 'ready');
     },
-    startRace() {
-      if (phase !== 'placed') return;
-      setPhase('racing');
-      engine.start();
-    },
+    startRace,
     nudgeScale: (f) => setSize(sizeM * f),
     setSize,
     getSize: () => sizeM,
@@ -984,32 +961,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
   /** Place using screen-space tap coordinates: raycast from the tap point
    *  through the camera to the ground plane, placing the track there. */
-  function placeAtTap(clientX: number, clientY: number) {
-    if (phase === 'racing') return;
-    const ndc = new THREE.Vector2(
-      (clientX / window.innerWidth) * 2 - 1,
-      -(clientY / window.innerHeight) * 2 + 1,
-    );
-    const ray = new THREE.Raycaster();
-    ray.setFromCamera(ndc, camera);
-    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -GROUND);
-    const intersection = new THREE.Vector3();
-    if (ray.ray.intersectPlane(groundPlane, intersection)) {
-      anchor.position.copy(intersection);
-    } else {
-      // Fallback: place in front
-      const ahead = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0);
-      if (ahead.lengthSq() < 1e-6) ahead.set(0, 0, -1);
-      ahead.normalize();
-      anchor.position.copy(ahead).multiplyScalar(1.1).setY(GROUND);
-    }
-    anchor.rotation.y = 0;
-    anchor.visible = true;
-    reticle.visible = false;
-    startBanner.visible = true;
-    setPhase('placed');
-  }
-
   function startRace() {
     if (phase !== 'placed') return;
     startBanner.visible = false;
@@ -1018,39 +969,10 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   }
 
   // DOM-level tap-to-place & tap-to-start
-  const onTapPlace = (e: PointerEvent) => {
-    if ((e.target as HTMLElement | null)?.closest('button,a,input,.arov__drive,.arov__size')) return;
-    /* Inspect has no race to start and nothing to place — a stray tap must not
-       launch one from a product page. Gestures still move and scale the car. */
-    if (inspect) return;
-    if (phase === 'ready' || phase === 'searching') {
-      placeAtTap(e.clientX, e.clientY);
-    } else if (phase === 'placed') {
-      startRace();
-    } else if (phase === 'racing') {
-      // Tap screen during race to pin an obstacle on desk!
-      pinObstacleAtTap(e.clientX, e.clientY);
-    }
-  };
-  /* On window, not the overlay root: `.arov` is pointer-events:none so taps
-     fall through to the scene, which means it never receives a pointer event
-     and this listener had never once fired in the camera session. Tap-to-place
-     simply did not work. A press is only a tap if the finger barely moved —
-     otherwise a drag would place the circuit on release. */
-  let downAt: { x: number; y: number; t: number } | null = null;
-  const onTapDown = (e: PointerEvent) => {
-    downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
-  };
-  const onTapUp = (e: PointerEvent) => {
-    const d = downAt;
-    downAt = null;
-    if (!d) return;
-    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12) return;
-    if (performance.now() - d.t > 600) return;
-    onTapPlace(e);
-  };
-  window.addEventListener('pointerdown', onTapDown);
-  window.addEventListener('pointerup', onTapUp);
+  /* Tap-to-place is gone deliberately. A tap anywhere competed with drag and
+     pinch on the same surface, so ordinary handling misfired placements, and a
+     stray tap during the race pinned an obstacle you did not ask for. Placement
+     is now only ever the explicit button. */
 
   const detachGestures = adjustGestures(opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize);
 
@@ -1064,8 +986,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     renderer.setAnimationLoop(null);
     window.removeEventListener('deviceorientation', onOrient, true);
     window.removeEventListener('resize', onResize);
-    window.removeEventListener('pointerdown', onTapDown);
-    window.removeEventListener('pointerup', onTapUp);
     detachGestures();
     vision.dispose();
     stream.getTracks().forEach((t) => t.stop());
@@ -1092,7 +1012,14 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
     if (!inspect && (phase === 'ready' || phase === 'searching')) {
       const a = aim();
-      reticle.visible = true;
+      /* Only draw the reticle when the phone is actually pointed at a surface.
+         A flat ground-plane marker sits 32 degrees below the view axis when the
+         phone is level — the very bottom edge of a 65 degree view — so drawing
+         it there put a mark in the corner that could not be aimed and could not
+         be centred. Geometry, not a bug: the floor is not at screen centre when
+         you are looking at the horizon. Pointing down reveals it properly, and
+         the button places without it. */
+      reticle.visible = !a.provisional;
       reticle.position.copy(a.point);
       // constant apparent size: scale with distance, so it can never fill the
       // screen when the assumed surface happens to be close
@@ -1173,11 +1100,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       anchor.visible = false;
       setPhase('ready');
     },
-    startRace() {
-      if (phase !== 'placed') return;
-      setPhase('racing');
-      engine.start();
-    },
+    startRace,
     nudgeScale: (f) => setSize(sizeM * f),
     setSize,
     getSize: () => sizeM,

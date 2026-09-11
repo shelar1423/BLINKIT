@@ -281,13 +281,13 @@ export default function ARView() {
             {!inspect && phase === 'searching' && (
               <p className="arov__hint">
                 Point at your floor or table
-                <small>Tap anywhere to drop the track there</small>
+                <small>Or just tap &apos;Place in front of me&apos;</small>
               </p>
             )}
             {phase === 'ready' && (
               <p className="arov__hint">
                 Surface locked! 🎯
-                <small>Tap anywhere on your floor to drop the track there</small>
+                <small>Point at the floor, then tap Place track here</small>
               </p>
             )}
             {phase === 'placed' && (
@@ -459,7 +459,7 @@ export default function ARView() {
             <ul className="howto">
               <li><b>Open Camera</b>: Works directly in Safari on iPhone (or Chrome on Android).</li>
               <li><b>Scan Surface</b>: Point at your floor or a flat desk — an animated radar ring locks onto the surface.</li>
-              <li><b>Drop Track</b>: Tap anywhere on the floor to place the track there.</li>
+              <li><b>Drop Track</b>: Point at the floor and tap &apos;Place track here&apos;.</li>
               <li><b>Adjust</b>: Pinch to resize the circuit, drag to reposition.</li>
               <li><b>Drive</b>: Press GO, steer left/right, handbrake to drift around corners, and collect groceries!</li>
             </ul>
