@@ -589,10 +589,11 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     const target = _p.clone().addScaledVector(_fwd, t);
     target.y = _p.y - ASSUMED_DROP;
     const yaw = Math.atan2(_fwd.x, _fwd.z);
+    const k = Math.max(0.3, Math.min(2.6, _p.distanceTo(target) / 1.2));
     reticle.matrix.compose(
       target,
       new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)),
-      new THREE.Vector3(1, 1, 1),
+      new THREE.Vector3(k, k, k),
     );
     reticle.visible = true;
     setReticleProvisional(true);
@@ -608,6 +609,13 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       if (pose) {
         reticle.visible = true;
         reticle.matrix.fromArray(pose.transform.matrix);
+        /* Same guard as the camera path: keep the reticle a constant size on
+           screen. A hit-test surface can be half a metre away, where a fixed
+           world-size reticle swallows the whole view. */
+        _p.setFromMatrixPosition(reticle.matrix);
+        const xrCam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
+        const k = Math.max(0.3, Math.min(2.6, xrCam.getWorldPosition(_fwd).distanceTo(_p) / 1.2));
+        reticle.matrix.scale(new THREE.Vector3(k, k, k));
         setReticleProvisional(false);
         if (phase !== 'ready') setPhase('ready');
       } else {
@@ -740,7 +748,15 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
    ============================================================ */
 
 export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { trackSize?: number }): Promise<ARHandle> {
-  const GROUND = -0.34; // assumed surface height below the phone, in metres
+  /* Assumed surface height below the phone. 0.34 m was far too shallow: with no
+     depth sensing the reticle is placed along the view ray at GROUND / fwd.y, so
+     a short drop put it right against the lens and it filled the screen. A phone
+     held at chest height sees a table ~0.7 m down and a floor ~1.3 m down. */
+  const GROUND = -0.95;
+  /** Where the reticle sits when the phone is level or pointing up. */
+  const PROVISIONAL_DIST = 1.5;
+  /** Reticle is scaled by distance so its on-screen size stays constant. */
+  const RETICLE_REF = 1.2;
   primeAudio();
 
   // iOS gates motion behind a prompt that must be raised from inside the user
@@ -896,12 +912,21 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   // phone is level or pointing up — used for the reticle only.
   const fwd = new THREE.Vector3();
   const hit = new THREE.Vector3();
-  function aim(): THREE.Vector3 | null {
+  /**
+   * Where the circuit would land. Always returns a point: when the phone is
+   * level or tilted up there is no floor along the view ray, so it falls back
+   * to a fixed distance straight ahead and reports that it is provisional.
+   * Returning null there meant nothing appeared at all until you tilted down
+   * and hunted for the reticle.
+   */
+  function aim(): { point: THREE.Vector3; dist: number; provisional: boolean } {
     fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
-    if (fwd.y > -0.08) return null;
+    if (fwd.y > -0.08) {
+      return { point: hit.copy(fwd).multiplyScalar(PROVISIONAL_DIST), dist: PROVISIONAL_DIST, provisional: true };
+    }
     const t = GROUND / fwd.y;
-    if (t < 0.25 || t > 3.5) return null;
-    return hit.copy(fwd).multiplyScalar(t);
+    const clamped = Math.max(0.35, Math.min(3.5, t));
+    return { point: hit.copy(fwd).multiplyScalar(clamped), dist: clamped, provisional: clamped !== t };
   }
 
   /** Placement here can NEVER fail. If the phone is not pointed at the
@@ -909,15 +934,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
    *  instead of returning and leaving the button looking broken. */
   function place() {
     if (phase === 'racing') return;
-    const aimed = aim();
-    if (aimed) {
-      anchor.position.copy(aimed);
-    } else {
-      const ahead = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0);
-      if (ahead.lengthSq() < 1e-6) ahead.set(0, 0, -1);
-      ahead.normalize();
-      anchor.position.copy(ahead).multiplyScalar(1.1).setY(GROUND);
-    }
+    // aim() always resolves now, so there is no no-surface branch to fall back
+    // to — a provisional aim is still a perfectly good place to drop the track.
+    anchor.position.copy(aim().point);
     anchor.rotation.y = 0;
     anchor.visible = true;
     reticle.visible = false;
@@ -1012,9 +1031,19 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     last = now;
     if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
     if (phase === 'ready' || phase === 'searching') {
-      const p = aim();
-      reticle.visible = !!p;
-      if (p) reticle.position.copy(p);
+      const a = aim();
+      reticle.visible = true;
+      reticle.position.copy(a.point);
+      // constant apparent size: scale with distance, so it can never fill the
+      // screen when the assumed surface happens to be close
+      reticle.scale.setScalar(a.dist / RETICLE_REF);
+      const bo0 = reticle.getObjectByName('burnout') as THREE.Mesh | undefined;
+      if (bo0) {
+        const m = bo0.material as THREE.MeshBasicMaterial;
+        m.opacity = a.provisional ? 0.4 : 0.88;
+      }
+      if (!a.provisional && phase !== 'ready') setPhase('ready');
+      if (a.provisional && phase !== 'searching') setPhase('searching');
       const pulse = reticle.getObjectByName('pulseRing') as THREE.Mesh;
       if (pulse) {
         const s = 1 + Math.sin(now * 0.007) * 0.22;
