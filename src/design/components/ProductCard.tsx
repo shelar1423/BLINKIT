@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
-import { AGE_RATING, ETA_MINS, rupees, type Product } from '../../data/catalog';
+import { AGE_RATING, BADGE_TONE, ETA_MINS, rupees, type Product } from '../../data/catalog';
 import { IconClock, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar, IconStock } from '../elements/Icons';
 
 export function AddControl({ product, size = 'sm' }: { product: Product; size?: 'sm' | 'lg' }) {
@@ -151,7 +151,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="pcard__im">
           <img src={product.image} alt={product.name} loading="lazy" />
           {product.badge && (
-            <span className={'pcard__badge' + (product.badge !== 'NEW DROP' ? ' pcard__badge--drop' : '')}>{product.badge}</span>
+            <span className={`pcard__badge pcard__badge--${BADGE_TONE[product.badge]}`}>{product.badge}</span>
           )}
           {product.glb && (
             <span className="pcard__3d" title="3D and AR available">

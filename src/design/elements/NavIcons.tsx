@@ -30,7 +30,7 @@ const Svg = ({ size = 22, children }: { size?: number; children: React.ReactNode
 export const NavHome = ({ size, active }: P) => (
   <Svg size={size}>
     <path
-      d="M12 3.1 4.35 9.55a1.7 1.7 0 0 0-.6 1.3V19.4a1.7 1.7 0 0 0 1.7 1.7h13.1a1.7 1.7 0 0 0 1.7-1.7v-8.55a1.7 1.7 0 0 0-.6-1.3l-2.1-1.77V5.15h-2.55v.9z"
+      d="M12 2.9 4.2 9.5a1.8 1.8 0 0 0-.65 1.38V19.3a1.8 1.8 0 0 0 1.8 1.8h13.3a1.8 1.8 0 0 0 1.8-1.8v-8.42a1.8 1.8 0 0 0-.65-1.38L17.8 7.55V4.6h-2.9v.5z"
       fill={active ? GOLD : 'none'}
       stroke={active ? GOLD : DARK}
       strokeWidth={SW}
@@ -38,13 +38,13 @@ export const NavHome = ({ size, active }: P) => (
     />
     {/* the door: a hole in the yellow when active, an outline when not */}
     <path
-      d="M9.6 21.1v-4.75a2.4 2.4 0 0 1 4.8 0v4.75"
+      d="M9.25 21.1v-4.95a2.75 2.75 0 0 1 5.5 0v4.95"
       fill={active ? DARK : 'none'}
       stroke={active ? DARK : DARK}
       strokeWidth={SW}
       strokeLinejoin="round"
     />
-    {active && <path d="M17.55 5.15h-2.55v.9l2.55 2.15z" fill={DARK} />}
+    {active && <path d="M17.8 4.6h-2.9v.5l2.9 2.45z" fill={DARK} />}
   </Svg>
 );
 
@@ -63,7 +63,7 @@ export const NavOrders = ({ size, active }: P) => (
     />
     {active && (
       <path
-        d="M12 18.1c-.15 0-2.75-1.6-2.75-3.35a1.5 1.5 0 0 1 2.75-.85 1.5 1.5 0 0 1 2.75.85c0 1.75-2.6 3.35-2.75 3.35z"
+        d="M12 18.5c-.17 0-3.15-1.85-3.15-3.85a1.72 1.72 0 0 1 3.15-.97 1.72 1.72 0 0 1 3.15.97c0 2-2.98 3.85-3.15 3.85z"
         fill={GOLD}
       />
     )}
@@ -72,18 +72,21 @@ export const NavOrders = ({ size, active }: P) => (
 
 /** Four discs. Selected, they alternate dark and gold on the diagonal. */
 export const NavCategories = ({ size, active }: P) => {
+  /* Spread far enough that the OUTER edge clears its neighbour: the stroke
+     adds half its weight beyond the radius, and at the previous spacing that
+     put the four discs in contact. */
   const spots: [number, number, string][] = [
-    [8.5, 8.5, DARK],
-    [15.5, 8.5, GOLD],
-    [8.5, 15.5, GOLD],
-    [15.5, 15.5, DARK],
+    [7.9, 7.9, DARK],
+    [16.1, 7.9, GOLD],
+    [7.9, 16.1, GOLD],
+    [16.1, 16.1, DARK],
   ];
   return (
     <Svg size={size}>
       {spots.map(([cx, cy, tone]) => (
         <circle
           key={`${cx}-${cy}`}
-          cx={cx} cy={cy} r="2.9"
+          cx={cx} cy={cy} r={active ? 3.2 : 2.8}
           fill={active ? tone : 'none'}
           stroke={active ? tone : DARK}
           strokeWidth={SW}
@@ -93,21 +96,17 @@ export const NavCategories = ({ size, active }: P) => {
   );
 };
 
-/** Printer: paper tray on top, body below, status dot on the right. */
+/** Printer: paper lid on top, body below, status dot on the right. */
 export const NavPrint = ({ size, active }: P) => (
   <Svg size={size}>
     <rect
-      x="7.3" y="2.9" width="9.4" height="4.9" rx="1.3"
+      x="6.6" y="3.4" width="10.8" height="5.4" rx="1.6"
       fill={active ? DARK : 'none'} stroke={DARK} strokeWidth={SW}
     />
     <rect
-      x="3.6" y="7.8" width="16.8" height="9.6" rx="2.6"
+      x="3.3" y="8.8" width="17.4" height="11.8" rx="3.2"
       fill={active ? GOLD : 'none'} stroke={active ? GOLD : DARK} strokeWidth={SW}
     />
-    <circle cx="16.9" cy="11.4" r="1.05" fill={active ? DARK : DARK} />
-    <path
-      d="M8 17.4h8v3.7H8z"
-      fill={active ? DARK : 'none'} stroke={DARK} strokeWidth={SW} strokeLinejoin="round"
-    />
+    <circle cx="17.1" cy="13" r="1.1" fill={DARK} />
   </Svg>
 );

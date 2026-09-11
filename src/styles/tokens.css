@@ -90,6 +90,10 @@
   /* --- radius: Blinkit is rounder than most Indian q-commerce --- */
   --r-xs: 4px;
   --r-sm: 6px;
+  /* category rail: the disc, and the top pad the active bar aligns to */
+  --rail-disc: 56px;
+  --rail-pad-t: 10px;
+
   /* height of the PDP's floating sheet header, and the sliver of the next
      product showing down its right edge */
   --shdr-h: 54px;

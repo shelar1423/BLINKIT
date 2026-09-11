@@ -171,13 +171,18 @@ input, select, textarea { font: inherit; color: inherit; }
   overflow: hidden;
 }
 .pcard__im > img { width: 100%; height: 100%; object-fit: contain; }
+/* Solid fills, because these sit over the product photo. The three tones climb
+   with the claim: NEW DROP is only news, LIMITED is scarce, RARE is the top of
+   the drop and takes Blinkit's own gold. */
 .pcard__badge {
   position: absolute; top: 0; left: 0;
-  background: var(--ink); color: #fff;
+  color: #fff;
   font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.02em;
   padding: 2px 6px; border-radius: var(--r-xs);
 }
-.pcard__badge--drop { background: var(--hw-r); }
+.pcard__badge--new { background: var(--ink); }
+.pcard__badge--limited { background: var(--hw-r); }
+.pcard__badge--rare { background: var(--yellow); color: var(--ink); }
 /* Wishlist. Sits in the frame's corner, over the image's empty margin. */
 .pcard__save {
   position: absolute; top: 2px; right: 2px; z-index: 2;
@@ -838,6 +843,11 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag { font-size: var(--f-2xs); font-weight: 700; padding: 3px 7px; border-radius: var(--r-xs); }
 .tag--blue { background: #EDF4FF; color: #1155CB; }
 .tag--dark { background: var(--surface-2); color: var(--mut); }
+/* Same three-step scale as the card badge, tinted rather than solid — on the
+   PDP these sit on white among other tags, not over a photo. */
+.tag--new { background: var(--surface-2); color: var(--ink); }
+.tag--limited { background: var(--hw-r-tint); color: var(--hw-r); }
+.tag--rare { background: var(--yellow-tint); color: #8A6D08; border: 1px solid #F0DFA4; }
 .pdp__rate { display: inline-flex; align-items: center; gap: 4px; font-size: var(--f-xs); color: var(--mut); margin-left: auto; }
 .pdp__rate svg { color: var(--yellow-dk); }
 .pdp__rate b { color: var(--ink); font-weight: 700; }
@@ -1416,7 +1426,6 @@ input, select, textarea { font: inherit; color: inherit; }
   max-height: calc(100vh - var(--hdr-h));
   overflow-y: auto;
   background: #fff;
-  border-right: 1px solid var(--line);
   padding: 8px 0 24px;
   -webkit-overflow-scrolling: touch;
 }
@@ -1424,13 +1433,13 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative;
   width: 100%;
   display: flex; flex-direction: column; align-items: center; gap: 6px;
-  padding: 10px 6px 12px;
+  padding: var(--rail-pad-t) 6px 12px;
   background: none; border: 0;
   color: var(--mut);
 }
 .catrail__i small { font-size: var(--f-sm); font-weight: 500; line-height: 1.25; text-align: center; }
 .catrail__im {
-  width: 56px; height: 56px; border-radius: 50%;
+  width: var(--rail-disc); height: var(--rail-disc); border-radius: 50%;
   background: var(--surface-2);
   display: grid; place-items: center;
   /* visible, not hidden: selecting a group lifts its picture out of the disc,
@@ -1455,12 +1464,19 @@ input, select, textarea { font: inherit; color: inherit; }
    — so it reads as the rail pointing at the products it is showing. */
 .catrail__i.is-on::before {
   content: '';
-  position: absolute; right: 0; top: 2px; bottom: 2px;
+  position: absolute; right: 0;
+  /* Aligned to the disc, not the whole tile. Running it past the label made it
+     read as a selected row again — the bar is marking the picture. */
+  top: var(--rail-pad-t); height: var(--rail-disc);
   width: 4px; border-radius: 4px 0 0 4px;
   background: var(--green);
 }
 
-.catmain { flex: 1; min-width: 0; padding-bottom: 20px; }
+/* The divider hangs off the grid, not off the rail. The rail is sticky and
+   only as tall as its own tiles, so its border stopped partway down the page
+   and the two columns ran together below it; the grid is the full height of
+   the listing, so the line drawn on its left edge reaches the end. */
+.catmain { flex: 1; min-width: 0; border-left: 1px solid var(--line); }
 /* Control row. Scrolls sideways rather than wrapping: a second line of chips
    pushes the first product off the fold, and on Blinkit this row is always one
    line however many facets a category has. */
@@ -1495,7 +1511,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .catcount { font-size: var(--f-xs); color: var(--mut); font-weight: 600; padding: 12px 12px 0; }
 
 .catrace { display: flex; gap: 11px; align-items: center; padding: 12px; margin: 10px 12px 0; }
-.catgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; padding: 10px 12px 20px; }
+.catgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; padding: 10px 12px 12px; }
 .catempty { padding: 28px 12px; text-align: center; color: var(--mut); }
 .linkbtn {
   background: none; border: 0; padding: 6px 0;

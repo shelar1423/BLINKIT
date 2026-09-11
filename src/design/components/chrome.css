@@ -172,7 +172,7 @@
 .bnav-wrap {
   position: sticky; bottom: 0; z-index: 30;
   display: flex; align-items: center; gap: 8px;
-  padding: 6px 10px calc(10px + var(--safe-b));
+  padding: 6px 8px calc(10px + var(--safe-b));
   pointer-events: none;
   background: linear-gradient(rgba(255, 255, 255, 0) 0%, var(--surface) 46%);
 }
@@ -184,7 +184,7 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 6px 4px;
+  padding: 5px 3px;
   box-shadow: 0 6px 22px rgba(31, 31, 31, 0.14);
 }
 /* The lozenge sits behind the whole tab — icon and label together — not just
@@ -193,14 +193,28 @@
 .bnav__i {
   position: relative;
   display: grid; justify-items: center; gap: 3px;
-  padding: 5px 2px 4px; color: var(--ink);
+  /* Asymmetric on purpose: extra space below lifts the label off the bottom of
+     the stadium, where the curve is closing in fastest, and into the band
+     where the full width is actually available. */
+  padding: 4px 2px 9px; color: var(--ink);
   font-size: var(--f-sm); font-weight: 500;
-  min-width: 0; border-radius: 999px;
-  transition: background-color 0.16s ease;
+  min-width: 0;
 }
 .bnav__ic { display: grid; place-items: center; height: 24px; }
 .bnav__l { line-height: 1.2; text-align: center; white-space: nowrap; }
-.bnav__i.is-on { background: rgba(31, 31, 31, 0.05); }
+
+/* A stadium narrows fastest at top and bottom, which is exactly where the
+   label sits — so a lozenge only as wide as its tab clips the widest labels on
+   the curve. Blinkit's runs about a quarter wider than the text it holds, so
+   this one breaks out of its grid cell rather than being bound by it. Only one
+   tab is ever current, so the overhang cannot collide with a neighbour. */
+.bnav__i.is-on::before {
+  content: '';
+  position: absolute; inset: 0 -8px;
+  border-radius: 999px;
+  background: rgba(31, 31, 31, 0.05);
+}
+.bnav__i > * { position: relative; z-index: 1; }
 .bnav__i.is-on .bnav__l { font-weight: 800; }
 .bnav__i.is-inert { color: var(--ink); cursor: default; pointer-events: none; }
 

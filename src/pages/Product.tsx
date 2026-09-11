@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '../design/elements';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AGE_RATING, CARS, ETA_MINS, productById, rupees, type Product as ProductT } from '../data/catalog';
+import { AGE_RATING, BADGE_TONE, CARS, ETA_MINS, productById, rupees, type Product as ProductT } from '../data/catalog';
 import { useStore } from '../store/useStore';
 import { createProductViewer, type ViewerHandle } from '../lib/three/productViewer';
 import {
@@ -359,7 +359,7 @@ export default function Product() {
           <section className="card pdp__info">
             <div className="pdp__tags">
               <span className="tag tag--blue">Limited Drop</span>
-              {product.badge && <span className="tag tag--dark">{product.badge}</span>}
+              {product.badge && <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>}
               {product.rating && (
                 <span className="pdp__rate">
                   <IconStar size={12} />

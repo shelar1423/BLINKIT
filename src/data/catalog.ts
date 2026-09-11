@@ -42,6 +42,21 @@ export const ETA_MINS = 8;
  */
 export const DELIVERY_ADDRESS = { label: 'Home', line: 'h.no 9-1-62/2, dubaigate, Hyderabad 500008' };
 
+/**
+ * One tone per badge, declared once.
+ *
+ * The card badge and the PDP tag were styled separately, and the card's rule
+ * was "NEW DROP is dark, everything else is red" — so LIMITED and RARE, which
+ * are different claims about scarcity, arrived identical. The scale runs
+ * neutral → flame → gold as the claim gets stronger.
+ */
+export type BadgeTone = 'new' | 'limited' | 'rare';
+export const BADGE_TONE: Record<NonNullable<Product['badge']>, BadgeTone> = {
+  'NEW DROP': 'new',
+  LIMITED: 'limited',
+  RARE: 'rare',
+};
+
 const CAR = (n: string) => `/cars/${n}.webp`;
 
 /** The five supplied GLB models — the hero tier: 3D viewer + real AR + raceable. */
