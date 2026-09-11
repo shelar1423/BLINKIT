@@ -1,0 +1,23 @@
+{
+  // Cloudflare created this as a Workers project rather than a Pages one, so
+  // the deploy step runs `wrangler deploy`. With no config file present,
+  // wrangler tries to auto-configure the Cloudflare Vite plugin, which needs
+  // Vite 6 or newer — this project is on 5.4.21, and that is the whole of the
+  // "cannot be automatically configured" failure. Stating the config
+  // explicitly skips that detection entirely, so nothing about the build
+  // toolchain has to move.
+  "name": "blinkit",
+  "compatibility_date": "2026-09-01",
+
+  // A static SPA with no Worker script: the assets ARE the application.
+  "assets": {
+    "directory": "./dist/",
+
+    // Serves index.html with a 200 for any path that does not match a real
+    // file, which is what /hot-wheels/bone-shaker and /campaign need. This is
+    // the Workers-native equivalent of the `/* /index.html 200` line in
+    // public/_redirects; that file stays for Pages and Netlify, and is simply
+    // redundant here rather than conflicting.
+    "not_found_handling": "single-page-application"
+  }
+}
