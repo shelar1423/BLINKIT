@@ -791,7 +791,8 @@ input, select, textarea { font: inherit; color: inherit; }
    which is a games convention, not Blinkit's.
    ============================================================ */
 .result {
-  position: fixed; inset: 0; z-index: 150;
+  /* above .arov (200): the AR overlay must never stack over the result */
+  position: fixed; inset: 0; z-index: 260;
   display: grid; align-content: start; gap: 12px;
   padding: 28px 16px calc(24px + var(--safe-b));
   background: var(--appbase);

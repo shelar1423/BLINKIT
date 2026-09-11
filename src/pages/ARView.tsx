@@ -43,7 +43,6 @@ export default function ARView() {
      it. The race entry point passes no mode and still gets the circuit. */
   const inspect = search.get('mode') === 'inspect';
   const [phase, setPhase] = useState<ARPhase | null>(null);
-  const [facing, setFacing] = useState<'environment' | 'user'>('environment');
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<RaceStats | null>(null);
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
@@ -227,8 +226,11 @@ export default function ARView() {
   return (
     <>
       {/* the DOM overlay lives outside the page so WebXR & Camera mode can adopt it */}
-      <div className={'arov' + (phase ? '' : ' is-idle')} ref={overlay}>
-        {phase && (
+      {/* `outcome` forces idle as well as `phase`. Relying on phase alone left
+          the driving overlay stacked over the result when teardown and render
+          raced each other — and .arov sits above .result in the stack. */}
+      <div className={'arov' + (phase && !outcome ? '' : ' is-idle')} ref={overlay}>
+        {phase && !outcome && (
           <>
             <div className="arov__bar">
               <span className="arov__chip arov__chip--name">
@@ -265,20 +267,6 @@ export default function ARView() {
                   </span>
                 </>
               )}
-              {handle.current?.flipCamera && (
-                <button
-                  className="arov__chip arov__flip"
-                  type="button"
-                  onClick={async () => {
-                    const f = await handle.current?.flipCamera?.();
-                    if (f) setFacing(f);
-                  }}
-                  aria-label={facing === 'environment' ? 'Switch to selfie camera' : 'Switch to rear camera'}
-                >
-                  <IconRotate size={14} />
-                  {facing === 'environment' ? 'Selfie' : 'Rear'}
-                </button>
-              )}
               <button
                 className="arov__chip arov__x"
                 type="button"
@@ -290,7 +278,7 @@ export default function ARView() {
             </div>
 
             {/* Scanning / Placement guidance */}
-            {phase === 'searching' && (
+            {!inspect && phase === 'searching' && (
               <p className="arov__hint">
                 Scanning floor or table…
                 <small>Move phone slowly side to side to detect a flat surface</small>
@@ -304,8 +292,12 @@ export default function ARView() {
             )}
             {phase === 'placed' && (
               <p className="arov__hint">
-                Circuit placed!
-                <small>Pinch to resize &middot; Drag to move &middot; Tap &apos;Start race&apos; to drive</small>
+                {inspect ? `${car.name.replace('Hot Wheels ', '')} in your space` : 'Circuit placed!'}
+                <small>
+                  {inspect
+                    ? 'Pinch to resize · Drag to move · Walk around it'
+                    : "Pinch to resize · Drag to move · Tap 'Start race' to drive"}
+                </small>
               </p>
             )}
             {phase === 'racing' && stats && (
@@ -394,7 +386,7 @@ export default function ARView() {
 
             {/* Action buttons */}
             <div className="arov__acts">
-              {(phase === 'ready' || phase === 'searching') && (
+              {!inspect && (phase === 'ready' || phase === 'searching') && (
                 <Button variant="flame" block type="button" onClick={() => handle.current?.placeNow()}>
                   {phase === 'ready' ? 'Place track here' : 'Place in front of me'}
                 </Button>

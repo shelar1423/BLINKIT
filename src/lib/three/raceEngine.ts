@@ -279,6 +279,8 @@ export class RaceEngine {
     shards: { mesh: THREE.Mesh; vel: THREE.Vector3; spin: THREE.Vector3 }[];
   }[] = [];
   private ground: THREE.Mesh | null = null;
+  private propRoot = new THREE.Group();
+  private arProps: { mesh: THREE.Mesh; spin: THREE.Vector3; bobPhase: number; baseY: number }[] = [];
   private scenery: THREE.InstancedMesh | null = null;
   /** widest extent of the ROAD itself, ignoring ground and scenery */
   readonly trackExtent: number;
@@ -346,6 +348,7 @@ export class RaceEngine {
     this.buildFinishGate();
     this.buildPickups();
     this.buildDebris();
+    this.buildArProps();
 
     this.root.add(this.carTilt);
   }
@@ -531,6 +534,53 @@ export class RaceEngine {
     this.disposables.push(geo);
   }
 
+  /**
+   * A small set of space props that read at tabletop scale.
+   *
+   * The main asteroid field is built for the 3D race, where the camera sits
+   * inside the scene — dropped into AR it is a ring of boulders bigger than the
+   * table. This is a scaled-down companion: a handful of rocks orbiting just
+   * above and outside the circuit, close enough to the track to stay in frame
+   * when the whole thing is 2.4 m across.
+   */
+  private buildArProps() {
+    const geo = new THREE.IcosahedronGeometry(1, 0);
+    const mat = new THREE.MeshStandardMaterial({
+      color: scene.asteroid,
+      roughness: 0.95,
+      metalness: 0.05,
+      flatShading: true,
+    });
+    mat.envMapIntensity = 0.4;
+    this.disposables.push(geo, mat);
+
+    const up = new THREE.Vector3(0, 1, 0);
+    const N = 10;
+    for (let i = 0; i < N; i++) {
+      const t = (i + 0.35) / N;
+      const p = this.curve.getPointAt(t);
+      const tan = this.curve.getTangentAt(t);
+      const right = new THREE.Vector3().crossVectors(tan, up).normalize();
+      const side = i % 2 === 0 ? 1 : -1;
+      const m = new THREE.Mesh(geo, mat);
+      const sc = 1.5 + ((i * 5) % 7) * 0.55;
+      m.scale.set(sc, sc * 0.8, sc);
+      m.position
+        .copy(p)
+        .addScaledVector(right, (ROAD_W / 2 + 3.5 + ((i * 3) % 5)) * side)
+        .setY(3 + ((i * 7) % 9));
+      m.rotation.set(i * 1.2, i * 0.8, i * 0.5);
+      this.arProps.push({
+        mesh: m,
+        spin: new THREE.Vector3(0.12 + (i % 3) * 0.05, 0.18 + (i % 4) * 0.04, 0.09),
+        bobPhase: i * 0.7,
+        baseY: m.position.y,
+      });
+      this.propRoot.add(m);
+    }
+    this.root.add(this.propRoot);
+  }
+
   /* ---------------- public API ---------------- */
 
   /**
@@ -542,6 +592,8 @@ export class RaceEngine {
     const show = mode === '3d';
     if (this.ground) this.ground.visible = show;
     if (this.scenery) this.scenery.visible = show;
+    // the full field is for the 3D race; the compact props are for AR
+    this.propRoot.visible = !show;
   }
 
   setCar(model: THREE.Object3D) {
@@ -770,6 +822,14 @@ export class RaceEngine {
       }
     }
 
+    // space props drift and bob, so the circuit sits inside a scene rather
+    // than on an empty plane
+    for (const pr of this.arProps) {
+      pr.mesh.rotation.x += pr.spin.x * dt;
+      pr.mesh.rotation.y += pr.spin.y * dt;
+      pr.mesh.position.y = pr.baseY + Math.sin(this.elapsed * 0.7 + pr.bobPhase) * 0.6;
+    }
+
     // debris tumbles slowly in zero gravity
     for (const c of this.debris) {
       c.mesh.rotation.x += c.spin.x * dt;
@@ -846,6 +906,8 @@ export class RaceEngine {
     this.disposables.length = 0;
     this.pickups.length = 0;
     for (const c of this.debris) for (const sh of c.shards) this.root.remove(sh.mesh);
+    for (const pr of this.arProps) this.propRoot.remove(pr.mesh);
+    this.arProps.length = 0;
     this.debris.length = 0;
     this.root.clear();
   }

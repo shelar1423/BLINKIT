@@ -65,8 +65,6 @@ export type ARHandle = {
   clearObstacles?: () => void;
   getPinnedCount?: () => number;
   isProximityAlert?: () => boolean;
-  /** Camera passthrough only: swap between the rear and selfie camera. */
-  flipCamera?: () => Promise<'environment' | 'user'>;
 };
 
 type Opts = {
@@ -375,7 +373,26 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   }
 
   loadCar(opts.glbUrl, 4.2)
-    .then((c) => (inspect ? inspectRoot.add(c) : engine.setCar(c)))
+    .then((c) => {
+      if (!inspect) {
+        engine.setCar(c);
+        return;
+      }
+      inspectRoot.add(c);
+      // nothing to place in inspect mode — see the camera session for why
+      const cam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
+      const pos = new THREE.Vector3();
+      const quat = new THREE.Quaternion();
+      cam.getWorldPosition(pos);
+      cam.getWorldQuaternion(quat);
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(quat).setY(0).normalize();
+      if (fwd.lengthSq() < 1e-6) fwd.set(0, 0, -1);
+      anchor.position.copy(pos).addScaledVector(fwd, 0.45).setY(pos.y - 0.22);
+      anchor.rotation.set(0, Math.atan2(fwd.x, fwd.z), 0);
+      anchor.visible = true;
+      reticle.visible = false;
+      setPhase('placed');
+    })
     .catch(() => opts.onError('The car model failed to load for AR.'));
 
   // Vision & Real-World Obstacle Collision System
@@ -603,7 +620,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
-    if (frame && hitSource && localSpace && (phase === 'searching' || phase === 'ready')) {
+    if (!inspect && frame && hitSource && localSpace && (phase === 'searching' || phase === 'ready')) {
       const hits = frame.getHitTestResults(hitSource);
       const pose = hits.length ? hits[0].getPose(localSpace) : null;
       if (pose) {
@@ -773,14 +790,10 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     gyro = false;
   }
 
-  /* Back camera by default: the point of placing the circuit is that it sits on
-     your real table. The front camera is a deliberate second mode — you in the
-     shot with the track — so it is a flip, not a replacement. Selfie view is
-     mirrored, which is what people expect of a front camera; the circuit is a
-     virtual object in front of you, so mirroring the feed alone is correct. */
-  let facing: 'environment' | 'user' = 'environment';
-  let stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: facing } },
+  /* Rear camera: the point of placing the circuit is that it sits on your real
+     surface, which only the rear camera can show. */
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: 'environment' } },
     audio: false,
   });
 
@@ -791,26 +804,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   video.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:55';
   document.body.appendChild(video);
   await video.play().catch(() => {});
-
-  async function flipCamera(): Promise<'environment' | 'user'> {
-    const next = facing === 'environment' ? 'user' : 'environment';
-    let nextStream: MediaStream;
-    try {
-      nextStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: next } },
-        audio: false,
-      });
-    } catch {
-      return facing; // some devices have only one camera; stay where we are
-    }
-    stream.getTracks().forEach((t) => t.stop());
-    stream = nextStream;
-    facing = next;
-    video.srcObject = stream;
-    video.style.transform = facing === 'user' ? 'scaleX(-1)' : '';
-    await video.play().catch(() => {});
-    return facing;
-  }
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -883,7 +876,25 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   }
 
   loadCar(opts.glbUrl, 4.2)
-    .then((c) => (inspect ? inspectRoot.add(c) : engine.setCar(c)))
+    .then((c) => {
+      if (!inspect) {
+        engine.setCar(c);
+        return;
+      }
+      inspectRoot.add(c);
+      /* Inspect has nothing to place — there is no circuit, just the car. Making
+         someone aim a reticle and tap "Place track here" to look at a product
+         was asking them to complete a step that does not apply. It drops in
+         front of the viewer the moment it loads; drag and pinch still work. */
+      const ahead = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0);
+      if (ahead.lengthSq() < 1e-6) ahead.set(0, 0, -1);
+      ahead.normalize();
+      anchor.position.copy(ahead).multiplyScalar(0.45).setY(-0.22);
+      anchor.rotation.y = 0;
+      anchor.visible = true;
+      reticle.visible = false;
+      setPhase('placed');
+    })
     .catch(() => opts.onError('The car model failed to load.'));
 
   // ---- device orientation -> camera quaternion (3DOF) ----
@@ -1030,7 +1041,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
     if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
-    if (phase === 'ready' || phase === 'searching') {
+    if (!inspect && (phase === 'ready' || phase === 'searching')) {
       const a = aim();
       reticle.visible = true;
       reticle.position.copy(a.point);
@@ -1109,7 +1120,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     },
     getPinnedCount: () => vision.getPinnedCount(),
     isProximityAlert: () => vision.proximityAlert,
-    flipCamera,
     reset() {
       anchor.visible = false;
       setPhase('ready');
