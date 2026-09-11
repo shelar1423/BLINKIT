@@ -88,3 +88,29 @@ export function dropStatus(now = new Date()): DropStatus {
   }
   return { phase: 'ended', lead: '', remaining: '', label: 'Drop ended' };
 }
+
+export type DropParts = { days: number; hours: number; mins: number; secs: number };
+
+/**
+ * The countdown split into its parts, for the places that set it as a row of
+ * segments rather than a sentence. `parts()` above rounds to two units because
+ * it writes prose; a hero countdown needs the seconds ticking or it reads as a
+ * static graphic.
+ */
+export function dropParts(now = new Date()): DropParts {
+  let ms: number;
+  const { start, end } = dropWindow(now);
+  if (DROP_OVERRIDE_LIVE) {
+    const dayMs = 86400000;
+    ms = Math.max(0, end.getTime() - start.getTime() - (now.getTime() % dayMs));
+  } else {
+    const t = now.getTime();
+    ms = t < start.getTime() ? start.getTime() - t : Math.max(0, end.getTime() - t);
+  }
+  return {
+    days: Math.floor(ms / 86400000),
+    hours: Math.floor((ms % 86400000) / 3600000),
+    mins: Math.floor((ms % 3600000) / 60000),
+    secs: Math.floor((ms % 60000) / 1000),
+  };
+}
