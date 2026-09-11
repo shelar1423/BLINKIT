@@ -45,7 +45,7 @@ export default function Home() {
             <button className="ccard" type="button" onClick={() => nav('/rewards')}>
               <span className="ccard__tab ccard__tab--flame">Up to ₹75 back</span>
               <span className="ccard__l">Rewards</span>
-              <img src="/campaign/04-rewards-shortcut-card.webp" alt="" loading="lazy" />
+              <img src="/campaign/card-rewards.webp" alt="" loading="lazy" />
             </button>
             <button className="ccard" type="button" onClick={() => nav('/leaderboard')}>
               <span className="ccard__tab">Live now</span>
