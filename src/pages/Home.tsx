@@ -113,7 +113,7 @@ export default function Home() {
           <div className="mystery">
             {/* The plate itself opens the detail. It is a separate control from
                 the CTA below because a button cannot contain a button. */}
-            <button className="mystery__plate" type="button" onClick={() => setDetails(true)} aria-label="About the mystery car">
+            <button className="mystery__plate" type="button" onClick={() => nav('/hot-wheels')} aria-label="Shop the Hot Wheels drop">
               <img className="mystery__im" src="/campaign/mystery-banner.webp" alt="" />
             </button>
 
@@ -131,14 +131,6 @@ export default function Home() {
                 campaign moment everyone shares on the last day. */}
             <p className="mystery__prog">Revealed on the final day of the drop</p>
           </div>
-
-          {/* The reference closes its campaign block with a darker full-bleed
-              strip back into the catalogue — "Shop for more ice creams &
-              frozen desserts". This is that. */}
-          <button className="cshop" type="button" onClick={() => nav('/hot-wheels')}>
-            <span>Shop all Hot Wheels cars &amp; track sets</span>
-            <IconChevronRight size={16} />
-          </button>
 
           <span className="ctake__edge" aria-hidden="true" />
         </section>
