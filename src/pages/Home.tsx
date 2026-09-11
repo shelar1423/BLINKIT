@@ -8,7 +8,7 @@ import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Sheet } from '../design/components/Sheet';
-import { IconChevronRight, IconFlag, IconTrophy } from '../design/elements/Icons';
+import { IconChevronRight, IconFlag, IconTicket, IconTrophy } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 export default function Home() {
@@ -36,10 +36,13 @@ export default function Home() {
 
           {/* Texture. These storefronts hang string lights, stars, diyas and
               gift boxes off the band — decoration is most of what makes them
-              read as an occasion. Ours is a racing one, and both of these sit
-              behind everything at low opacity: texture, not content. */}
+              read as an occasion. Ours is a racing one, sitting behind
+              everything at low opacity: texture, not content.
+              The chequered-flag element that used to sit beside it is gone —
+              it is a glossy 3D render, it was only ever tolerable because the
+              tile grid covered it, and against the open band it read as a
+              smudge rather than as decoration. */}
           <img className="ctake__streaks" src="/decor/26-03-speed-line-streaks-element.webp" alt="" aria-hidden="true" />
-          <img className="ctake__flag" src="/decor/26-01-checkered-flag-element.webp" alt="" aria-hidden="true" />
 
           <div className="ctake__mast">
             <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
@@ -79,33 +82,24 @@ export default function Home() {
             <span className="cpower__b">MATTEL</span>
           </div>
 
-          {/* Four entries, two by two. The illustrations are the supplied
-              Blinkit-style set recoloured to Hot Wheels — flat vector, which is
-              the house language, so the plaque can be plain and let the artwork
-              carry the tile. Mystery Car, Race a Friend and All Models are gone
-              from here on purpose: six small tiles was clutter, and the mystery
-              drop belongs behind a tap rather than sitting in the grid. */}
-          <div className="ctake__cards">
-            <button className="ccard" type="button" onClick={() => nav('/hot-wheels')}>
-              <span className="ccard__tab">From &#8377;179</span>
-              <span className="ccard__l">The Drop</span>
-              <img src="/campaign/tile-drop.webp" alt="" loading="lazy" />
-            </button>
-            <button className="ccard" type="button" onClick={() => nav('/rewards')}>
-              <span className="ccard__tab ccard__tab--flame">&#8377;75 back</span>
-              <span className="ccard__l">Rewards</span>
-              <img src="/campaign/tile-rewards.webp" alt="" loading="lazy" />
-            </button>
-            <button className="ccard" type="button" onClick={() => nav('/leaderboard')}>
-              <span className="ccard__l">Leaderboard</span>
-              <img src="/campaign/tile-leaderboard.webp" alt="" loading="lazy" />
-            </button>
-            <button className="ccard" type="button" onClick={() => nav('/race')}>
-              <span className="ccard__l">Challenge Friends</span>
-              <span className="ccard__s">{racesLeft} of {MAX_RACE_ATTEMPTS} races left</span>
-              <img src="/campaign/tile-challenge.webp" alt="" loading="lazy" />
-            </button>
-          </div>
+          {/* The four tiles are replaced by the thing the campaign is actually
+              selling: the car nobody has seen yet. The plate is feathered to
+              transparent on every edge so it melts into the band's gradient
+              rather than sitting on it as a rectangle.
+              Everything the tiles linked to still has a home — the sheet this
+              opens carries The Drop, Rewards, Leaderboard and the race, so
+              nothing was orphaned by taking the grid away. */}
+          <button className="mystery" type="button" onClick={() => setDetails(true)}>
+            <img className="mystery__im" src="/campaign/mystery-banner.webp" alt="" />
+            {/* Below the plate rather than over it. Set on the artwork it
+                landed across the platform's lit rim and fought the one thing
+                the image exists to show. The date line is gone with it — the
+                chip beside the countdown already carries the window. */}
+            <span className="mystery__cap">
+              <b>The mystery car</b>
+              <span className="mystery__cta">See what&rsquo;s coming</span>
+            </span>
+          </button>
 
           <span className="ctake__scallop" aria-hidden="true" />
         </section>
@@ -191,6 +185,11 @@ export default function Home() {
             teaser, and a teaser does not need a permanent tile on the home
             screen. This is the placeholder for the event page it should
             eventually open. */}
+        <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/hot-wheels'); }}>
+          <span className="rowcard__ic"><IconTicket size={18} /></span>
+          <span className="grow"><b>The Drop</b><small>Limited Hot Wheels, from &#8377;179</small></span>
+          <IconChevronRight size={18} />
+        </button>
         <button className="card rowcard mystrow" type="button" onClick={() => { setDetails(false); nav('/hot-wheels'); }}>
           <span className="rowcard__ic mystrow__ic">?</span>
           <span className="grow"><b>Mystery Car</b><small>Revealed on the final day of the drop</small></span>
@@ -199,6 +198,11 @@ export default function Home() {
         <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/leaderboard'); }}>
           <span className="rowcard__ic"><IconFlag size={18} /></span>
           <span className="grow"><b>Leaderboard</b><small>See where you sit in the city</small></span>
+          <IconChevronRight size={18} />
+        </button>
+        <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/race'); }}>
+          <span className="rowcard__ic rowcard__ic--flame"><IconFlag size={18} /></span>
+          <span className="grow"><b>Challenge friends</b><small>{racesLeft} of {MAX_RACE_ATTEMPTS} races left today</small></span>
           <IconChevronRight size={18} />
         </button>
         <p className="t-xs" style={{ lineHeight: 1.6, marginTop: 10 }}>
