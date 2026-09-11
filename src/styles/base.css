@@ -96,7 +96,8 @@ input, select, textarea { font: inherit; color: inherit; }
    is white rather than green, red or yellow */
 .btn--light {
   background: #fff; color: var(--ink); font-weight: 800;
-  border-radius: 999px;
+  /* rounded, but not a lozenge — a full pill made it read as a chip */
+  border-radius: 16px;
   padding: 0 26px;
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.32);
 }
@@ -408,6 +409,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The rule as a line of type, not a panel. */
 .mystery__prog {
   margin: 4px var(--gut) 0;
+  padding-bottom: 18px;
   text-align: center;
   font-size: var(--f-xs); font-weight: 600;
   color: rgba(255, 255, 255, 0.72);
@@ -1391,3 +1393,20 @@ input, select, textarea { font: inherit; color: inherit; }
 .pdpspec__list dt { font-size: var(--f-xs); color: var(--mut); font-weight: 600; }
 .pdpspec__list dd { margin: 0; font-size: var(--f-xs); font-weight: 700; color: var(--ink); text-align: right; }
 @media (prefers-reduced-motion: reduce) { .pdpspec__chev { transition: none; } }
+
+/* ---- the way back to the catalogue ----
+   A darker full-bleed strip closing the campaign block, as the reference does
+   with "Shop for more ice creams & frozen desserts". The chequered edge
+   occupies the last 12px of the band, so the copy clears it. */
+.cshop {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: calc(100% + var(--gut) * 2);
+  margin: 0 calc(var(--gut) * -1) -12px;
+  padding: 14px var(--gut) 28px;
+  background: rgba(0, 0, 0, 0.26);
+  border: 0;
+  color: #fff;
+  font-size: var(--f-md); font-weight: 700; letter-spacing: -0.2px;
+}
+.cshop svg { flex: 0 0 auto; opacity: 0.8; }
+.cshop:active { background: rgba(0, 0, 0, 0.34); }

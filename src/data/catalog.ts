@@ -95,7 +95,7 @@ export const SHOP_CARS: Product[] = [
   { id: 'proto', name: 'Hot Wheels Race Prototype', series: 'Track Stars', unit: '1 pc', price: 219, mrp: 259, rating: 4.5, ratings: 22, image: CAR('09-10-race-prototype-red') },
   { id: 'metallic', name: 'Hot Wheels Metallic Edition', series: 'Collector Series', unit: '1 pc', price: 329, mrp: 399, rating: 4.9, ratings: 88, image: CAR('09-11-rare-metallic-edition'), badge: 'LIMITED' },
   { id: 'premium', name: 'Hot Wheels Premium Limited Racer', series: 'Premium Collection', unit: '1 pc', price: 449, mrp: 549, rating: 4.9, ratings: 46, image: CAR('09-12-premium-limited-racer'), badge: 'LIMITED' },
-  { id: 'featured', name: 'Hot Wheels Featured Drop Car', series: 'Drop #01', unit: '1 pc', price: 299, mrp: 349, rating: 4.8, ratings: 130, image: CAR('10-featured-limited-drop-car'), badge: 'NEW DROP' },
+  { id: 'featured', name: 'Hot Wheels Featured Drop Car', series: 'Drop #01', unit: '1 pc', price: 299, mrp: 349, rating: 4.8, ratings: 130, image: CAR('featured-drop-diecast'), badge: 'NEW DROP' },
 ];
 
 /** Rare car gated behind an actual race score. */

@@ -6,7 +6,7 @@ import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
-import { IconFlag } from '../design/elements/Icons';
+import { IconChevronRight, IconFlag } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 /**
@@ -125,6 +125,13 @@ export default function Home() {
                 campaign moment everyone shares on the last day. */}
             <p className="mystery__prog">Revealed on the final day of the drop</p>
           </div>
+
+          {/* The way back into the catalogue, closing the band the way the
+              reference storefronts do. */}
+          <button className="cshop" type="button" onClick={() => nav('/hot-wheels')}>
+            <span>Shop all Hot Wheels cars &amp; track sets</span>
+            <IconChevronRight size={16} />
+          </button>
 
           <span className="ctake__edge" aria-hidden="true" />
         </section>
