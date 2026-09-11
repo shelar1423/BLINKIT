@@ -120,7 +120,7 @@ export default function Product() {
       <SheetHeader onClose={() => nav(-1)} onShare={share} />
 
       <main className="page page--flush pdp">
-        <div className="pdp__stage">
+        <div className={'pdp__stage' + (has3D && view === 0 ? ' pdp__stage--garage' : '')}>
           {has3D && view === 0 ? (
             <>
               <div className="pdp__3d" ref={host} />
