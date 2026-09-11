@@ -98,33 +98,36 @@ export default function Home() {
               <img className="mystery__im" src="/campaign/mystery-banner.webp" alt="" />
             </button>
 
-            {/* The copy says what is actually true: the cover comes off at
-                MYSTERY_UNLOCK_POINTS, and points come from racing. The number
-                is read from the store rather than written here, so the promise
+            {/* No card. On the reference storefront the CTA is a bare pill
+                sitting straight on the campaign ground — boxing it put a
+                second surface between the artwork and the one thing to do. */}
+            <button className="mystery__go" type="button" onClick={() => nav('/race')}>
+              Race now
+            </button>
+
+            {/* The rule, kept as a line of type rather than a panel: the cover
+                lifts at MYSTERY_UNLOCK_POINTS and points come from racing. The
+                number is read from the store, never typed here, so the promise
                 cannot drift from the rule that enforces it. */}
-            <div className="mystcta">
-              <span className="mystcta__c">
-                <b>{mysteryUnlocked ? 'You lifted the cover' : 'Race to lift the cover'}</b>
-                <small>
-                  {mysteryUnlocked
-                    ? 'The final drop car is yours to see'
-                    : `${totalPoints.toLocaleString('en-IN')} of ${MYSTERY_UNLOCK_POINTS.toLocaleString('en-IN')} points`}
-                </small>
-                {!mysteryUnlocked && (
-                  <span className="mystcta__bar">
-                    <i style={{ width: `${Math.min(100, (totalPoints / MYSTERY_UNLOCK_POINTS) * 100)}%` }} />
-                  </span>
-                )}
-              </span>
-              <button
-                className="mystcta__go"
-                type="button"
-                onClick={() => nav(mysteryUnlocked ? '/hot-wheels/mystery' : '/race')}
-              >
-                {mysteryUnlocked ? 'See it' : 'Race now'}
-              </button>
-            </div>
+            <p className="mystery__prog">
+              {mysteryUnlocked ? (
+                <>Cover lifted — <b>the final drop car is yours to see</b></>
+              ) : (
+                <>
+                  <b>{totalPoints.toLocaleString('en-IN')}</b> of{' '}
+                  {MYSTERY_UNLOCK_POINTS.toLocaleString('en-IN')} points to lift the cover
+                </>
+              )}
+            </p>
           </div>
+
+          {/* The reference closes its campaign block with a darker full-bleed
+              strip back into the catalogue — "Shop for more ice creams &
+              frozen desserts". This is that. */}
+          <button className="cshop" type="button" onClick={() => nav('/hot-wheels')}>
+            <span>Shop all Hot Wheels cars &amp; track sets</span>
+            <IconChevronRight size={16} />
+          </button>
 
           <span className="ctake__scallop" aria-hidden="true" />
         </section>
