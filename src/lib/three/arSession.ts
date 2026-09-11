@@ -350,7 +350,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   // the reticle a whole floor-height away from the surface being pointed at,
   // so the track was placed somewhere the camera was not looking.
   renderer.xr.setReferenceSpaceType('local');
-  renderer.domElement.style.cssText = 'position:fixed;inset:0;z-index:60';
+  renderer.domElement.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:60';
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -764,6 +764,10 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      a short drop put it right against the lens and it filled the screen. A phone
      held at chest height sees a table ~0.7 m down and a floor ~1.3 m down. */
   const GROUND = -0.95;
+  /** Tabletop rather than floor when you are just standing a car on a surface:
+   *  "View in your space" is used pointed at a desk, roughly 40 cm below a held
+   *  phone, so assuming a 95 cm floor drop threw the aim well past the table. */
+  const GROUND_INSPECT = -0.42;
   /** Where the reticle sits when the phone is level or pointing up. */
   const PROVISIONAL_DIST = 1.5;
   /** Reticle is scaled by distance so its on-screen size stays constant. */
@@ -801,9 +805,19 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  /* The style MUST be written before setSize, and setSize must not write its
+     own. cssText replaces the entire inline style, so doing it the other way
+     round silently deleted the width/height setSize had just set. A canvas
+     with no CSS size falls back to its intrinsic size — the drawing buffer,
+     which is innerWidth x devicePixelRatio — so on a 2x phone the canvas was
+     drawn at twice the viewport, pinned to the top-left by inset:0. The centre
+     of the render then sat exactly on the bottom-right corner of the screen,
+     which is where the placement reticle kept appearing. Nothing was wrong
+     with the aim maths; half the frame was simply off-screen. Scrolling made
+     it snap back only because that fired resize, which called setSize again. */
+  renderer.domElement.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:56';
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.domElement.style.cssText = 'position:fixed;inset:0;z-index:56';
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -824,6 +838,12 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   };
 
   const inspect = opts.mode === 'inspect';
+  const ground = inspect ? GROUND_INSPECT : GROUND;
+  /* Reach, matched to the surface. A 2.4 m circuit is dropped on a floor a
+     couple of metres out; a 7.4 cm car is stood on the desk in front of you. */
+  const provDist = inspect ? 0.55 : PROVISIONAL_DIST;
+  const nearest = inspect ? 0.2 : 0.35;
+  const farthest = inspect ? 1.6 : 3.5;
   const engine = makeEngine(opts, () => setPhase('placed'));
   // true 1:64 in inspect mode — a real Hot Wheels car is ~7.4 cm
   let sizeM = inspect ? 0.074 : (opts.trackSize ?? 2.4);
@@ -861,7 +881,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     );
     const ray = new THREE.Raycaster();
     ray.setFromCamera(ndc, camera);
-    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -GROUND);
+    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -ground);
     const intersection = new THREE.Vector3();
     if (ray.ray.intersectPlane(groundPlane, intersection)) {
       vision.pinObstacleAt(intersection);
@@ -914,7 +934,13 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
    */
   function aim(): { point: THREE.Vector3; dist: number; provisional: boolean } {
     fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
-    if (fwd.y > -0.08) {
+    /* Cast from where the camera actually is. This is the origin on a fresh
+       session, but the chase cam moves the camera during a race and reset()
+       leaves it there — so casting from (0,0,0) aimed at a point the camera
+       was no longer looking at once a race had been run. */
+    const eye = camera.position;
+    const drop = ground - eye.y;
+    if (fwd.y > -0.08 || drop >= 0) {
       /* Phone level or tilted up: there is no floor along the view ray. Put the
          reticle on the ground plane a fixed distance ahead rather than straight
          out at eye level — it is a flat horizontal disc, so at eye level it is
@@ -922,12 +948,12 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
          down and hunted for it. */
       hit.copy(fwd).setY(0);
       if (hit.lengthSq() < 1e-6) hit.set(0, 0, -1);
-      hit.normalize().multiplyScalar(PROVISIONAL_DIST).setY(GROUND);
-      return { point: hit, dist: PROVISIONAL_DIST, provisional: true };
+      hit.normalize().multiplyScalar(provDist).add(eye).setY(ground);
+      return { point: hit, dist: provDist, provisional: true };
     }
-    const t = GROUND / fwd.y;
-    const clamped = Math.max(0.35, Math.min(3.5, t));
-    return { point: hit.copy(fwd).multiplyScalar(clamped), dist: clamped, provisional: clamped !== t };
+    const t = drop / fwd.y;
+    const clamped = Math.max(nearest, Math.min(farthest, t));
+    return { point: hit.copy(fwd).multiplyScalar(clamped).add(eye), dist: clamped, provisional: clamped !== t };
   }
 
   /** Placement here can NEVER fail. If the phone is not pointed at the
@@ -985,7 +1011,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   }
 
   const onResize = () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    // updateStyle false: the canvas is sized by CSS (100% of a fixed inset:0
+    // box), so the renderer only owns the drawing buffer.
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
   };
@@ -998,14 +1026,12 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
     if (phase === 'ready' || phase === 'searching') {
       const a = aim();
-      /* Only draw the reticle when the phone is actually pointed at a surface.
-         A flat ground-plane marker sits 32 degrees below the view axis when the
-         phone is level — the very bottom edge of a 65 degree view — so drawing
-         it there put a mark in the corner that could not be aimed and could not
-         be centred. Geometry, not a bug: the floor is not at screen centre when
-         you are looking at the horizon. Pointing down reveals it properly, and
-         the button places without it. */
-      reticle.visible = !a.provisional;
+      /* Always drawn. A provisional aim still shows the marker, faintly and
+         low in frame, which is the cue to tilt down onto the surface. It was
+         previously hidden because it appeared stranded in a corner — that was
+         the canvas sizing bug above, not the aim, so there is nothing left to
+         hide from. */
+      reticle.visible = true;
       reticle.position.copy(a.point);
       // constant apparent size: scale with distance, so it can never fill the
       // screen when the assumed surface happens to be close
@@ -1084,6 +1110,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     isProximityAlert: () => vision.proximityAlert,
     reset() {
       anchor.visible = false;
+      // undo the chase cam: orientation alone drives the camera outside a race
+      camera.position.set(0, 0, 0);
+      fpInited = false;
       setPhase('ready');
     },
     startRace,
