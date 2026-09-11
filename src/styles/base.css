@@ -507,13 +507,27 @@ input, select, textarea { font: inherit; color: inherit; }
 /* Never display:none — WebXR adopts this element as the dom-overlay root at
    session start and a hidden root presents nothing inside the headset view. */
 .arov.is-idle { visibility: hidden; }
-.arov__bar { position: absolute; top: calc(var(--safe-t) + 12px); left: 12px; right: 12px; display: flex; gap: 8px; align-items: center; }
+/* The HUD row carries five chips plus a close button on a 390pt screen, so it
+   has to shrink rather than run off the edge — on device the close button was
+   clipped and the car name wrapped to two lines. */
+.arov__bar {
+  position: absolute; top: calc(var(--safe-t) + 10px); left: 10px; right: 10px;
+  display: flex; gap: 6px; align-items: center;
+  min-width: 0;
+}
 .arov__chip {
   pointer-events: auto;
-  background: rgba(10,6,18,0.68); border: 1px solid rgba(255,255,255,0.16);
-  color: #fff; border-radius: var(--r); padding: 8px 12px;
-  font-size: var(--f-sm); font-weight: 700; display: flex; align-items: center; gap: 7px;
+  background: rgba(10, 6, 18, 0.68); border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff; border-radius: var(--r); padding: 7px 9px;
+  font-size: var(--f-xs); font-weight: 700; line-height: 1.15;
+  display: flex; align-items: center; gap: 5px;
+  min-width: 0; white-space: nowrap;
 }
+/* the car name is the one chip that may truncate; the numbers never should */
+.arov__chip--name { overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+.arov__chip--name svg { flex: 0 0 auto; }
+.arov__chip.t-num { flex: 0 0 auto; }
+.arov__bar .arov__x { margin-left: auto; flex: 0 0 auto; }
 .arov__hint {
   position: absolute; left: 16px; right: 16px; bottom: calc(var(--safe-b) + 108px);
   text-align: center; color: #fff; font-size: var(--f-lg); font-weight: 800;
@@ -953,3 +967,11 @@ input, select, textarea { font: inherit; color: inherit; }
 /* Tilt has the wheel in AR — the steering pads would only compete with it. */
 .arov__drive.is-tilt .arov__pad--sm:first-child,
 .arov__drive.is-tilt .arov__pad--sm:nth-child(2) { display: none; }
+
+/* proximity warning — only on an actual hit, never as a permanent readout */
+.arov__chip--warn {
+  background: var(--hw-r); border-color: rgba(255, 255, 255, 0.4);
+  color: #fff; font-weight: 800;
+  animation: arwarn 0.9s ease-in-out infinite;
+}
+@keyframes arwarn { 0%, 100% { opacity: 1; } 50% { opacity: 0.62; } }

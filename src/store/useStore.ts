@@ -43,6 +43,13 @@ export type Order = {
   placedAt: number;
 };
 
+/**
+ * Testing switch: races never run out, but the counter still shows the real
+ * daily allowance so every screen reads exactly as it would in production.
+ * Set to false to enforce the real three-a-day rule.
+ */
+const UNLIMITED_RACES = true;
+
 const MAX_RACES = 3;
 
 /** Order value that earns free delivery, matching Blinkit's own threshold copy. */
@@ -163,7 +170,11 @@ export const useStore = create<State>()(
         const tier = tierFor(r.score);
         const result: RaceResult = { ...r, rewardId: tier?.id ?? null, at: Date.now() };
         set((s) => ({
-          racesLeft: Math.max(0, s.racesLeft - 1),
+          /* UNLIMITED_RACES keeps the daily limit visible in the UI — it still
+             reads "3 of 3 races left today" — while never actually running out,
+             so the build can be demoed and tested back to back. Flip it to
+             false to restore the real three-a-day rule. */
+          racesLeft: UNLIMITED_RACES ? s.racesLeft : Math.max(0, s.racesLeft - 1),
           totalPoints: s.totalPoints + r.score,
           bestScore: Math.max(s.bestScore, r.score),
           lastResult: result,

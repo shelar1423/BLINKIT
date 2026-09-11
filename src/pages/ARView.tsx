@@ -60,6 +60,14 @@ export default function ARView() {
     (o: RaceOutcome) => {
       finishRace({ score: o.score, groceries: o.groceries, seconds: o.seconds });
       setOutcome(o);
+      /* Close the session on finish. Previously only `outcome` was set, so the
+         camera kept running and the whole driving overlay — track size, "Circuit
+         placed!", Start race — stayed mounted underneath the result, with the
+         headline colliding with the car chip. */
+      handle.current?.end();
+      handle.current = null;
+      setPhase(null);
+      setStats(null);
     },
     [finishRace],
   );
@@ -222,22 +230,15 @@ export default function ARView() {
         {phase && (
           <>
             <div className="arov__bar">
-              <span className="arov__chip">
-                <IconAR size={15} /> {car.name.replace('Hot Wheels ', '')}
+              <span className="arov__chip arov__chip--name">
+                <IconAR size={14} /> {car.name.replace('Hot Wheels ', '')}
               </span>
-              {phase === 'racing' && (
-                <span
-                  className="arov__chip"
-                  style={{
-                    background: proximityAlert ? '#ff1744' : 'rgba(0,0,0,0.5)',
-                    color: proximityAlert ? '#ffffff' : '#00e676',
-                    fontWeight: proximityAlert ? 700 : 500,
-                    boxShadow: proximityAlert ? '0 0 12px rgba(255,23,68,0.7)' : 'none',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {proximityAlert ? '⚠️ PROXIMITY!' : '👁️ CV BUMPER'}
-                </span>
+              {/* Only warn when there is something to warn about. This chip used
+                  to sit there permanently reading "CV BUMPER" — internal jargon
+                  for the collision sensor — eating a fifth of a crowded HUD to
+                  say nothing. It now appears only on an actual proximity hit. */}
+              {phase === 'racing' && proximityAlert && (
+                <span className="arov__chip arov__chip--warn">Close!</span>
               )}
               {pinnedCount > 0 && (
                 <button
@@ -264,9 +265,8 @@ export default function ARView() {
                 </>
               )}
               <button
-                className="arov__chip"
+                className="arov__chip arov__x"
                 type="button"
-                style={{ marginLeft: 'auto' }}
                 onClick={() => handle.current?.end()}
                 aria-label="Exit AR"
               >
