@@ -1,0 +1,20 @@
+# Mirrors the headers vercel.json sets, so the app behaves the same on
+# Cloudflare Pages as it does on Vercel.
+
+# Hashed filenames — safe to cache forever.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The car models. Content-Type is stated explicitly rather than left to
+# extension sniffing; GLTFLoader reads the response as an ArrayBuffer either
+# way, but an HTML error page served with a 200 is much easier to spot when
+# the type is wrong.
+/models/*
+  Content-Type: model/gltf-binary
+  Cache-Control: public, max-age=31536000, immutable
+
+# Self-hosted Figtree. The CORS header matters because fonts are fetched with
+# CORS even from the same origin once a preview URL differs from production.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
