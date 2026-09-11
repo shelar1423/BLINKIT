@@ -8,7 +8,7 @@ import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { Countdown } from '../design/components/Countdown';
 import { Sheet } from '../design/components/Sheet';
-import { IconChevronRight, IconFlag, IconTicket, IconTrophy } from '../design/elements/Icons';
+import { IconChevronRight, IconFlag, IconTrophy } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 export default function Home() {
@@ -17,6 +17,7 @@ export default function Home() {
   const racesLeft = useStore((s) => s.racesLeft);
   const { status: drop, parts } = useDrop();
   const [details, setDetails] = useState(false);
+  const [night, setNight] = useState(false);
 
   return (
     <>
@@ -25,7 +26,7 @@ export default function Home() {
         {/* --- campaign takeover: the header's flame red runs straight into this
              block, exactly how Blinkit carries a festival theme down the page,
              and the scalloped edge hands back to the white product feed. --- */}
-        <section className="ctake" aria-label="Hot Wheels x Blinkit campaign">
+        <section className={'ctake' + (night ? ' is-night' : '')} aria-label="Hot Wheels x Blinkit campaign">
           <span className="ctake__trackwrap" aria-hidden="true">
             <img className="ctake__track" src="/campaign/track-divider.webp" alt="" />
             {/* One pass, on arrival. A car looping forever would become wallpaper
@@ -34,18 +35,40 @@ export default function Home() {
             <img className="ctake__runner" src="/cars/hollowback-diecast.webp" alt="" />
           </span>
 
+          {/* Texture. These storefronts hang string lights, stars, diyas and
+              gift boxes off the band — decoration is most of what makes them
+              read as an occasion. Ours is a racing one, and both of these sit
+              behind everything at low opacity: texture, not content. */}
+          <img className="ctake__streaks" src="/decor/26-03-speed-line-streaks-element.webp" alt="" aria-hidden="true" />
+          <img className="ctake__flag" src="/decor/26-01-checkered-flag-element.webp" alt="" aria-hidden="true" />
+
           <div className="ctake__mast">
             <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
             <span className="ctake__x">&times;</span>
             <BlinkitMark className="ctake__bm bmark--on-dark" />
           </div>
 
-          {/* The campaign name is still artwork, the way Blinkit sets a campaign
-              lockup — but at a third of the height it was. It was a billboard
-              taking 18% of the fold and pushing the actual shop off screen. */}
+          {/* Every one of these storefronts sets the campaign name as its own
+              piece of lettering — script for Hug Day and Karwa Chauth, a
+              glowing lockup for Ice Cream and Harry Potter. Ours is a lockup. */}
           <h2 className="ctake__t">
             <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
           </h2>
+
+          {/* The thing that actually makes these feel like an occasion, and the
+              piece I had missed entirely: Blinkit puts one playful control in
+              the band and lets you flip the whole storefront with it — SINGLE
+              MODE ON/OFF on Hug Day, CHANGE LIGHTS on Diwali. It does nothing
+              commercial. That is the point. Ours drops the race to night. */}
+          <button
+            className="ctake__mode"
+            type="button"
+            aria-pressed={night}
+            onClick={() => setNight((n) => !n)}
+          >
+            <span>NIGHT<br />RACE</span>
+            <i aria-hidden="true" />
+          </button>
 
           {/* The countdown is the headline now. A limited drop's one job is to
               say how long you have, and that was a small grey line. */}
@@ -56,31 +79,44 @@ export default function Home() {
             onClick={() => setDetails(true)}
           />
 
-          {/* Quick entries, set as Blinkit sets category tiles: small, flat,
-              label under the mark. They were 132px cards carrying glossy
-              renders, which is neither Blinkit's language nor worth a third of
-              the screen. */}
-          <div className="ctake__tiles">
-            <button className="ctile" type="button" onClick={() => nav('/hot-wheels')}>
-              <span className="ctile__ic ctile__ic--drop"><IconTicket size={20} /></span>
-              <b>The Drop</b>
-              <small>From &#8377;179</small>
+          {/* Six tiles in two rows, which is what these storefronts actually
+              do — four on Karwa Chauth, six on Hug Day, eight on Diwali. Three
+              was never the pattern; the ice-cream row of three sits under a
+              grid, not instead of one. Title on top, real product artwork
+              filling the bottom, warm plaque on the themed ground. */}
+          <div className="ctake__cards">
+            <button className="ccard" type="button" onClick={() => nav('/hot-wheels')}>
+              <span className="ccard__tab">From &#8377;179</span>
+              <span className="ccard__l">The Drop</span>
+              <img src="/campaign/card-drop.webp" alt="" loading="lazy" />
             </button>
-            <button className="ctile" type="button" onClick={() => nav('/rewards')}>
-              <span className="ctile__ic ctile__ic--rew"><IconTrophy size={20} /></span>
-              <b>Rewards</b>
-              <small>Up to &#8377;75 back</small>
+            <button className="ccard" type="button" onClick={() => nav('/rewards')}>
+              <span className="ccard__tab ccard__tab--flame">&#8377;75 back</span>
+              <span className="ccard__l">Rewards</span>
+              <img src="/campaign/card-rewards.webp" alt="" loading="lazy" />
             </button>
-            <button className="ctile" type="button" onClick={() => nav('/leaderboard')}>
-              <span className="ctile__ic ctile__ic--lead"><IconFlag size={20} /></span>
-              <b>Leaderboard</b>
-              <small>{drop.phase === 'live' ? 'Live now' : 'Opens 12 Nov'}</small>
+            <button className="ccard" type="button" onClick={() => nav('/leaderboard')}>
+              <span className="ccard__l">Leaderboard</span>
+              <img src="/campaign/card-leaderboard.webp" alt="" loading="lazy" />
+            </button>
+            <button className="ccard" type="button" onClick={() => nav('/race')}>
+              <span className="ccard__l">Race a Friend</span>
+              <img src="/cars/battlespec-diecast.webp" alt="" loading="lazy" />
+            </button>
+            <button className="ccard ccard--dark" type="button" onClick={() => nav('/hot-wheels')}>
+              <span className="ccard__l">Mystery Car</span>
+              <img src="/cars/11-mystery-drop-car.webp" alt="" loading="lazy" />
+            </button>
+            <button className="ccard" type="button" onClick={() => nav('/hot-wheels')}>
+              <span className="ccard__l">All Models</span>
+              <img src="/cars/jackhammer-diecast.webp" alt="" loading="lazy" />
             </button>
           </div>
 
-          {/* The activation strip — the thing you came to do. Slimmer, and the
-              car is the real die-cast render, which is product photography
-              rather than illustration. */}
+          {/* The activation strip — the thing you came to do. Same shape as
+              "Challenge your friends! / Share now" on the ice-cream storefront
+              and "Ready for Secret Santa? / Play" on the Christmas one: art
+              left, line of copy, dark pill on the right. */}
           <button className="cact" type="button" onClick={() => nav('/race')}>
             <span className="cact__art">
               <img src="/cars/hollowback-diecast.webp" alt="" loading="lazy" />

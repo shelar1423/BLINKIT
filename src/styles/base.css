@@ -279,10 +279,46 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative;
   margin-top: -1px;
   padding: 20px var(--gut) 18px;
+  /* The reference storefronts all sit on one saturated colour — hot pink for
+     Promise Day, deep red for Diwali, a bright blue for the ice cream. This
+     was a muted navy, which is why it read as pale. */
   background:
-    radial-gradient(85% 55% at 50% 0%, rgba(255, 122, 26, 0.30) 0%, rgba(255, 122, 26, 0) 62%),
-    linear-gradient(180deg, #102A6B 0%, #0A1A4A 100%);
+    radial-gradient(70% 44% at 50% 0%, rgba(255, 138, 26, 0.42) 0%, rgba(255, 122, 26, 0) 64%),
+    radial-gradient(120% 70% at 50% 112%, rgba(237, 28, 36, 0.30) 0%, rgba(237, 28, 36, 0) 60%),
+    linear-gradient(180deg, #1B4FD8 0%, #122E86 52%, #0C1F63 100%);
   color: #fff;
+  overflow: hidden;
+}
+
+/* Decoration, which is most of what makes these storefronts feel like an
+   occasion: the references hang string lights, stars, diyas and gift boxes off
+   the band. Ours is a racing one — speed streaks washing through the ground,
+   and a chequered flag in the corner. Both sit behind everything and are
+   deliberately faint; they are texture, not content. */
+.ctake__streaks,
+.ctake__flag {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+.ctake__streaks {
+  left: -10%; right: -10%; top: 16%;
+  width: 120%; height: auto;
+  opacity: 0.16;
+  mix-blend-mode: screen;
+}
+.ctake__flag {
+  right: -26px; bottom: 4px;
+  width: 128px; height: auto;
+  opacity: 0.13;
+  transform: rotate(-8deg);
+}
+/* Positioned decor paints above static siblings whatever the DOM order, so
+   the content has to be positioned too. The toggle and the track set their
+   own position, so they are excluded — including them here silently reset the
+   toggle to `relative` and dropped it into the flow on the left. */
+.ctake > *:not(.ctake__streaks):not(.ctake__flag):not(.ctake__mode):not(.ctake__trackwrap):not(.ctake__scallop) {
+  position: relative; z-index: 1;
 }
 
 .ctake__mast { display: flex; align-items: center; justify-content: center; gap: 9px; }
@@ -306,54 +342,145 @@ input, select, textarea { font: inherit; color: inherit; }
    chrome-and-flame word-art rather than styled text. The alt carries the name
    for anyone not seeing the image. */
 .ctake__t {
-  /* A band, not a billboard. At 218px this was 149px tall — 18% of the fold
-     spent on the campaign's own name, which pushed the shop below it off the
-     first screen entirely. */
-  margin: 2px auto 9px;
-  max-width: 132px;
+  /* The campaign lockup is the hero on every one of these storefronts — the
+     glowing ICE CREAM word, the ornamental Diwali masthead. Cutting it to
+     132px to save space took the occasion out of it. Back up, but short of the
+     218px billboard that pushed the shop off the screen. */
+  margin: 0 auto 2px;
+  max-width: 196px;
   line-height: 0;
+  filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
-@media (min-width: 768px) { .ctake__t { max-width: 200px; } }
+@media (min-width: 768px) { .ctake__t { max-width: 260px; } }
 
-/* ---- quick-entry tiles ----
-   Blinkit's category tile: a small flat mark on a tinted square, label
-   underneath. Replaces three 132px cards that each carried a glossy render —
-   Blinkit does product photography and flat illustration, not 3D, and the
-   cards were eating a third of the first screen to say three words. */
-.ctake__tiles {
-  margin-top: 10px;
+/* ---- the novelty control ----
+   SINGLE MODE ON/OFF, CHANGE LIGHTS. It sits top-right of the campaign name,
+   is plainly a physical object rather than a button, and does nothing
+   commercial — it just flips the storefront. That is what makes these feel
+   like an occasion rather than a promotion, and it was the piece missing
+   here. */
+.ctake__mode {
+  position: absolute; z-index: 4;
+  right: var(--gut); top: 22px;
+  display: flex; align-items: center; gap: 7px;
+  background: linear-gradient(180deg, #2B3242, #171B25);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 5px 7px 5px 11px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 8px; font-weight: 800; letter-spacing: 0.08em; line-height: 1.05;
+  text-align: right;
+}
+.ctake__mode i {
+  width: 17px; height: 17px; border-radius: 50%;
+  background: radial-gradient(circle at 34% 30%, #fff, #C9CFDA 60%, #8B93A3);
+  box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.35);
+  transition: background 200ms ease, box-shadow 200ms ease;
+}
+.ctake.is-night .ctake__mode i {
+  background: radial-gradient(circle at 34% 30%, #FFD9A0, var(--hw-o) 55%, #C03A00);
+  box-shadow: 0 0 10px rgba(255, 122, 26, 0.85);
+}
+.ctake.is-night .ctake__mode { color: var(--yellow); }
+@media (prefers-reduced-motion: reduce) { .ctake__mode i { transition: none; } }
+
+/* ---- night race ----
+   The whole band drops to a night circuit: lights off, headlight glow on, the
+   plaques go dark the way the Single Mode storefront does. */
+.ctake.is-night {
+  background:
+    radial-gradient(60% 34% at 50% 6%, rgba(255, 138, 26, 0.30) 0%, rgba(255, 122, 26, 0) 62%),
+    radial-gradient(120% 62% at 50% 108%, rgba(237, 28, 36, 0.22) 0%, rgba(237, 28, 36, 0) 58%),
+    linear-gradient(180deg, #0B1020 0%, #070A16 60%, #05070F 100%);
+}
+.ctake.is-night .ccard {
+  background: linear-gradient(170deg, #2A2F3C 0%, #171B26 100%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+}
+.ctake.is-night .ccard::after { border-color: rgba(255, 160, 60, 0.26); }
+.ctake.is-night .ccard__l { color: #FFD6A0; }
+.ctake.is-night .ctake__streaks { opacity: 0.3; }
+
+/* ---- campaign cards ----
+   Blinkit's campaign tile: a warm plaque on the themed ground, its hook on a
+   tab over the top edge, the title in the campaign's own dark colour and real
+   product artwork filling the bottom. Briefly replaced with small flat icons
+   on the dark ground, which read as a settings menu — the ground is supposed
+   to be the theme and the cards are supposed to be the light on top of it. */
+.ctake__cards {
+  margin-top: 12px;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  align-items: stretch;
 }
-.ctile {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: var(--r-md);
-  padding: 10px 8px 9px;
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
+/* Two rows of three. Four to eight tiles is the shape of every one of these
+   storefronts; the ice-cream row of three sits under a grid, not instead of
+   one, and cutting to three was how this ended up looking like a menu. */
+.ccard {
+  position: relative;
+  border-radius: 14px;
+  background: linear-gradient(172deg, #FFFDF7 0%, #FCEBBE 100%);
+  padding: 22px 8px 0;
+  min-height: 112px;
+  text-align: left;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  display: flex; flex-direction: column;
+}
+/* The plaque frame — the inset keyline that makes a campaign tile read as
+   themed rather than as a plain white card. */
+.ccard::after {
+  content: '';
+  position: absolute; inset: 4px;
+  border: 1px solid rgba(180, 120, 30, 0.28);
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 3;
+}
+.ccard__tab {
+  position: absolute; top: 0; left: 0; z-index: 4;
+  background: var(--ink); color: #fff;
+  font-size: 9px; font-weight: 800; letter-spacing: -0.01em;
+  padding: 4px 8px 4px 9px;
+  border-radius: 14px 0 12px 0;
+  white-space: nowrap;
+}
+.ccard__tab--flame { background: var(--hw-r); }
+/* Some artwork is a dark scene rather than a cut-out on white. The plaque
+   goes dark with it rather than printing dark red text over a black car. */
+.ccard--dark { background: linear-gradient(170deg, #2A2F3C 0%, #171B26 100%); }
+.ccard--dark .ccard__l { color: #FFD6A0; }
+.ccard--dark::after { border-color: rgba(255, 160, 60, 0.3); }
+.ccard__l {
+  position: relative; z-index: 2;
+  font-size: var(--f-xs); font-weight: 800; line-height: 1.15;
+  color: #6E0C0A; letter-spacing: -0.2px;
   text-align: center;
-  min-width: 0;
 }
-.ctile__ic {
-  width: 38px; height: 38px; border-radius: 11px;
-  display: grid; place-items: center;
-  color: var(--ink);
+/* No tab on four of the six, so the title has to sit at the top on its own. */
+.ccard:not(:has(.ccard__tab)) { padding-top: 11px; }
+/* Bounded to the lower part of the plaque. Left to size itself, a square
+   image at full width exactly fills a 104px tile and rises behind the title —
+   which is how "Rewards" ended up printed across the middle of a gold trophy.
+   `contain` keeps the aspect within that box whatever shape the art is. */
+.ccard img {
+  position: absolute; z-index: 1;
+  left: 50%; transform: translateX(-50%);
+  bottom: -2px;
+  /* Wider than the plaque on purpose. The renders carry transparent margin, so
+     a box sized to the tile leaves the car looking like a thumbnail — the
+     references let product artwork fill the lower half and run to the edges. */
+  width: 122%; height: 72%;
+  object-fit: contain; object-position: bottom;
 }
-.ctile__ic--drop { background: var(--yellow); }
-.ctile__ic--rew { background: #FFD9A8; }
-.ctile__ic--lead { background: #BFE3C6; }
-.ctile b {
-  font-size: var(--f-xs); font-weight: 800; color: #fff; line-height: 1.15;
-  letter-spacing: -0.1px;
+/* The dark plaque carries a full-bleed scene rather than a cut-out, so it
+   fills the tile and the title sits over it with a scrim for legibility. */
+.ccard--dark img { height: 100%; bottom: 0; object-fit: cover; }
+.ccard--dark .ccard__l {
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9), 0 0 18px rgba(0, 0, 0, 0.75);
 }
-.ctile small {
-  font-size: 9px; font-weight: 600; line-height: 1.15;
-  color: rgba(255, 255, 255, 0.66);
-  /* three tiles across 375px leaves ~105px each — one line, clipped cleanly,
-     rather than a second line that shifts the row's height */
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
-}
-.ctile:active { transform: scale(0.97); }
+.ccard:active { transform: scale(0.985); }
 
 /* ---- activation strip ----
    Where the campaign's actual mechanic lives. Own lockup, own dark pill CTA. */
