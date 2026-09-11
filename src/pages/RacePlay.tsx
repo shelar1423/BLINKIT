@@ -364,7 +364,7 @@ export default function RacePlay() {
               </div>
             </div>
           ) : (
-            <p style={{ textAlign: 'center', color: 'var(--tk-mut)', fontSize: 'var(--f-sm)' }}>
+            <p className="result__note">
               You need 1,000 points for a reward. Closest yet: {outcome.score.toLocaleString('en-IN')}.
             </p>
           )}
@@ -383,7 +383,7 @@ export default function RacePlay() {
               </Button>
             )}
             {!tier && (
-              <Button variant="flame" size="lg" block
+              <Button variant="primary" size="lg" block
                 type="button"
                 disabled={useStore.getState().racesLeft <= 0}
                 onClick={() => window.location.reload()}
@@ -393,7 +393,7 @@ export default function RacePlay() {
             )}
             <div className="result__more">
               {tier && (
-                <Button variant="ghostDark"
+                <Button variant="outline"
                   type="button"
                   disabled={useStore.getState().racesLeft <= 0}
                   onClick={() => window.location.reload()}
@@ -401,10 +401,10 @@ export default function RacePlay() {
                   Race again
                 </Button>
               )}
-              <Button variant="ghostDark" type="button" onClick={() => nav('/leaderboard')}>
+              <Button variant="outline" type="button" onClick={() => nav('/leaderboard')}>
                 Leaderboard
               </Button>
-              <Button variant="ghostDark" type="button" onClick={() => nav('/campaign')}>
+              <Button variant="outline" type="button" onClick={() => nav('/campaign')}>
                 Campaign
               </Button>
             </div>

@@ -768,64 +768,61 @@ input, select, textarea { font: inherit; color: inherit; }
 /* ============================================================
    Race result.
 
-   The screen the player lands on after every race, so it should feel like a
-   finish, not a form. Three changes over the flat version: the campaign's own
-   flame gradient behind the hero, a headline that reads as a result rather than
-   a label, and one clear primary action instead of four buttons of equal
-   weight.
+   Blinkit's own success screens — order placed, for one — are light, plainly
+   spaced and low-radius: an app-base ground, white cards, hairline borders,
+   ink text and green for the win. An earlier pass had this dark and glowing,
+   which is a games convention, not Blinkit's.
    ============================================================ */
 .result {
   position: fixed; inset: 0; z-index: 150;
-  display: grid; align-content: center; gap: 12px;
-  padding: 20px 20px 28px;
-  background:
-    radial-gradient(120% 60% at 50% 0%, rgba(255, 122, 26, 0.30) 0%, rgba(255, 122, 26, 0) 62%),
-    linear-gradient(170deg, #17233B 0%, var(--tk-2) 68%);
-  color: #fff; overflow-y: auto;
+  display: grid; align-content: start; gap: 12px;
+  padding: 28px 16px calc(24px + var(--safe-b));
+  background: var(--appbase);
+  color: var(--ink);
+  overflow-y: auto;
 }
 
-/* the hero sits in its own warm pool of light */
-.result__herowrap { position: relative; display: grid; place-items: center; margin-bottom: -4px; }
-.result__herowrap::before {
-  content: '';
-  position: absolute; width: 74%; aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 150, 40, 0.42) 0%, rgba(255, 150, 40, 0) 68%);
-}
-.result__hero { position: relative; width: 100%; max-width: 260px; margin: 0 auto; }
+.result__herowrap { display: grid; place-items: center; }
+.result__hero { width: 100%; max-width: 240px; margin: 0 auto; }
 
 .result__kick {
   text-align: center; font-size: var(--f-2xs); font-weight: 800;
-  letter-spacing: 0.22em; color: var(--hw-o);
+  letter-spacing: 0.16em; color: var(--green);
 }
 .result__t {
-  font-size: 30px; font-weight: 900; letter-spacing: -0.8px;
-  text-align: center; line-height: 1.05; margin-top: 2px;
+  font-size: 24px; font-weight: 800; letter-spacing: -0.5px;
+  text-align: center; line-height: 1.15; margin-top: 2px; color: var(--ink);
 }
 
-.result__g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 4px; }
+.result__g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 6px; }
 .result__g > div {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--tk-line); border-radius: var(--r-md);
-  padding: 11px 8px; text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 12px 8px; text-align: center;
 }
-/* the score is the headline number, so it outranks the other two */
-.result__g > div:first-child { background: rgba(255, 122, 26, 0.14); border-color: rgba(255, 122, 26, 0.4); }
-.result__g > div:first-child b { color: #FFC24A; }
-.result__g b { display: block; font-size: var(--f-xl); font-weight: 800; font-variant-numeric: tabular-nums; }
-.result__g span { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--tk-mut); }
+.result__g b {
+  display: block; font-size: var(--f-xl); font-weight: 800;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.result__g span {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em; color: var(--mut);
+}
 
+/* the reward reads the way a saving does elsewhere in the app: green on a
+   green tint, hairline, not a glowing slab */
 .result__rw {
-  display: flex; align-items: center; gap: 12px;
-  background: linear-gradient(96deg, #0E5F2C, var(--green));
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: var(--r-lg); padding: 12px 14px;
-  box-shadow: 0 8px 24px rgba(12, 131, 31, 0.32);
+  display: flex; align-items: center; gap: 11px;
+  background: var(--green-tint);
+  border: 1px solid #BEE3C4;
+  border-radius: var(--r); padding: 12px;
 }
-.result__rw img { width: 40px; height: 40px; object-fit: contain; }
-.result__rw b { display: block; font-size: var(--f-lg); font-weight: 800; }
-.result__rw span { font-size: var(--f-xs); color: #CFEBD8; }
+.result__rw img { width: 36px; height: 36px; object-fit: contain; }
+.result__rw b { display: block; font-size: var(--f-base); font-weight: 800; color: var(--green-dk); }
+.result__rw span { font-size: var(--f-xs); color: var(--green-dk); opacity: 0.85; }
 
-/* secondary actions read as a row of links, not three more buttons */
+.result__note { text-align: center; color: var(--mut); font-size: var(--f-sm); }
+
 .result__more { display: flex; gap: 8px; margin-top: 2px; }
 .result__more > * { flex: 1; }
 
