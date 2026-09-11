@@ -53,15 +53,41 @@ export default function Race() {
         </div>
 
         <div className="shell" style={{ paddingTop: 8 }}>
-          <div className="card" style={{ padding: 12 }}>
-            <p style={{ fontSize: 'var(--f-md)', fontWeight: 700 }}>How it works</p>
-            <ul className="howto">
-              <li>Your camera opens and you place the track on a real surface.</li>
-              <li>Hold GO for the throttle, the arrows to steer, the brake to slow.</li>
-              <li>Hold the handbrake through a corner to drift — more slide, less speed.</li>
-              <li>Collect groceries for points. The Blinkit bag is worth 500.</li>
-              <li>Two laps, 45 seconds. Whichever comes first ends the race.</li>
-            </ul>
+          {/* Set the way Blinkit sets a campaign explainer: a labelled panel
+              with the mechanic shown rather than only described, a pro tip,
+              and the line that makes the point. A bulleted list under a bold
+              paragraph was documentation, not a campaign. */}
+          <div className="howcard">
+            <p className="howcard__hd">How it works</p>
+            <div className="howcard__art">
+              <img src="/campaign/14-ar-toy-car-placement.webp" alt="A Hot Wheels car placed on a real table through the camera" />
+              <span className="howcard__tip">
+                <b>Pro tip:</b> a clear table or floor works best
+              </span>
+            </div>
+            {/* The copy is wrapped rather than sitting loose beside the
+                number: the row is a flex container, so bare text nodes and a
+                <b> each become flex items and every one of them picks up the
+                row gap — which is why "Hold GO and tilt" had holes punched
+                through it. */}
+            <ol className="howsteps">
+              <li>
+                <span className="howsteps__n">1</span>
+                <span className="howsteps__t">Point your camera at a table or floor</span>
+              </li>
+              {/* Tilt is how this is actually driven now; the old copy still
+                  described on-screen arrows and a handbrake as the primary
+                  controls, which stopped being true when tilt steering landed. */}
+              <li>
+                <span className="howsteps__n">2</span>
+                <span className="howsteps__t">Hold <b>GO</b> and tilt the phone to steer</span>
+              </li>
+              <li>
+                <span className="howsteps__n">3</span>
+                <span className="howsteps__t">Grab groceries on the way — the Blinkit bag is worth 500</span>
+              </li>
+            </ol>
+            <p className="howcard__line">Two laps. 45 seconds.<br />Race it home.</p>
             {bestScore > 0 && (
               <p className="t-xs" style={{ marginTop: 8 }}>
                 Your best so far: <b className="t-num">{bestScore.toLocaleString('en-IN')} pts</b>
