@@ -29,6 +29,20 @@ export function BlinkitMark({ className = '' }: { className?: string }) {
   );
 }
 
+/**
+ * District's wordmark, set live rather than shipped as a traced logotype —
+ * same approach as the Blinkit mark above. Lowercase, heavy, tightened, with
+ * the outbound arrow that marks it as a jump to a different app.
+ */
+export function DistrictMark() {
+  return (
+    <span className="dmark" aria-label="District" role="img">
+      district
+      <i aria-hidden="true">&#8599;</i>
+    </span>
+  );
+}
+
 /** The category rail's tabs. Only Hot Wheels is built out. */
 const RAIL = [
   { id: 'all', label: 'All', Icon: IconBasket },

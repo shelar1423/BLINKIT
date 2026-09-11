@@ -3,6 +3,7 @@ import { rupees } from '../../data/catalog';
 import { useCartCount, useStore, useTotals } from '../../store/useStore';
 import { IconScooter } from '../elements/Icons';
 import { NavCategories, NavHome, NavOrders, NavPrint } from '../elements/NavIcons';
+import { DistrictMark } from './Chrome';
 
 /**
  * Blinkit's real bottom navigation: a floating white pill that rides above the
@@ -101,12 +102,18 @@ export function BottomNav() {
           </span>
         </nav>
 
-        {/* Blinkit floats a partner shortcut beside the bar (District today).
-            The Hot Wheels takeover puts the race there — one tap from anywhere,
-            without touching the permanent tabs. */}
-        <button className="bnav__fab" type="button" onClick={() => nav('/race')} aria-label="Race It Home">
-          <img className="bnav__fab-mark" src="/brand/hot-wheels.svg" alt="" />
-        </button>
+        {/* Blinkit floats District beside the bar — a jump to a separate app,
+            not a tab. It stays District through the takeover: the campaign does
+            not get to displace another Blinkit product from the permanent
+            chrome, and the race already has its own routes in from the home
+            band and the category rail.
+
+            Inert, like Order Again and Print: District is not part of this
+            build, and sending it somewhere else would be worse than it not
+            moving. */}
+        <span className="bnav__fab is-inert" aria-disabled="true">
+          <DistrictMark />
+        </span>
       </div>
     </>
   );

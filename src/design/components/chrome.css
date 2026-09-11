@@ -218,14 +218,16 @@
 .bnav__i.is-on .bnav__l { font-weight: 800; }
 .bnav__i.is-inert { color: var(--ink); cursor: default; pointer-events: none; }
 
-/* partner shortcut beside the bar — District in the live app, the race here */
+/* District, floating beside the bar — Blinkit's own partner shortcut, a jump
+   to a separate app rather than a fifth tab. Flat violet, no gradient and no
+   inner highlight: it is a brand disc, not a raised control. */
 .bnav__fab {
   flex: 0 0 auto;
   position: relative;
   width: 58px; height: 58px; border-radius: 50%;
-  background: linear-gradient(155deg, #FF8A2B 0%, var(--hw-r) 58%, #B3121A 100%);
+  background: #7B2FF2;
   display: grid; place-items: center;
-  box-shadow: 0 6px 20px rgba(237, 28, 36, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: 0 6px 20px rgba(123, 47, 242, 0.34);
   transition: transform 0.16s ease;
 }
 /* a thin light ring lifts it off the white bar */
@@ -237,10 +239,21 @@
   pointer-events: none;
 }
 .bnav__fab:active { transform: scale(0.94); }
-/* the mark itself, knocked out white — no wordmark competing with it */
-.bnav__fab-mark {
-  width: 38px; height: auto; display: block;
-  filter: brightness(0) invert(1) drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+.bnav__fab.is-inert { cursor: default; pointer-events: none; }
+
+/* The wordmark. Squeezed horizontally rather than letter-spaced negative: the
+   real logotype is a condensed geometric face, and tightening the tracking of
+   a normal-width one closes the gaps without narrowing the letters, which
+   reads as cramped instead of condensed. */
+.dmark {
+  display: inline-flex; align-items: flex-start; gap: 1px;
+  color: #fff;
+  font-size: 13px; font-weight: 800; letter-spacing: -0.045em;
+  transform: scaleX(0.92);
+}
+.dmark i {
+  font-style: normal; font-weight: 700;
+  font-size: 10px; line-height: 1.15;
 }
 
 /* ---------- floating bar above the nav ---------- */
