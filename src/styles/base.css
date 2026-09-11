@@ -368,7 +368,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ccard img {
   position: absolute; z-index: 1;
   left: 50%; transform: translateX(-50%);
-  bottom: -6px; width: 92%; height: auto; object-fit: contain;
+  bottom: -10px; width: 104%; height: auto; object-fit: contain;
 }
 .ccard:active { transform: scale(0.985); }
 
@@ -384,7 +384,7 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
 }
 .cact__art { flex: 0 0 74px; height: 54px; position: relative; overflow: hidden; }
-.cact__art img { position: absolute; left: -4px; bottom: -8px; width: 118%; height: auto; }
+.cact__art img { position: absolute; left: -6px; bottom: -6px; width: 120%; height: auto; }
 .cact__c { flex: 1; min-width: 0; }
 .cact__c b {
   display: block; font-size: var(--f-base); font-weight: 800;

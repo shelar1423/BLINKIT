@@ -40,7 +40,7 @@ export default function Home() {
             <button className="ccard" type="button" onClick={() => nav('/hot-wheels')}>
               <span className="ccard__tab">Starting at ₹179</span>
               <span className="ccard__l">The Drop</span>
-              <img src="/campaign/03-drops-shortcut-card.webp" alt="" loading="lazy" />
+              <img src="/campaign/card-drop.webp" alt="" loading="lazy" />
             </button>
             <button className="ccard" type="button" onClick={() => nav('/rewards')}>
               <span className="ccard__tab ccard__tab--flame">Up to ₹75 back</span>
@@ -50,7 +50,7 @@ export default function Home() {
             <button className="ccard" type="button" onClick={() => nav('/leaderboard')}>
               <span className="ccard__tab">Live now</span>
               <span className="ccard__l">Leaderboard</span>
-              <img src="/campaign/21-friend-challenge-card.webp" alt="" loading="lazy" />
+              <img src="/campaign/card-leaderboard.webp" alt="" loading="lazy" />
             </button>
           </div>
 
@@ -59,7 +59,7 @@ export default function Home() {
               lockup and a dark pill CTA. Ours is the race. */}
           <div className="cact">
             <span className="cact__art">
-              <img src="/campaign/02-race-shortcut-card.webp" alt="" loading="lazy" />
+              <img src="/cars/hollowback-diecast.webp" alt="" loading="lazy" />
             </span>
             <span className="cact__c">
               <b>Challenge your friends!</b>
