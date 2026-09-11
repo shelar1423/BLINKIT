@@ -952,7 +952,15 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   function aim(): { point: THREE.Vector3; dist: number; provisional: boolean } {
     fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
     if (fwd.y > -0.08) {
-      return { point: hit.copy(fwd).multiplyScalar(PROVISIONAL_DIST), dist: PROVISIONAL_DIST, provisional: true };
+      /* Phone level or tilted up: there is no floor along the view ray. Put the
+         reticle on the ground plane a fixed distance ahead rather than straight
+         out at eye level — it is a flat horizontal disc, so at eye level it is
+         edge-on and invisible, which is why it only appeared once you tilted
+         down and hunted for it. */
+      hit.copy(fwd).setY(0);
+      if (hit.lengthSq() < 1e-6) hit.set(0, 0, -1);
+      hit.normalize().multiplyScalar(PROVISIONAL_DIST).setY(GROUND);
+      return { point: hit, dist: PROVISIONAL_DIST, provisional: true };
     }
     const t = GROUND / fwd.y;
     const clamped = Math.max(0.35, Math.min(3.5, t));
@@ -1024,7 +1032,25 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       pinObstacleAtTap(e.clientX, e.clientY);
     }
   };
-  opts.overlayRoot.addEventListener('pointerup', onTapPlace);
+  /* On window, not the overlay root: `.arov` is pointer-events:none so taps
+     fall through to the scene, which means it never receives a pointer event
+     and this listener had never once fired in the camera session. Tap-to-place
+     simply did not work. A press is only a tap if the finger barely moved —
+     otherwise a drag would place the circuit on release. */
+  let downAt: { x: number; y: number; t: number } | null = null;
+  const onTapDown = (e: PointerEvent) => {
+    downAt = { x: e.clientX, y: e.clientY, t: performance.now() };
+  };
+  const onTapUp = (e: PointerEvent) => {
+    const d = downAt;
+    downAt = null;
+    if (!d) return;
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12) return;
+    if (performance.now() - d.t > 600) return;
+    onTapPlace(e);
+  };
+  window.addEventListener('pointerdown', onTapDown);
+  window.addEventListener('pointerup', onTapUp);
 
   const detachGestures = adjustGestures(opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize);
 
@@ -1038,7 +1064,8 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     renderer.setAnimationLoop(null);
     window.removeEventListener('deviceorientation', onOrient, true);
     window.removeEventListener('resize', onResize);
-    opts.overlayRoot.removeEventListener('pointerup', onTapPlace);
+    window.removeEventListener('pointerdown', onTapDown);
+    window.removeEventListener('pointerup', onTapUp);
     detachGestures();
     vision.dispose();
     stream.getTracks().forEach((t) => t.stop());
