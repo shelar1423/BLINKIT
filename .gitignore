@@ -1,0 +1,10 @@
+node_modules
+dist
+.vercel
+.DS_Store
+*.log
+# untouched source GLBs (101 MB) — the app loads optimised copies in public/models
+models-original/
+# pre-rebrand artwork, kept so the violet recolour stays reversible
+art-originals/
+*.tsbuildinfo

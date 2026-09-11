@@ -1,0 +1,350 @@
+type P = { size?: number; className?: string; strokeWidth?: number };
+
+const S = ({ size = 20, className, strokeWidth = 1.8, children }: P & { children: React.ReactNode }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+    focusable="false"
+  >
+    {children}
+  </svg>
+);
+
+const F = ({ size = 20, className, children }: P & { children: React.ReactNode }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true" focusable="false">
+    {children}
+  </svg>
+);
+
+export const IconSearch = (p: P) => (
+  <S {...p}>
+    <circle cx="10.8" cy="10.8" r="6.4" />
+    <path d="m20 20-4.7-4.7" />
+  </S>
+);
+
+export const IconCart = (p: P) => (
+  <S {...p}>
+    <path d="M3 4h2.1l2.2 10.2h9.4L19 7.3H6.1" />
+    <circle cx="9.5" cy="19" r="1.5" />
+    <circle cx="16.5" cy="19" r="1.5" />
+  </S>
+);
+
+export const IconUser = (p: P) => (
+  <S {...p}>
+    <circle cx="12" cy="8.4" r="3.5" />
+    <path d="M4.9 20a7.1 7.1 0 0 1 14.2 0" />
+  </S>
+);
+
+export const IconHome = (p: P) => (
+  <S {...p}>
+    <path d="M3.6 10.4 12 3.8l8.4 6.6V20a1 1 0 0 1-1 1h-4.6v-6H9.2v6H4.6a1 1 0 0 1-1-1z" />
+  </S>
+);
+
+export const IconGrid = (p: P) => (
+  <S {...p}>
+    <rect x="3.2" y="3.2" width="7.4" height="7.4" rx="1.6" />
+    <rect x="13.4" y="3.2" width="7.4" height="7.4" rx="1.6" />
+    <rect x="3.2" y="13.4" width="7.4" height="7.4" rx="1.6" />
+    <rect x="13.4" y="13.4" width="7.4" height="7.4" rx="1.6" />
+  </S>
+);
+
+export const IconFlag = (p: P) => (
+  <S {...p}>
+    <path d="M5.5 21.5V3" />
+    <path d="M5.5 4.2h14v8.6h-14z" />
+    <path d="M5.5 4.2h4.7v4.3H5.5zM14.8 4.2h4.7v4.3h-4.7zM10.2 8.5h4.6v4.3h-4.6z" fill="currentColor" stroke="none" />
+  </S>
+);
+
+export const IconTrophy = (p: P) => (
+  <S {...p}>
+    <path d="M7 4h10v5a5 5 0 0 1-10 0z" />
+    <path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" />
+    <path d="M12 14v3M8.6 20h6.8l-.7-3H9.3z" />
+  </S>
+);
+
+export const IconUsers = (p: P) => (
+  <S {...p}>
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3.6 19.4a5.4 5.4 0 0 1 10.8 0" />
+    <path d="M16 5.4a3.2 3.2 0 0 1 0 5.2M17.5 14.6a5.4 5.4 0 0 1 2.9 4.8" />
+  </S>
+);
+
+export const IconBolt = (p: P) => (
+  <F {...p}>
+    <path d="M13.6 2 5 13.2h5.2L9.8 22l8.8-11.4h-5.4z" />
+  </F>
+);
+
+export const IconStar = (p: P) => (
+  <F {...p}>
+    <path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.2 6-5.5-3-5.5 3 1.2-6L3.2 9.4l6.1-.8z" />
+  </F>
+);
+
+export const IconChevronRight = (p: P) => (
+  <S {...p}>
+    <path d="m9.5 5 7 7-7 7" />
+  </S>
+);
+
+export const IconChevronLeft = (p: P) => (
+  <S {...p}>
+    <path d="m14.5 5-7 7 7 7" />
+  </S>
+);
+
+export const IconChevronDown = (p: P) => (
+  <S {...p}>
+    <path d="m5 9.5 7 7 7-7" />
+  </S>
+);
+
+export const IconClose = (p: P) => (
+  <S {...p}>
+    <path d="m6 6 12 12M18 6 6 18" />
+  </S>
+);
+
+export const IconPlus = (p: P) => (
+  <S {...p} strokeWidth={2.2}>
+    <path d="M12 5.5v13M5.5 12h13" />
+  </S>
+);
+
+export const IconMinus = (p: P) => (
+  <S {...p} strokeWidth={2.2}>
+    <path d="M5.5 12h13" />
+  </S>
+);
+
+export const IconCheck = (p: P) => (
+  <S {...p} strokeWidth={2.4}>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </S>
+);
+
+export const IconCube = (p: P) => (
+  <S {...p}>
+    <path d="m12 2.6 8 4.6v9.6l-8 4.6-8-4.6V7.2z" />
+    <path d="m4 7.2 8 4.6 8-4.6M12 11.8v9.6" />
+  </S>
+);
+
+export const IconAR = (p: P) => (
+  <S {...p}>
+    <path d="M3.5 8.5v-3a2 2 0 0 1 2-2h3M15.5 3.5h3a2 2 0 0 1 2 2v3M20.5 15.5v3a2 2 0 0 1-2 2h-3M8.5 20.5h-3a2 2 0 0 1-2-2v-3" />
+    <path d="m12 8 3.6 2v4L12 16l-3.6-2v-4z" />
+  </S>
+);
+
+export const IconPin = (p: P) => (
+  <S {...p}>
+    <path d="M12 21s6.4-6 6.4-10.4A6.4 6.4 0 0 0 5.6 10.6C5.6 15 12 21 12 21z" />
+    <circle cx="12" cy="10.5" r="2.3" />
+  </S>
+);
+
+export const IconRotate = (p: P) => (
+  <S {...p}>
+    <path d="M20 12a8 8 0 1 1-2.6-5.9" />
+    <path d="M20.4 4.2v4.4H16" />
+  </S>
+);
+
+export const IconLock = (p: P) => (
+  <S {...p}>
+    <rect x="4.6" y="10.5" width="14.8" height="9.4" rx="2.2" />
+    <path d="M8 10.5V7.9a4 4 0 0 1 8 0v2.6" />
+  </S>
+);
+
+export const IconShare = (p: P) => (
+  <S {...p}>
+    <path d="M12 15.4V3.8M8.2 7.6 12 3.8l3.8 3.8" />
+    <path d="M5.6 12.8V19a1.6 1.6 0 0 0 1.6 1.6h9.6A1.6 1.6 0 0 0 18.4 19v-6.2" />
+  </S>
+);
+
+export const IconSound = (p: P) => (
+  <S {...p}>
+    <path d="M4.5 9.5h3l4-3.4v11.8l-4-3.4h-3z" />
+    <path d="M15.4 9.2a4 4 0 0 1 0 5.6" />
+  </S>
+);
+
+export const IconMute = (p: P) => (
+  <S {...p}>
+    <path d="M4.5 9.5h3l4-3.4v11.8l-4-3.4h-3z" />
+    <path d="m15.5 9.8 4.2 4.4M19.7 9.8l-4.2 4.4" />
+  </S>
+);
+
+export const IconTruck = (p: P) => (
+  <S {...p}>
+    <path d="M3 6.6h10.4v9.2H3zM13.4 9.6h3.5l3.1 3v3.2h-6.6z" />
+    <circle cx="7" cy="18" r="1.7" />
+    <circle cx="16.6" cy="18" r="1.7" />
+  </S>
+);
+
+export const IconTicket = (p: P) => (
+  <S {...p}>
+    <path d="M3.5 8.2A1.7 1.7 0 0 0 5.2 6.5h13.6a1.7 1.7 0 0 0 1.7 1.7v2a2 2 0 0 0 0 3.6v2a1.7 1.7 0 0 0-1.7 1.7H5.2a1.7 1.7 0 0 0-1.7-1.7v-2a2 2 0 0 0 0-3.6z" />
+    <path d="M12 9v1.5M12 13.5V15" />
+  </S>
+);
+
+export const IconInfo = (p: P) => (
+  <S {...p}>
+    <circle cx="12" cy="12" r="8.6" />
+    <path d="M12 11v5.4M12 7.9v.6" />
+  </S>
+);
+
+export const IconCafe = (p: P) => (
+  <S {...p}>
+    <path d="M5.6 8.5h11.2v5.2a5.6 5.6 0 0 1-11.2 0z" />
+    <path d="M16.8 9.6h1.8a2.3 2.3 0 0 1 0 4.6h-1.8" />
+    <path d="M4.6 20.2h13.2" />
+  </S>
+);
+
+export const IconScooter = (p: P) => (
+  <S {...p}>
+    <circle cx="5.8" cy="17.2" r="2.6" />
+    <circle cx="18.2" cy="17.2" r="2.6" />
+    <path d="M8.4 17.2h7.2M15.6 17.2 13.2 7.6h-2.6M18.2 14.6V9.8h-2.6" />
+  </S>
+);
+
+/* --- race controls --- */
+
+export const IconHorn = (p: P) => (
+  <S {...p}>
+    <path d="M3 10v4a1 1 0 0 0 1 1h2l5 4V5L6 9H4a1 1 0 0 0-1 1Z" />
+    <path d="M16 8.5a4.5 4.5 0 0 1 0 7" />
+    <path d="M19 5.5a8.5 8.5 0 0 1 0 13" />
+  </S>
+);
+
+export const IconBrake = (p: P) => (
+  <S {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="3.2" />
+    <path d="M12 3.5v5M12 15.5v5M3.5 12h5M15.5 12h5" />
+  </S>
+);
+
+export const IconDrift = (p: P) => (
+  <S {...p}>
+    <path d="M3 17c3.5 0 5.5-2.2 7-4.6C11.6 9.8 13.6 7 17 7" />
+    <path d="M14 4.5 17.5 7 14 9.5" />
+    <path d="M4.5 20.5c2.6-.4 4.3-1.6 5.6-3.1M9 21.5c2.2-.5 3.7-1.6 4.9-3" />
+  </S>
+);
+
+/** Blinkit Print Store — a real Blinkit surface, referenced in the tab bar. */
+export const IconPrint = (p: P) => (
+  <S {...p}>
+    <path d="M7 9V4.2h10V9" />
+    <rect x="4" y="9" width="16" height="7" rx="1.8" />
+    <path d="M7 14h10v5.8H7z" />
+  </S>
+);
+
+/** Voice search — the real Blinkit search field has one on the right. */
+export const IconMic = (p: P) => (
+  <S {...p}>
+    <rect x="9" y="2.8" width="6" height="11" rx="3" />
+    <path d="M5.4 11.2a6.6 6.6 0 0 0 13.2 0M12 17.8V21" />
+  </S>
+);
+
+/** Wallet chip in the header. */
+export const IconWallet = (p: P) => (
+  <F {...p}>
+    <path d="M3.2 7.6A2.6 2.6 0 0 1 5.8 5h10.9a2.6 2.6 0 0 1 2.6 2.6v.6H5.8a2.6 2.6 0 0 1-2.6-.6z" />
+    <path d="M3.2 9.4h15.4A2.4 2.4 0 0 1 21 11.8v5.6a2.4 2.4 0 0 1-2.4 2.4H5.6a2.4 2.4 0 0 1-2.4-2.4z" />
+    <circle cx="16.6" cy="14.6" r="1.35" fill="#fff" />
+  </F>
+);
+
+/** Order Again — the second tab in Blinkit's bottom bar. */
+export const IconBag = (p: P) => (
+  <S {...p}>
+    <path d="M4.6 8.4h14.8l-1.1 11a1.8 1.8 0 0 1-1.8 1.6H7.5a1.8 1.8 0 0 1-1.8-1.6z" />
+    <path d="M8.8 8.4V6.6a3.2 3.2 0 0 1 6.4 0v1.8" />
+  </S>
+);
+
+/** Filled house for the active home tab. */
+export const IconHouse = (p: P) => (
+  <F {...p}>
+    <path d="M11.3 2.9a1.1 1.1 0 0 1 1.4 0l8 6.6c.3.2.4.5.4.85V20a1.2 1.2 0 0 1-1.2 1.2h-4.6a.9.9 0 0 1-.9-.9v-4.2a2.4 2.4 0 0 0-4.8 0v4.2a.9.9 0 0 1-.9.9H4.1A1.2 1.2 0 0 1 2.9 20v-9.65c0-.35.15-.65.4-.85z" />
+  </F>
+);
+
+/* ---- category rail: Blinkit uses monochrome line icons, not emoji ---- */
+
+export const IconBasket = (p: P) => (
+  <S {...p}>
+    <path d="M3.4 9.4h17.2l-1.5 9.1a2 2 0 0 1-2 1.7H6.9a2 2 0 0 1-2-1.7z" />
+    <path d="M8.4 9.4 10.6 4M15.6 9.4 13.4 4" />
+  </S>
+);
+
+export const IconHeadphones = (p: P) => (
+  <S {...p}>
+    <path d="M4.2 15.4v-3.2a7.8 7.8 0 0 1 15.6 0v3.2" />
+    <rect x="2.6" y="14.2" width="4.2" height="6.2" rx="2.1" />
+    <rect x="17.2" y="14.2" width="4.2" height="6.2" rx="2.1" />
+  </S>
+);
+
+export const IconLipstick = (p: P) => (
+  <S {...p}>
+    <path d="M9.2 9.6V5.4a1.8 1.8 0 0 1 1-1.6l2.4-1.2a.8.8 0 0 1 1.2.7v6.3" />
+    <rect x="8.2" y="9.6" width="6.6" height="4" rx="1" />
+    <path d="M8.8 13.6h5.4v6.2a1.4 1.4 0 0 1-1.4 1.4h-2.6a1.4 1.4 0 0 1-1.4-1.4z" />
+  </S>
+);
+
+export const IconGift = (p: P) => (
+  <S {...p}>
+    <rect x="3.2" y="9.2" width="17.6" height="4.2" rx="1" />
+    <path d="M4.8 13.4h14.4v6.2a1.4 1.4 0 0 1-1.4 1.4H6.2a1.4 1.4 0 0 1-1.4-1.4zM12 9.2V21" />
+    <path d="M12 9.2S10.8 3.4 8.2 3.4a2.4 2.4 0 0 0 0 5.8zM12 9.2s1.2-5.8 3.8-5.8a2.4 2.4 0 0 1 0 5.8z" />
+  </S>
+);
+
+/* ---- PDP sheet chrome, matching Blinkit's real product page ---- */
+
+export const IconHeart = (p: P) => (
+  <S {...p}>
+    <path d="M12 20.3s-7.6-4.7-7.6-9.8a4.3 4.3 0 0 1 7.6-2.7 4.3 4.3 0 0 1 7.6 2.7c0 5.1-7.6 9.8-7.6 9.8z" />
+  </S>
+);
+
+/** Replacement policy row. */
+export const IconReplace = (p: P) => (
+  <S {...p}>
+    <path d="M3.6 8.6 12 4.4l8.4 4.2v6.8L12 19.6l-8.4-4.2z" />
+    <path d="M3.6 8.6 12 12.8l8.4-4.2M12 12.8v6.8" />
+  </S>
+);

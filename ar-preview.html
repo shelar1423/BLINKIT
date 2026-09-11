@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>AR track preview</title>
+    <style>
+      body { margin: 0; background: #0b0d12; font: 13px system-ui; color: #fff; }
+      #wrap { position: relative; width: 100vw; height: 100vh; }
+      #note {
+        position: fixed; left: 12px; bottom: 12px; z-index: 5;
+        background: rgba(0,0,0,0.62); padding: 8px 11px; border-radius: 8px;
+        font-size: 11px; line-height: 1.5; max-width: 62vw;
+      }
+      b { color: #F8CB46; }
+    </style>
+  </head>
+  <body>
+    <div id="wrap"></div>
+    <div id="note">
+      <b>Not a real AR capture.</b> This is the exact geometry the AR session anchors to your
+      surface — <code>setPresentation('ar')</code>, scaled to the same 2.4 m footprint — rendered
+      on a neutral ground so it can be seen without a headset. In AR your room is the background.
+    </div>
+
+    <script type="module">
+      /*
+        Dev-only. Shows the AR-placed circuit honestly: same engine, same
+        AR presentation mode (no ground disc, no asteroid field), same footprint.
+        Delete ar-preview.html when done.
+      */
+      import * as THREE from 'three';
+      import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+      import { RaceEngine } from '/src/lib/three/raceEngine.ts';
+      import { loadCar } from '/src/lib/three/modelLoader.ts';
+
+      const wrap = document.getElementById('wrap');
+      const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+      renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+      renderer.setSize(innerWidth, innerHeight, false);
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      // same tone mapping the AR session and the 3D race now use
+      renderer.toneMapping = THREE.NeutralToneMapping;
+      renderer.toneMappingExposure = 1.0;
+      renderer.domElement.style.cssText = 'display:block;width:100%;height:100%';
+      wrap.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0b0d12);
+
+      const pmrem = new THREE.PMREMGenerator(renderer);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+      // AR lighting: a neutral room, not the starfield
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1.9));
+      const dir = new THREE.DirectionalLight(0xffffff, 2.1);
+      dir.position.set(1.4, 3.0, 1.2);
+      scene.add(dir);
+
+      // a plain ground so the tabletop footprint is legible
+      const floor = new THREE.Mesh(
+        new THREE.CircleGeometry(3.2, 64).rotateX(-Math.PI / 2),
+        new THREE.MeshStandardMaterial({ color: 0x171a21, roughness: 1 }),
+      );
+      floor.position.y = -0.002;
+      scene.add(floor);
+
+      const engine = new RaceEngine({ laps: 2, duration: 45 });
+      engine.setPresentation('ar');                       // drops ground disc + asteroid field
+      const sizeM = 2.4;                                  // arSession's default footprint
+      engine.root.scale.setScalar(sizeM / engine.trackExtent);
+      scene.add(engine.root);
+
+      engine.setCar(await loadCar('/models/ballistik.glb', 4.2));
+
+      const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.01, 60);
+      let last = performance.now();
+      let theta = 0.6;
+
+      addEventListener('resize', () => {
+        renderer.setSize(innerWidth, innerHeight, false);
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+      });
+
+      window.__ar = { engine, renderer, scene, camera, setAngle: (t) => (theta = t) };
+
+      renderer.setAnimationLoop((now) => {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        engine.update(dt);                                // keeps debris tumbling
+        theta += dt * 0.12;                               // slow orbit so it can be seen
+        const r = 2.6;
+        camera.position.set(Math.sin(theta) * r, 1.28, Math.cos(theta) * r);
+        camera.lookAt(0, 0.06, 0);
+        renderer.render(scene, camera);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,80 @@
+import { createContext, lazy, Suspense, useCallback, useContext, useMemo, useState } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import { BottomNav } from './components/blinkit/BottomNav';
+import { IconCheck } from './components/Icons';
+import ErrorBoundary from './components/ErrorBoundary';
+
+import Home from './pages/Home';
+import HotWheels from './pages/HotWheels';
+const Product = lazy(() => import('./pages/Product'));
+import Campaign from './pages/Campaign';
+import Race from './pages/Race';
+const RacePlay = lazy(() => import('./pages/RacePlay'));
+const ARView = lazy(() => import('./pages/ARView'));
+import Rewards from './pages/Rewards';
+import Leaderboard from './pages/Leaderboard';
+import Invite from './pages/Invite';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import OrderSuccess from './pages/OrderSuccess';
+import NotFound from './pages/NotFound';
+
+/* ---------------- toast ---------------- */
+type ToastCtx = { toast: (msg: string) => void };
+const Ctx = createContext<ToastCtx>({ toast: () => {} });
+export const useToast = () => useContext(Ctx);
+
+/** Routes that take over the screen — no bottom nav, no page padding. */
+const FULLSCREEN = ['/race/play'];
+/** Routes with their own sticky action bar, where Blinkit drops the tab bar. */
+const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/checkout$/, /^\/ar(\/|$)/];
+
+export default function App() {
+  const [msg, setMsg] = useState<string | null>(null);
+  const loc = useLocation();
+
+  const toast = useCallback((m: string) => {
+    setMsg(m);
+    window.clearTimeout((toast as unknown as { t?: number }).t);
+    (toast as unknown as { t?: number }).t = window.setTimeout(() => setMsg(null), 2200);
+  }, []);
+
+  const value = useMemo(() => ({ toast }), [toast]);
+  const full = FULLSCREEN.some((p) => loc.pathname.startsWith(p));
+  const hideNav = full || NO_NAV.some((re) => re.test(loc.pathname));
+
+  return (
+    <Ctx.Provider value={value}>
+      <div className="app">
+        <ErrorBoundary>
+        <Suspense fallback={<div className="loadbox" style={{ minHeight: '60vh' }}><span className="spin" /><p>Loading…</p></div>}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/hot-wheels" element={<HotWheels />} />
+          <Route path="/hot-wheels/:id" element={<Product />} />
+          <Route path="/campaign" element={<Campaign />} />
+          <Route path="/race" element={<Race />} />
+          <Route path="/race/play" element={<RacePlay />} />
+          <Route path="/ar" element={<ARView />} />
+          <Route path="/ar/:id" element={<ARView />} />
+          <Route path="/rewards" element={<Rewards />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/invite" element={<Invite />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        </Suspense>
+        </ErrorBoundary>
+        {!hideNav && <BottomNav />}
+      </div>
+      {msg && (
+        <div className="toast" role="status" aria-live="polite">
+          <IconCheck size={16} />
+          <span>{msg}</span>
+        </div>
+      )}
+    </Ctx.Provider>
+  );
+}

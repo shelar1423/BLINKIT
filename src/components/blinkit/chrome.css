@@ -1,0 +1,230 @@
+/* ---------- wordmark ---------- */
+.bmark {
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  color: var(--ink);
+  line-height: 1;
+  font-style: normal;
+}
+.bmark i { font-style: normal; color: var(--green); }
+.bmark--on-dark { color: #fff; }
+.bmark--on-dark i { color: var(--yellow); }
+
+/* ============================================================
+   Home header.
+
+   Default is Blinkit's yellow block. During a campaign Blinkit re-skins the
+   whole header in the campaign's colours (Ganeshotsav runs deep maroon), so
+   `.bhdr--campaign` runs the Hot Wheels takeover in flame red.
+   ============================================================ */
+.bhdr {
+  position: relative;
+  z-index: 30;
+  background: var(--yellow);
+  padding: calc(var(--safe-t) + 10px) 0 0;
+  color: var(--ink);
+}
+.bhdr--campaign {
+  background:
+    radial-gradient(120% 80% at 82% 4%, rgba(255, 160, 40, 0.55) 0%, rgba(255, 160, 40, 0) 58%),
+    linear-gradient(178deg, #E03A12 0%, #C41F14 52%, #9E1410 100%);
+  color: #fff;
+}
+
+.bhdr__top { display: flex; align-items: flex-start; gap: 10px; padding: 0 var(--gut); }
+.bhdr__eta { flex: 1; min-width: 0; }
+.bhdr__kicker {
+  font-size: var(--f-md);
+  font-weight: 600;
+  opacity: 0.86;
+  line-height: 1.1;
+}
+.bhdr__minsrow { display: flex; align-items: center; gap: 8px; margin-top: 1px; }
+.bhdr__mins {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.9px;
+  line-height: 1.12;
+}
+@media (min-width: 768px) { .bhdr__mins { font-size: 30px; } }
+.bhdr__dist {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px; padding: 3px 9px;
+  font-size: var(--f-xs); font-weight: 600; white-space: nowrap;
+}
+.bhdr:not(.bhdr--campaign) .bhdr__dist { background: rgba(31, 31, 31, 0.1); }
+.bhdr__addr {
+  display: flex; align-items: center; gap: 4px;
+  font-size: var(--f-base); font-weight: 500;
+  margin-top: 3px; max-width: 100%; color: inherit;
+}
+
+.bhdr__acts { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; padding-top: 4px; }
+.bhdr__wallet {
+  display: grid; justify-items: center; gap: 3px; color: inherit;
+}
+.bhdr__wallet-ic {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  display: grid; place-items: center; color: var(--yellow);
+}
+.bhdr:not(.bhdr--campaign) .bhdr__wallet-ic { background: rgba(31, 31, 31, 0.08); color: var(--ink); }
+.bhdr__wallet-v {
+  background: rgba(0, 0, 0, 0.42); color: #fff;
+  border-radius: 999px; padding: 1px 7px;
+  font-size: var(--f-2xs); font-weight: 700; line-height: 1.5;
+  margin-top: -9px;
+}
+.bhdr__avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  display: grid; place-items: center; color: inherit;
+}
+.bhdr:not(.bhdr--campaign) .bhdr__avatar { background: rgba(31, 31, 31, 0.08); }
+
+/* the search field is a full pill in the real app, with a mic on the right */
+.bsearch {
+  margin: 12px var(--gut) 0;
+  width: calc(100% - var(--gut) * 2);
+  height: 46px;
+  display: flex; align-items: center; gap: 10px; padding: 0 16px;
+  border: 0; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--mut); font-size: var(--f-base); text-align: left;
+}
+.bhdr:not(.bhdr--campaign) .bsearch { background: #fff; box-shadow: 0 1px 3px rgba(31, 31, 31, 0.1); }
+.bsearch__div { width: 1px; height: 20px; background: var(--line-2); flex: 0 0 1px; }
+
+/* ---------- category rail ---------- */
+.crail {
+  display: flex; gap: 2px; margin-top: 10px;
+  padding: 0 var(--gut);
+  overflow-x: auto; scrollbar-width: none;
+}
+.crail::-webkit-scrollbar { display: none; }
+.crail__i {
+  position: relative;
+  flex: 1 0 auto; min-width: 74px;
+  display: grid; justify-items: center; gap: 3px;
+  padding: 4px 6px 9px;
+  color: inherit; opacity: 0.74;
+  font-size: var(--f-sm); font-weight: 600;
+  border-bottom: 3px solid transparent;
+}
+.crail__ic { position: relative; display: grid; place-items: center; height: 25px; }
+.crail__l { white-space: nowrap; }
+.crail__i.is-on { opacity: 1; font-weight: 800; border-bottom-color: currentColor; }
+.crail__i.is-inert { opacity: 0.55; pointer-events: none; }
+.crail__badge {
+  position: absolute; top: -6px; left: 56%;
+  background: var(--green); color: #fff;
+  border-radius: 999px; padding: 1px 5px;
+  font-size: 8px; font-weight: 800; font-style: normal;
+  letter-spacing: 0.02em; line-height: 1.5;
+}
+
+/* ---------- inner page header ---------- */
+.phdr {
+  position: sticky; top: 0; z-index: 30;
+  background: #fff; border-bottom: 1px solid var(--line);
+  padding: calc(var(--safe-t) + 8px) var(--gut) 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.phdr__back {
+  width: 34px; height: 34px; margin-left: -6px;
+  display: grid; place-items: center; border-radius: 50%; color: var(--ink);
+}
+.phdr__back:active { background: var(--surface-2); }
+.phdr__t { font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.3px; }
+.phdr__s { font-size: var(--f-xs); color: var(--mut); margin-top: 1px; }
+
+/* ============================================================
+   Bottom navigation — a floating pill, not a docked bar.
+   ============================================================ */
+.bnav-wrap {
+  position: sticky; bottom: 0; z-index: 30;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px calc(10px + var(--safe-b));
+  pointer-events: none;
+  background: linear-gradient(rgba(255, 255, 255, 0) 0%, var(--surface) 46%);
+}
+.bnav-wrap > * { pointer-events: auto; }
+.bnav {
+  flex: 1; min-width: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  align-items: center;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 4px;
+  box-shadow: 0 6px 22px rgba(31, 31, 31, 0.14);
+}
+.bnav__i {
+  display: grid; justify-items: center; gap: 2px;
+  padding: 2px; color: var(--mut);
+  font-size: var(--f-2xs); font-weight: 600;
+  min-width: 0;
+}
+.bnav__ic {
+  display: grid; place-items: center;
+  width: 40px; height: 26px; border-radius: 999px;
+  transition: background-color 0.16s ease;
+}
+.bnav__ic.is-on { background: var(--yellow); color: var(--ink); }
+.bnav__l { line-height: 1.2; text-align: center; white-space: nowrap; }
+.bnav__i.is-on { color: var(--ink); }
+.bnav__i.is-on .bnav__l { font-weight: 800; }
+.bnav__i.is-inert { opacity: 0.5; cursor: default; pointer-events: none; }
+
+/* partner shortcut beside the bar — District in the live app, the race here */
+.bnav__fab {
+  flex: 0 0 auto;
+  width: 58px; height: 58px; border-radius: 50%;
+  background: linear-gradient(150deg, var(--hw-o), var(--hw-r));
+  color: #fff; display: grid; place-items: center;
+  box-shadow: 0 6px 22px rgba(237, 28, 36, 0.42);
+}
+.bnav__fab:active { transform: scale(0.95); }
+.bnav__fab-t {
+  font-size: 13px; font-weight: 800; letter-spacing: -0.04em; line-height: 1;
+}
+.bnav__fab-t b { color: var(--yellow); font-weight: 800; }
+
+/* ---------- floating bar above the nav ---------- */
+.floatbar {
+  position: sticky; bottom: calc(var(--nav-h) + var(--safe-b) + 14px);
+  z-index: 29; display: flex; align-items: stretch; gap: 8px;
+  padding: 0 10px; margin-bottom: 8px; pointer-events: none;
+}
+.floatbar > * { pointer-events: auto; }
+.freepill {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--ink); color: #fff;
+  border-radius: var(--r-md); padding: 10px 12px;
+  font-size: var(--f-md); font-weight: 700;
+  box-shadow: 0 6px 18px rgba(31, 31, 31, 0.22);
+}
+.freepill__ic {
+  width: 30px; height: 30px; border-radius: 50%; flex: 0 0 30px;
+  background: var(--yellow); color: var(--ink); display: grid; place-items: center;
+}
+.cartpill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--green); color: #fff;
+  border-radius: var(--r-md); padding: 7px 12px 7px 7px;
+  box-shadow: 0 6px 18px rgba(12, 131, 31, 0.3);
+  flex: 0 0 auto;
+}
+.cartpill img { width: 34px; height: 34px; object-fit: contain; background: #fff; border-radius: 7px; padding: 2px; }
+.cartpill b { display: block; font-size: var(--f-base); font-weight: 800; line-height: 1.15; }
+.cartpill small { display: block; font-size: var(--f-xs); opacity: 0.92; }
+
+/* free-delivery progress inside the floating bar */
+.freepill__t { display: block; font-size: var(--f-md); font-weight: 700; line-height: 1.25; }
+.freepill__bar {
+  display: block; height: 4px; border-radius: 3px; margin-top: 6px;
+  background: rgba(255, 255, 255, 0.22); overflow: hidden;
+}
+.freepill__bar i { display: block; height: 100%; border-radius: 3px; background: var(--yellow); transition: width 0.35s ease; }

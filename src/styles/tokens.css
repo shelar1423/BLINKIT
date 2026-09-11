@@ -1,0 +1,127 @@
+/* ============================================================
+   Blinkit design system — values read off the live Blinkit
+   product (blinkit.com computed styles + :root custom property
+   dump), not invented. Campaign accents are additive only.
+
+   Source of truth, sampled from blinkit.com:
+     --colors-base-yellow   #F8CB46
+     --colors-base-green    #318616   (brand green)
+     --color__grg1          #0C831F   (action green: ADD, price, ETA)
+     --colors-base-black    #1F1F1F
+     --colors-base-appbase  #F5F8FA
+     --color__grc2          #666666   (dominant body text)
+     --header__height--mobile 68px
+   ============================================================ */
+
+/* Blinkit sets Okra, a licensed ITF typeface we can't redistribute.
+   Figtree (SIL OFL) is the closest open match: same large x-height,
+   low contrast and round geometric bowls. One variable file, 300–900. */
+@font-face {
+  font-family: 'Blinkit Sans';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('/fonts/figtree-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Blinkit Sans';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('/fonts/figtree-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  /* --- brand: yellow is the ground, green is the action --- */
+  --yellow: #F8CB46;        /* --colors-base-yellow: header, app icon, promo */
+  --yellow-dk: #F3C117;     /* --colors-yellow-500: pressed state */
+  --yellow-lt: #FCDF82;     /* --colors-yellow-300: header gradient tail */
+  --yellow-tint: #FEFAEC;   /* --colors-yellow-100: tinted surfaces */
+
+  --green: #0C831F;         /* --color__grg1: ADD control, price, ETA, CTA */
+  --green-dk: #0A6B19;      /* pressed */
+  --green-2: #318616;       /* --colors-base-green: secondary brand green */
+  --green-tint: #ECFFEC;    /* --color__grg8 */
+
+  /* --- neutrals: Blinkit's grey ramp, not invented --- */
+  --ink: #1F1F1F;           /* --colors-base-black: primary / product name */
+  --ink-2: #363636;         /* --colors-grey-900: secondary */
+  --mut: #666666;           /* --color__grc2: tertiary — the dominant text tone */
+  --mut-2: #828282;         /* --colors-grey-600: quaternary / struck prices */
+  --line: #E8E8E8;          /* --colors-grey-200: hairline / header border */
+  --line-2: #DDDDDD;        /* --color__grc5: ADD button border */
+  --surface: #FFFFFF;
+  --surface-2: #F7F7F7;     /* --color__grc10 */
+  --appbase: #F5F8FA;       /* --colors-base-appbase: page ground behind cards */
+
+  /* --- campaign accents (Hot Wheels) ---
+     Hot Wheels yellow (#FFC400) is deliberately absent: it collides with
+     Blinkit's own #F8CB46. The campaign leads with flame red instead, which
+     is both unmistakably Hot Wheels and maximally legible on yellow. */
+  --hw-r: #ED1C24;          /* flame red — primary campaign accent */
+  --hw-r-dk: #C2121A;       /* pressed */
+  --hw-r-tint: #FFF0F0;
+  --hw-o: #FF6A00;          /* flame orange — gradient partner only */
+  --hw-b: #0B5FD0;          /* Hot Wheels blue — rare, for 3D/AR affordances */
+
+  /* dark surfaces: only the 3D race + AR viewports, never commerce chrome.
+     Neutral blue-black pit lane — no purple anywhere in this build. */
+  --tk-1: #131A26;
+  --tk-2: #080B12;
+  --tk-mut: #9AA6BC;
+  --tk-line: rgba(255, 255, 255, 0.12);
+
+  /* --- type scale: mobile first --- */
+  --f-2xs: 10px;
+  --f-xs: 11px;
+  --f-sm: 12px;
+  --f-md: 13px;
+  --f-base: 14px;
+  --f-lg: 15px;
+  --f-xl: 17px;
+  --f-2xl: 20px;
+
+  /* --- radius: Blinkit is rounder than most Indian q-commerce --- */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+
+  /* --- spacing --- */
+  --gut: 12px;
+  --shell: 1100px;
+
+  /* --- elevation: Blinkit uses hairlines + one soft card shadow --- */
+  --sh-1: 0 1px 2px rgba(31, 31, 31, 0.06);
+  --sh-2: 0 2px 8px rgba(31, 31, 31, 0.08);
+  --sh-up: 0 -1px 0 var(--line);
+
+  /* --- chrome heights --- */
+  --hdr-h: 68px;            /* --header__height--mobile */
+  --nav-h: 56px;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --f-2xs: 11px;
+    --f-xs: 12px;
+    --f-sm: 13px;
+    --f-md: 14px;
+    --f-base: 15px;
+    --f-lg: 16px;
+    --f-xl: 19px;
+    --f-2xl: 24px;
+    --gut: 20px;
+    --hdr-h: 76px;
+  }
+}
