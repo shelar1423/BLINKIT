@@ -95,49 +95,52 @@ type Opts = {
 /* ---------- shared scene furniture ---------- */
 
 /**
- * Placement reticle, drawn as a tyre mark rather than a generic radar target.
+ * Placement reticle: a real burnout mark, textured rather than drawn.
  *
- * The old one used a cyan (#00ffcc) pulse that belonged to no palette in this
- * build. A scuffed tyre print reads instantly as "the car goes here", and it is
- * the campaign's own language — rubber on the ground.
+ * This was 15 meshes of hand-built tread — a scuff disc plus fourteen little
+ * tread blocks — which read as exactly what it was: geometry pretending to be
+ * rubber. One photographic ring on a single plane replaces all of it, and looks
+ * like rubber because it is a photograph of rubber.
+ *
+ * The texture is pure black on transparent, so it can be tinted and faded from
+ * code: dimmed while the surface is only provisional, full once tracking locks.
  */
 function makeReticle() {
   const g = new THREE.Group();
 
-  // scorched rubber patch the tread sits on
-  const scuff = new THREE.Mesh(
-    new THREE.CircleGeometry(0.15, 44).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 0x120d0a, transparent: true, opacity: 0.5, side: THREE.DoubleSide }),
+  const tex = new THREE.TextureLoader().load('/decor/tire-mark.webp');
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  const burnout = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.46, 0.46).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      opacity: 0.88,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    }),
   );
-  scuff.position.y = 0.0005;
+  burnout.name = 'burnout';
+  burnout.position.y = 0.0006;
+  burnout.renderOrder = -1;
 
-  // two tyre tracks, treads laid across them
-  const treadMat = new THREE.MeshBasicMaterial({ color: 0x1a1513, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
-  const treadGeo = new THREE.PlaneGeometry(0.052, 0.014).rotateX(-Math.PI / 2);
-  for (const lane of [-0.055, 0.055]) {
-    for (let i = -3; i <= 3; i++) {
-      const t = new THREE.Mesh(treadGeo, treadMat);
-      t.position.set(lane, 0.0015, i * 0.026);
-      g.add(t);
-    }
-  }
-
-  // hot ring — the reticle still has to read as a target
+  // hot ring — the reticle still has to read as a target, not just a stain
   const ring = new THREE.Mesh(
-    new THREE.RingGeometry(0.135, 0.155, 48).rotateX(-Math.PI / 2),
+    new THREE.RingGeometry(0.135, 0.152, 48).rotateX(-Math.PI / 2),
     new THREE.MeshBasicMaterial({ color: color.hwO.int, transparent: true, opacity: 0.95, side: THREE.DoubleSide }),
   );
   ring.position.y = 0.002;
 
-  // the pulse that says the surface is locked — flame orange, not cyan
+  // pulse that says the surface is locked
   const pulseRing = new THREE.Mesh(
-    new THREE.RingGeometry(0.17, 0.185, 48).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: color.yellow.int, transparent: true, opacity: 0.6, side: THREE.DoubleSide }),
+    new THREE.RingGeometry(0.168, 0.182, 48).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: color.yellow.int, transparent: true, opacity: 0.55, side: THREE.DoubleSide }),
   );
   pulseRing.name = 'pulseRing';
   pulseRing.position.y = 0.002;
 
-  // four chequered ticks around the ring, the start-line motif
+  // four chequered ticks, the start-line motif
   const tickGeo = new THREE.PlaneGeometry(0.03, 0.012).rotateX(-Math.PI / 2);
   for (let i = 0; i < 4; i++) {
     const ang = (i * Math.PI) / 2 + Math.PI / 4;
@@ -145,7 +148,7 @@ function makeReticle() {
       tickGeo,
       new THREE.MeshBasicMaterial({ color: i % 2 ? 0xffffff : color.ink.int, side: THREE.DoubleSide }),
     );
-    tick.position.set(Math.cos(ang) * 0.168, 0.0025, Math.sin(ang) * 0.168);
+    tick.position.set(Math.cos(ang) * 0.166, 0.0025, Math.sin(ang) * 0.166);
     tick.rotation.y = -ang;
     g.add(tick);
   }
@@ -155,7 +158,7 @@ function makeReticle() {
   for (let x = -4; x <= 4; x++) {
     for (let z = -4; z <= 4; z++) {
       const d = Math.hypot(x, z);
-      if (d <= 4.2 && d >= 2.4) pts.push(x * 0.062, 0, z * 0.062);
+      if (d <= 4.2 && d >= 2.6) pts.push(x * 0.066, 0, z * 0.066);
     }
   }
   const ptsGeo = new THREE.BufferGeometry();
@@ -166,7 +169,7 @@ function makeReticle() {
   );
   gridPoints.name = 'gridPoints';
 
-  g.add(scuff, ring, pulseRing, gridPoints);
+  g.add(burnout, ring, pulseRing, gridPoints);
   return g;
 }
 
@@ -627,6 +630,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       if (gp) {
         gp.rotation.y = now * 0.0012;
       }
+      // a slow counter-rotation stops the burnout reading as a flat decal
+      const bo = reticle.getObjectByName('burnout');
+      if (bo) bo.rotation.y = -now * 0.00035;
 
       // Also check transient (tap-position) hit-test results to update
       // reticle to where the user last tapped
@@ -1018,6 +1024,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       if (gp) {
         gp.rotation.y = now * 0.0012;
       }
+      // a slow counter-rotation stops the burnout reading as a flat decal
+      const bo = reticle.getObjectByName('burnout');
+      if (bo) bo.rotation.y = -now * 0.00035;
     }
     if (phase === 'racing') {
       engine.update(dt);
