@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '../design/elements';
 import type React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
 import { HERO_CARS, rupees } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
@@ -20,6 +20,7 @@ import {
 } from '../design/elements/Icons';
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
+import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 export default function ARView() {
   const { id } = useParams();
@@ -37,6 +38,10 @@ export default function ARView() {
   const handle = useRef<ARHandle | null>(null);
 
   const [support, setSupport] = useState<ARSupport | null>(null);
+  const [search] = useSearchParams();
+  /* "View in your space" on the product page means look at the car, not race
+     it. The race entry point passes no mode and still gets the circuit. */
+  const inspect = search.get('mode') === 'inspect';
   const [phase, setPhase] = useState<ARPhase | null>(null);
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<RaceStats | null>(null);
@@ -68,6 +73,7 @@ export default function ARView() {
         glbUrl: car.glb,
         overlayRoot: overlay.current,
         trackSize: 2.4,
+        mode: inspect ? 'inspect' : 'race',
         onPhase: setPhase,
         onTick: setStats,
         onPickup: () => {},
@@ -96,10 +102,36 @@ export default function ARView() {
     } finally {
       setBusy(false);
     }
-  }, [car.glb, onFinish, toast, support]);
+  }, [car.glb, onFinish, toast, support, inspect]);
 
   /* ---------- driving while racing in AR ---------- */
   const [drift, setDrift] = useState(false);
+  /* Tilt steering, same module the 3D race uses. In AR it matters more: you are
+     already holding the phone up at the scene, so reaching for on-screen pads
+     means taking a hand off the thing you are aiming. Motion permission is
+     already granted by this point — the camera session requests it during
+     launch — so there is no second prompt here. */
+  const tilt = useRef<TiltSteer | null>(null);
+  const [tiltState, setTiltState] = useState<TiltState>(() => initialTiltState());
+  const tiltDriving = tiltState === 'active';
+
+  useEffect(() => {
+    if (phase !== 'racing') return;
+    const t = createTiltSteer({
+      onSteer: (v) => handle.current?.setSteer(v),
+      onStateChange: setTiltState,
+    });
+    tilt.current = t;
+    // the AR launch flow has already raised the iOS motion prompt
+    void t.enable().then((st) => {
+      if (st === 'active') t.start();
+    });
+    return () => {
+      t.stop();
+      tilt.current = null;
+    };
+  }, [phase]);
+
   const press = useCallback((dir: number) => handle.current?.setSteer(dir), []);
   const release = useCallback(() => handle.current?.setSteer(0), []);
   const gas = useCallback((on: boolean) => handle.current?.setThrottle(on ? 1 : 0), []);
@@ -288,7 +320,7 @@ export default function ARView() {
 
             {/* In-race driving controls */}
             {phase === 'racing' && (
-              <div className="arov__drive">
+              <div className={'arov__drive' + (tiltDriving ? ' is-tilt' : '')}>
                 <div className="arov__steer">
                   <button
                     type="button"
@@ -354,9 +386,11 @@ export default function ARView() {
               )}
               {phase === 'placed' && (
                 <>
-                  <Button variant="flame" block type="button" onClick={() => handle.current?.startRace()}>
-                    Start race
-                  </Button>
+                  {!inspect && (
+                    <Button variant="flame" block type="button" onClick={() => handle.current?.startRace()}>
+                      Start race
+                    </Button>
+                  )}
                   <Button variant="ghostDark" block type="button" onClick={() => handle.current?.reset()}>
                     <IconRotate size={15} /> Reposition track
                   </Button>

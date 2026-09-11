@@ -333,8 +333,13 @@ export default function RacePlay() {
 
       {outcome && (
         <div className="result">
-          <img className="result__hero" src="/campaign/08-race-complete-illustration.webp" alt="" />
-          <h1 className="result__t">{outcome.finished ? 'Race complete' : "Time's up"}</h1>
+          <div className="result__herowrap">
+            <img className="result__hero" src="/campaign/08-race-complete-illustration.webp" alt="" />
+          </div>
+          <p className="result__kick">{outcome.finished ? 'FINISHED' : 'TIME UP'}</p>
+          <h1 className="result__t">
+            {outcome.finished ? 'You raced it home' : 'So close!'}
+          </h1>
           <div className="result__g">
             <div>
               <b className="t-num">{outcome.score.toLocaleString('en-IN')}</b>
@@ -377,19 +382,32 @@ export default function RacePlay() {
                 Claim reward
               </Button>
             )}
-            <Button variant="ghostDark" block
-              type="button"
-              disabled={useStore.getState().racesLeft <= 0}
-              onClick={() => window.location.reload()}
-            >
-              Race again ({useStore.getState().racesLeft} left)
-            </Button>
-            <Button variant="ghostDark" block type="button" onClick={() => nav('/leaderboard')}>
-              Leaderboard
-            </Button>
-            <Button variant="ghostDark" block type="button" onClick={() => nav('/campaign')}>
-              Back to campaign
-            </Button>
+            {!tier && (
+              <Button variant="flame" size="lg" block
+                type="button"
+                disabled={useStore.getState().racesLeft <= 0}
+                onClick={() => window.location.reload()}
+              >
+                Race again ({useStore.getState().racesLeft} left)
+              </Button>
+            )}
+            <div className="result__more">
+              {tier && (
+                <Button variant="ghostDark"
+                  type="button"
+                  disabled={useStore.getState().racesLeft <= 0}
+                  onClick={() => window.location.reload()}
+                >
+                  Race again
+                </Button>
+              )}
+              <Button variant="ghostDark" type="button" onClick={() => nav('/leaderboard')}>
+                Leaderboard
+              </Button>
+              <Button variant="ghostDark" type="button" onClick={() => nav('/campaign')}>
+                Campaign
+              </Button>
+            </div>
           </div>
         </div>
       )}

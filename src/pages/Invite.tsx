@@ -79,7 +79,7 @@ export default function Invite() {
             </Button>
           </div>
 
-          <img src="/campaign/21-friend-challenge-card.webp" alt="" style={{ width: '100%', borderRadius: 'var(--r-lg)' }} />
+          <img src="/campaign/card-leaderboard.webp" alt="" style={{ width: '100%', borderRadius: 'var(--r-lg)' }} />
 
           <p className="t-xs" style={{ lineHeight: 1.6 }}>
             Sharing uses your device&rsquo;s own share sheet. No contact list is read and nothing is sent on your behalf.

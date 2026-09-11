@@ -269,7 +269,15 @@ export class RaceEngine {
     pop: number;
   }[] = [];
 
-  private debris: { mesh: THREE.Mesh; t: number; lateral: number; spin: THREE.Vector3 }[] = [];
+  private debris: {
+    mesh: THREE.Mesh;
+    t: number;
+    lateral: number;
+    spin: THREE.Vector3;
+    /** >0 once hit: seconds since it shattered, drives the shard animation. */
+    broken: number;
+    shards: { mesh: THREE.Mesh; vel: THREE.Vector3; spin: THREE.Vector3 }[];
+  }[] = [];
   private ground: THREE.Mesh | null = null;
   private scenery: THREE.InstancedMesh | null = null;
   /** widest extent of the ROAD itself, ignoring ground and scenery */
@@ -487,9 +495,40 @@ export class RaceEngine {
         t: t % 1,
         lateral,
         spin: new THREE.Vector3(0.25 + (i % 3) * 0.12, 0.4 + (i % 5) * 0.09, 0.18 + (i % 4) * 0.07),
+        broken: 0,
+        shards: [],
       });
       this.root.add(mesh);
     }
+  }
+
+  /**
+   * Break a chunk of debris into tumbling shards. Hitting a rock and having it
+   * sit there unmoved read as scenery; breaking it reads as impact, and it also
+   * tells the player that piece is spent.
+   */
+  private shatter(c: {
+    mesh: THREE.Mesh;
+    broken: number;
+    shards: { mesh: THREE.Mesh; vel: THREE.Vector3; spin: THREE.Vector3 }[];
+  }) {
+    c.broken = 0.0001;
+    c.mesh.visible = false;
+    const geo = new THREE.TetrahedronGeometry(0.26, 0);
+    const mat = c.mesh.material as THREE.Material;
+    for (let i = 0; i < 6; i++) {
+      const sh = new THREE.Mesh(geo, mat);
+      sh.position.copy(c.mesh.position);
+      const a = (i / 6) * Math.PI * 2 + Math.random();
+      sh.scale.setScalar(0.6 + Math.random() * 0.6);
+      this.root.add(sh);
+      c.shards.push({
+        mesh: sh,
+        vel: new THREE.Vector3(Math.cos(a) * (3 + Math.random() * 3), 5 + Math.random() * 4, Math.sin(a) * (3 + Math.random() * 3)),
+        spin: new THREE.Vector3(Math.random() * 9 - 4.5, Math.random() * 9 - 4.5, Math.random() * 9 - 4.5),
+      });
+    }
+    this.disposables.push(geo);
   }
 
   /* ---------------- public API ---------------- */
@@ -738,12 +777,32 @@ export class RaceEngine {
       c.mesh.rotation.z += c.spin.z * dt;
     }
 
-    // --- debris scrubs speed ---
+    // --- debris: clip one and it shatters ---
     for (const c of this.debris) {
+      if (c.broken > 0) {
+        // shards fly out, tumble, fall under gravity and fade
+        c.broken += dt;
+        for (const sh of c.shards) {
+          sh.vel.y -= 26 * dt;
+          sh.mesh.position.addScaledVector(sh.vel, dt);
+          sh.mesh.rotation.x += sh.spin.x * dt;
+          sh.mesh.rotation.y += sh.spin.y * dt;
+          sh.mesh.rotation.z += sh.spin.z * dt;
+          const k = Math.max(0, 1 - c.broken / 1.1);
+          sh.mesh.scale.setScalar(k * 0.9 + 0.1);
+          if (sh.mesh.position.y < 0.05) sh.vel.y = Math.abs(sh.vel.y) * 0.32;
+        }
+        if (c.broken > 1.1) {
+          for (const sh of c.shards) this.root.remove(sh.mesh);
+          c.shards.length = 0;
+        }
+        continue;
+      }
       let dT = Math.abs(c.t - this.t);
       if (dT > 0.5) dT = 1 - dT;
       if (dT * this.curveLen < 1.4 && Math.abs(c.lateral - this.lateral) < 1.2) {
         this.speed *= 0.94;
+        this.shatter(c);
       }
     }
 
@@ -786,6 +845,7 @@ export class RaceEngine {
     for (const d of this.disposables) d.dispose();
     this.disposables.length = 0;
     this.pickups.length = 0;
+    for (const c of this.debris) for (const sh of c.shards) this.root.remove(sh.mesh);
     this.debris.length = 0;
     this.root.clear();
   }

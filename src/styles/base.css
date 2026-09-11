@@ -765,19 +765,69 @@ input, select, textarea { font: inherit; color: inherit; }
 .rewbar span { font-size: var(--f-xs); color: #9C6A34; }
 
 /* ---------- results ---------- */
-.result { position: fixed; inset: 0; z-index: 150; display: grid; align-content: center; gap: 14px;
-  padding: 24px; background: linear-gradient(170deg, var(--tk-1), var(--tk-2)); color: #fff; overflow-y: auto; }
-.result__hero { width: 100%; max-width: 300px; margin: 0 auto; border-radius: var(--r-lg); }
-.result__t { font-size: 26px; font-weight: 800; letter-spacing: -0.6px; text-align: center; }
-.result__g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.result__g > div { background: rgba(255,255,255,0.08); border: 1px solid var(--tk-line); border-radius: var(--r); padding: 10px; text-align: center; }
+/* ============================================================
+   Race result.
+
+   The screen the player lands on after every race, so it should feel like a
+   finish, not a form. Three changes over the flat version: the campaign's own
+   flame gradient behind the hero, a headline that reads as a result rather than
+   a label, and one clear primary action instead of four buttons of equal
+   weight.
+   ============================================================ */
+.result {
+  position: fixed; inset: 0; z-index: 150;
+  display: grid; align-content: center; gap: 12px;
+  padding: 20px 20px 28px;
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(255, 122, 26, 0.30) 0%, rgba(255, 122, 26, 0) 62%),
+    linear-gradient(170deg, #17233B 0%, var(--tk-2) 68%);
+  color: #fff; overflow-y: auto;
+}
+
+/* the hero sits in its own warm pool of light */
+.result__herowrap { position: relative; display: grid; place-items: center; margin-bottom: -4px; }
+.result__herowrap::before {
+  content: '';
+  position: absolute; width: 74%; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 150, 40, 0.42) 0%, rgba(255, 150, 40, 0) 68%);
+}
+.result__hero { position: relative; width: 100%; max-width: 260px; margin: 0 auto; }
+
+.result__kick {
+  text-align: center; font-size: var(--f-2xs); font-weight: 800;
+  letter-spacing: 0.22em; color: var(--hw-o);
+}
+.result__t {
+  font-size: 30px; font-weight: 900; letter-spacing: -0.8px;
+  text-align: center; line-height: 1.05; margin-top: 2px;
+}
+
+.result__g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 4px; }
+.result__g > div {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--tk-line); border-radius: var(--r-md);
+  padding: 11px 8px; text-align: center;
+}
+/* the score is the headline number, so it outranks the other two */
+.result__g > div:first-child { background: rgba(255, 122, 26, 0.14); border-color: rgba(255, 122, 26, 0.4); }
+.result__g > div:first-child b { color: #FFC24A; }
 .result__g b { display: block; font-size: var(--f-xl); font-weight: 800; font-variant-numeric: tabular-nums; }
 .result__g span { font-size: 9px; font-weight: 700; letter-spacing: 0.1em; color: var(--tk-mut); }
-.result__rw { display: flex; align-items: center; gap: 12px; background: linear-gradient(96deg, #1C6F3A, #329537);
-  border-radius: var(--r-lg); padding: 12px 14px; }
-.result__rw img { width: 38px; height: 38px; object-fit: contain; }
+
+.result__rw {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(96deg, #0E5F2C, var(--green));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--r-lg); padding: 12px 14px;
+  box-shadow: 0 8px 24px rgba(12, 131, 31, 0.32);
+}
+.result__rw img { width: 40px; height: 40px; object-fit: contain; }
 .result__rw b { display: block; font-size: var(--f-lg); font-weight: 800; }
 .result__rw span { font-size: var(--f-xs); color: #CFEBD8; }
+
+/* secondary actions read as a row of links, not three more buttons */
+.result__more { display: flex; gap: 8px; margin-top: 2px; }
+.result__more > * { flex: 1; }
 
 /* ---------- car picker ---------- */
 .carpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px var(--gut) 4px; }
@@ -902,3 +952,7 @@ input, select, textarea { font: inherit; color: inherit; }
   font-style: normal; background: var(--green-tint); color: var(--green);
   font-size: var(--f-xs); font-weight: 700; padding: 2px 6px; border-radius: var(--r-xs);
 }
+
+/* Tilt has the wheel in AR — the steering pads would only compete with it. */
+.arov__drive.is-tilt .arov__pad--sm:first-child,
+.arov__drive.is-tilt .arov__pad--sm:nth-child(2) { display: none; }

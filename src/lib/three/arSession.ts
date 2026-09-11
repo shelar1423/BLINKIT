@@ -72,6 +72,13 @@ type Opts = {
   overlayRoot: HTMLElement;
   /** metres — footprint of the placed circuit */
   trackSize?: number;
+  /**
+   * 'inspect' places the car alone — no circuit, no engine, no race. This is
+   * what "View in your space" on the product page means: look at the model on
+   * your table, move it, scale it. Launching a race from a product page was
+   * simply the wrong destination.
+   */
+  mode?: 'race' | 'inspect';
   onPhase: (p: ARPhase) => void;
   onTick: (s: RaceStats) => void;
   onPickup: (points: number, name: string) => void;
@@ -85,54 +92,79 @@ type Opts = {
 
 /* ---------- shared scene furniture ---------- */
 
+/**
+ * Placement reticle, drawn as a tyre mark rather than a generic radar target.
+ *
+ * The old one used a cyan (#00ffcc) pulse that belonged to no palette in this
+ * build. A scuffed tyre print reads instantly as "the car goes here", and it is
+ * the campaign's own language — rubber on the ground.
+ */
 function makeReticle() {
   const g = new THREE.Group();
-  // Solid target ring
-  const ring = new THREE.Mesh(
-    new THREE.RingGeometry(0.09, 0.11, 40).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: color.yellow.int, transparent: true, opacity: 0.95, side: THREE.DoubleSide }),
-  );
-  // Pulsing radar wave
-  const pulseRing = new THREE.Mesh(
-    new THREE.RingGeometry(0.13, 0.15, 40).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.7, side: THREE.DoubleSide }),
-  );
-  pulseRing.name = 'pulseRing';
 
-  // Center target dot
-  const dot = new THREE.Mesh(
-    new THREE.CircleGeometry(0.015, 20).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }),
+  // scorched rubber patch the tread sits on
+  const scuff = new THREE.Mesh(
+    new THREE.CircleGeometry(0.15, 44).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x120d0a, transparent: true, opacity: 0.5, side: THREE.DoubleSide }),
   );
+  scuff.position.y = 0.0005;
 
-  // Directional crosshairs
-  const crossGeo = new THREE.PlaneGeometry(0.035, 0.008).rotateX(-Math.PI / 2);
-  const crossMat = new THREE.MeshBasicMaterial({ color: color.hwR.int, side: THREE.DoubleSide });
-  for (let i = 0; i < 4; i++) {
-    const cross = new THREE.Mesh(crossGeo, crossMat);
-    const ang = (i * Math.PI) / 2;
-    cross.position.set(Math.cos(ang) * 0.13, 0.001, Math.sin(ang) * 0.13);
-    cross.rotation.y = -ang;
-    g.add(cross);
+  // two tyre tracks, treads laid across them
+  const treadMat = new THREE.MeshBasicMaterial({ color: 0x1a1513, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
+  const treadGeo = new THREE.PlaneGeometry(0.052, 0.014).rotateX(-Math.PI / 2);
+  for (const lane of [-0.055, 0.055]) {
+    for (let i = -3; i <= 3; i++) {
+      const t = new THREE.Mesh(treadGeo, treadMat);
+      t.position.set(lane, 0.0015, i * 0.026);
+      g.add(t);
+    }
   }
 
-  // Scanning dots on floor
+  // hot ring — the reticle still has to read as a target
+  const ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.135, 0.155, 48).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: color.hwO.int, transparent: true, opacity: 0.95, side: THREE.DoubleSide }),
+  );
+  ring.position.y = 0.002;
+
+  // the pulse that says the surface is locked — flame orange, not cyan
+  const pulseRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.17, 0.185, 48).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: color.yellow.int, transparent: true, opacity: 0.6, side: THREE.DoubleSide }),
+  );
+  pulseRing.name = 'pulseRing';
+  pulseRing.position.y = 0.002;
+
+  // four chequered ticks around the ring, the start-line motif
+  const tickGeo = new THREE.PlaneGeometry(0.03, 0.012).rotateX(-Math.PI / 2);
+  for (let i = 0; i < 4; i++) {
+    const ang = (i * Math.PI) / 2 + Math.PI / 4;
+    const tick = new THREE.Mesh(
+      tickGeo,
+      new THREE.MeshBasicMaterial({ color: i % 2 ? 0xffffff : color.ink.int, side: THREE.DoubleSide }),
+    );
+    tick.position.set(Math.cos(ang) * 0.168, 0.0025, Math.sin(ang) * 0.168);
+    tick.rotation.y = -ang;
+    g.add(tick);
+  }
+
+  // surface dots, so a scanning surface still reads as scanned
   const pts: number[] = [];
   for (let x = -4; x <= 4; x++) {
     for (let z = -4; z <= 4; z++) {
       const d = Math.hypot(x, z);
-      if (d <= 4.2 && d >= 1.6) {
-        pts.push(x * 0.06, 0, z * 0.06);
-      }
+      if (d <= 4.2 && d >= 2.4) pts.push(x * 0.062, 0, z * 0.062);
     }
   }
   const ptsGeo = new THREE.BufferGeometry();
   ptsGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  const ptsMat = new THREE.PointsMaterial({ color: color.yellow.int, size: 0.012, transparent: true, opacity: 0.8 });
-  const gridPoints = new THREE.Points(ptsGeo, ptsMat);
+  const gridPoints = new THREE.Points(
+    ptsGeo,
+    new THREE.PointsMaterial({ color: color.yellow.int, size: 0.011, transparent: true, opacity: 0.7 }),
+  );
   gridPoints.name = 'gridPoints';
 
-  g.add(ring, pulseRing, dot, gridPoints);
+  g.add(scuff, ring, pulseRing, gridPoints);
   return g;
 }
 
@@ -310,20 +342,35 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     opts.onPhase(p);
   };
 
+  const inspect = opts.mode === 'inspect';
+
   const engine = makeEngine(opts, () => setPhase('placed'));
-  let sizeM = opts.trackSize ?? 2.4;
-  const applySize = () => engine.root.scale.setScalar(sizeM / engine.trackExtent);
+  /* In inspect mode the car is shown at true 1:64 scale — a real Hot Wheels
+     car is about 7.4 cm long — so what lands on the table is the size of the
+     thing in the box. The circuit's 2.4 m footprint is meaningless here. */
+  let sizeM = inspect ? 0.074 : (opts.trackSize ?? 2.4);
+  const inspectRoot = new THREE.Group();
+
+  const applySize = () =>
+    inspect
+      ? inspectRoot.scale.setScalar(sizeM / 4.2)
+      : engine.root.scale.setScalar(sizeM / engine.trackExtent);
   const setSize = (m: number) => {
-    sizeM = Math.max(0.25, Math.min(4, m));
+    sizeM = inspect ? Math.max(0.03, Math.min(1.2, m)) : Math.max(0.25, Math.min(4, m));
     applySize();
   };
   applySize();
+
   const startBanner = create3DStartBanner();
-  anchor.add(engine.root);
-  anchor.add(startBanner);
+  if (inspect) {
+    anchor.add(inspectRoot);
+  } else {
+    anchor.add(engine.root);
+    anchor.add(startBanner);
+  }
 
   loadCar(opts.glbUrl, 4.2)
-    .then((c) => engine.setCar(c))
+    .then((c) => (inspect ? inspectRoot.add(c) : engine.setCar(c)))
     .catch(() => opts.onError('The car model failed to load for AR.'));
 
   // Vision & Real-World Obstacle Collision System
@@ -504,6 +551,48 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   detachGestures = adjustGestures(opts.overlayRoot, anchor, renderer.xr.getCamera(), () => ({ phase, size: sizeM }), setSize);
 
+  /* ---- provisional placement ----
+     Assumed floor height below the headset/phone when no plane is tracked yet.
+     1.2 m is about table height from a held phone and reads sensibly either way. */
+  const ASSUMED_DROP = 1.2;
+  const _p = new THREE.Vector3();
+  const _q = new THREE.Quaternion();
+  const _fwd = new THREE.Vector3();
+  let reticleProvisional = false;
+
+  function setReticleProvisional(on: boolean) {
+    if (on === reticleProvisional) return;
+    reticleProvisional = on;
+    reticle.traverse((o) => {
+      const m = (o as THREE.Mesh).material as THREE.Material | undefined;
+      if (m && 'opacity' in m) {
+        (m as THREE.Material & { opacity: number }).transparent = true;
+        (m as THREE.Material & { opacity: number }).opacity *= on ? 0.55 : 1 / 0.55;
+      }
+    });
+  }
+
+  /** Put the reticle where the camera is looking, on the assumed floor. */
+  function provisionalReticle() {
+    const cam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
+    cam.getWorldPosition(_p);
+    cam.getWorldQuaternion(_q);
+    _fwd.set(0, 0, -1).applyQuaternion(_q);
+    // how far along the view ray the assumed floor sits; clamp so a level or
+    // upward gaze still puts the reticle a sensible distance ahead
+    const t = _fwd.y < -0.05 ? Math.min(ASSUMED_DROP / -_fwd.y, 3.2) : 1.6;
+    const target = _p.clone().addScaledVector(_fwd, t);
+    target.y = _p.y - ASSUMED_DROP;
+    const yaw = Math.atan2(_fwd.x, _fwd.z);
+    reticle.matrix.compose(
+      target,
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)),
+      new THREE.Vector3(1, 1, 1),
+    );
+    reticle.visible = true;
+    setReticleProvisional(true);
+  }
+
   renderer.setAnimationLoop((now, frame) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
@@ -514,9 +603,16 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       if (pose) {
         reticle.visible = true;
         reticle.matrix.fromArray(pose.transform.matrix);
+        setReticleProvisional(false);
         if (phase !== 'ready') setPhase('ready');
       } else {
-        reticle.visible = false;
+        /* No surface found yet. Rather than hide the reticle — which forced you
+           to tilt the phone down and hunt for it before anything appeared —
+           show a provisional one where the camera is already looking, on an
+           assumed floor plane. It is dimmed to say "not locked yet", and the
+           moment real tracking arrives the branch above snaps it to the true
+           surface. Something is always aimable from the first frame. */
+        provisionalReticle();
         if (phase !== 'searching') setPhase('searching');
       }
 
@@ -690,17 +786,27 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     opts.onPhase(p);
   };
 
+  const inspect = opts.mode === 'inspect';
   const engine = makeEngine(opts, () => setPhase('placed'));
-  let sizeM = opts.trackSize ?? 2.4;
-  const applySize = () => engine.root.scale.setScalar(sizeM / engine.trackExtent);
+  // true 1:64 in inspect mode — a real Hot Wheels car is ~7.4 cm
+  let sizeM = inspect ? 0.074 : (opts.trackSize ?? 2.4);
+  const inspectRoot = new THREE.Group();
+  const applySize = () =>
+    inspect
+      ? inspectRoot.scale.setScalar(sizeM / 4.2)
+      : engine.root.scale.setScalar(sizeM / engine.trackExtent);
   const setSize = (m: number) => {
-    sizeM = Math.max(0.25, Math.min(4, m));
+    sizeM = inspect ? Math.max(0.03, Math.min(1.2, m)) : Math.max(0.25, Math.min(4, m));
     applySize();
   };
   applySize();
   const startBanner = create3DStartBanner();
-  anchor.add(engine.root);
-  anchor.add(startBanner);
+  if (inspect) {
+    anchor.add(inspectRoot);
+  } else {
+    anchor.add(engine.root);
+    anchor.add(startBanner);
+  }
   setPhase('ready');
 
   // Vision Obstacle Collision System (real-time camera video frame edge sampling)
@@ -727,7 +833,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   }
 
   loadCar(opts.glbUrl, 4.2)
-    .then((c) => engine.setCar(c))
+    .then((c) => (inspect ? inspectRoot.add(c) : engine.setCar(c)))
     .catch(() => opts.onError('The car model failed to load.'));
 
   // ---- device orientation -> camera quaternion (3DOF) ----
