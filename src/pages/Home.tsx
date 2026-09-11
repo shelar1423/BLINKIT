@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
 import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
-import { useStore, MAX_RACE_ATTEMPTS, MYSTERY_UNLOCK_POINTS } from '../store/useStore';
+import { useStore, MAX_RACE_ATTEMPTS } from '../store/useStore';
 import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
@@ -15,8 +15,6 @@ export default function Home() {
   const nav = useNavigate();
   const { toast } = useToast();
   const racesLeft = useStore((s) => s.racesLeft);
-  const totalPoints = useStore((s) => s.totalPoints);
-  const mysteryUnlocked = useStore((s) => s.mysteryUnlocked);
   const { status: drop, parts } = useDrop();
   const [details, setDetails] = useState(false);
 
@@ -105,20 +103,11 @@ export default function Home() {
               Race now
             </button>
 
-            {/* The rule, kept as a line of type rather than a panel: the cover
-                lifts at MYSTERY_UNLOCK_POINTS and points come from racing. The
-                number is read from the store, never typed here, so the promise
-                cannot drift from the rule that enforces it. */}
-            <p className="mystery__prog">
-              {mysteryUnlocked ? (
-                <>Cover lifted — <b>the final drop car is yours to see</b></>
-              ) : (
-                <>
-                  <b>{totalPoints.toLocaleString('en-IN')}</b> of{' '}
-                  {MYSTERY_UNLOCK_POINTS.toLocaleString('en-IN')} points to lift the cover
-                </>
-              )}
-            </p>
+            {/* What the cloth is hiding and when it comes off. This was a
+                points counter against the unlock threshold, which made the
+                reveal sound like a personal score to grind rather than a
+                campaign moment everyone shares on the last day. */}
+            <p className="mystery__prog">Revealed on the final day of the drop</p>
           </div>
 
           {/* The reference closes its campaign block with a darker full-bleed

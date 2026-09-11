@@ -278,7 +278,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake {
   position: relative;
   margin-top: -1px;
-  padding: 30px var(--gut) 14px;
+  padding: 28px var(--gut) 12px;
   /* The reference storefronts all sit on one saturated colour — hot pink for
      Promise Day, deep red for Diwali, a bright blue for the ice cream. This
      was a muted navy, which is why it read as pale. */
@@ -340,7 +340,7 @@ input, select, textarea { font: inherit; color: inherit; }
      132px to save space took the occasion out of it. Back up, but short of the
      218px billboard that pushed the shop off the screen. */
   margin: 0 auto 2px;
-  max-width: 104px;
+  max-width: 72px;
   line-height: 0;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
@@ -355,7 +355,7 @@ input, select, textarea { font: inherit; color: inherit; }
    back exactly the rectangle the feathering exists to remove. */
 .mystery {
   width: calc(100% + var(--gut) * 2);
-  margin: 4px calc(var(--gut) * -1) 0;
+  margin: 0 calc(var(--gut) * -1) 0;
 }
 .mystery__plate {
   display: block; width: 100%;
@@ -370,7 +370,7 @@ input, select, textarea { font: inherit; color: inherit; }
    the artwork and the one thing there is to do, which is what it replaced. */
 .mystery__go {
   display: block;
-  margin: -26px auto 0;
+  margin: -34px auto 0;
   position: relative; z-index: 2;
   background: var(--yellow);
   color: var(--ink);
@@ -383,7 +383,7 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* The rule as a line of type, not a panel. */
 .mystery__prog {
-  margin: 5px var(--gut) 0;
+  margin: 4px var(--gut) 0;
   text-align: center;
   font-size: var(--f-xs); font-weight: 600;
   color: rgba(255, 255, 255, 0.72);
@@ -398,7 +398,7 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: center; gap: 6px;
   width: calc(100% + var(--gut) * 2);
   margin: 8px calc(var(--gut) * -1) -14px;
-  padding: 12px var(--gut) 14px;
+  padding: 11px var(--gut) 12px;
   background: rgba(0, 0, 0, 0.26);
   border: 0;
   color: #fff;
@@ -1093,23 +1093,25 @@ input, select, textarea { font: inherit; color: inherit; }
   text-align: center;
   color: #fff;
 }
-.dropclock__head {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  margin-bottom: 5px;
-}
 .dropclock__lead {
+  display: block;
   font-size: var(--f-2xs); font-weight: 800;
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--yellow);
+  margin-bottom: 4px;
 }
 /* The dates were a 9px grey line under everything and were being lost. Set as
    a solid chip beside the lead, they read at a glance and stop competing with
    the flaps for the same greyed-out register. */
+/* Under the flaps rather than beside the lead. The window is a fact about the
+   drop, not part of the sentence the countdown is saying. */
 .dropclock__dates {
+  display: inline-block;
+  margin-top: 3px;
   background: var(--yellow);
   color: var(--ink);
   border-radius: 999px;
-  padding: 3px 9px 4px;
+  padding: 3px 10px 4px;
   font-size: var(--f-2xs); font-weight: 800;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -1118,7 +1120,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .dropclock__cell { display: block; }
 .dropclock__flaps { display: flex; gap: 3px; }
 .dropclock__cell small {
-  display: block; margin-top: 13px;
+  display: block; margin-top: 8px;
   font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
   color: rgba(255, 255, 255, 0.6);
 }
@@ -1129,7 +1131,7 @@ input, select, textarea { font: inherit; color: inherit; }
    split across the hinge. */
 .flip {
   position: relative; display: block;
-  width: 30px; height: 42px;
+  width: 27px; height: 37px;
   perspective: 140px;
   font-variant-numeric: tabular-nums;
 }
@@ -1142,7 +1144,7 @@ input, select, textarea { font: inherit; color: inherit; }
   position: absolute; left: 0; right: 0;
   height: 200%;
   display: grid; place-items: center;
-  font-size: 26px; font-weight: 800; line-height: 1;
+  font-size: 23px; font-weight: 800; line-height: 1;
   color: #fff;
 }
 .flip__pane--top { top: 0; border-radius: 5px 5px 0 0; }
@@ -1193,7 +1195,7 @@ input, select, textarea { font: inherit; color: inherit; }
    partner set beneath. Every festive storefront carries one of these between
    the masthead and the tile grid. */
 .cpower {
-  margin: 4px auto 0;
+  margin: 2px auto 0;
   display: flex; flex-direction: column; align-items: center; gap: 0;
 }
 .cpower__l {

@@ -82,29 +82,24 @@ export type FlipClockProps = {
 };
 
 export function FlipClock({ parts, lead, dates, onClick }: FlipClockProps) {
-  /* Hours and minutes only. Seconds turned the board into something that
-     demanded attention once a second for information nobody acts on at that
-     resolution, and days split the same number across two units — 58 hours
-     reads as a race clock, "2 days 10 hours" reads as a calendar. */
-  const totalHours = parts.days * 24 + parts.hours;
+  /* Days and hours. Minutes and seconds both moved faster than anyone acts on
+     a three-day drop, and folding days into hours turned a readable "2 days"
+     into a 58 nobody parses at a glance. */
   const cells: [string, string][] = [
-    [String(totalHours).padStart(2, '0'), 'HRS'],
-    [PAD(parts.mins), 'MIN'],
+    [PAD(parts.days), parts.days === 1 ? 'DAY' : 'DAYS'],
+    [PAD(parts.hours), 'HRS'],
   ];
 
   const Tag = onClick ? 'button' : 'div';
   return (
     <Tag className="dropclock" type={onClick ? 'button' : undefined} onClick={onClick}>
-      <span className="dropclock__head">
-        <span className="dropclock__lead">{lead}</span>
-        {dates && <span className="dropclock__dates">{dates}</span>}
-      </span>
+      {/* Centred on its own line. Set beside the dates chip it read as one
+          run-on phrase — "ends in 12-14 Nov" — which is not what either half
+          was saying. */}
+      <span className="dropclock__lead">{lead}</span>
       <span className="dropclock__row">
         {cells.map(([v, l]) => (
           <span className="dropclock__cell" key={l}>
-            {/* One flap per digit, so the tens sits still while the units
-                turns — and a long count (61 days out, before the drop opens)
-                simply grows a third flap rather than overflowing. */}
             <span className="dropclock__flaps">
               {[...v].map((ch, i) => (
                 <FlipCell key={i} value={ch} />
@@ -114,6 +109,7 @@ export function FlipClock({ parts, lead, dates, onClick }: FlipClockProps) {
           </span>
         ))}
       </span>
+      {dates && <span className="dropclock__dates">{dates}</span>}
     </Tag>
   );
 }
