@@ -18,9 +18,12 @@ import {
   IconAR, IconBrake, IconCheck, IconChevronLeft, IconChevronRight, IconClose,
   IconDrift, IconFlag, IconHorn, IconInfo, IconMinus, IconPlus, IconRotate,
 } from '../design/elements/Icons';
-import { horn as playHorn, primeAudio } from '../lib/horn';
+import { chime, horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
+import { createFlickShifter, initialShiftState, type FlickShifter, type ShiftState } from '../lib/shiftInput';
+import { Tacho } from '../design/components/Tacho';
+import type { ShiftResult } from '../lib/gearbox';
 
 export default function ARView() {
   const { id } = useParams();
@@ -140,6 +143,38 @@ export default function ARView() {
     };
   }, [phase]);
 
+  /* Flick to shift. The gearbox is the part of the race the player actually
+     plays; the flick is just one way to work it, so the same shift() is used
+     by the sensor and by the on-screen button when there is no sensor. */
+  const shifter = useRef<FlickShifter | null>(null);
+  const [shiftState, setShiftState] = useState<ShiftState>(() => initialShiftState());
+  const [flash, setFlash] = useState<{ r: ShiftResult; key: number } | null>(null);
+  const flashTimer = useRef<number | undefined>(undefined);
+
+  const shift = useCallback((dir: 1 | -1) => {
+    const r = dir > 0 ? handle.current?.shiftUp() : handle.current?.shiftDown();
+    if (!r) return;
+    if (r.quality === 'perfect') chime();
+    window.clearTimeout(flashTimer.current);
+    setFlash({ r, key: Date.now() });
+    flashTimer.current = window.setTimeout(() => setFlash(null), 700);
+  }, []);
+
+  useEffect(() => {
+    if (phase !== 'racing') return;
+    const sh = createFlickShifter({ onShift: shift, onStateChange: setShiftState });
+    shifter.current = sh;
+    void sh.enable().then((st) => {
+      if (st === 'active') sh.start();
+    });
+    return () => {
+      sh.stop();
+      shifter.current = null;
+      window.clearTimeout(flashTimer.current);
+      setFlash(null);
+    };
+  }, [phase, shift]);
+
   const press = useCallback((dir: number) => handle.current?.setSteer(dir), []);
   const release = useCallback(() => handle.current?.setSteer(0), []);
   const gas = useCallback((on: boolean) => handle.current?.setThrottle(on ? 1 : 0), []);
@@ -178,6 +213,8 @@ export default function ARView() {
       if (e.key === 'ArrowDown' || e.key === 's') brake(true);
       if (e.key === ' ') slide(true);
       if (e.key === 'h') hornNow();
+      if (e.key === 'e' || e.key === 'ArrowUp') shift(1);
+      if (e.key === 'q' || e.key === 'ArrowDown') shift(-1);
     };
     const keyUp = (e: KeyboardEvent) => {
       if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) release();
@@ -191,7 +228,7 @@ export default function ARView() {
       window.removeEventListener('keydown', key);
       window.removeEventListener('keyup', keyUp);
     };
-  }, [phase, press, release, gas, brake, slide, hornNow]);
+  }, [phase, press, release, gas, brake, slide, hornNow, shift]);
 
   const tier = outcome ? tierFor(outcome.score) : null;
 
@@ -308,13 +345,31 @@ export default function ARView() {
                 </small>
               </p>
             )}
+            {flash && (
+              <div key={flash.key} className={'shiftflash shiftflash--' + flash.r.quality}>
+                {flash.r.message}
+              </div>
+            )}
+            {phase === 'racing' && stats && (
+              <div className="arov__tacho">
+                <Tacho
+                  rpm={stats.rpm}
+                  gear={stats.gear}
+                  shiftNow={stats.shiftNow}
+                  onLimiter={stats.onLimiter}
+                  speedKph={stats.speedKph}
+                />
+              </div>
+            )}
             {phase === 'racing' && stats && (
               <p className="arov__hint">
                 {lastHitMessage ? (
                   <span style={{ color: '#ff5252', fontWeight: 700 }}>{lastHitMessage}</span>
                 ) : (
                   <small>
-                    Hold GO · Arrows steer · <strong>Tap screen to drop hazard on real object</strong> ({pinnedCount} active)
+                    {shiftState === 'active'
+                      ? <>Hold GO · <strong>Flick the phone forward to shift up</strong>, back to shift down</>
+                      : <>Hold GO · Arrows steer · <strong>SHIFT</strong> when the dial turns amber</>}
                   </small>
                 )}
               </p>
@@ -355,6 +410,16 @@ export default function ARView() {
                   </button>
                 </div>
                 <div className="arov__drivec">
+                  {shiftState !== 'active' && (
+                    <button
+                      type="button"
+                      className="arov__shift"
+                      aria-label="Shift up"
+                      onClick={() => shift(1)}
+                    >
+                      SHIFT
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="arov__pad arov__pad--sm"
@@ -486,9 +551,13 @@ export default function ARView() {
                 <>
                   <li><b>Open Camera</b>: Works directly in Safari on iPhone (or Chrome on Android).</li>
                   <li><b>Scan Surface</b>: Point at your floor or a flat desk — an animated radar ring locks onto the surface.</li>
-                  <li><b>Drop Track</b>: Point at the floor and tap &apos;Place track here&apos;.</li>
+                  <li><b>Drop Track</b>: Keep the ring on the surface and press &apos;Place track here&apos;.</li>
                   <li><b>Adjust</b>: Pinch to resize the circuit, drag to reposition.</li>
-                  <li><b>Drive</b>: Press GO, steer left/right, handbrake to drift around corners, and collect groceries!</li>
+                  <li><b>Drive</b>: Hold GO and tilt the phone to steer — no thumbs on the screen.</li>
+                  <li><b>Shift</b>: Six gears, and each one runs out of revs. When the dial turns
+                    amber, <b>flick the phone forward</b> to take the next gear; flick back to drop one.
+                    Catch the amber and you get a burst of speed — shift too early and the engine bogs,
+                    leave it on the limiter and you stop accelerating altogether.</li>
                 </>
               )}
             </ul>

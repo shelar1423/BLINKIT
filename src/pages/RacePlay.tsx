@@ -38,6 +38,7 @@ export default function RacePlay() {
   const [count, setCount] = useState<number | null>(null);
   const [stats, setStats] = useState<RaceStats>({
     score: 0, groceries: 0, timeLeft: 45, lap: 1, laps: 2, progress: 0, speedKph: 0,
+    gear: 1, rpm: 0, shiftNow: false, onLimiter: false,
   });
   const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);

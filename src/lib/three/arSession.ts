@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import type { ShiftResult } from '../gearbox';
 import { color } from '../../design/constants';
 import { RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
@@ -55,6 +56,9 @@ export type ARHandle = {
   setThrottle: (v: number) => void;
   setBrake: (v: number) => void;
   setDrift: (on: boolean) => void;
+  /** take the next gear up; null when there is none left */
+  shiftUp: () => ShiftResult | null;
+  shiftDown: () => ShiftResult | null;
   /** multiply the placed circuit's size (pinch) */
   nudgeScale: (factor: number) => void;
   /** absolute size in metres across */
@@ -327,6 +331,8 @@ function driveApi(engine: RaceEngine) {
       drifting = on;
       engine.setDrift(on);
     },
+    shiftUp: () => engine.shiftUp(),
+    shiftDown: () => engine.shiftDown(),
   };
 }
 
