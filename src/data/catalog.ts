@@ -187,15 +187,23 @@ export const PICKUPS: Pickup[] = [
 ];
 
 /** Blinkit's own category artwork. */
+/**
+ * Shop by category.
+ *
+ * The labels follow the art rather than the other way round: the supplied set
+ * covers oil and masala, bakery, dry fruits, meat and kitchenware, which the
+ * old eight did not. Keeping the old labels would have meant putting a tray of
+ * chicken under a tile that said "Munchies".
+ */
 export const CATEGORIES = [
-  { id: 'fruits', label: 'Fruits & Vegetables', image: '/assets/c_fruits.png' },
-  { id: 'dairy', label: 'Dairy, Bread & Eggs', image: '/assets/c_dairy.png' },
-  { id: 'atta', label: 'Atta, Rice & Dals', image: '/assets/c_atta.png' },
-  { id: 'munchies', label: 'Munchies', image: '/assets/c_munchies.png' },
-  { id: 'breakfast', label: 'Breakfast & Sauces', image: '/assets/c_breakfast.png' },
-  { id: 'packaged', label: 'Packaged Food', image: '/assets/c_packaged.png' },
-  { id: 'cafe', label: 'Bistro', image: '/assets/c_cafe.png' },
-  { id: 'icecream', label: 'Ice Cream & More', image: '/assets/c_icecream.png' },
+  { id: 'veg', label: 'Vegetables & Fruits', image: '/assets/cat-veg.webp' },
+  { id: 'atta', label: 'Atta, Rice & Dal', image: '/assets/cat-atta.webp' },
+  { id: 'oil', label: 'Oil, Ghee & Masala', image: '/assets/cat-oil.webp' },
+  { id: 'dairy', label: 'Dairy, Bread & Eggs', image: '/assets/cat-dairy.webp' },
+  { id: 'bakery', label: 'Bakery & Biscuits', image: '/assets/cat-bakery.webp' },
+  { id: 'dryfruits', label: 'Dry Fruits & Cereals', image: '/assets/cat-dryfruits.webp' },
+  { id: 'meat', label: 'Chicken, Meat & Fish', image: '/assets/cat-meat.webp' },
+  { id: 'kitchen', label: 'Kitchenware & Appliances', image: '/assets/cat-kitchen.webp' },
 ];
 
 export const LEADERBOARD = [
