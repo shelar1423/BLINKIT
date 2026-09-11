@@ -6,7 +6,7 @@ import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useStore, MAX_RACE_ATTEMPTS } from '../store/useStore';
 import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
-import { Countdown } from '../design/components/Countdown';
+import { FlipClock } from '../design/components/FlipClock';
 import { Sheet } from '../design/components/Sheet';
 import { IconChevronRight, IconFlag, IconTrophy } from '../design/elements/Icons';
 import { useToast } from '../App';
@@ -17,7 +17,6 @@ export default function Home() {
   const racesLeft = useStore((s) => s.racesLeft);
   const { status: drop, parts } = useDrop();
   const [details, setDetails] = useState(false);
-  const [night, setNight] = useState(false);
 
   return (
     <>
@@ -26,7 +25,7 @@ export default function Home() {
         {/* --- campaign takeover: the header's flame red runs straight into this
              block, exactly how Blinkit carries a festival theme down the page,
              and the scalloped edge hands back to the white product feed. --- */}
-        <section className={'ctake' + (night ? ' is-night' : '')} aria-label="Hot Wheels x Blinkit campaign">
+        <section className="ctake" aria-label="Hot Wheels x Blinkit campaign">
           <span className="ctake__trackwrap" aria-hidden="true">
             <img className="ctake__track" src="/campaign/track-divider.webp" alt="" />
             {/* One pass, on arrival. A car looping forever would become wallpaper
@@ -55,24 +54,12 @@ export default function Home() {
             <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
           </h2>
 
-          {/* The thing that actually makes these feel like an occasion, and the
-              piece I had missed entirely: Blinkit puts one playful control in
-              the band and lets you flip the whole storefront with it — SINGLE
-              MODE ON/OFF on Hug Day, CHANGE LIGHTS on Diwali. It does nothing
-              commercial. That is the point. Ours drops the race to night. */}
-          <button
-            className="ctake__mode"
-            type="button"
-            aria-pressed={night}
-            onClick={() => setNight((n) => !n)}
-          >
-            <span>NIGHT<br />RACE</span>
-            <i aria-hidden="true" />
-          </button>
-
-          {/* The countdown is the headline now. A limited drop's one job is to
-              say how long you have, and that was a small grey line. */}
-          <Countdown
+          {/* The countdown is the headline. A row of numbers that merely
+              changes is a readout; a split-flap is a mechanism, and the
+              seconds flap turns once a second whether or not anyone is
+              watching. The hinge is set as a chequer — the one place the flag
+              motif costs nothing. */}
+          <FlipClock
             parts={parts}
             lead={drop.phase === 'ended' ? 'Drop ended' : drop.lead}
             note={`Limited drop · ${DROP_DATES} · Tap for details`}
@@ -92,54 +79,33 @@ export default function Home() {
             <span className="cpower__b">MATTEL</span>
           </div>
 
-          {/* Six tiles in two rows, which is what these storefronts actually
-              do — four on Karwa Chauth, six on Hug Day, eight on Diwali. Three
-              was never the pattern; the ice-cream row of three sits under a
-              grid, not instead of one. Title on top, real product artwork
-              filling the bottom, warm plaque on the themed ground. */}
+          {/* Four entries, two by two. The illustrations are the supplied
+              Blinkit-style set recoloured to Hot Wheels — flat vector, which is
+              the house language, so the plaque can be plain and let the artwork
+              carry the tile. Mystery Car, Race a Friend and All Models are gone
+              from here on purpose: six small tiles was clutter, and the mystery
+              drop belongs behind a tap rather than sitting in the grid. */}
           <div className="ctake__cards">
             <button className="ccard" type="button" onClick={() => nav('/hot-wheels')}>
               <span className="ccard__tab">From &#8377;179</span>
               <span className="ccard__l">The Drop</span>
-              <img src="/campaign/card-drop.webp" alt="" loading="lazy" />
+              <img src="/campaign/tile-drop.webp" alt="" loading="lazy" />
             </button>
             <button className="ccard" type="button" onClick={() => nav('/rewards')}>
               <span className="ccard__tab ccard__tab--flame">&#8377;75 back</span>
               <span className="ccard__l">Rewards</span>
-              <img src="/campaign/card-rewards.webp" alt="" loading="lazy" />
+              <img src="/campaign/tile-rewards.webp" alt="" loading="lazy" />
             </button>
             <button className="ccard" type="button" onClick={() => nav('/leaderboard')}>
               <span className="ccard__l">Leaderboard</span>
-              <img src="/campaign/card-leaderboard.webp" alt="" loading="lazy" />
+              <img src="/campaign/tile-leaderboard.webp" alt="" loading="lazy" />
             </button>
             <button className="ccard" type="button" onClick={() => nav('/race')}>
-              <span className="ccard__l">Race a Friend</span>
-              <img src="/cars/battlespec-diecast.webp" alt="" loading="lazy" />
-            </button>
-            <button className="ccard ccard--dark" type="button" onClick={() => nav('/hot-wheels')}>
-              <span className="ccard__l">Mystery Car</span>
-              <img src="/cars/11-mystery-drop-car.webp" alt="" loading="lazy" />
-            </button>
-            <button className="ccard" type="button" onClick={() => nav('/hot-wheels')}>
-              <span className="ccard__l">All Models</span>
-              <img src="/cars/jackhammer-diecast.webp" alt="" loading="lazy" />
+              <span className="ccard__l">Challenge Friends</span>
+              <span className="ccard__s">{racesLeft} of {MAX_RACE_ATTEMPTS} races left</span>
+              <img src="/campaign/tile-challenge.webp" alt="" loading="lazy" />
             </button>
           </div>
-
-          {/* The activation strip — the thing you came to do. Same shape as
-              "Challenge your friends! / Share now" on the ice-cream storefront
-              and "Ready for Secret Santa? / Play" on the Christmas one: art
-              left, line of copy, dark pill on the right. */}
-          <button className="cact" type="button" onClick={() => nav('/race')}>
-            <span className="cact__art">
-              <img src="/cars/hollowback-diecast.webp" alt="" loading="lazy" />
-            </span>
-            <span className="cact__c">
-              <b>Challenge your friends</b>
-              <small>{racesLeft} of {MAX_RACE_ATTEMPTS} races left today</small>
-            </span>
-            <span className="cact__cta">Race now</span>
-          </button>
 
           <span className="ctake__scallop" aria-hidden="true" />
         </section>
@@ -219,6 +185,15 @@ export default function Home() {
         <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/rewards'); }}>
           <span className="rowcard__ic"><IconTrophy size={18} /></span>
           <span className="grow"><b>Rewards</b><small>Four tiers, up to &#8377;75 back</small></span>
+          <IconChevronRight size={18} />
+        </button>
+        {/* The mystery drop lives here rather than in the grid — it is a
+            teaser, and a teaser does not need a permanent tile on the home
+            screen. This is the placeholder for the event page it should
+            eventually open. */}
+        <button className="card rowcard mystrow" type="button" onClick={() => { setDetails(false); nav('/hot-wheels'); }}>
+          <span className="rowcard__ic mystrow__ic">?</span>
+          <span className="grow"><b>Mystery Car</b><small>Revealed on the final day of the drop</small></span>
           <IconChevronRight size={18} />
         </button>
         <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/leaderboard'); }}>

@@ -278,7 +278,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake {
   position: relative;
   margin-top: -1px;
-  padding: 20px var(--gut) 18px;
+  padding: 16px var(--gut) 16px;
   /* The reference storefronts all sit on one saturated colour — hot pink for
      Promise Day, deep red for Diwali, a bright blue for the ice cream. This
      was a muted navy, which is why it read as pale. */
@@ -317,7 +317,7 @@ input, select, textarea { font: inherit; color: inherit; }
    the content has to be positioned too. The toggle and the track set their
    own position, so they are excluded — including them here silently reset the
    toggle to `relative` and dropped it into the flow on the left. */
-.ctake > *:not(.ctake__streaks):not(.ctake__flag):not(.ctake__mode):not(.ctake__trackwrap):not(.ctake__scallop) {
+.ctake > *:not(.ctake__streaks):not(.ctake__flag):not(.ctake__trackwrap):not(.ctake__scallop) {
   position: relative; z-index: 1;
 }
 
@@ -347,61 +347,14 @@ input, select, textarea { font: inherit; color: inherit; }
      132px to save space took the occasion out of it. Back up, but short of the
      218px billboard that pushed the shop off the screen. */
   margin: 0 auto 2px;
-  max-width: 196px;
+  max-width: 152px;
   line-height: 0;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
 @media (min-width: 768px) { .ctake__t { max-width: 260px; } }
 
-/* ---- the novelty control ----
-   SINGLE MODE ON/OFF, CHANGE LIGHTS. It sits top-right of the campaign name,
-   is plainly a physical object rather than a button, and does nothing
-   commercial — it just flips the storefront. That is what makes these feel
-   like an occasion rather than a promotion, and it was the piece missing
-   here. */
-.ctake__mode {
-  position: absolute; z-index: 4;
-  right: var(--gut); top: 22px;
-  display: flex; align-items: center; gap: 7px;
-  background: linear-gradient(180deg, #2B3242, #171B25);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  padding: 5px 7px 5px 11px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 8px; font-weight: 800; letter-spacing: 0.08em; line-height: 1.05;
-  text-align: right;
-}
-.ctake__mode i {
-  width: 17px; height: 17px; border-radius: 50%;
-  background: radial-gradient(circle at 34% 30%, #fff, #C9CFDA 60%, #8B93A3);
-  box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.35);
-  transition: background 200ms ease, box-shadow 200ms ease;
-}
-.ctake.is-night .ctake__mode i {
-  background: radial-gradient(circle at 34% 30%, #FFD9A0, var(--hw-o) 55%, #C03A00);
-  box-shadow: 0 0 10px rgba(255, 122, 26, 0.85);
-}
-.ctake.is-night .ctake__mode { color: var(--yellow); }
-@media (prefers-reduced-motion: reduce) { .ctake__mode i { transition: none; } }
 
-/* ---- night race ----
-   The whole band drops to a night circuit: lights off, headlight glow on, the
-   plaques go dark the way the Single Mode storefront does. */
-.ctake.is-night {
-  background:
-    radial-gradient(60% 34% at 50% 6%, rgba(255, 138, 26, 0.30) 0%, rgba(255, 122, 26, 0) 62%),
-    radial-gradient(120% 62% at 50% 108%, rgba(237, 28, 36, 0.22) 0%, rgba(237, 28, 36, 0) 58%),
-    linear-gradient(180deg, #0B1020 0%, #070A16 60%, #05070F 100%);
-}
-.ctake.is-night .ccard {
-  background: linear-gradient(170deg, #2A2F3C 0%, #171B26 100%);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
-}
-.ctake.is-night .ccard::after { border-color: rgba(255, 160, 60, 0.26); }
-.ctake.is-night .ccard__l { color: #FFD6A0; }
-.ctake.is-night .ctake__streaks { opacity: 0.3; }
 
 /* ---- campaign cards ----
    Blinkit's campaign tile: a warm plaque on the themed ground, its hook on a
@@ -411,7 +364,7 @@ input, select, textarea { font: inherit; color: inherit; }
    to be the theme and the cards are supposed to be the light on top of it. */
 .ctake__cards {
   margin-top: 12px;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px;
   align-items: stretch;
 }
 /* Two rows of three. Four to eight tiles is the shape of every one of these
@@ -421,8 +374,8 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative;
   border-radius: 14px;
   background: linear-gradient(172deg, #FFFDF7 0%, #FCEBBE 100%);
-  padding: 22px 8px 0;
-  min-height: 112px;
+  padding: 22px 10px 0;
+  min-height: 126px;
   text-align: left;
   overflow: hidden;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
@@ -447,14 +400,9 @@ input, select, textarea { font: inherit; color: inherit; }
   white-space: nowrap;
 }
 .ccard__tab--flame { background: var(--hw-r); }
-/* Some artwork is a dark scene rather than a cut-out on white. The plaque
-   goes dark with it rather than printing dark red text over a black car. */
-.ccard--dark { background: linear-gradient(170deg, #2A2F3C 0%, #171B26 100%); }
-.ccard--dark .ccard__l { color: #FFD6A0; }
-.ccard--dark::after { border-color: rgba(255, 160, 60, 0.3); }
 .ccard__l {
   position: relative; z-index: 2;
-  font-size: var(--f-xs); font-weight: 800; line-height: 1.15;
+  font-size: var(--f-sm); font-weight: 800; line-height: 1.15;
   color: #6E0C0A; letter-spacing: -0.2px;
   text-align: center;
 }
@@ -471,43 +419,13 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Wider than the plaque on purpose. The renders carry transparent margin, so
      a box sized to the tile leaves the car looking like a thumbnail — the
      references let product artwork fill the lower half and run to the edges. */
-  width: 122%; height: 72%;
+  width: 108%; height: 68%;
   object-fit: contain; object-position: bottom;
 }
 /* The dark plaque carries a full-bleed scene rather than a cut-out, so it
    fills the tile and the title sits over it with a scrim for legibility. */
-.ccard--dark img { height: 100%; bottom: 0; object-fit: cover; }
-.ccard--dark .ccard__l {
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9), 0 0 18px rgba(0, 0, 0, 0.75);
-}
 .ccard:active { transform: scale(0.985); }
 
-/* ---- activation strip ----
-   Where the campaign's actual mechanic lives. Own lockup, own dark pill CTA. */
-.cact {
-  margin-top: 8px; width: 100%;
-  display: flex; align-items: center; gap: 10px;
-  background: linear-gradient(100deg, #FFE9A8, #FFF6DC 62%);
-  border-radius: var(--r-md);
-  padding: 8px 10px 8px 6px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
-  text-align: left;
-}
-.cact__art { flex: 0 0 62px; height: 44px; position: relative; overflow: hidden; }
-.cact__art img { position: absolute; left: -4px; bottom: -5px; width: 118%; height: auto; }
-.cact__c { flex: 1; min-width: 0; }
-.cact__c b {
-  display: block; font-size: var(--f-sm); font-weight: 800;
-  color: #6E0C0A; letter-spacing: -0.2px; line-height: 1.2;
-}
-.cact__c small { display: block; font-size: var(--f-2xs); color: #A8471C; margin-top: 1px; }
-.cact__cta {
-  flex: 0 0 auto;
-  background: var(--ink); color: #fff;
-  border-radius: 999px; padding: 8px 14px;
-  font-size: var(--f-xs); font-weight: 800; white-space: nowrap;
-}
-.cact:active { transform: scale(0.99); }
 
 /* ---- drop facts, inside the sheet ---- */
 .dropfacts {
@@ -1184,13 +1102,13 @@ input, select, textarea { font: inherit; color: inherit; }
   .sheet__scrim, .sheet__panel { transition: none; }
 }
 
-/* ---------- drop countdown ---------- */
+/* ---------- drop countdown: a split-flap board ---------- */
 .dropclock {
   display: block; width: 100%;
-  background: rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--r-md);
-  padding: 8px 10px 9px;
+  padding: 9px 10px 10px;
   text-align: center;
   color: #fff;
 }
@@ -1200,30 +1118,83 @@ input, select, textarea { font: inherit; color: inherit; }
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--yellow);
 }
-.dropclock__row { display: flex; align-items: flex-start; justify-content: center; gap: 0; margin-top: 3px; }
-.dropclock__cell { position: relative; display: block; padding: 0 11px; }
-.dropclock__cell b {
-  display: block;
-  font-size: 26px; font-weight: 800; line-height: 1.05;
-  letter-spacing: -0.5px; color: #fff;
-}
+.dropclock__row { display: flex; align-items: flex-start; justify-content: center; gap: 12px; margin-top: 6px; }
+.dropclock__cell { display: block; }
+.dropclock__flaps { display: flex; gap: 3px; }
 .dropclock__cell small {
-  display: block; margin-top: 1px;
+  display: block; margin-top: 13px;
   font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
   color: rgba(255, 255, 255, 0.6);
 }
-/* The separator hangs off the cell rather than sitting in the flow, so the
-   colon never shifts when a digit changes width. */
+
+/* ---- one flap ----
+   The cell is a single glyph clipped into two panes. `--bot` shifts its copy
+   up by exactly the cell height so the two panes together read as one number
+   split across the hinge. */
+.flip {
+  position: relative; display: block;
+  width: 30px; height: 42px;
+  perspective: 140px;
+  font-variant-numeric: tabular-nums;
+}
+.flip__pane {
+  position: absolute; left: 0; right: 0;
+  height: 50%; overflow: hidden;
+  background: linear-gradient(180deg, #23262E, #15171D);
+}
+.flip__pane > b {
+  position: absolute; left: 0; right: 0;
+  height: 200%;
+  display: grid; place-items: center;
+  font-size: 26px; font-weight: 800; line-height: 1;
+  color: #fff;
+}
+.flip__pane--top { top: 0; border-radius: 5px 5px 0 0; }
+.flip__pane--top > b { top: 0; }
+.flip__pane--bot { top: 50%; border-radius: 0 0 5px 5px; }
+.flip__pane--bot > b { top: -100%; }
+
+/* The hinge, set as a chequer rather than a plain rule — this is a race
+   countdown, and it is the one place the flag motif costs nothing. */
+.flip::after {
+  content: '';
+  position: absolute; left: 0; right: 0; top: calc(50% - 0.5px);
+  height: 1px; z-index: 5; pointer-events: none;
+  background-image: linear-gradient(90deg, rgba(0,0,0,0.9) 50%, rgba(255,255,255,0.55) 50%);
+  background-size: 5px 1px;
+  opacity: 0.7;
+}
+
+/* ---- the two moving leaves ---- */
+.flip__leaf {
+  position: absolute; left: 0; right: 0; height: 50%;
+  z-index: 4;
+  backface-visibility: hidden;
+}
+.flip__leaf .flip__pane { height: 100%; }
+.flip__leaf--top {
+  top: 0;
+  transform-origin: bottom center;
+  animation: flipAway 0.21s ease-in forwards;
+}
+.flip__leaf--bot {
+  top: 50%;
+  transform-origin: top center;
+  transform: rotateX(90deg);
+  animation: flipIn 0.21s ease-out 0.21s forwards;
+}
+@keyframes flipAway { from { transform: rotateX(0); } to { transform: rotateX(-90deg); } }
+@keyframes flipIn   { from { transform: rotateX(90deg); } to { transform: rotateX(0); } }
+
+/* Reduced motion still updates, it just does not animate the hinge. */
+@media (prefers-reduced-motion: reduce) {
+  .flip__leaf { display: none; }
+}
+
 .dropclock__note {
   display: block; margin-top: 6px;
   font-size: 9px; font-weight: 600; letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.58);
-}
-.dropclock__sep {
-  position: absolute; right: -2px; top: 4px;
-  width: 4px; height: 4px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.34);
-  box-shadow: 0 7px 0 rgba(255, 255, 255, 0.34);
 }
 
 /* ---------- campaign sponsor strip ----------
@@ -1231,8 +1202,8 @@ input, select, textarea { font: inherit; color: inherit; }
    partner set beneath. Every festive storefront carries one of these between
    the masthead and the tile grid. */
 .cpower {
-  margin: 12px auto 0;
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  margin: 10px auto 0;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
 }
 .cpower__l {
   position: relative;
@@ -1255,7 +1226,6 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--yellow);
   text-shadow: 0 1px 8px rgba(248, 203, 70, 0.35);
 }
-.ctake.is-night .cpower__b { color: var(--hw-o); text-shadow: 0 0 12px rgba(255, 122, 26, 0.6); }
 
 /* ---------- ornamental hand-off to the feed ----------
    Sits on the white feed just under the band's scalloped edge. Two rules
@@ -1283,4 +1253,18 @@ input, select, textarea { font: inherit; color: inherit; }
   background-position: 0 0, 6px 6px;
   background-color: #fff;
   box-shadow: 0 0 0 1px rgba(31, 31, 31, 0.14);
+}
+
+/* Subtitle on a tile that needs one — only the race tile carries live state. */
+.ccard__s {
+  position: relative; z-index: 2;
+  display: block; margin-top: 2px;
+  font-size: 9px; font-weight: 700; line-height: 1.15;
+  color: #A8471C;
+  text-align: center;
+}
+/* The mystery drop's placeholder mark, inside the sheet. */
+.mystrow__ic {
+  font-size: 17px; font-weight: 800; color: var(--hw-r);
+  background: #FFE8E4;
 }
