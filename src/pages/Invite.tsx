@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../components/blinkit/Chrome';
+import { PageHeader } from '../design/components/Chrome';
 import { useStore } from '../store/useStore';
-import { IconCheck, IconShare, IconUsers } from '../components/Icons';
+import { IconCheck, IconShare, IconUsers } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 export default function Invite() {
@@ -55,9 +56,9 @@ export default function Invite() {
               </div>
               <span className="chip chip--on">{invitedCount} joined</span>
             </div>
-            <button className="btn btn--flame btn--block" type="button" onClick={share}>
+            <Button variant="flame" block type="button" onClick={share}>
               <IconShare size={16} /> Invite a friend
-            </button>
+            </Button>
           </div>
 
           <div className="card" style={{ padding: 12, display: 'grid', gap: 10 }}>
@@ -69,14 +70,13 @@ export default function Invite() {
               There is no backend in this prototype, so nothing can genuinely confirm a friend raced. This button stands
               in for that server callback so you can see the unlock happen.
             </p>
-            <button
-              className="btn btn--outline btn--block"
+            <Button variant="outline" block
               type="button"
               disabled={!shared}
               onClick={() => { grantExtraRace(); toast('+1 race unlocked'); }}
             >
               <IconCheck size={16} /> {shared ? 'Simulate friend completing a race' : 'Share your link first'}
-            </button>
+            </Button>
           </div>
 
           <img src="/campaign/21-friend-challenge-card.webp" alt="" style={{ width: '100%', borderRadius: 'var(--r-lg)' }} />

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { color } from '../../design/constants';
 import { RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
 import { primeAudio, skid } from '../horn';
@@ -89,7 +90,7 @@ function makeReticle() {
   // Solid target ring
   const ring = new THREE.Mesh(
     new THREE.RingGeometry(0.09, 0.11, 40).rotateX(-Math.PI / 2),
-    new THREE.MeshBasicMaterial({ color: 0xf8cb46, transparent: true, opacity: 0.95, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({ color: color.yellow.int, transparent: true, opacity: 0.95, side: THREE.DoubleSide }),
   );
   // Pulsing radar wave
   const pulseRing = new THREE.Mesh(
@@ -106,7 +107,7 @@ function makeReticle() {
 
   // Directional crosshairs
   const crossGeo = new THREE.PlaneGeometry(0.035, 0.008).rotateX(-Math.PI / 2);
-  const crossMat = new THREE.MeshBasicMaterial({ color: 0xed1c24, side: THREE.DoubleSide });
+  const crossMat = new THREE.MeshBasicMaterial({ color: color.hwR.int, side: THREE.DoubleSide });
   for (let i = 0; i < 4; i++) {
     const cross = new THREE.Mesh(crossGeo, crossMat);
     const ang = (i * Math.PI) / 2;
@@ -127,7 +128,7 @@ function makeReticle() {
   }
   const ptsGeo = new THREE.BufferGeometry();
   ptsGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  const ptsMat = new THREE.PointsMaterial({ color: 0xf8cb46, size: 0.012, transparent: true, opacity: 0.8 });
+  const ptsMat = new THREE.PointsMaterial({ color: color.yellow.int, size: 0.012, transparent: true, opacity: 0.8 });
   const gridPoints = new THREE.Points(ptsGeo, ptsMat);
   gridPoints.name = 'gridPoints';
 

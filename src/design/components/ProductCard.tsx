@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { rupees, type Product } from '../../data/catalog';
-import { IconCube, IconLock, IconMinus, IconPlus, IconStar } from '../Icons';
+import { IconCube, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
 
 export function AddControl({ product, size = 'sm' }: { product: Product; size?: 'sm' | 'lg' }) {
   const qty = useStore((s) => s.cart[product.id] ?? 0);

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { color } from '../../../design/constants';
 import { loadCar } from '../modelLoader';
 import { OccupancyGrid, type GridPoint } from './occupancyGrid';
 import { GroceryPlacer } from './groceryPlacer';
@@ -359,7 +360,7 @@ export async function startCameraRallySession(opts: RallySessionOpts): Promise<R
 function createCameraReticle() {
   const g = new THREE.Group();
   const ringGeo = new THREE.RingGeometry(0.06, 0.08, 36).rotateX(-Math.PI / 2);
-  const ringMat = new THREE.MeshBasicMaterial({ color: 0xf8cb46, transparent: true, opacity: 0.95, side: THREE.DoubleSide });
+  const ringMat = new THREE.MeshBasicMaterial({ color: color.yellow.int, transparent: true, opacity: 0.95, side: THREE.DoubleSide });
   const ring = new THREE.Mesh(ringGeo, ringMat);
   const dotGeo = new THREE.CircleGeometry(0.012, 16).rotateX(-Math.PI / 2);
   const dotMat = new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide });
@@ -371,7 +372,7 @@ function createCameraReticle() {
 function createCameraStartMarker() {
   const g = new THREE.Group();
   const baseGeo = new THREE.PlaneGeometry(0.12, 0.16).rotateX(-Math.PI / 2);
-  const baseMat = new THREE.MeshBasicMaterial({ color: 0xf8cb46, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+  const baseMat = new THREE.MeshBasicMaterial({ color: color.yellow.int, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
   const base = new THREE.Mesh(baseGeo, baseMat);
   const lineGeo = new THREE.PlaneGeometry(0.12, 0.02).rotateX(-Math.PI / 2);
   const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });

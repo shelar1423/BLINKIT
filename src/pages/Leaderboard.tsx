@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../components/blinkit/Chrome';
+import { PageHeader } from '../design/components/Chrome';
 import { LEADERBOARD } from '../data/catalog';
 import { useStore } from '../store/useStore';
 
@@ -44,12 +45,12 @@ export default function Leaderboard() {
         </div>
 
         <div className="shell" style={{ paddingTop: 14, display: 'grid', gap: 8 }}>
-          <button className="btn btn--flame btn--block" type="button" disabled={racesLeft <= 0} onClick={() => nav('/race')}>
+          <Button variant="flame" block type="button" disabled={racesLeft <= 0} onClick={() => nav('/race')}>
             {racesLeft > 0 ? `Race again · ${racesLeft} left` : 'No races left today'}
-          </button>
-          <button className="btn btn--outline btn--block" type="button" onClick={() => nav('/invite')}>
+          </Button>
+          <Button variant="outline" block type="button" onClick={() => nav('/invite')}>
             Invite a friend to unlock +1 race
-          </button>
+          </Button>
         </div>
       </main>
     </>

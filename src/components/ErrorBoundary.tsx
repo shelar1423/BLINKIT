@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Button } from '../design/elements';
 
 type Props = { children: ReactNode };
 type State = { error: Error | null };
@@ -22,9 +23,9 @@ export default class ErrorBoundary extends Component<Props, State> {
       <main className="page">
         <div className="empty">
           <p>Something went wrong on this screen.</p>
-          <button className="btn btn--dark" type="button" onClick={() => { this.setState({ error: null }); window.location.href = '/'; }}>
+          <Button variant="dark" type="button" onClick={() => { this.setState({ error: null }); window.location.href = '/'; }}>
             Back to home
-          </button>
+          </Button>
         </div>
       </main>
     );

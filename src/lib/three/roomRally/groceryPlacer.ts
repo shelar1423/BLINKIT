@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { color } from '../../../design/constants';
 import { type GridPoint } from './occupancyGrid';
 
 export type GroceryItemType = 'milk' | 'banana' | 'chips' | 'cola' | 'cereal' | 'blinkit_bag';
@@ -123,7 +124,7 @@ export class GroceryPlacer {
     // Subtle base shadow/glow ring
     const ringGeo = new THREE.RingGeometry(0.02, 0.035, 24).rotateX(-Math.PI / 2);
     const ringMat = new THREE.MeshBasicMaterial({
-      color: type === 'blinkit_bag' ? 0xed1c24 : 0xf8cb46,
+      color: type === 'blinkit_bag' ? color.hwR.int : color.yellow.int,
       transparent: true,
       opacity: 0.6,
       side: THREE.DoubleSide,
@@ -205,7 +206,7 @@ export class GroceryPlacer {
         // Blinkit delivery bag
         const bagGeo = new THREE.BoxGeometry(0.05, 0.055, 0.038);
         const bagMat = new THREE.MeshStandardMaterial({
-          color: 0xf8cb46, // Blinkit Yellow
+          color: color.yellow.int, // Blinkit Yellow
           roughness: 0.3,
           metalness: 0.2,
         });

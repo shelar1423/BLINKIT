@@ -1,7 +1,7 @@
 import { createContext, lazy, Suspense, useCallback, useContext, useMemo, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
-import { BottomNav } from './components/blinkit/BottomNav';
-import { IconCheck } from './components/Icons';
+import { BottomNav } from './design/components/BottomNav';
+import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import Home from './pages/Home';

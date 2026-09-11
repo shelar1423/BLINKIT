@@ -13,7 +13,7 @@ import {
   IconSearch,
   IconUser,
   IconWallet,
-} from '../Icons';
+} from '../elements/Icons';
 import './chrome.css';
 
 /**

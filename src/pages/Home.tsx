@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { AppHeader, BlinkitMark, SectionHeader } from '../components/blinkit/Chrome';
-import { ProductCard } from '../components/blinkit/ProductCard';
+import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
+import { ProductCard } from '../design/components/ProductCard';
 import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useStore, MAX_RACE_ATTEMPTS } from '../store/useStore';
-import { IconFlag } from '../components/Icons';
+import { IconFlag } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 export default function Home() {

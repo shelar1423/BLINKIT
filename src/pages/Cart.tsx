@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../components/blinkit/Chrome';
-import { AddControl } from '../components/blinkit/ProductCard';
+import { Button } from '../design/elements';
+import { PageHeader } from '../design/components/Chrome';
+import { AddControl } from '../design/components/ProductCard';
 import { rupees } from '../data/catalog';
 import { REWARD_TIERS, useCartLines, useStore, useTotals } from '../store/useStore';
-import { IconBolt, IconCart, IconPin } from '../components/Icons';
+import { IconBolt, IconCart, IconPin } from '../design/elements/Icons';
 
 export default function Cart() {
   const nav = useNavigate();
@@ -22,9 +23,9 @@ export default function Cart() {
               <IconCart size={34} />
             </span>
             <p>Your cart is empty.</p>
-            <button className="btn btn--dark" type="button" onClick={() => nav('/hot-wheels')}>
+            <Button variant="dark" type="button" onClick={() => nav('/hot-wheels')}>
               Browse the drop
-            </button>
+            </Button>
           </div>
         </main>
       </>
@@ -99,9 +100,9 @@ export default function Cart() {
           <b style={{ fontSize: 'var(--f-lg)', fontWeight: 800 }} className="t-num">{rupees(totals.toPay)}</b>
           <p className="t-xs">TOTAL</p>
         </div>
-        <button className="btn btn--primary btn--lg grow" type="button" onClick={() => nav('/checkout')}>
+        <Button variant="primary" size="lg" className="grow" type="button" onClick={() => nav('/checkout')}>
           Proceed to checkout
-        </button>
+        </Button>
       </div>
     </>
   );

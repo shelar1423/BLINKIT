@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { color, scene } from '../../design/constants';
 import { PICKUPS } from '../../data/catalog';
 
 /* ============================================================
@@ -117,11 +118,11 @@ function roadTexture() {
 
   // moulded orange plastic, slightly darker toward the rails
   const g = x.createLinearGradient(0, 0, 128, 0);
-  g.addColorStop(0, '#7A2600');
-  g.addColorStop(0.13, '#C44A00');
-  g.addColorStop(0.5, '#E05F06');
-  g.addColorStop(0.87, '#C44A00');
-  g.addColorStop(1, '#7A2600');
+  g.addColorStop(0, scene.trackEdge);
+  g.addColorStop(0.13, scene.trackMid);
+  g.addColorStop(0.5, scene.trackCore);
+  g.addColorStop(0.87, scene.trackMid);
+  g.addColorStop(1, scene.trackEdge);
   x.fillStyle = g;
   x.fillRect(0, 0, 128, 256);
 
@@ -188,7 +189,7 @@ function nebulaTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 512;
   const x = c.getContext('2d')!;
-  x.fillStyle = '#05070C';
+  x.fillStyle = scene.space;
   x.fillRect(0, 0, 512, 512);
 
   const cloud = (cx: number, cy: number, r: number, col: string, a: number) => {
@@ -307,7 +308,7 @@ export class RaceEngine {
 
     // raised side rails, the detail that makes it read as Hot Wheels track
     const railMat = new THREE.MeshStandardMaterial({
-      color: 0x8f2d00,
+      color: scene.rail,
       roughness: 0.5,
       metalness: 0.05,
       side: THREE.DoubleSide,
@@ -344,7 +345,7 @@ export class RaceEngine {
   /** Asteroid field drifting around the circuit, in place of the old city blocks. */
   private buildScenery() {
     const geo = new THREE.IcosahedronGeometry(1, 0);   // low-poly = reads as rock
-    const mat = new THREE.MeshStandardMaterial({ color: 0x6b5a4a, roughness: 0.95, metalness: 0.05, flatShading: true });
+    const mat = new THREE.MeshStandardMaterial({ color: scene.asteroid, roughness: 0.95, metalness: 0.05, flatShading: true });
     mat.envMapIntensity = 0.35;
     this.disposables.push(geo, mat);
     const N = 60;
@@ -409,7 +410,7 @@ export class RaceEngine {
 
     // two posts
     const postGeo = new THREE.CylinderGeometry(0.22, 0.22, 6, 8);
-    const postMat = new THREE.MeshStandardMaterial({ color: 0xff6a00, roughness: 0.6 });
+    const postMat = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.6 });
     this.disposables.push(postGeo, postMat);
     for (const s of [-1, 1]) {
       const post = new THREE.Mesh(postGeo, postMat);
@@ -462,7 +463,7 @@ export class RaceEngine {
   private buildDebris() {
     const geo = new THREE.DodecahedronGeometry(0.62, 0);
     const mat = new THREE.MeshStandardMaterial({
-      color: 0x8a7460,
+      color: scene.debris,
       roughness: 0.9,
       metalness: 0.12,
       flatShading: true,

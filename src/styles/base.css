@@ -837,3 +837,17 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .tiltask__t { font-size: var(--f-base); font-weight: 800; letter-spacing: -0.2px; }
 .tiltask__s { font-size: var(--f-xs); color: var(--tk-mut); margin-bottom: 6px; }
+
+/* ---------- Element: Tag ---------- */
+.tag--green { background: var(--green-tint); color: var(--green); }
+.tag--flame { background: var(--hw-r-tint); color: var(--hw-r); }
+
+/* ---------- Element: Price ---------- */
+.price { display: inline-flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.price b { font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.2px; }
+.price--lg b { font-size: 24px; letter-spacing: -0.5px; }
+.price s { font-size: var(--f-sm); color: var(--mut-2); }
+.price i {
+  font-style: normal; background: var(--green-tint); color: var(--green);
+  font-size: var(--f-xs); font-weight: 700; padding: 2px 6px; border-radius: var(--r-xs);
+}

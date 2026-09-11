@@ -1,8 +1,9 @@
 import { Fragment, useEffect, useState } from 'react';
+import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { rupees } from '../data/catalog';
 import { useStore } from '../store/useStore';
-import { IconCheck, IconChevronRight, IconPin } from '../components/Icons';
+import { IconCheck, IconChevronRight, IconPin } from '../design/elements/Icons';
 
 const STAGES = ['Store', 'Packing', 'On the way', 'Arriving', 'You'];
 
@@ -23,7 +24,7 @@ export default function OrderSuccess() {
       <main className="page">
         <div className="empty">
           <p>No recent order.</p>
-          <button className="btn btn--dark" type="button" onClick={() => nav('/')}>Back to home</button>
+          <Button variant="dark" type="button" onClick={() => nav('/')}>Back to home</Button>
         </div>
       </main>
     );
@@ -119,9 +120,9 @@ export default function OrderSuccess() {
           <IconChevronRight size={17} />
         </button>
 
-        <button className="btn btn--outline btn--block" type="button" onClick={() => nav('/')}>
+        <Button variant="outline" block type="button" onClick={() => nav('/')}>
           Continue shopping
-        </button>
+        </Button>
       </div>
     </main>
   );

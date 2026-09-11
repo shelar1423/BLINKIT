@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from '../design/elements';
 import type React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PageHeader } from '../components/blinkit/Chrome';
+import { PageHeader } from '../design/components/Chrome';
 import { HERO_CARS, rupees } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import {
@@ -16,7 +17,7 @@ import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import {
   IconAR, IconBrake, IconCheck, IconChevronLeft, IconChevronRight, IconClose,
   IconDrift, IconFlag, IconHorn, IconInfo, IconMinus, IconPlus, IconRotate,
-} from '../components/Icons';
+} from '../design/elements/Icons';
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 
@@ -347,18 +348,18 @@ export default function ARView() {
             {/* Action buttons */}
             <div className="arov__acts">
               {(phase === 'ready' || phase === 'searching') && (
-                <button className="btn btn--flame btn--block" type="button" onClick={() => handle.current?.placeNow()}>
+                <Button variant="flame" block type="button" onClick={() => handle.current?.placeNow()}>
                   {phase === 'ready' ? 'Place track here' : 'Place in front of me'}
-                </button>
+                </Button>
               )}
               {phase === 'placed' && (
                 <>
-                  <button className="btn btn--flame btn--block" type="button" onClick={() => handle.current?.startRace()}>
+                  <Button variant="flame" block type="button" onClick={() => handle.current?.startRace()}>
                     Start race
-                  </button>
-                  <button className="btn btn--ghostDark btn--block" type="button" onClick={() => handle.current?.reset()}>
+                  </Button>
+                  <Button variant="ghostDark" block type="button" onClick={() => handle.current?.reset()}>
                     <IconRotate size={15} /> Reposition track
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
@@ -383,8 +384,7 @@ export default function ARView() {
             </div>
           </div>
 
-          <button
-            className="btn btn--flame btn--lg btn--block"
+          <Button variant="flame" size="lg" block
             type="button"
             disabled={!(support?.kind === 'webxr' || support?.kind === 'camera') || busy}
             onClick={launch}
@@ -395,10 +395,9 @@ export default function ARView() {
               : support?.kind === 'camera'
               ? 'Open Camera Race'
               : 'Race in your space'}
-          </button>
+          </Button>
 
-          <button
-            className="btn btn--outline btn--block"
+          <Button variant="outline" block
             type="button"
             onClick={() => {
               selectCar(car.id);
@@ -407,7 +406,7 @@ export default function ARView() {
           >
             <IconFlag size={16} />
             Play 3D Browser Race instead
-          </button>
+          </Button>
 
           <div className="card" style={{ padding: 12 }}>
             <div className="row" style={{ gap: 8, marginBottom: 6 }}>
@@ -451,8 +450,7 @@ export default function ARView() {
           )}
           <div style={{ display: 'grid', gap: 8 }}>
             {tier && (
-              <button
-                className="btn btn--primary btn--lg btn--block"
+              <Button variant="primary" size="lg" block
                 type="button"
                 onClick={() => {
                   claimReward(tier.id);
@@ -460,10 +458,9 @@ export default function ARView() {
                 }}
               >
                 Claim reward
-              </button>
+              </Button>
             )}
-            <button
-              className="btn btn--flame btn--block"
+            <Button variant="flame" block
               type="button"
               onClick={() => {
                 setOutcome(null);
@@ -472,10 +469,10 @@ export default function ARView() {
               disabled={racesLeft <= 0}
             >
               Race again
-            </button>
-            <button className="btn btn--ghostDark btn--block" type="button" onClick={() => nav('/')}>
+            </Button>
+            <Button variant="ghostDark" block type="button" onClick={() => nav('/')}>
               Shop the drop
-            </button>
+            </Button>
           </div>
         </div>
       )}

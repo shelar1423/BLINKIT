@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../components/blinkit/Chrome';
+import { PageHeader } from '../design/components/Chrome';
 import { rupees } from '../data/catalog';
 import { REWARD_TIERS, useCartLines, useStore, useTotals } from '../store/useStore';
-import { IconBolt, IconCheck, IconPin, IconTicket } from '../components/Icons';
+import { IconBolt, IconCheck, IconPin, IconTicket } from '../design/elements/Icons';
 
 const PAYMENTS = [
   { id: 'upi', label: 'UPI', sub: 'Pay by any UPI app' },
@@ -28,7 +29,7 @@ export default function Checkout() {
         <main className="page">
           <div className="empty">
             <p>There is nothing to check out.</p>
-            <button className="btn btn--dark" type="button" onClick={() => nav('/hot-wheels')}>Browse the drop</button>
+            <Button variant="dark" type="button" onClick={() => nav('/hot-wheels')}>Browse the drop</Button>
           </div>
         </main>
       </>
@@ -118,8 +119,7 @@ export default function Checkout() {
           <b style={{ fontSize: 'var(--f-lg)', fontWeight: 800 }} className="t-num">{rupees(totals.toPay)}</b>
           <p className="t-xs">TOTAL</p>
         </div>
-        <button
-          className="btn btn--primary btn--lg grow"
+        <Button variant="primary" size="lg" className="grow"
           type="button"
           disabled={busy}
           onClick={() => {
@@ -130,7 +130,7 @@ export default function Checkout() {
           }}
         >
           {busy ? 'Placing order…' : 'Place order'}
-        </button>
+        </Button>
       </div>
     </>
   );

@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../components/blinkit/Chrome';
+import { Button } from '../design/elements';
+import { PageHeader } from '../design/components/Chrome';
 import { rupees } from '../data/catalog';
 import { REWARD_TIERS, useStore } from '../store/useStore';
 import { useToast } from '../App';
@@ -53,13 +54,12 @@ export default function Rewards() {
                   {isClaimed ? (
                     <span className="chip chip--live">APPLIED</span>
                   ) : unlocked ? (
-                    <button
-                      className="btn btn--sm btn--flame"
+                    <Button variant="flame" size="sm"
                       type="button"
                       onClick={() => { claimReward(t.id); toast(`${t.label} applied to your cart`); nav('/cart'); }}
                     >
                       Claim
-                    </button>
+                    </Button>
                   ) : (
                     <span className="chip chip--off">{(t.min - totalPoints).toLocaleString('en-IN')} to go</span>
                   )}

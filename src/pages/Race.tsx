@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
+import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../components/blinkit/Chrome';
+import { PageHeader } from '../design/components/Chrome';
 import { HERO_CARS, rupees } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, useStore } from '../store/useStore';
 import { preloadCar } from '../lib/three/modelLoader';
-import { IconAR, IconCheck, IconFlag } from '../components/Icons';
+import { IconAR, IconCheck, IconFlag } from '../design/elements/Icons';
 
 /** Race preparation: pick the car, then choose 3D or AR. */
 export default function Race() {
@@ -70,28 +71,26 @@ export default function Race() {
         </div>
 
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 8 }}>
-          <button
-            className="btn btn--flame btn--lg btn--block"
+          <Button variant="flame" size="lg" block
             type="button"
             disabled={racesLeft <= 0}
             onClick={() => nav(`/ar/${car.id}`)}
           >
             <IconAR size={17} />
             {racesLeft > 0 ? 'Race in your space' : 'No races left today'}
-          </button>
-          <button
-            className="btn btn--outline btn--block"
+          </Button>
+          <Button variant="outline" block
             type="button"
             disabled={racesLeft <= 0}
             onClick={() => nav('/race/play')}
           >
             <IconFlag size={16} />
             Play in 3D instead
-          </button>
+          </Button>
           {racesLeft <= 0 && (
-            <button className="btn btn--outline btn--block" type="button" onClick={() => nav('/invite')}>
+            <Button variant="outline" block type="button" onClick={() => nav('/invite')}>
               Invite a friend to unlock +1 race
-            </button>
+            </Button>
           )}
         </div>
       </main>

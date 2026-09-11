@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { HERO_CARS, rupees } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
-import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconRotate } from '../components/Icons';
+import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconRotate } from '../design/elements/Icons';
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 import { useToast } from '../App';
@@ -226,9 +227,9 @@ export default function RacePlay() {
       {err && (
         <div className="loadbox loadbox--dark" style={{ position: 'absolute', inset: 0 }}>
           <p style={{ color: '#fff' }}>{err}</p>
-          <button className="btn btn--outline" type="button" onClick={() => nav('/race')}>
+          <Button variant="outline" type="button" onClick={() => nav('/race')}>
             Back
-          </button>
+          </Button>
         </div>
       )}
 
@@ -275,9 +276,9 @@ export default function RacePlay() {
             <div className="tiltask" onPointerDown={(e) => e.stopPropagation()}>
               <p className="tiltask__t">Steer by tilting your phone</p>
               <p className="tiltask__s">Needs access to motion sensors.</p>
-              <button className="btn btn--flame btn--sm" type="button" onClick={enableTilt}>
+              <Button variant="flame" size="sm" type="button" onClick={enableTilt}>
                 Enable tilt steering
-              </button>
+              </Button>
             </div>
           )}
           {/* the whole stage is a steering surface, so a tap on these buttons
@@ -365,8 +366,7 @@ export default function RacePlay() {
 
           <div style={{ display: 'grid', gap: 8, marginTop: 4 }}>
             {tier && (
-              <button
-                className="btn btn--primary btn--lg btn--block"
+              <Button variant="primary" size="lg" block
                 type="button"
                 onClick={() => {
                   claimReward(tier.id);
@@ -375,22 +375,21 @@ export default function RacePlay() {
                 }}
               >
                 Claim reward
-              </button>
+              </Button>
             )}
-            <button
-              className="btn btn--ghostDark btn--block"
+            <Button variant="ghostDark" block
               type="button"
               disabled={useStore.getState().racesLeft <= 0}
               onClick={() => window.location.reload()}
             >
               Race again ({useStore.getState().racesLeft} left)
-            </button>
-            <button className="btn btn--ghostDark btn--block" type="button" onClick={() => nav('/leaderboard')}>
+            </Button>
+            <Button variant="ghostDark" block type="button" onClick={() => nav('/leaderboard')}>
               Leaderboard
-            </button>
-            <button className="btn btn--ghostDark btn--block" type="button" onClick={() => nav('/campaign')}>
+            </Button>
+            <Button variant="ghostDark" block type="button" onClick={() => nav('/campaign')}>
               Back to campaign
-            </button>
+            </Button>
           </div>
         </div>
       )}

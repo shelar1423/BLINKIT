@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Button } from '../design/elements';
 import { useNavigate, useParams } from 'react-router-dom';
 import { CARS, productById, rupees } from '../data/catalog';
 import { useStore } from '../store/useStore';
@@ -18,9 +19,9 @@ import {
   IconSearch,
   IconShare,
   IconStar,
-} from '../components/Icons';
-import { ProductCard } from '../components/blinkit/ProductCard';
-import { SectionHeader } from '../components/blinkit/Chrome';
+} from '../design/elements/Icons';
+import { ProductCard } from '../design/components/ProductCard';
+import { SectionHeader } from '../design/components/Chrome';
 import { useToast } from '../App';
 
 /** Blinkit's PDP opens as a sheet: dismiss chevron left, utilities right, no title. */
@@ -88,9 +89,9 @@ export default function Product() {
         <main className="page">
           <div className="empty">
             <p>We couldn&rsquo;t find that product.</p>
-            <button className="btn btn--dark" type="button" onClick={() => nav('/hot-wheels')}>
+            <Button variant="dark" type="button" onClick={() => nav('/hot-wheels')}>
               Back to Hot Wheels
-            </button>
+            </Button>
           </div>
         </main>
       </>
@@ -298,8 +299,7 @@ export default function Product() {
           </b>
         </div>
         {qty === 0 ? (
-          <button
-            className="btn btn--primary btn--lg grow"
+          <Button variant="primary" size="lg" className="grow"
             type="button"
             onClick={() => {
               add(product.id);
@@ -307,7 +307,7 @@ export default function Product() {
             }}
           >
             Add to Cart
-          </button>
+          </Button>
         ) : (
           <div className="row grow" style={{ gap: 10 }}>
             <div className="stepper stepper--lg" role="group" aria-label="Quantity">
@@ -319,9 +319,9 @@ export default function Product() {
                 <IconPlus size={15} />
               </button>
             </div>
-            <button className="btn btn--primary btn--lg grow" type="button" onClick={() => nav('/cart')}>
+            <Button variant="primary" size="lg" className="grow" type="button" onClick={() => nav('/cart')}>
               Go to Cart
-            </button>
+            </Button>
           </div>
         )}
       </div>

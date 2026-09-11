@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { color } from '../../../design/constants';
 import { loadCar } from '../modelLoader';
 import { OccupancyGrid, CellType, type GridPoint } from './occupancyGrid';
 import { GroceryPlacer } from './groceryPlacer';
@@ -586,7 +587,7 @@ function createPlacementReticle() {
 
   const ringGeo = new THREE.RingGeometry(0.06, 0.08, 36).rotateX(-Math.PI / 2);
   const ringMat = new THREE.MeshBasicMaterial({
-    color: 0xf8cb46,
+    color: color.yellow.int,
     transparent: true,
     opacity: 0.95,
     side: THREE.DoubleSide,
@@ -605,7 +606,7 @@ function createStartMarker() {
   const g = new THREE.Group();
   const baseGeo = new THREE.PlaneGeometry(0.12, 0.16).rotateX(-Math.PI / 2);
   const baseMat = new THREE.MeshBasicMaterial({
-    color: 0xf8cb46,
+    color: color.yellow.int,
     transparent: true,
     opacity: 0.5,
     side: THREE.DoubleSide,

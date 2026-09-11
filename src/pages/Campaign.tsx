@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { PageHeader } from '../components/blinkit/Chrome';
-import { ProductCard } from '../components/blinkit/ProductCard';
+import { Button } from '../design/elements';
+import { PageHeader } from '../design/components/Chrome';
+import { ProductCard } from '../design/components/ProductCard';
 import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, rupees } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
-import { IconChevronRight, IconFlag, IconTrophy, IconUsers } from '../components/Icons';
+import { IconChevronRight, IconFlag, IconTrophy, IconUsers } from '../design/elements/Icons';
 
 export default function Campaign() {
   const nav = useNavigate();
@@ -57,19 +58,18 @@ export default function Campaign() {
                 <i key={i} className={i < racesLeft ? 'on' : ''} />
               ))}
             </div>
-            <button
-              className="btn btn--flame btn--block"
+            <Button variant="flame" block
               type="button"
               disabled={racesLeft <= 0}
               onClick={() => nav('/race')}
             >
               <IconFlag size={17} />
               {racesLeft > 0 ? 'Race Now' : 'No races left'}
-            </button>
+            </Button>
             {racesLeft <= 0 && (
-              <button className="btn btn--outline btn--block" type="button" onClick={() => nav('/invite')}>
+              <Button variant="outline" block type="button" onClick={() => nav('/invite')}>
                 Unlock another race
-              </button>
+              </Button>
             )}
           </div>
         </div>

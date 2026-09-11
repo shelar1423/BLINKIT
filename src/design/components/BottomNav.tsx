@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { rupees } from '../../data/catalog';
 import { useCartCount, useStore, useTotals } from '../../store/useStore';
-import { IconBag, IconGrid, IconHouse, IconPrint, IconScooter } from '../Icons';
+import { IconBag, IconGrid, IconHouse, IconPrint, IconScooter } from '../elements/Icons';
 
 /**
  * Blinkit's real bottom navigation: a floating white pill that rides above the

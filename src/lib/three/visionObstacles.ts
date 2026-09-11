@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { color } from '../../design/constants';
 import { rallyAudio } from './roomRally/audioEffects';
 
 export interface PinnedObstacle {
@@ -205,11 +206,11 @@ export class VisionObstacleSystem {
     c.height = 128;
     const ctx = c.getContext('2d')!;
     // Blinkit primary yellow
-    ctx.fillStyle = '#F8CB46';
+    ctx.fillStyle = color.yellow.hex;
     ctx.fillRect(0, 0, 128, 128);
 
     // Caution diagonal stripes
-    ctx.fillStyle = '#1F1F1F';
+    ctx.fillStyle = color.ink.hex;
     ctx.beginPath();
     for (let i = -128; i < 256; i += 32) {
       ctx.moveTo(i, 0);
@@ -220,7 +221,7 @@ export class VisionObstacleSystem {
     ctx.fill();
 
     // Blinkit badge
-    ctx.fillStyle = '#1F1F1F';
+    ctx.fillStyle = color.ink.hex;
     ctx.roundRect(24, 44, 80, 40, 8);
     ctx.fill();
     ctx.fillStyle = '#FFFFFF';
