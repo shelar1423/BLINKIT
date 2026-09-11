@@ -939,14 +939,17 @@ input, select, textarea { font: inherit; color: inherit; }
 .rowcard--static { cursor: default; }
 .rowcard b { display: block; font-size: var(--f-base); font-weight: 700; }
 .rowcard small { display: block; font-size: var(--f-xs); color: var(--mut); line-height: 1.4; margin-top: 1px; }
+/* A square tile, like the icon tile beside it in the same stack. The logotype
+   is nearly 3:1, so in a 46x38 box it letterboxed down to an unreadable smear;
+   fitted by width in a square it reads as the mark it is. */
 .rowcard__brand {
-  width: 46px; height: 38px; flex: 0 0 46px;
-  border: 1px solid var(--line); border-radius: var(--r);
+  width: 52px; height: 52px; flex: 0 0 52px;
+  border: 1px solid var(--line); border-radius: var(--r-md);
   display: grid; place-items: center; padding: 5px; background: #fff;
 }
-.rowcard__brand img { width: 100%; height: auto; }
+.rowcard__brand img { width: 100%; height: auto; object-fit: contain; }
 .rowcard__ic {
-  width: 38px; height: 38px; border-radius: var(--r); flex: 0 0 38px;
+  width: 52px; height: 52px; border-radius: var(--r-md); flex: 0 0 52px;
   display: grid; place-items: center;
   background: var(--surface-2); color: var(--ink-2);
 }

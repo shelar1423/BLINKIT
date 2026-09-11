@@ -341,11 +341,22 @@ export const IconHeart = (p: P) => (
   </S>
 );
 
-/** Replacement policy row. */
+/**
+ * Replacement policy row: a parcel inside a return loop.
+ *
+ * It used to be a bare cube, which says "box" and nothing about sending one
+ * back. The loop is what carries the meaning, so the box shrinks to sit inside
+ * it rather than filling the frame.
+ */
 export const IconReplace = (p: P) => (
-  <S {...p}>
-    <path d="M3.6 8.6 12 4.4l8.4 4.2v6.8L12 19.6l-8.4-4.2z" />
-    <path d="M3.6 8.6 12 12.8l8.4-4.2M12 12.8v6.8" />
+  <S {...p} strokeWidth={1.7}>
+    {/* The return loop, open at the top where the arrowhead lands. */}
+    <path d="M16.4 4.6a8.8 8.8 0 1 1-8.8 0" />
+    <path d="M13.6 2.1 16.8 4.5l-2.7 2.6" />
+    {/* The parcel, drawn flat rather than isometric: three extra edges of a
+        cube inside an 18px circle is a smudge, not a box. */}
+    <rect x="8.4" y="9.9" width="7.2" height="6.6" rx="1.1" />
+    <path d="M8.4 12.3h7.2M12 9.9v2.4" />
   </S>
 );
 

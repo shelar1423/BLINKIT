@@ -434,7 +434,7 @@ export default function Product() {
               }}
             >
               <span className="rowcard__ic rowcard__ic--flame">
-                <IconFlag size={18} />
+                <IconFlag size={21} />
               </span>
               <span className="grow">
                 <b>Race this car</b>
@@ -446,7 +446,7 @@ export default function Product() {
 
           <div className="card rowcard rowcard--static">
             <span className="rowcard__ic">
-              <IconReplace size={18} />
+              <IconReplace size={23} />
             </span>
             <span className="grow">
               <b>72 hours only replacement</b>
