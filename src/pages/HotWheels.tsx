@@ -9,7 +9,6 @@ import { useStore } from '../store/useStore';
 import {
   IconCheck,
   IconChevronDown,
-  IconFlag,
   IconSearch,
   IconShare,
   IconSliders,
@@ -219,19 +218,6 @@ export default function HotWheels() {
                 Clear all
               </button>
             )}
-          </div>
-
-          <div className="card catrace">
-            <span style={{ color: 'var(--hw-r)' }}>
-              <IconFlag size={20} />
-            </span>
-            <div className="grow">
-              <p style={{ fontSize: 'var(--f-md)', fontWeight: 700 }}>Race to reveal the rare car</p>
-              <p className="t-xs">Five cars have full 3D and AR. Everything else buys normally.</p>
-            </div>
-            <Button variant="flame" size="sm" onClick={() => nav('/race')}>
-              Race
-            </Button>
           </div>
 
           <p className="catcount">

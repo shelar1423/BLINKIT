@@ -146,9 +146,10 @@ export function ProductCard({ product }: { product: Product }) {
         }
       }}
     >
-      {/* The framed part of the card: image, pager, then a foot carrying the
-          unit on the left and ADD on the right — ADD sits half outside the
-          frame, which is the detail that makes it read as Blinkit's. */}
+      {/* The panel: image, pager, then the pack size along its foot. ADD is
+          hung off the bottom-right corner and is the only thing that leaves
+          the panel — that break is the detail that makes it read as Blinkit's,
+          and it only works if everything else stays inside. */}
       <div className="pcard__imwrap">
         {/* Outside the image, which is clipped to its own box — the badge has to
             reach the panel's corner. */}
@@ -171,12 +172,13 @@ export function ProductCard({ product }: { product: Product }) {
             ))}
           </span>
         )}
-        <div className="pcard__foot">
-          {/* pack size only: the card has one line for it, and the material
-              ("die-cast") belongs on the detail page where there is room. */}
-          <span className="pcard__unit">{product.unit.split(' · ')[0]}</span>
+        {/* Pack size only: the card has one line for it, and the material
+            ("die-cast") belongs on the detail page where there is room. It sits
+            INSIDE the panel — only the button is allowed to break out. */}
+        <span className="pcard__unit">{product.unit.split(' · ')[0]}</span>
+        <span className="pcard__act">
           <AddControl product={product} />
-        </div>
+        </span>
       </div>
 
       <div className="pcard__prow">

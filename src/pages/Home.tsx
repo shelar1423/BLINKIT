@@ -101,7 +101,7 @@ export default function Home() {
             {/* No card. On the reference storefront the CTA is a bare pill
                 sitting straight on the campaign ground — boxing it put a
                 second surface between the artwork and the one thing to do. */}
-            <Button variant="light" className="mystery__go" onClick={() => nav('/race')}>
+            <Button variant="hwBlue" className="mystery__go" onClick={() => nav('/race')}>
               <IconFlag size={17} />
               Race now
             </Button>

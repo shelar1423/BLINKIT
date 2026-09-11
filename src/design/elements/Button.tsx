@@ -22,7 +22,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
    button you are meant to press.
    ============================================================ */
 
-export type ButtonVariant = 'primary' | 'flame' | 'light' | 'dark' | 'outline' | 'ghostDark';
+export type ButtonVariant = 'primary' | 'flame' | 'hwBlue' | 'light' | 'dark' | 'outline' | 'ghostDark';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {

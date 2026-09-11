@@ -105,6 +105,17 @@ input, select, textarea { font: inherit; color: inherit; }
 /* campaign CTA — Hot Wheels flame red, never used for commerce actions */
 .btn--flame { background: var(--hw-r); color: #fff; }
 .btn--flame:not(:disabled):active { background: var(--hw-r-dk); }
+/* Hot Wheels blue. The other half of the brand's pair, and the one that can
+   carry a CTA on a campaign ground without being mistaken for Blinkit's green
+   (which means commerce) or its red (which means the campaign itself). Shares
+   the light variant's geometry so the two are interchangeable in place. */
+.btn--hwBlue {
+  background: var(--hw-b); color: #fff; font-weight: 800;
+  border-radius: 16px;
+  padding: 0 26px;
+  box-shadow: 0 8px 22px rgba(11, 95, 208, 0.42);
+}
+.btn--hwBlue:not(:disabled):active { background: #094FAD; }
 .btn--outline { border: 1px solid var(--line); background: #fff; color: var(--ink); font-weight: 600; }
 .btn--outline:not(:disabled):active { background: var(--surface-2); }
 .btn--ghostDark { border: 1px solid var(--tk-line); background: rgba(255,255,255,0.08); color: #fff; font-weight: 600; }
@@ -116,12 +127,16 @@ input, select, textarea { font: inherit; color: inherit; }
    Outlined in brand green rather than hairline grey: on a listing grid this is
    the only control on the card, and the outline is what separates it from the
    unit label sitting next to it. */
+/* Proportioned off the reference rather than guessed: on Blinkit's card the
+   button is about 48% of the card's width and 34% of it tall, with a radius
+   about a quarter of its own height. A softened square, not a pill — at half
+   the height it becomes a lozenge and stops reading as the same control. */
 .add {
-  height: 34px;
-  min-width: 72px;
-  padding: 0 16px;
-  border: 1px solid var(--green);
-  border-radius: var(--r-md);
+  height: 40px;
+  min-width: 62px;
+  padding: 0 12px;
+  border: 1.5px solid var(--green);
+  border-radius: 9px;
   background: #fff;
   color: var(--green);
   font-size: var(--f-md);
@@ -133,9 +148,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .stepper {
   display: inline-flex;
   align-items: center;
-  height: 34px;
-  min-width: 72px;
-  border-radius: var(--r-md);
+  height: 40px;
+  min-width: 62px;
+  border-radius: 9px;
   background: var(--green);
   color: #fff;
   overflow: hidden;
@@ -162,9 +177,9 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative;
   border-radius: var(--r-lg);
   background: var(--appbase);
-  padding: 8px 8px 0;
-  /* clears the ADD's overhang (17) plus the gap to the price row (14) */
-  margin-bottom: 31px;
+  padding: 8px 10px 9px;
+  /* clears the ADD's overhang (20) plus the gap to the price row (14) */
+  margin-bottom: 34px;
 }
 .pcard__im {
   position: relative;
@@ -200,25 +215,20 @@ input, select, textarea { font: inherit; color: inherit; }
 .pcard__dots { display: flex; gap: 4px; padding: 5px 0 1px 2px; }
 .pcard__dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--line-2); }
 .pcard__dots i.is-on { background: var(--mut); }
-/* The overhang. On Blinkit's card the frame's bottom border runs through the
-   middle of ADD and its right edge clears the corner — the button is sitting
-   on the card, not inside it. The negative margins are what buy that. */
-.pcard__foot {
-  display: flex; align-items: center; justify-content: space-between; gap: 6px;
-  padding: 6px 0 0;
-  margin: 0 -14px -17px 0;
-  min-height: 34px;
-}
-/* Explicit, not incidental. ADD only painted above the frame border and the
-   price row because it happened to come first in the DOM; once it overhangs by
-   half its height, the text below would win on paint order without this. */
-.pcard__foot .add,
-.pcard__foot .stepper { position: relative; z-index: 3; }
+/* The pack size is part of the panel, sitting on its foot. It was being
+   dragged out of the panel along with the button, which is the one thing that
+   is meant to break the edge. */
 .pcard__unit {
-  font-size: var(--f-sm); font-weight: 600; color: var(--ink);
-  padding-left: 2px;
+  display: block;
+  margin-top: 8px;
+  /* keeps clear of the button hanging in the corner */
+  padding-right: 62px;
+  font-size: var(--f-md); font-weight: 600; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* ADD, hung off the panel's bottom-right corner: out past the right edge and
+   down past the foot, so the panel's edge runs behind it. */
+.pcard__act { position: absolute; right: -6px; bottom: -20px; z-index: 3; }
 
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
 .pcard__price { font-size: var(--f-lg); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
@@ -270,7 +280,7 @@ input, select, textarea { font: inherit; color: inherit; }
    to the edge of the screen while every heading beside it kept its margin. */
 .prail {
   display: grid; grid-auto-flow: column; grid-auto-columns: 46%;
-  gap: 12px; overflow-x: auto; padding: 12px var(--gut) 18px;
+  gap: 16px; overflow-x: auto; padding: 12px var(--gut) 18px;
   scroll-snap-type: x proximity; scroll-padding-inline: var(--gut);
   scrollbar-width: none;
 }
@@ -1095,7 +1105,18 @@ input, select, textarea { font: inherit; color: inherit; }
 .result__more > * { flex: 1; }
 
 /* ---------- car picker ---------- */
-.carpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px var(--gut) 4px; }
+/* Five cars in a scrolling row rather than a 3x2 grid. The grid cost two full
+   rows plus an empty sixth cell and pushed both CTAs off the fold — on a
+   screen whose whole job is "read this, pick one, start", the start button has
+   to be reachable without scrolling past the picker. */
+.carpick {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 29%;
+  gap: 10px; padding: 12px var(--gut) 6px;
+  overflow-x: auto; scrollbar-width: none;
+  scroll-snap-type: x proximity; scroll-padding-inline: var(--gut);
+}
+.carpick::-webkit-scrollbar { display: none; }
+.carpick > * { scroll-snap-align: start; }
 .carpick__i { display: grid; gap: 5px; text-align: left; }
 .carpick__im { position: relative; border: 1px solid var(--line); border-radius: var(--r-md); background: #fff; aspect-ratio: 1; overflow: hidden; }
 .carpick__im img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
@@ -1418,27 +1439,19 @@ input, select, textarea { font: inherit; color: inherit; }
   letter-spacing: 0.18em; text-transform: uppercase;
 }
 .howcard__art { position: relative; }
-.howcard__art img { display: block; width: 100%; height: 146px; object-fit: cover; }
-/* Over the art, as in the reference, so it reads as advice about the picture
-   rather than another step. */
-.howcard__tip {
-  position: absolute; left: 10px; right: 10px; bottom: 8px;
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 999px;
-  padding: 5px 12px;
-  font-size: var(--f-2xs); font-weight: 600; color: var(--ink);
-  text-align: center;
-}
-.howcard__tip b { font-weight: 800; }
+/* The source is a tall portrait and the car sits well below its middle, so a
+   centred cover crop of a short band framed the wall behind it. The asset is
+   cropped to the car; this only has to hold the shape. */
+.howcard__art img { display: block; width: 100%; height: 132px; object-fit: cover; object-position: center 54%; }
 
-.howsteps { list-style: none; margin: 0; padding: 12px 12px 4px; display: grid; gap: 9px; }
+.howsteps { list-style: none; margin: 0; padding: 12px 12px 2px; display: grid; gap: 8px; }
 .howsteps li {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 9px;
   font-size: var(--f-sm); font-weight: 600; color: var(--ink); line-height: 1.3;
 }
 .howsteps__n {
   flex: 0 0 auto;
-  width: 21px; height: 21px; border-radius: 50%;
+  width: 20px; height: 20px; border-radius: 50%;
   background: var(--hw-r); color: #fff;
   display: grid; place-items: center;
   font-size: 11px; font-weight: 800;
@@ -1448,12 +1461,31 @@ input, select, textarea { font: inherit; color: inherit; }
 .howsteps__t { flex: 1; min-width: 0; }
 .howsteps li b { font-weight: 800; }
 
+/* The rule and the tip share one row. Stacked, they were two more full-width
+   blocks on a panel that was already taller than the fold, and the tip on top
+   of the art was covering the very thing it points at. */
+.howcard__foot {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px 12px;
+}
 .howcard__line {
-  padding: 8px 12px 14px;
+  flex: none;
+  font-size: var(--f-md); font-weight: 800; line-height: 1.2;
+  letter-spacing: -0.2px; color: #102A6B;
+}
+.howcard__tip {
+  flex: 1; min-width: 0;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: var(--f-2xs); font-weight: 600; color: var(--ink);
   text-align: center;
-  font-size: var(--f-lg); font-weight: 800; line-height: 1.2;
-  letter-spacing: -0.3px;
-  color: #102A6B;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.howcard__tip b { font-weight: 800; }
+.howcard__best {
+  padding: 0 12px 12px;
+  font-size: var(--f-xs); color: #2A3C6B;
 }
 
 /* ---------- category page: rail + grid ----------
@@ -1552,7 +1584,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .catcount { font-size: var(--f-xs); color: var(--mut); font-weight: 600; padding: 12px 12px 0; }
 
 .catrace { display: flex; gap: 11px; align-items: center; padding: 12px; margin: 10px 12px 0; }
-.catgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; padding: 10px 12px 12px; }
+/* The side padding and the column gap both have to clear the ADD's 6px
+   overhang, or the right-hand column pushes it off the screen. */
+.catgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; padding: 10px 16px 14px; }
 .catempty { padding: 28px 12px; text-align: center; color: var(--mut); }
 .linkbtn {
   background: none; border: 0; padding: 6px 0;
