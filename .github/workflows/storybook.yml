@@ -1,0 +1,103 @@
+# Per-PR Storybook preview URLs.
+#
+# This is the Jenkins pipeline from Blinkit's design-library post, on GitHub
+# Actions: every pull request gets its own Storybook build at its own URL, so a
+# designer can review components without checking anything out, and a push to
+# the same PR redeploys to the same link.
+#
+# The app itself doesn't need this — that Vercel project is git-connected and
+# gets native preview deployments. Storybook needs a workflow because its build
+# command differs from the app's and a Vercel project can only hold one.
+#
+# Setup: one repository secret, VERCEL_TOKEN (see docs/storybook-previews.md).
+
+name: Storybook preview
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  # a new push to the same PR supersedes the in-flight build
+  group: storybook-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: team_nT4eE5QBT7w9r9asI4gAxE51
+  VERCEL_PROJECT_ID: prj_zUyf9KkAv378JH9fpcN72TJT3z8l
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write   # to post the preview link back onto the PR
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # the same guard the app build runs: Constants and tokens.css must agree
+      - name: Check design tokens
+        run: npm run check:tokens
+
+      - name: Build Storybook
+        run: npm run build:storybook
+
+      # Until VERCEL_TOKEN is set the build still runs and still guards the
+      # tokens — it just skips the deploy, rather than failing every PR red
+      # before anyone has had a chance to add the secret.
+      - name: Check for deploy credentials
+        id: creds
+        run: |
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Storybook deploy skipped::Add a VERCEL_TOKEN repository secret to publish per-PR Storybook previews. See docs/storybook-previews.md"
+          fi
+
+      - name: Install Vercel CLI
+        if: steps.creds.outputs.ready == 'true'
+        run: npm i -g vercel@latest
+
+      - name: Deploy
+        id: deploy
+        if: steps.creds.outputs.ready == 'true'
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            url=$(vercel deploy ./storybook-static --prod --yes --token="${{ secrets.VERCEL_TOKEN }}")
+          else
+            url=$(vercel deploy ./storybook-static --yes --token="${{ secrets.VERCEL_TOKEN }}")
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Storybook deployed to $url"
+
+      - name: Comment the preview link
+        if: github.event_name == 'pull_request' && steps.creds.outputs.ready == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}';
+            const marker = '<!-- storybook-preview -->';
+            const body = `${marker}\n📖 **Storybook preview for this PR**\n\n${url}\n\nEvery component at all three levels — Constants, Elements, Components. Pushing to this branch redeploys to the same link.`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
+            });
+            // update the existing comment rather than adding one per push
+            const existing = comments.find((c) => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body,
+              });
+            }
