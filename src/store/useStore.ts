@@ -104,6 +104,9 @@ type State = {
   invitedCount: number;
   order: Order | null;
   soundOn: boolean;
+  /** Wishlisted product ids. The heart on a card has to keep its state, or it
+   *  is a control that lies every time the list re-renders. */
+  saved: string[];
 
   add: (id: string, qty?: number) => void;
   setQty: (id: string, qty: number) => void;
@@ -120,6 +123,7 @@ type State = {
   grantExtraRace: () => void;
   placeOrder: () => Order | null;
   toggleSound: () => void;
+  toggleSaved: (id: string) => void;
   resetCampaign: () => void;
 };
 
@@ -143,6 +147,7 @@ export const useStore = create<State>()(
       invitedCount: 0,
       order: null,
       soundOn: true,
+      saved: [],
 
       add: (id, qty = 1) => set((s) => ({ cart: { ...s.cart, [id]: (s.cart[id] ?? 0) + qty } })),
       setQty: (id, qty) =>
@@ -215,6 +220,8 @@ export const useStore = create<State>()(
       },
 
       toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
+      toggleSaved: (id) =>
+        set((s) => ({ saved: s.saved.includes(id) ? s.saved.filter((x) => x !== id) : [...s.saved, id] })),
       resetCampaign: () =>
         set({
           cart: {},
@@ -227,6 +234,7 @@ export const useStore = create<State>()(
           mysteryUnlocked: false,
           invitedCount: 0,
           order: null,
+          saved: [],
         }),
     }),
     {
@@ -237,6 +245,7 @@ export const useStore = create<State>()(
         const p = (persisted ?? {}) as Partial<State>;
         const safe: Partial<State> = {};
         if (p.cart && typeof p.cart === 'object') safe.cart = p.cart;
+        if (Array.isArray(p.saved)) safe.saved = p.saved.filter((x) => typeof x === 'string');
         if (typeof p.racesLeft === 'number' && p.racesLeft >= 0) safe.racesLeft = p.racesLeft;
         if (typeof p.totalPoints === 'number' && p.totalPoints >= 0) safe.totalPoints = p.totalPoints;
         if (typeof p.bestScore === 'number') safe.bestScore = p.bestScore;

@@ -3,22 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { PageHeader } from '../design/components/Chrome';
 import { Sheet } from '../design/components/Sheet';
-import { dropStatus } from '../data/drop';
 import { ProductCard } from '../design/components/ProductCard';
-import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, SHOP_CARS, type Product } from '../data/catalog';
+import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, SHOP_CARS, rupees, type Product } from '../data/catalog';
 import { useStore } from '../store/useStore';
-import { IconCheck, IconChevronDown, IconFlag } from '../design/elements/Icons';
+import {
+  IconCheck,
+  IconChevronDown,
+  IconFlag,
+  IconSearch,
+  IconShare,
+  IconSliders,
+  IconSortArrows,
+} from '../design/elements/Icons';
 
 /* ============================================================
    The drop, as a Blinkit category page.
 
    Blinkit's category listing is a sticky rail of picture-led groups down the
-   left with the grid beside it, and a row of controls above the grid. This was
-   a bare two-column grid, which is the same products with none of the way in.
+   left with the grid beside it, and a scrolling row of filter controls above
+   the grid: Filters, Sort, and then the one or two facets that matter for the
+   category. The header carries the delivery address rather than a description,
+   because changing where it goes is the thing you might do before filling a
+   basket.
 
    Every control here does something. A "Filters" chip that opens nothing is
-   worse than no chip, so the rail filters, the sort sheet sorts, and the
-   toggle is a real predicate — nothing is drawn just to match the reference.
+   worse than no chip, so every chip below is a real predicate — nothing is
+   drawn just to match the reference. That is also why the fourth facet is
+   Series and not Brand: every product in this catalogue is Hot Wheels, so a
+   brand filter would have exactly one option and could never change the grid.
    ============================================================ */
 
 type Group = {
@@ -29,26 +41,10 @@ type Group = {
 
 const GROUPS: Group[] = [
   { id: 'all', label: 'All cars', match: () => true },
-  {
-    id: 'playable',
-    label: 'Race ready',
-    match: (p) => Boolean(p.glb),
-  },
-  {
-    id: 'new',
-    label: 'New drop',
-    match: (p) => p.badge === 'NEW DROP',
-  },
-  {
-    id: 'limited',
-    label: 'Limited',
-    match: (p) => p.badge === 'LIMITED',
-  },
-  {
-    id: 'collector',
-    label: 'Collector',
-    match: (p) => /Collector|Premium/i.test(p.series),
-  },
+  { id: 'playable', label: 'Race ready', match: (p) => Boolean(p.glb) },
+  { id: 'new', label: 'New drop', match: (p) => p.badge === 'NEW DROP' },
+  { id: 'limited', label: 'Limited', match: (p) => p.badge === 'LIMITED' },
+  { id: 'collector', label: 'Collector', match: (p) => /Collector|Premium/i.test(p.series) },
 ];
 
 type SortId = 'featured' | 'priceAsc' | 'priceDesc' | 'rating';
@@ -59,6 +55,16 @@ const SORTS: { id: SortId; label: string }[] = [
   { id: 'rating', label: 'Customer rating' },
 ];
 
+type Band = { id: string; label: string; match: (p: Product) => boolean };
+const BANDS: Band[] = [
+  { id: 'u200', label: `Under ${rupees(200)}`, match: (p) => p.price < 200 },
+  { id: '200-300', label: `${rupees(200)} – ${rupees(300)}`, match: (p) => p.price >= 200 && p.price < 300 },
+  { id: 'o300', label: `${rupees(300)} and above`, match: (p) => p.price >= 300 },
+];
+
+/** Which sheet is open. One at a time, so one piece of state, not four. */
+type SheetId = 'filters' | 'sort' | 'price' | 'series' | null;
+
 export default function HotWheels() {
   const nav = useNavigate();
   const mysteryUnlocked = useStore((s) => s.mysteryUnlocked);
@@ -67,7 +73,18 @@ export default function HotWheels() {
 
   const [group, setGroup] = useState('all');
   const [sort, setSort] = useState<SortId>('featured');
-  const [sortOpen, setSortOpen] = useState(false);
+  const [band, setBand] = useState<string | null>(null);
+  const [series, setSeries] = useState<string[]>([]);
+  const [raceOnly, setRaceOnly] = useState(false);
+  const [inStock, setInStock] = useState(false);
+  const [sheet, setSheet] = useState<SheetId>(null);
+
+  /** The series facet is derived from the catalogue, not typed out twice. */
+  const allSeries = useMemo(() => {
+    const seen = new Set<string>();
+    for (const p of all) seen.add(p.series.split(' · ')[0]);
+    return [...seen].sort();
+  }, [all]);
 
   /* Each group needs a thumbnail the eye can tell apart. Taking the first
      match per group independently gave four groups the same green car, because
@@ -88,7 +105,15 @@ export default function HotWheels() {
 
   const shown = useMemo(() => {
     const g = GROUPS.find((x) => x.id === group) ?? GROUPS[0];
-    const list = all.filter(g.match);
+    const bandDef = BANDS.find((b) => b.id === band);
+    const list = all.filter(
+      (p) =>
+        g.match(p) &&
+        (!bandDef || bandDef.match(p)) &&
+        (series.length === 0 || series.includes(p.series.split(' · ')[0])) &&
+        (!raceOnly || Boolean(p.glb)) &&
+        (!inStock || p.stock == null || p.stock > 0),
+    );
     /* Sorting a copy: `all` is memoised off the catalogue, and sorting in
        place would quietly reorder it for every other screen that reads it. */
     const out = [...list];
@@ -96,16 +121,39 @@ export default function HotWheels() {
     if (sort === 'priceDesc') out.sort((a, b) => b.price - a.price);
     if (sort === 'rating') out.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return out;
-  }, [all, group, sort]);
+  }, [all, group, sort, band, series, raceOnly, inStock]);
 
   const sortLabel = SORTS.find((s) => s.id === sort)?.label ?? 'Featured';
+  const bandLabel = BANDS.find((b) => b.id === band)?.label;
+  const extraCount = (raceOnly ? 1 : 0) + (inStock ? 1 : 0);
+  const anyFilter = extraCount > 0 || band !== null || series.length > 0;
+
+  const clearAll = () => {
+    setBand(null);
+    setSeries([]);
+    setRaceOnly(false);
+    setInStock(false);
+  };
+
+  const toggleSeries = (s: string) =>
+    setSeries((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
 
   return (
     <>
       <PageHeader
         title="Hot Wheels"
-        subtitle={`Limited Drop · ${all.length} products · ${dropStatus().label.toLowerCase()}`}
+        address
         onBack={() => nav('/')}
+        right={
+          <div className="phdr__acts">
+            <button type="button" aria-label="Share this collection">
+              <IconShare size={21} />
+            </button>
+            <button type="button" aria-label="Search in Hot Wheels">
+              <IconSearch size={21} />
+            </button>
+          </div>
+        }
       />
 
       <main className="page catpage">
@@ -131,12 +179,46 @@ export default function HotWheels() {
         </nav>
 
         <div className="catmain">
-          <div className="catbar">
-            <button className="catchip" type="button" onClick={() => setSortOpen(true)}>
-              Sort: <b>{sortLabel.replace(/ —.*/, '')}</b>
+          {/* Blinkit's control row: text chips with a leading glyph and a
+              chevron, scrolling sideways rather than wrapping. Active ones take
+              the green outline so the grid's state is readable without opening
+              anything. */}
+          <div className="catbar" role="group" aria-label="Filter and sort">
+            <button
+              className={'catchip' + (extraCount ? ' is-on' : '')}
+              type="button"
+              onClick={() => setSheet('filters')}
+            >
+              <IconSliders size={15} />
+              Filters{extraCount ? ` (${extraCount})` : ''}
               <IconChevronDown size={14} />
             </button>
-            <span className="catbar__n">{shown.length} items</span>
+            <button
+              className={'catchip' + (sort !== 'featured' ? ' is-on' : '')}
+              type="button"
+              onClick={() => setSheet('sort')}
+            >
+              <IconSortArrows size={15} />
+              {sort === 'featured' ? 'Sort' : sortLabel.replace(/ —.*/, '')}
+              <IconChevronDown size={14} />
+            </button>
+            <button className={'catchip' + (band ? ' is-on' : '')} type="button" onClick={() => setSheet('price')}>
+              {band ? bandLabel : 'Price'}
+              <IconChevronDown size={14} />
+            </button>
+            <button
+              className={'catchip' + (series.length ? ' is-on' : '')}
+              type="button"
+              onClick={() => setSheet('series')}
+            >
+              {series.length ? `Series (${series.length})` : 'Series'}
+              <IconChevronDown size={14} />
+            </button>
+            {anyFilter && (
+              <button className="catchip catchip--clear" type="button" onClick={clearAll}>
+                Clear all
+              </button>
+            )}
           </div>
 
           <div className="card catrace">
@@ -152,8 +234,18 @@ export default function HotWheels() {
             </Button>
           </div>
 
+          <p className="catcount">
+            {shown.length} {shown.length === 1 ? 'product' : 'products'}
+          </p>
+
           {shown.length === 0 ? (
-            <p className="t-sm catempty">Nothing in this group yet.</p>
+            <p className="t-sm catempty">
+              Nothing matches those filters.
+              <br />
+              <button className="linkbtn" type="button" onClick={clearAll}>
+                Clear all filters
+              </button>
+            </p>
           ) : (
             <div className="catgrid">
               {shown.map((p) => (
@@ -164,7 +256,7 @@ export default function HotWheels() {
         </div>
       </main>
 
-      <Sheet open={sortOpen} onClose={() => setSortOpen(false)} title="Sort by">
+      <Sheet open={sheet === 'sort'} onClose={() => setSheet(null)} title="Sort by">
         {SORTS.map((o) => (
           <button
             key={o.id}
@@ -172,13 +264,96 @@ export default function HotWheels() {
             className={'sortrow' + (sort === o.id ? ' is-on' : '')}
             onClick={() => {
               setSort(o.id);
-              setSortOpen(false);
+              setSheet(null);
             }}
           >
             <span className="grow">{o.label}</span>
             {sort === o.id && <IconCheck size={17} />}
           </button>
         ))}
+      </Sheet>
+
+      <Sheet open={sheet === 'price'} onClose={() => setSheet(null)} title="Price">
+        <button
+          type="button"
+          className={'sortrow' + (band === null ? ' is-on' : '')}
+          onClick={() => {
+            setBand(null);
+            setSheet(null);
+          }}
+        >
+          <span className="grow">Any price</span>
+          {band === null && <IconCheck size={17} />}
+        </button>
+        {BANDS.map((b) => (
+          <button
+            key={b.id}
+            type="button"
+            className={'sortrow' + (band === b.id ? ' is-on' : '')}
+            onClick={() => {
+              setBand(b.id);
+              setSheet(null);
+            }}
+          >
+            <span className="grow">{b.label}</span>
+            <em className="sortrow__n">{all.filter(b.match).length}</em>
+            {band === b.id && <IconCheck size={17} />}
+          </button>
+        ))}
+      </Sheet>
+
+      <Sheet
+        open={sheet === 'series'}
+        onClose={() => setSheet(null)}
+        title="Series"
+        footer={
+          <Button variant="primary" block onClick={() => setSheet(null)}>
+            Show {shown.length} {shown.length === 1 ? 'product' : 'products'}
+          </Button>
+        }
+      >
+        {allSeries.map((s) => {
+          const on = series.includes(s);
+          return (
+            <button key={s} type="button" className={'sortrow' + (on ? ' is-on' : '')} onClick={() => toggleSeries(s)}>
+              <span className={'tick' + (on ? ' is-on' : '')} aria-hidden="true">
+                {on && <IconCheck size={13} />}
+              </span>
+              <span className="grow">{s}</span>
+              <em className="sortrow__n">{all.filter((p) => p.series.startsWith(s)).length}</em>
+            </button>
+          );
+        })}
+      </Sheet>
+
+      <Sheet
+        open={sheet === 'filters'}
+        onClose={() => setSheet(null)}
+        title="Filters"
+        footer={
+          <Button variant="primary" block onClick={() => setSheet(null)}>
+            Show {shown.length} {shown.length === 1 ? 'product' : 'products'}
+          </Button>
+        }
+      >
+        <button type="button" className={'sortrow' + (raceOnly ? ' is-on' : '')} onClick={() => setRaceOnly((v) => !v)}>
+          <span className={'tick' + (raceOnly ? ' is-on' : '')} aria-hidden="true">
+            {raceOnly && <IconCheck size={13} />}
+          </span>
+          <span className="grow">
+            Race ready only
+            <small>Has a 3D model and runs in AR</small>
+          </span>
+        </button>
+        <button type="button" className={'sortrow' + (inStock ? ' is-on' : '')} onClick={() => setInStock((v) => !v)}>
+          <span className={'tick' + (inStock ? ' is-on' : '')} aria-hidden="true">
+            {inStock && <IconCheck size={13} />}
+          </span>
+          <span className="grow">
+            In stock
+            <small>Hides anything sold out of this drop</small>
+          </span>
+        </button>
       </Sheet>
     </>
   );

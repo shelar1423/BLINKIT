@@ -348,3 +348,38 @@ export const IconReplace = (p: P) => (
     <path d="M3.6 8.6 12 12.8l8.4-4.2M12 12.8v6.8" />
   </S>
 );
+
+/* ---------- listing-page glyphs (Blinkit's PLP control row + card meta) ---------- */
+
+/** Delivery promise on a product card. */
+export const IconClock = (p: P) => (
+  <S {...p}>
+    <circle cx="12" cy="12" r="8.4" />
+    <path d="M12 7.4V12l3 1.8" />
+  </S>
+);
+
+/** "N left" — a stock gauge, drawn part-full like Blinkit's. */
+export const IconStock = (p: P) => (
+  <S {...p}>
+    <rect x="3.2" y="8.4" width="17.6" height="7.2" rx="2.4" />
+    <path d="M6.4 10.8h3.4v2.4H6.4z" fill="currentColor" stroke="none" />
+  </S>
+);
+
+/** Filters — the slider stack. */
+export const IconSliders = (p: P) => (
+  <S {...p}>
+    <path d="M4 8h11M18.5 8H20M4 16h3M10.5 16H20" />
+    <circle cx="16.6" cy="8" r="1.9" />
+    <circle cx="8.6" cy="16" r="1.9" />
+  </S>
+);
+
+/** Sort — two arrows running opposite ways. */
+export const IconSortArrows = (p: P) => (
+  <S {...p}>
+    <path d="M7.4 4.6v14.8M4.2 16.2l3.2 3.2 3.2-3.2" />
+    <path d="M16.6 19.4V4.6M13.4 7.8l3.2-3.2 3.2 3.2" />
+  </S>
+);

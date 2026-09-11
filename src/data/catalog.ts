@@ -16,7 +16,31 @@ export type Product = {
   revealAt?: number;
   /** scheduled drop that is not yet live */
   lockedUntil?: string;
+  /**
+   * Units left. Only set where stock is genuinely short: Blinkit shows the
+   * counter as scarcity, so putting it on everything turns it into decoration
+   * and stops meaning anything on the items where it should bite.
+   */
+  stock?: number;
+  /** Overrides AGE_RATING for anything that is not an ordinary 1:64 die-cast. */
+  age?: string;
 };
+
+/**
+ * Every 1:64 die-cast in this catalogue carries the same rating, so it lives
+ * here rather than being copied onto fifteen products where it would drift.
+ */
+export const AGE_RATING = '3+ years';
+
+/** The store's standing promise, shown on every card the way Blinkit does. */
+export const ETA_MINS = 8;
+
+/**
+ * The saved address. It appears in the home header and again under every inner
+ * page title, so it is declared once — two copies drift the moment either is
+ * edited, and the whole point of repeating it is that they agree.
+ */
+export const DELIVERY_ADDRESS = { label: 'Home', line: 'h.no 9-1-62/2, dubaigate, Hyderabad 500008' };
 
 const CAR = (n: string) => `/cars/${n}.webp`;
 
@@ -24,6 +48,7 @@ const CAR = (n: string) => `/cars/${n}.webp`;
 export const HERO_CARS: Product[] = [
   {
     id: 'ballistik',
+    stock: 4,
     name: 'Hot Wheels Ballistik',
     series: 'Unleashed 2 Series · Collector #04',
     unit: '1 pc · die-cast',
@@ -60,6 +85,7 @@ export const HERO_CARS: Product[] = [
   },
   {
     id: 'hollowback',
+    stock: 2,
     name: 'Hot Wheels Hollowback',
     series: 'Unleashed Series',
     unit: '1 pc · die-cast',
@@ -73,6 +99,7 @@ export const HERO_CARS: Product[] = [
   },
   {
     id: 'kitt',
+    stock: 3,
     name: 'Hot Wheels K.I.T.T.',
     series: 'Unleashed Series · Licensed',
     unit: '1 pc · die-cast',
@@ -93,9 +120,9 @@ export const SHOP_CARS: Product[] = [
   { id: 'supercar', name: 'Hot Wheels Night Shifter', series: 'Worldwide Basic Series', unit: '1 pc', price: 199, rating: 4.6, ratings: 61, image: CAR('09-07-supercar-purple') },
   { id: 'pickup', name: 'Hot Wheels Performance Pickup', series: 'Worldwide Basic Series', unit: '1 pc', price: 189, image: CAR('09-09-performance-pickup-blue') },
   { id: 'proto', name: 'Hot Wheels Race Prototype', series: 'Track Stars', unit: '1 pc', price: 219, mrp: 259, rating: 4.5, ratings: 22, image: CAR('09-10-race-prototype-red') },
-  { id: 'metallic', name: 'Hot Wheels Metallic Edition', series: 'Collector Series', unit: '1 pc', price: 329, mrp: 399, rating: 4.9, ratings: 88, image: CAR('09-11-rare-metallic-edition'), badge: 'LIMITED' },
-  { id: 'premium', name: 'Hot Wheels Premium Limited Racer', series: 'Premium Collection', unit: '1 pc', price: 449, mrp: 549, rating: 4.9, ratings: 46, image: CAR('09-12-premium-limited-racer'), badge: 'LIMITED' },
-  { id: 'featured', name: 'Hot Wheels Featured Drop Car', series: 'Drop #01', unit: '1 pc', price: 299, mrp: 349, rating: 4.8, ratings: 130, image: CAR('featured-drop-diecast'), badge: 'NEW DROP' },
+  { id: 'metallic', stock: 2, name: 'Hot Wheels Metallic Edition', series: 'Collector Series', unit: '1 pc', price: 329, mrp: 399, rating: 4.9, ratings: 88, image: CAR('09-11-rare-metallic-edition'), badge: 'LIMITED' },
+  { id: 'premium', stock: 1, name: 'Hot Wheels Premium Limited Racer', series: 'Premium Collection', unit: '1 pc', price: 449, mrp: 549, rating: 4.9, ratings: 46, image: CAR('09-12-premium-limited-racer'), badge: 'LIMITED' },
+  { id: 'featured', stock: 5, name: 'Hot Wheels Featured Drop Car', series: 'Drop #01', unit: '1 pc', price: 299, mrp: 349, rating: 4.8, ratings: 130, image: CAR('featured-drop-diecast'), badge: 'NEW DROP' },
 ];
 
 /** Rare car gated behind an actual race score. */

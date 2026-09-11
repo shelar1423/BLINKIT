@@ -112,27 +112,30 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn--lg { height: 48px; font-size: var(--f-lg); }
 .btn--block { width: 100%; }
 
-/* ---------- ADD control (Blinkit's real one: green on white) ---------- */
+/* ---------- ADD control (Blinkit's real one: green on white) ----------
+   Outlined in brand green rather than hairline grey: on a listing grid this is
+   the only control on the card, and the outline is what separates it from the
+   unit label sitting next to it. */
 .add {
-  height: 30px;
-  min-width: 62px;
-  padding: 0 14px;
-  border: 0.5px solid var(--line-2);
-  border-radius: var(--r);
+  height: 34px;
+  min-width: 72px;
+  padding: 0 16px;
+  border: 1px solid var(--green);
+  border-radius: var(--r-md);
   background: #fff;
   color: var(--green);
   font-size: var(--f-md);
-  font-weight: 600;
-  letter-spacing: 0.2px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   box-shadow: var(--sh-1);
 }
 .add:active { background: var(--green-tint); }
 .stepper {
   display: inline-flex;
   align-items: center;
-  height: 30px;
-  min-width: 62px;
-  border-radius: var(--r);
+  height: 34px;
+  min-width: 72px;
+  border-radius: var(--r-md);
   background: var(--green);
   color: #fff;
   overflow: hidden;
@@ -145,46 +148,101 @@ input, select, textarea { font: inherit; color: inherit; }
 .stepper--outline { background: #fff; color: var(--green); border: 1px solid var(--green); }
 .stepper--outline button { color: var(--green); }
 
-/* ---------- product card ---------- */
-.pcard { display: flex; flex-direction: column; gap: 4px; text-align: left; position: relative; }
-.pcard__im {
+/* ---------- product card ----------
+   Blinkit's card is two zones: a bordered frame holding the image, the pager
+   and a foot row (unit on the left, ADD on the right, ADD breaking the frame's
+   edge), then unframed text beneath it — price, saving, name, age, rating,
+   delivery. The break in the frame is what makes ADD read as the one thing you
+   can press without leaving the grid. */
+.pcard { display: flex; flex-direction: column; gap: 3px; text-align: left; position: relative; }
+.pcard__imwrap {
   position: relative;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: #fff;
+  padding: 8px 8px 0;
+  margin-bottom: 14px;
+}
+.pcard__im {
+  position: relative;
   aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  padding: 6px;
+  display: grid; place-items: center;
   overflow: hidden;
 }
-.pcard__imwrap { position: relative; margin-bottom: 12px; }
 .pcard__im > img { width: 100%; height: 100%; object-fit: contain; }
-.pcard__act { position: absolute; right: -2px; bottom: -13px; z-index: 3; }
 .pcard__badge {
-  position: absolute; top: 6px; left: 6px;
+  position: absolute; top: 0; left: 0;
   background: var(--ink); color: #fff;
   font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.02em;
   padding: 2px 6px; border-radius: var(--r-xs);
 }
 .pcard__badge--drop { background: var(--hw-r); }
-.pcard__prow { display: flex; align-items: center; gap: 6px; }
-.pill {
-  background: var(--green); color: #fff;
-  font-size: var(--f-sm); font-weight: 700;
-  border-radius: var(--r-sm); padding: 1px 6px;
-  font-variant-numeric: tabular-nums;
+/* Wishlist. Sits in the frame's corner, over the image's empty margin. */
+.pcard__save {
+  position: absolute; top: 2px; right: 2px; z-index: 2;
+  width: 28px; height: 28px;
+  display: grid; place-items: center;
+  background: none; border: 0; color: var(--mut-2);
 }
+.pcard__save.is-on { color: var(--hw-r); }
+.pcard__save.is-on svg { fill: currentColor; }
+/* Pager. Only drawn when the product genuinely has more than one view. */
+.pcard__dots { display: flex; justify-content: center; gap: 4px; padding: 4px 0 2px; }
+.pcard__dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--line-2); }
+.pcard__dots i.is-on { background: var(--mut); }
+.pcard__foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  /* the negative right/bottom is the overhang: ADD leaves the frame */
+  padding: 6px 0 8px;
+  margin: 0 -4px -12px 0;
+  min-height: 34px;
+}
+.pcard__unit {
+  font-size: var(--f-sm); font-weight: 600; color: var(--ink);
+  padding-left: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.pcard__prow { display: flex; align-items: baseline; gap: 5px; }
+.pcard__price { font-size: var(--f-lg); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
 .pcard__mrp { font-size: var(--f-xs); color: var(--mut-2); }
-.pcard__off { font-size: var(--f-2xs); font-weight: 700; color: var(--green); }
+/* Blinkit sets the MRP saving in blue, not in the brand green — green is the
+   action colour here and the discount is information, not a control. */
+.pcard__off { font-size: var(--f-xs); font-weight: 700; color: var(--hw-b); }
 .pcard__nm {
   font-size: var(--f-md); line-height: 1.3; font-weight: 500; color: var(--ink);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  margin-top: 1px;
 }
 .pcard__un { font-size: var(--f-xs); color: var(--mut); }
-.pcard__rt { display: flex; align-items: center; gap: 3px; font-size: var(--f-xs); font-weight: 600; }
-.pcard__rt svg { color: var(--green); }
-.pcard__rt span { color: var(--mut); font-weight: 400; }
+.pcard__age {
+  align-self: flex-start;
+  background: var(--yellow-tint); border: 1px solid #F0E3BC;
+  color: #6B5A1E; font-size: var(--f-2xs); font-weight: 700;
+  border-radius: var(--r-xs); padding: 2px 6px;
+  margin-top: 3px;
+}
+.pcard__rt { display: flex; align-items: center; gap: 4px; font-size: var(--f-xs); margin-top: 3px; }
+/* Named, not `.pcard__rt span`: a bare descendant selector also caught the
+   spans inside the star row and outranked their own colours, which greyed the
+   fill out. */
+.pcard__rtn { color: var(--mut); }
+.pcard__meta {
+  display: flex; align-items: center; gap: 10px;
+  font-size: var(--f-xs); color: var(--mut); font-weight: 600;
+  margin-top: 2px;
+}
+.pcard__meta span { display: inline-flex; align-items: center; gap: 3px; }
+
+/* Part-filled star row. The filled copy is clipped to the decimal over a grey
+   copy, so 4.7 looks like 4.7 rather than rounding to five. */
+.stars { display: inline-flex; gap: 1px; }
+.stars__s { position: relative; display: inline-block; color: #D9D9D9; }
+.stars__s svg { display: block; }
+.stars__fg {
+  position: absolute; left: 0; top: 0; bottom: 0; overflow: hidden;
+  color: #F5A623;
+}
 
 .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; padding: 12px var(--gut) 20px; }
 @media (min-width: 560px) { .pgrid { grid-template-columns: repeat(3, 1fr); } }
@@ -259,8 +317,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .nosel { user-select: none; -webkit-user-select: none; }
 
 /* ---------- product card extras ---------- */
+/* Bottom-left of the image: the top-right corner belongs to the wishlist
+   heart, and the top-left to the drop badge. */
 .pcard__3d {
-  position: absolute; top: 6px; right: 6px; z-index: 2;
+  position: absolute; bottom: 4px; left: 0; z-index: 2;
   display: inline-flex; align-items: center; gap: 3px;
   background: rgba(16,20,24,0.82); color: #fff;
   font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.02em;
@@ -1275,39 +1335,61 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center; overflow: hidden;
 }
 .catrail__im img { width: 86%; height: 86%; object-fit: contain; }
-/* The active group is marked by a bar on the boundary, which is how Blinkit
-   shows it — the tile itself stays quiet. */
+/* The active group is marked by a bar on the rail's INNER edge — the boundary
+   it shares with the grid — so it reads as the rail pointing at the products
+   it is showing. On the outer edge it just looks like a selected list row. */
 .catrail__i.is-on { background: #fff; color: var(--ink); }
 .catrail__i.is-on small { font-weight: 800; }
 .catrail__i.is-on::before {
   content: '';
-  position: absolute; left: 0; top: 6px; bottom: 6px;
-  width: 3px; border-radius: 0 3px 3px 0;
+  position: absolute; right: 0; top: 4px; bottom: 4px;
+  width: 4px; border-radius: 4px 0 0 4px;
   background: var(--green);
 }
 .catrail__i.is-on .catrail__im { border-color: var(--green); }
 
 .catmain { flex: 1; min-width: 0; padding-bottom: 20px; }
+/* Control row. Scrolls sideways rather than wrapping: a second line of chips
+   pushes the first product off the fold, and on Blinkit this row is always one
+   line however many facets a category has. */
 .catbar {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  padding: 9px 12px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
   position: sticky; top: var(--hdr-h); z-index: 2;
   background: var(--surface);
+  overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.catbar::-webkit-scrollbar { display: none; }
 .catchip {
+  flex: none;
   display: inline-flex; align-items: center; gap: 5px;
-  border: 1px solid var(--line); border-radius: 999px;
+  border: 1px solid var(--line-2); border-radius: 999px;
   background: #fff;
-  padding: 6px 11px;
-  font-size: var(--f-xs); font-weight: 600; color: var(--mut);
+  padding: 7px 12px;
+  font-size: var(--f-sm); font-weight: 600; color: var(--ink);
+  white-space: nowrap;
 }
-.catchip b { color: var(--ink); font-weight: 800; }
-.catbar__n { font-size: var(--f-xs); color: var(--mut); font-weight: 600; }
+.catchip svg { color: var(--mut); }
+/* An applied facet reads from the row itself, so you never have to open a
+   sheet to find out what the grid is currently showing. */
+.catchip.is-on {
+  border-color: var(--green); background: var(--green-tint);
+  color: var(--green-dk); font-weight: 700;
+}
+.catchip.is-on svg { color: var(--green); }
+.catchip--clear { border-style: dashed; color: var(--mut); }
+.catcount { font-size: var(--f-xs); color: var(--mut); font-weight: 600; padding: 12px 12px 0; }
 
 .catrace { display: flex; gap: 11px; align-items: center; padding: 12px; margin: 10px 12px 0; }
-.catgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 10px; padding: 12px 12px 20px; }
+.catgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; padding: 10px 12px 20px; }
 .catempty { padding: 28px 12px; text-align: center; color: var(--mut); }
+.linkbtn {
+  background: none; border: 0; padding: 6px 0;
+  color: var(--green); font-size: var(--f-md); font-weight: 700;
+  text-decoration: underline;
+}
 
 /* sort options inside the sheet */
 .sortrow {
@@ -1318,6 +1400,16 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-md); font-weight: 600; color: var(--ink);
   text-align: left;
 }
+.sortrow small { display: block; font-size: var(--f-xs); font-weight: 400; color: var(--mut); margin-top: 2px; }
+.sortrow__n { font-size: var(--f-xs); font-style: normal; color: var(--mut-2); font-weight: 600; }
+/* Multi-select rows get a real box, so "one of these" and "any of these" are
+   distinguishable before you tap either. */
+.tick {
+  flex: none; width: 18px; height: 18px; border-radius: var(--r-xs);
+  border: 1.5px solid var(--line-2); background: #fff;
+  display: grid; place-items: center; color: #fff;
+}
+.tick.is-on { background: var(--green); border-color: var(--green); }
 .sortrow:last-child { border-bottom: 0; }
 .sortrow.is-on { font-weight: 800; color: var(--green); }
 

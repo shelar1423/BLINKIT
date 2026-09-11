@@ -146,6 +146,25 @@
 .phdr__back:active { background: var(--surface-2); }
 .phdr__t { font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.3px; }
 .phdr__s { font-size: var(--f-xs); color: var(--mut); margin-top: 1px; }
+/* Listing-page variant: green label, truncated address, chevron. The label is
+   fixed width by its own text so the address always starts in the same place
+   down a stack of screens. */
+.phdr__addr {
+  display: flex; align-items: center; gap: 4px;
+  max-width: 100%; margin-top: 2px; padding: 0;
+  background: none; border: 0;
+  font-size: var(--f-sm); color: var(--mut); text-align: left;
+}
+.phdr__addr b { color: var(--green-dk); font-weight: 700; white-space: nowrap; }
+.phdr__addr svg { flex: none; color: var(--ink); }
+/* Share and search, sized to Blinkit's 44px touch targets. */
+.phdr__acts { display: flex; align-items: center; gap: 2px; margin-right: -8px; }
+.phdr__acts button {
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  background: none; border: 0; border-radius: 50%; color: var(--ink);
+}
+.phdr__acts button:active { background: var(--surface-2); }
 
 /* ============================================================
    Bottom navigation — a floating pill, not a docked bar.

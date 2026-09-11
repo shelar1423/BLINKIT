@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
+import { DELIVERY_ADDRESS } from '../../data/catalog';
 import {
   IconBasket,
   IconChevronDown,
@@ -61,7 +62,7 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
             </span>
           </div>
           <button className="bhdr__addr" type="button">
-            <span className="trunc">h.no 9-1-62/2, dubaigate, Hyderabad 500008</span>
+            <span className="trunc">{DELIVERY_ADDRESS.line}</span>
             <IconChevronDown size={15} />
           </button>
         </div>
@@ -110,15 +111,24 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
   );
 }
 
-/** Sub-page header: back chevron + title, matching Blinkit's inner screens. */
+/**
+ * Sub-page header: back chevron + title, matching Blinkit's inner screens.
+ *
+ * On a listing page Blinkit replaces the grey subtitle with the delivery
+ * address — the one thing you might need to change before you fill a basket —
+ * set as a green label and a truncated line you can tap. Pass `address` for
+ * that variant; `subtitle` stays for pages where a description is the point.
+ */
 export function PageHeader({
   title,
   subtitle,
+  address,
   right,
   onBack,
 }: {
   title: string;
   subtitle?: string;
+  address?: boolean;
   right?: React.ReactNode;
   onBack?: () => void;
 }) {
@@ -130,7 +140,15 @@ export function PageHeader({
       </button>
       <div className="grow">
         <h1 className="phdr__t trunc">{title}</h1>
-        {subtitle && <p className="phdr__s trunc">{subtitle}</p>}
+        {address ? (
+          <button className="phdr__addr" type="button">
+            <b>Delivering to {DELIVERY_ADDRESS.label}:</b>
+            <span className="trunc">{DELIVERY_ADDRESS.line}</span>
+            <IconChevronDown size={14} />
+          </button>
+        ) : (
+          subtitle && <p className="phdr__s trunc">{subtitle}</p>
+        )}
       </div>
       {right}
     </header>
