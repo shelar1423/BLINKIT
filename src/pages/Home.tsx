@@ -4,34 +4,24 @@ import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chro
 import { ProductCard } from '../design/components/ProductCard';
 import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useStore, MAX_RACE_ATTEMPTS } from '../store/useStore';
+import { DROP_DATES, dropStatus } from '../data/drop';
 import { useToast } from '../App';
 
-/** The drop closes at the end of 14 Nov; shown as a live countdown. */
-function useDropCountdown() {
-  const [label, setLabel] = useState('');
+/** Ticks the shared drop status so the countdown stays live on screen. */
+function useDropStatus() {
+  const [status, setStatus] = useState(() => dropStatus());
   useEffect(() => {
-    const end = new Date();
-    end.setHours(23, 59, 59, 999);
-    end.setDate(end.getDate() + 2);
-    const tick = () => {
-      const ms = Math.max(0, end.getTime() - Date.now());
-      const d = Math.floor(ms / 86400000);
-      const h = Math.floor((ms % 86400000) / 3600000);
-      const m = Math.floor((ms % 3600000) / 60000);
-      setLabel(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m`);
-    };
-    tick();
-    const t = window.setInterval(tick, 30000);
+    const t = window.setInterval(() => setStatus(dropStatus()), 30000);
     return () => window.clearInterval(t);
   }, []);
-  return label;
+  return status;
 }
 
 export default function Home() {
   const nav = useNavigate();
   const { toast } = useToast();
   const racesLeft = useStore((s) => s.racesLeft);
-  const dropEndsIn = useDropCountdown();
+  const drop = useDropStatus();
 
   return (
     <>
@@ -63,14 +53,18 @@ export default function Home() {
           {/* A date in small caps is easy to scroll past. A countdown states the
               same thing as pressure, which is what a limited drop needs to say. */}
           <div className="ctake__when">
-            <span className="ctake__when-pill">
-              <i />
+            <span className={'ctake__when-pill' + (drop.phase === 'live' ? ' is-live' : '')}>
+              {drop.phase === 'live' && <i />}
               LIMITED DROP
             </span>
-            <span className="ctake__when-t">
-              Ends in <b>{dropEndsIn}</b>
-            </span>
-            <span className="ctake__when-d">12&ndash;14 Nov</span>
+            {drop.phase === 'ended' ? (
+              <span className="ctake__when-t">{drop.label}</span>
+            ) : (
+              <span className="ctake__when-t">
+                {drop.lead} <b>{drop.remaining}</b>
+              </span>
+            )}
+            <span className="ctake__when-d">{DROP_DATES}</span>
           </div>
 
           {/* A row of offer cards, each with its hook on a tab over the top
@@ -88,7 +82,9 @@ export default function Home() {
               <img src="/campaign/card-rewards.webp" alt="" loading="lazy" />
             </button>
             <button className="ccard" type="button" onClick={() => nav('/leaderboard')}>
-              <span className="ccard__tab">Live now</span>
+              {/* Must not claim to be live while the drop is still counting
+                  down to its start — that sat directly under "Starts in 61d". */}
+              <span className="ccard__tab">{drop.phase === 'live' ? 'Live now' : 'Opens 12 Nov'}</span>
               <span className="ccard__l">Leaderboard</span>
               <img src="/campaign/card-leaderboard.webp" alt="" loading="lazy" />
             </button>

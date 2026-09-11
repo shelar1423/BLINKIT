@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { PageHeader } from '../design/components/Chrome';
+import { dropStatus } from '../data/drop';
 import { ProductCard } from '../design/components/ProductCard';
 import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, SHOP_CARS } from '../data/catalog';
 import { useStore } from '../store/useStore';
@@ -14,7 +15,7 @@ export default function HotWheels() {
 
   return (
     <>
-      <PageHeader title="Hot Wheels" subtitle="Limited Drop · 14 products · ends in 2 days" onBack={() => nav('/')} />
+      <PageHeader title="Hot Wheels" subtitle={`Limited Drop · ${SHOP_CARS.length + HERO_CARS.length} products · ${dropStatus().label.toLowerCase()}`} onBack={() => nav('/')} />
       <main className="page">
         <div className="shell" style={{ paddingTop: 12 }}>
           <div className="card" style={{ display: 'flex', gap: 11, alignItems: 'center', padding: 12 }}>

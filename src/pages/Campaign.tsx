@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { PageHeader } from '../design/components/Chrome';
+import { DROP_DATES } from '../data/drop';
 import { ProductCard } from '../design/components/ProductCard';
 import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, rupees } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
@@ -15,7 +16,7 @@ export default function Campaign() {
 
   return (
     <>
-      <PageHeader title="Race It Home" subtitle="Hot Wheels × Blinkit · 12–14 Nov" onBack={() => nav('/')} />
+      <PageHeader title="Race It Home" subtitle={`Hot Wheels × Blinkit · ${DROP_DATES}`} onBack={() => nav('/')} />
       <main className="page">
         <div className="hub">
           <img className="hub__im" src="/campaign/06-campaign-hub-hero.webp" alt="" />
