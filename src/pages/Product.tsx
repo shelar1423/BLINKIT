@@ -461,12 +461,17 @@ export default function Product() {
             )}
           </div>
 
-          <SectionHeader title="Top products in this category" action="See all" onAction={() => nav('/hot-wheels')} />
-          <div className="prail">
-            {alsoLike.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
+          {/* Inside a white card, like every other block on this page. The card
+              panels are tinted, and this page's ground is the same tint — on
+              the bare page they had nothing to read against. */}
+          <section className="card pdptop">
+            <SectionHeader title="Top products in this category" action="See all" onAction={() => nav('/hot-wheels')} />
+            <div className="prail">
+              {alsoLike.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
         </main>
 
         <div className="actionbar">

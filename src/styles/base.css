@@ -155,11 +155,13 @@ input, select, textarea { font: inherit; color: inherit; }
    delivery. The break in the frame is what makes ADD read as the one thing you
    can press without leaving the grid. */
 .pcard { display: flex; flex-direction: column; gap: 3px; text-align: left; position: relative; }
+/* A tinted panel rather than a white box with a hairline: the product shot and
+   the white ADD both sit on it, and against #fff neither had an edge to read
+   against. This is what Blinkit's own cards do. */
 .pcard__imwrap {
   position: relative;
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  background: #fff;
+  border-radius: var(--r-lg);
+  background: var(--appbase);
   padding: 8px 8px 0;
   /* clears the ADD's overhang (17) plus the gap to the price row (14) */
   margin-bottom: 31px;
@@ -175,10 +177,12 @@ input, select, textarea { font: inherit; color: inherit; }
    with the claim: NEW DROP is only news, LIMITED is scarce, RARE is the top of
    the drop and takes Blinkit's own gold. */
 .pcard__badge {
-  position: absolute; top: 0; left: 0;
+  position: absolute; top: 0; left: 0; z-index: 2;
   color: #fff;
   font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.02em;
-  padding: 2px 6px; border-radius: var(--r-xs);
+  padding: 4px 8px;
+  /* follows the panel's corner on the outside, turns in on the other */
+  border-radius: var(--r-lg) 0 var(--r-md) 0;
 }
 .pcard__badge--new { background: var(--ink); }
 .pcard__badge--limited { background: var(--hw-r); }
@@ -193,7 +197,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .pcard__save.is-on { color: var(--hw-r); }
 .pcard__save.is-on svg { fill: currentColor; }
 /* Pager. Only drawn when the product genuinely has more than one view. */
-.pcard__dots { display: flex; justify-content: center; gap: 4px; padding: 4px 0 2px; }
+.pcard__dots { display: flex; gap: 4px; padding: 5px 0 1px 2px; }
 .pcard__dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--line-2); }
 .pcard__dots i.is-on { background: var(--mut); }
 /* The overhang. On Blinkit's card the frame's bottom border runs through the
@@ -259,14 +263,20 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; padding: 12px var(--gut) 20px; }
 @media (min-width: 560px) { .pgrid { grid-template-columns: repeat(3, 1fr); } }
+/* Horizontal product rail.
+   `scroll-padding-inline` is doing real work: the snapport defaults to the
+   scrollport, so `scroll-snap-align: start` was snapping the first card to x=0
+   and scrolling the rail's own gutter out from under it — the card sat welded
+   to the edge of the screen while every heading beside it kept its margin. */
 .prail {
-  display: grid; grid-auto-flow: column; grid-auto-columns: 40%;
-  gap: 10px; overflow-x: auto; padding: 12px var(--gut) 16px;
-  scroll-snap-type: x proximity; scrollbar-width: none;
+  display: grid; grid-auto-flow: column; grid-auto-columns: 46%;
+  gap: 12px; overflow-x: auto; padding: 12px var(--gut) 18px;
+  scroll-snap-type: x proximity; scroll-padding-inline: var(--gut);
+  scrollbar-width: none;
 }
 .prail::-webkit-scrollbar { display: none; }
 .prail > * { scroll-snap-align: start; }
-@media (min-width: 560px) { .prail { grid-auto-columns: 30%; } }
+@media (min-width: 560px) { .prail { grid-auto-columns: 33%; } }
 
 /* ---------- hairline rows / list ---------- */
 .rowline { border-bottom: 1px solid var(--line); }
@@ -339,7 +349,8 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.02em;
   padding: 2px 6px; border-radius: var(--r-xs);
 }
-.pcard__im--mystery { background: linear-gradient(160deg, #2a1140, #150a22); border-color: #33204a; }
+.pcard__imwrap--mystery { background: linear-gradient(160deg, #2a1140, #150a22); }
+.pcard__im--mystery { background: none; }
 .pcard__im--mystery > img { opacity: 0.28; filter: grayscale(0.5) brightness(0.7); }
 .mystery__veil {
   position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 6px;
@@ -739,6 +750,35 @@ input, select, textarea { font: inherit; color: inherit; }
 .cat__im img { width: 100%; height: 100%; object-fit: cover; }
 .cat__l { font-size: var(--f-2xs); line-height: 1.25; text-align: center; font-weight: 600; }
 
+/* ---------- end-of-feed footer ----------
+   Blinkit's own sign-off: the line set very large and ghosted back into the
+   ground, a hairline, then the wordmark in the same grey. It reads as the end
+   of the scroll rather than as a block of copy, which is the whole point — you
+   are meant to register that there is nothing more, not to read it. */
+.bfoot {
+  background: var(--surface-2);
+  padding: 44px var(--gut) calc(40px + var(--safe-b));
+  margin-top: 10px;
+}
+/* Not a flex row: as a flex container the heart became its own wrappable item
+   and dropped to a line of its own. Inline keeps it in the text run, following
+   "app" the way it does in the real footer. */
+.bfoot__line {
+  font-size: clamp(34px, 11.5vw, 46px);
+  font-weight: 800; letter-spacing: -0.04em; line-height: 1.06;
+  color: #D6D6D9;
+}
+.bfoot__heart {
+  display: inline-block; vertical-align: -0.14em; margin-left: 12px;
+  color: #FF6B5A; fill: currentColor; stroke: none;
+}
+.bfoot__rule { border: 0; border-top: 1px solid #E4E4E6; margin: 26px 0 22px; }
+.bfoot__mark {
+  font-size: clamp(24px, 8vw, 32px);
+  font-weight: 800; letter-spacing: -0.04em;
+  color: #D6D6D9;
+}
+
 /* ---------- campaign hub hero ---------- */
 .hub { position: relative; overflow: hidden; }
 .hub__im { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
@@ -888,8 +928,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .rowcard__ic--flame { background: var(--hw-r-tint); color: var(--hw-r); }
 
 
-.pdp .sec { padding-top: 18px; }
-.pdp .prail { padding-bottom: 4px; }
+.pdptop { padding: 0 0 4px; overflow: hidden; }
+.pdptop .sec { padding-top: 14px; }
+.pdptop .prail { padding-bottom: 6px; }
 
 /* ============================================================
    PDP deck — the next product is already behind this one.

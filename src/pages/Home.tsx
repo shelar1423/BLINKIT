@@ -6,7 +6,7 @@ import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
-import { IconChevronRight, IconFlag } from '../design/elements/Icons';
+import { IconChevronRight, IconFlag, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 /**
@@ -155,10 +155,17 @@ export default function Home() {
           ))}
         </div>
 
-        <p className="shell t-xs" style={{ padding: '20px var(--gut) 28px', lineHeight: 1.6 }}>
-          Independent Blinkit &times; Hot Wheels campaign concept. Not affiliated with or endorsed by Blinkit or Mattel.
-          Prices, drop times, points and rewards are illustrative.
-        </p>
+        {/* Blinkit closes every feed with this: the line set huge and ghosted,
+            a rule, then the wordmark. It is the end-of-scroll marker, which is
+            why it is the thing that belongs here rather than a disclaimer. */}
+        <footer className="bfoot">
+          <p className="bfoot__line">
+            India&rsquo;s last minute app
+            <IconHeart className="bfoot__heart" size={44} />
+          </p>
+          <hr className="bfoot__rule" />
+          <p className="bfoot__mark">blinkit</p>
+        </footer>
       </main>
 
     </>

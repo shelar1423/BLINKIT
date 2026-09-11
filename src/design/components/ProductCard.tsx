@@ -111,7 +111,9 @@ export function ProductCard({ product }: { product: Product }) {
     const short = Math.max(0, need - points);
     return (
       <div className="pcard">
-        <div className="pcard__imwrap">
+        {/* The concealed treatment has to fill the whole panel; on the inner
+            image box alone it left a lit ring of panel around a dark square. */}
+        <div className="pcard__imwrap pcard__imwrap--mystery">
           <div className="pcard__im pcard__im--mystery">
             <img src={product.image} alt="" loading="lazy" />
             <span className="mystery__veil">
@@ -148,11 +150,13 @@ export function ProductCard({ product }: { product: Product }) {
           unit on the left and ADD on the right — ADD sits half outside the
           frame, which is the detail that makes it read as Blinkit's. */}
       <div className="pcard__imwrap">
+        {/* Outside the image, which is clipped to its own box — the badge has to
+            reach the panel's corner. */}
+        {product.badge && (
+          <span className={`pcard__badge pcard__badge--${BADGE_TONE[product.badge]}`}>{product.badge}</span>
+        )}
         <div className="pcard__im">
           <img src={product.image} alt={product.name} loading="lazy" />
-          {product.badge && (
-            <span className={`pcard__badge pcard__badge--${BADGE_TONE[product.badge]}`}>{product.badge}</span>
-          )}
           {product.glb && (
             <span className="pcard__3d" title="3D and AR available">
               <IconCube size={11} /> 3D
