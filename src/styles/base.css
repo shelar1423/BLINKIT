@@ -285,17 +285,6 @@ input, select, textarea { font: inherit; color: inherit; }
   color: #fff;
 }
 
-/* A real length of Hot Wheels track across the top of the block, chequered
-   section and all, in place of the CSS chequer approximation it replaced. */
-.ctake__track {
-  position: absolute;
-  left: 0; top: -10px;
-  width: 100%; height: auto;
-  display: block;
-  z-index: 2;
-  pointer-events: none;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
-}
 .ctake__mast { display: flex; align-items: center; justify-content: center; gap: 9px; }
 /* The mark ships as a flat #ED1C24. Red on the campaign blue technically
    clears contrast, but two saturated hues at the same luminance vibrate against
@@ -996,18 +985,21 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 @keyframes arwarn { 0%, 100% { opacity: 1; } 50% { opacity: 0.62; } }
 
-/* ---- drop window: stated as time left, not just a date ---- */
-/* dimmer while the drop has not opened yet — it is not live */
-/* the live dot — this is running now */
-@keyframes droplive { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
-
 /* ---- a car runs the divider once, on arrival ---- */
 .ctake__trackwrap {
   position: absolute; left: 0; top: -10px; right: 0;
   z-index: 2; pointer-events: none;
   display: block;
 }
-.ctake__trackwrap .ctake__track { position: static; width: 100%; height: auto; display: block; }
+/* A real length of Hot Wheels track across the top of the block, chequered
+   section and all. The wrapper owns the positioning — this used to be stated
+   twice, 700 lines apart, with the first copy's `position: absolute` silently
+   overridden here while its filter and z-index still landed. One rule now. */
+.ctake__track {
+  display: block;
+  width: 100%; height: auto;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
+}
 .ctake__runner {
   position: absolute;
   top: -46%;
