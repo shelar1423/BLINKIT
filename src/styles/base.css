@@ -527,6 +527,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .arov__chip--name { overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
 .arov__chip--name svg { flex: 0 0 auto; }
 .arov__chip.t-num { flex: 0 0 auto; }
+/* the flip sits with the close button, pushed to the right of the row */
+.arov__bar .arov__flip { margin-left: auto; flex: 0 0 auto; }
+.arov__bar .arov__flip + .arov__x { margin-left: 0; }
 .arov__bar .arov__x { margin-left: auto; flex: 0 0 auto; }
 .arov__hint {
   position: absolute; left: 16px; right: 16px; bottom: calc(var(--safe-b) + 108px);

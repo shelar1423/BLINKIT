@@ -43,6 +43,7 @@ export default function ARView() {
      it. The race entry point passes no mode and still gets the circuit. */
   const inspect = search.get('mode') === 'inspect';
   const [phase, setPhase] = useState<ARPhase | null>(null);
+  const [facing, setFacing] = useState<'environment' | 'user'>('environment');
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<RaceStats | null>(null);
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
@@ -264,6 +265,20 @@ export default function ARView() {
                   </span>
                 </>
               )}
+              {handle.current?.flipCamera && (
+                <button
+                  className="arov__chip arov__flip"
+                  type="button"
+                  onClick={async () => {
+                    const f = await handle.current?.flipCamera?.();
+                    if (f) setFacing(f);
+                  }}
+                  aria-label={facing === 'environment' ? 'Switch to selfie camera' : 'Switch to rear camera'}
+                >
+                  <IconRotate size={14} />
+                  {facing === 'environment' ? 'Selfie' : 'Rear'}
+                </button>
+              )}
               <button
                 className="arov__chip arov__x"
                 type="button"
@@ -467,7 +482,8 @@ export default function ARView() {
       {/* Results screen */}
       {outcome && (
         <div className="result">
-          <h1 className="result__t">{outcome.finished ? 'RACE COMPLETE' : "TIME'S UP"}</h1>
+          <p className="result__kick">{outcome.finished ? 'FINISHED' : 'TIME UP'}</p>
+          <h1 className="result__t">{outcome.finished ? 'You raced it home' : 'So close!'}</h1>
           <div className="result__g">
             <div><b className="t-num">{outcome.score.toLocaleString('en-IN')}</b><span>POINTS</span></div>
             <div><b className="t-num">{outcome.groceries}</b><span>GROCERIES</span></div>
@@ -494,19 +510,38 @@ export default function ARView() {
                 Claim reward
               </Button>
             )}
-            <Button variant="flame" block
-              type="button"
-              onClick={() => {
-                setOutcome(null);
-                handle.current?.reset();
-              }}
-              disabled={racesLeft <= 0}
-            >
-              Race again
-            </Button>
-            <Button variant="ghostDark" block type="button" onClick={() => nav('/')}>
-              Shop the drop
-            </Button>
+            {!tier && (
+              <Button variant="primary" size="lg" block
+                type="button"
+                onClick={() => {
+                  setOutcome(null);
+                  void launch();
+                }}
+                disabled={racesLeft <= 0}
+              >
+                Race again
+              </Button>
+            )}
+            <div className="result__more">
+              {tier && (
+                <Button variant="outline"
+                  type="button"
+                  onClick={() => {
+                    setOutcome(null);
+                    void launch();
+                  }}
+                  disabled={racesLeft <= 0}
+                >
+                  Race again
+                </Button>
+              )}
+              <Button variant="outline" type="button" onClick={() => nav('/hot-wheels')}>
+                Shop the drop
+              </Button>
+              <Button variant="outline" type="button" onClick={() => nav('/campaign')}>
+                Campaign
+              </Button>
+            </div>
           </div>
         </div>
       )}

@@ -65,6 +65,8 @@ export type ARHandle = {
   clearObstacles?: () => void;
   getPinnedCount?: () => number;
   isProximityAlert?: () => boolean;
+  /** Camera passthrough only: swap between the rear and selfie camera. */
+  flipCamera?: () => Promise<'environment' | 'user'>;
 };
 
 type Opts = {
@@ -749,8 +751,14 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     gyro = false;
   }
 
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: 'environment' } },
+  /* Back camera by default: the point of placing the circuit is that it sits on
+     your real table. The front camera is a deliberate second mode — you in the
+     shot with the track — so it is a flip, not a replacement. Selfie view is
+     mirrored, which is what people expect of a front camera; the circuit is a
+     virtual object in front of you, so mirroring the feed alone is correct. */
+  let facing: 'environment' | 'user' = 'environment';
+  let stream = await navigator.mediaDevices.getUserMedia({
+    video: { facingMode: { ideal: facing } },
     audio: false,
   });
 
@@ -761,6 +769,26 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   video.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:55';
   document.body.appendChild(video);
   await video.play().catch(() => {});
+
+  async function flipCamera(): Promise<'environment' | 'user'> {
+    const next = facing === 'environment' ? 'user' : 'environment';
+    let nextStream: MediaStream;
+    try {
+      nextStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: next } },
+        audio: false,
+      });
+    } catch {
+      return facing; // some devices have only one camera; stay where we are
+    }
+    stream.getTracks().forEach((t) => t.stop());
+    stream = nextStream;
+    facing = next;
+    video.srcObject = stream;
+    video.style.transform = facing === 'user' ? 'scaleX(-1)' : '';
+    await video.play().catch(() => {});
+    return facing;
+  }
 
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -1043,6 +1071,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     },
     getPinnedCount: () => vision.getPinnedCount(),
     isProximityAlert: () => vision.proximityAlert,
+    flipCamera,
     reset() {
       anchor.visible = false;
       setPhase('ready');
