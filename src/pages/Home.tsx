@@ -18,7 +18,7 @@ export default function Home() {
              block, exactly how Blinkit carries a festival theme down the page,
              and the scalloped edge hands back to the white product feed. --- */}
         <section className="ctake" aria-label="Hot Wheels x Blinkit campaign">
-          <span className="ctake__flag" aria-hidden="true" />
+          <img className="ctake__track" src="/campaign/track-divider.webp" alt="" aria-hidden="true" />
 
           <div className="ctake__mast">
             <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
@@ -27,9 +27,10 @@ export default function Home() {
           </div>
 
           {/* Blinkit sets the campaign name as artwork, not type — the glowing
-              "ICE CREAM" lockup, the ornamental Ganesh Chaturthi masthead. This
-              is the CSS stand-in until the rendered word-art lands. */}
-          <h2 className="ctake__t">Race It Home</h2>
+              "ICE CREAM" lockup, the ornamental Ganesh Chaturthi masthead. */}
+          <h2 className="ctake__t">
+            <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
+          </h2>
           <p className="ctake__kick">LIMITED DROP &middot; 12&ndash;14 NOV</p>
 
           {/* A row of offer cards, each with its hook on a tab over the top

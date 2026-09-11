@@ -278,22 +278,23 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake {
   position: relative;
   margin-top: -1px;
-  padding: 24px var(--gut) 30px;
+  padding: 30px var(--gut) 26px;
   background:
     radial-gradient(85% 55% at 50% 0%, rgba(255, 122, 26, 0.30) 0%, rgba(255, 122, 26, 0) 62%),
     linear-gradient(180deg, #102A6B 0%, #0A1A4A 100%);
   color: #fff;
 }
 
-/* chequered flag strip across the top of the block — the fastest possible
-   signal that this is a race, and Hot Wheels' own motif */
-.ctake__flag {
+/* A real length of Hot Wheels track across the top of the block, chequered
+   section and all, in place of the CSS chequer approximation it replaced. */
+.ctake__track {
   position: absolute;
-  left: 0; right: 0; top: 0;
-  height: 10px;
-  background:
-    repeating-conic-gradient(#F2F4F8 0% 25%, #0A1A4A 0% 50%) 0 0 / 16px 16px;
-  opacity: 0.92;
+  left: 0; top: -10px;
+  width: 100%; height: auto;
+  display: block;
+  z-index: 2;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.4));
 }
 .ctake__mast { display: flex; align-items: center; justify-content: center; gap: 9px; }
 /* The mark ships as a flat #ED1C24. Red on the campaign blue technically
@@ -304,7 +305,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake__x { font-size: 12px; opacity: 0.65; font-weight: 600; }
 .ctake__bm { font-size: 16px; }
 .ctake__kick {
-  margin-top: 6px; text-align: center;
+  margin-top: -2px; text-align: center;
   font-size: var(--f-2xs); font-weight: 800;
   letter-spacing: 0.2em; color: #FFA24D;
 }
@@ -316,28 +317,26 @@ input, select, textarea { font: inherit; color: inherit; }
 @media (min-width: 768px) { .ctake__t { font-size: 36px; } }
 
 /* ---- campaign name, set as artwork rather than plain type ----
-   Blinkit renders the campaign name as a graphic: the glowing "ICE CREAM"
-   lockup, the ornamental Ganesh Chaturthi masthead. Until the rendered
-   word-art lands this is a CSS approximation — heavy, tight, with a warm
-   flame gradient and a glow, so it reads as a logo rather than a heading. */
+   Blinkit renders the campaign name as a graphic — the glowing "ICE CREAM"
+   lockup, the ornamental Ganesh Chaturthi masthead — so this is a rendered
+   chrome-and-flame word-art rather than styled text. The alt carries the name
+   for anyone not seeing the image. */
 .ctake__t {
-  margin-top: 12px; text-align: center;
-  font-size: 40px; font-weight: 900; line-height: 0.98;
-  letter-spacing: -0.035em; text-transform: uppercase;
-  background: linear-gradient(178deg, #FFF3D2 0%, #FFC24A 42%, #FF7A1A 72%, #E0400C 100%);
-  -webkit-background-clip: text; background-clip: text;
-  color: transparent; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.32)) drop-shadow(0 0 18px rgba(255, 140, 40, 0.45));
-  font-style: italic;
+  /* In the reference the campaign lockup is a band, not a billboard — sized so
+     the offer cards stay above the fold rather than pushed off it. */
+  margin: 6px auto 0;
+  max-width: 218px;
+  line-height: 0;
 }
-@media (min-width: 768px) { .ctake__t { font-size: 52px; } }
+.ctake__t img { width: 100%; height: auto; display: block; }
+@media (min-width: 768px) { .ctake__t { max-width: 280px; } }
 
 /* ---- offer cards ----
    Three equal cards, each with its hook on a tab that sits over the card's top
    edge — the "Starting at ₹29" device. A campaign card should carry a reason to
    tap, not only a name. */
 .ctake__cards {
-  margin-top: 16px;
+  margin-top: 14px;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
   align-items: start;
 }
