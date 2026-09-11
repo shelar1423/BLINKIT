@@ -3,6 +3,7 @@ import { PageHeader } from '../design/components/Chrome';
 import { Button } from '../design/elements';
 import { detectAR, type ARSupport } from '../lib/three/arSession';
 import { createTiltSteer, initialTiltState, type TiltState } from '../lib/tiltSteer';
+import { probeDualCamera, startBlinkProbe, type BlinkSample, type DualCamResult } from '../lib/faceProbe';
 
 /* ============================================================
    On-device diagnostics.
@@ -69,6 +70,16 @@ export default function Diag() {
   const [live, setLive] = useState<{ steer: number; samples: number }>({ steer: 0, samples: 0 });
   const [raw, setRaw] = useState<{ beta: number | null; gamma: number | null } | null>(null);
   const [cam, setCam] = useState<string>('not requested');
+  const [dual, setDual] = useState<DualCamResult | null>(null);
+  const [dualBusy, setDualBusy] = useState(false);
+  const [blink, setBlink] = useState<BlinkSample | null>(null);
+  const [blinkErr, setBlinkErr] = useState<string | null>(null);
+  const [blinkBusy, setBlinkBusy] = useState(false);
+  /* A ref does not re-render, and the button label and status both depend on
+     whether the probe is running — so the flag is state and the teardown
+     function is the ref. */
+  const [blinkOn, setBlinkOn] = useState(false);
+  const stopBlink = useRef<(() => void) | null>(null);
   const tilt = useRef<ReturnType<typeof createTiltSteer> | null>(null);
   const count = useRef(0);
 
@@ -108,6 +119,35 @@ export default function Diag() {
     }
   };
 
+  // never leave a camera running behind the page
+  useEffect(() => () => stopBlink.current?.(), []);
+
+  const runDual = async () => {
+    setDualBusy(true);
+    setDual(null);
+    setDual(await probeDualCamera());
+    setDualBusy(false);
+  };
+
+  const runBlink = async () => {
+    if (stopBlink.current) {
+      stopBlink.current();
+      stopBlink.current = null;
+      setBlinkOn(false);
+      setBlink(null);
+      return;
+    }
+    setBlinkBusy(true);
+    setBlinkErr(null);
+    try {
+      stopBlink.current = await startBlinkProbe(setBlink);
+      setBlinkOn(true);
+    } catch (e) {
+      setBlinkErr(e instanceof Error ? e.message : 'failed to load');
+    }
+    setBlinkBusy(false);
+  };
+
   const angle = (typeof screen !== 'undefined' && screen.orientation?.angle) ?? 0;
 
   return (
@@ -142,6 +182,40 @@ export default function Diag() {
           </Button>
 
           <Status
+            title="Blink It — can both cameras run at once?"
+            rows={[
+              {
+                label: 'Rear + front together',
+                value: dual ? (dual.ok ? 'YES' : 'NO') : dualBusy ? 'testing…' : 'not run',
+                ok: dual ? dual.ok : null,
+              },
+              { label: 'Front camera opened', value: dual ? String(dual.frontOpened) : '—', ok: dual ? dual.frontOpened : null },
+              { label: 'Rear kept running for', value: dual ? `${dual.rearFramesAfter}s` : '—', ok: null },
+              { label: 'Detail', value: dual ? dual.detail : '—', ok: null },
+            ]}
+          />
+
+          <Button variant="outline" block onClick={runDual} disabled={dualBusy}>
+            {dualBusy ? 'Testing both cameras…' : 'Test dual camera'}
+          </Button>
+
+          <Status
+            title="Blink It — face tracking"
+            rows={[
+              { label: 'Landmarker', value: blinkErr ? 'failed' : blinkOn ? 'running' : blinkBusy ? 'loading…' : 'not run', ok: blinkErr ? false : blinkOn ? true : null },
+              { label: 'Face detected', value: blink ? String(blink.faceSeen) : '—', ok: blink ? blink.faceSeen : null },
+              { label: 'Frame rate', value: blink ? `${blink.fps} fps` : '—', ok: blink ? blink.fps >= 15 : null },
+              { label: 'Eyes closed (live)', value: blink ? blink.blink.toFixed(2) : '—', ok: null },
+              { label: 'Blinks counted', value: blink ? String(blink.blinks) : '—', ok: blink ? blink.blinks > 0 : null },
+              ...(blinkErr ? [{ label: 'Error', value: blinkErr, ok: false }] : []),
+            ]}
+          />
+
+          <Button variant="flame" block onClick={runBlink} disabled={blinkBusy}>
+            {blinkBusy ? 'Loading face model…' : blinkOn ? 'Stop blink test' : 'Test blink detection'}
+          </Button>
+
+          <Status
             title="Tilt steering"
             rows={[
               { label: 'State', value: tiltState, ok: tiltState === 'active' ? true : tiltState === 'needs-permission' ? null : false },
@@ -157,7 +231,14 @@ export default function Diag() {
           </Button>
 
           <p className="t-xs" style={{ lineHeight: 1.6 }}>
-            Tap both buttons, tilt the phone left and right, then screenshot this
+            Run <b>Test dual camera</b> first — that one answers whether the blink
+            can live inside the AR race or has to replace it. Then <b>Test blink
+            detection</b> and blink a few times deliberately; &ldquo;Blinks counted&rdquo;
+            should climb and the frame rate should stay above 15. Screenshot the
+            page either way.
+          </p>
+          <p className="t-xs" style={{ lineHeight: 1.6 }}>
+            Tap both tilt buttons, tilt the phone left and right, then screenshot this
             page. &ldquo;Samples received&rdquo; climbing and &ldquo;Steer output&rdquo; swinging between
             &minus;1 and 1 means tilt steering is working on this device.
           </p>

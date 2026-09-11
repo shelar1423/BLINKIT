@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { color, scene } from '../../design/constants';
 import { PICKUPS } from '../../data/catalog';
-import { Gearbox, type ShiftResult } from '../gearbox';
 
 /* ============================================================
    Race It Home — arcade race engine.
@@ -24,14 +23,6 @@ export type RaceStats = {
   laps: number;
   progress: number; // 0..1 of the whole race
   speedKph: number;
-  /** 1..6 */
-  gear: number;
-  /** 0..1.05 of the redline; above 1 is the limiter */
-  rpm: number;
-  /** shift light — take the next gear now */
-  shiftNow: boolean;
-  /** revs are against the limiter and the car has stopped pulling */
-  onLimiter: boolean;
 };
 
 export type RaceOutcome = {
@@ -255,9 +246,6 @@ export class RaceEngine {
      drives itself, which is what the 3D race has always done. The AR race
      hands the throttle to the player. --- */
   private manual = false;
-  /** Set by the first shift. Until then the car has an automatic. */
-  private manualGears = false;
-  private readonly gearbox = new Gearbox();
   private throttle = 0;
   private braking = 0;
   private drifting = false;
@@ -671,42 +659,7 @@ export class RaceEngine {
     this.boostUntil = this.elapsed + 1.4;
   }
 
-  /**
-   * Take the next gear. The first call switches the car out of its automatic
-   * for the rest of the race, so a player who never shifts is never punished
-   * for a mechanic they did not opt into — but from the first shift on, the
-   * gearbox is theirs to manage.
-   */
-  shiftUp(): ShiftResult | null {
-    if (!this.running || this.done) return null;
-    this.manual = true;
-    this.manualGears = true;
-    const r = this.gearbox.up(this.speed);
-    if (!r) return null;
-    this.speed *= r.speedScale;
-    if (r.boost) this.boostUntil = this.elapsed + r.boost;
-    this.score += r.points;
-    return r;
-  }
-
-  shiftDown(): ShiftResult | null {
-    if (!this.running || this.done) return null;
-    this.manual = true;
-    this.manualGears = true;
-    return this.gearbox.down();
-  }
-
-  get gear() {
-    return this.gearbox.gear;
-  }
-
-  get perfectShifts() {
-    return this.gearbox.perfectShifts;
-  }
-
   start() {
-    this.gearbox.reset();
-    this.manualGears = false;
     this.running = true;
   }
 
@@ -795,17 +748,7 @@ export class RaceEngine {
     // --- longitudinal ---
     const boosting = this.elapsed < this.boostUntil;
     const vMax = boosting ? 34 : 26;
-    if (this.manual && this.manualGears) {
-      /* Gear-limited. Pull comes from the gearbox, so the same throttle does
-         very different things depending on which gear you are in and where the
-         revs sit — and no gear except top will reach the car's top speed. */
-      this.gearbox.update(dt, this.speed);
-      const drag = 3.2 + this.speed * 0.12 + (this.drifting ? 5.5 : 0);
-      const a = this.throttle * 7 * this.gearbox.pull(this.speed) * (boosting ? 1.25 : 1)
-        - this.braking * 30 - drag;
-      const ceil = this.gearbox.ceiling() * (boosting ? 1.04 : 1);
-      this.speed = Math.max(0, Math.min(ceil, this.speed + a * dt));
-    } else if (this.manual) {
+    if (this.manual) {
       // throttle accelerates, brake bites hard, everything else is drag
       const drag = 3.2 + this.speed * 0.12 + (this.drifting ? 5.5 : 0);
       const a = this.throttle * 20 - this.braking * 30 - drag;
@@ -934,10 +877,6 @@ export class RaceEngine {
       laps: this.laps,
       progress,
       speedKph: Math.round(this.speed * 3.6),
-      gear: this.gearbox.gear,
-      rpm: this.gearbox.rpm(this.speed),
-      shiftNow: this.manualGears && this.gearbox.inWindow(this.speed),
-      onLimiter: this.manualGears && this.gearbox.onLimiter(this.speed),
     });
 
     if (this.lap >= this.laps) return this.finish(true);
