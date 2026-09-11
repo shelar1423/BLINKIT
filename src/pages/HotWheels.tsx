@@ -38,10 +38,16 @@ type Group = {
   match: (p: Product) => boolean;
 };
 
+/*
+ * Race ready is no longer a rail tile. It was describing the same cars the
+ * drop is about — the five with a real model behind them — so the drop tile
+ * covers them now and the rail is one shorter. The capability has not gone
+ * anywhere: "Race ready only" is still a filter, which is the better home for
+ * it, because it is a property of a car rather than a category of one.
+ */
 const GROUPS: Group[] = [
   { id: 'all', label: 'All cars', match: () => true },
-  { id: 'playable', label: 'Race ready', match: (p) => Boolean(p.glb) },
-  { id: 'new', label: 'New drop', match: (p) => p.badge === 'NEW DROP' },
+  { id: 'new', label: 'New drop', match: (p) => Boolean(p.glb) || p.badge === 'NEW DROP' },
   { id: 'limited', label: 'Limited', match: (p) => p.badge === 'LIMITED' },
   { id: 'collector', label: 'Collector', match: (p) => /Collector|Premium/i.test(p.series) },
 ];
