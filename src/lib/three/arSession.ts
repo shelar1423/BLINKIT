@@ -185,33 +185,103 @@ function makeReticle() {
   return g;
 }
 
+/** Shrink until it fits. Text drawn wider than its own box is the whole bug
+ *  this replaces: "TAP SCREEN TO RACE" at a fixed 42px ran past the rounded
+ *  rectangle behind it and the final E was cut in half. */
+function fitText(ctx: CanvasRenderingContext2D, text: string, max: number, start: number, weight = 800) {
+  let size = start;
+  do {
+    ctx.font = `${weight} ${size}px system-ui, -apple-system, sans-serif`;
+    if (ctx.measureText(text).width <= max) break;
+    size -= 2;
+  } while (size > 12);
+  return size;
+}
+
 function create3DStartBanner() {
+  /* 2x the old resolution: this sprite is held close to the lens in AR, and at
+     512px the type was visibly soft. */
+  const W = 1024;
+  const H = 320;
   const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 160;
+  c.width = W;
+  c.height = H;
   const ctx = c.getContext('2d')!;
-  ctx.fillStyle = 'rgba(149, 14, 219, 0.92)';
-  ctx.beginPath();
-  ctx.roundRect(10, 10, 492, 140, 24);
-  ctx.fill();
-  ctx.lineWidth = 6;
-  ctx.strokeStyle = '#ffffff';
-  ctx.stroke();
-
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 42px sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('🏁 TAP SCREEN TO RACE', 256, 72);
-
-  ctx.fillStyle = '#ffeb3b';
-  ctx.font = 'bold 26px sans-serif';
-  ctx.fillText('Hot Wheels Circuit · GO!', 256, 120);
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
+
+  /** Everything except the logotype, which arrives later. */
+  const paint = (logo?: HTMLImageElement) => {
+    ctx.clearRect(0, 0, W, H);
+
+    const PAD = 14;
+    const r = 40;
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(PAD, PAD, W - PAD * 2, H - PAD * 2, r);
+    ctx.clip();
+
+    /* Pit-lane navy, not the purple this used to be — purple is not in the
+       campaign's palette anywhere, and over camera video a dark ground is what
+       keeps white type legible whatever the room is. */
+    const g = ctx.createLinearGradient(0, PAD, 0, H - PAD);
+    g.addColorStop(0, 'rgba(20, 38, 70, 0.94)');
+    g.addColorStop(1, 'rgba(8, 16, 34, 0.94)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // chequered flag along the top, drawn rather than typed as an emoji
+    const sq = 22;
+    for (let x = 0; x < W / sq; x++) {
+      for (let y = 0; y < 2; y++) {
+        ctx.fillStyle = (x + y) % 2 ? '#FFFFFF' : '#101828';
+        ctx.fillRect(x * sq, PAD + y * sq, sq, sq);
+      }
+    }
+    ctx.restore();
+
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.roundRect(PAD, PAD, W - PAD * 2, H - PAD * 2, r);
+    ctx.stroke();
+
+    const inner = W - PAD * 2 - 56;
+    ctx.textAlign = 'center';
+
+    /* Three bands down the sprite, each clear of the next: the logotype from
+       70, the headline's cap-height starting around 165, the sub-line at 270.
+       Sized so the mark cannot land on top of the words under it. */
+    if (logo) {
+      const lw = Math.min(210, inner * 0.24);
+      const lh = (logo.height / logo.width) * lw;
+      ctx.drawImage(logo, (W - lw) / 2, 70, lw, lh);
+    }
+
+    ctx.fillStyle = '#FFFFFF';
+    const size = fitText(ctx, 'TAP SCREEN TO RACE', inner, 74);
+    ctx.font = `800 ${size}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText('TAP SCREEN TO RACE', W / 2, 222);
+
+    ctx.fillStyle = '#FFC400';
+    ctx.font = `700 ${fitText(ctx, 'TWO LAPS · 45 SECONDS', inner, 30, 700)}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText('TWO LAPS · 45 SECONDS', W / 2, 272);
+
+    tex.needsUpdate = true;
+  };
+
+  paint();
+
+  /* The mark loads async; the banner is drawn once without it and repainted
+     when it arrives, so a slow decode never leaves the sprite blank. */
+  const logo = new Image();
+  logo.onload = () => paint(logo);
+  logo.src = '/brand/hot-wheels.svg';
+
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
   const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(1.4, 0.44, 1);
+  sprite.scale.set(1.5, 1.5 * (H / W), 1);
   sprite.position.set(0, 1.2, 0);
   sprite.name = 'startBanner';
   sprite.visible = false;

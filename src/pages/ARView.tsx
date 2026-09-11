@@ -23,6 +23,9 @@ import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
+/** Coverage at which the surface is considered read well enough to brief on. */
+const SCAN_READY = 0.75;
+
 export default function ARView() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -51,6 +54,12 @@ export default function ARView() {
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<RaceStats | null>(null);
   const [scanInfo, setScanInfo] = useState({ coverage: 0, hazards: 0 });
+  /* What the briefing line says. The scan keeps refining every frame, so the
+     live count ticks 126, 124, 131… while you are trying to read the sentence
+     it sits in — which reads as broken rather than as live. The number is
+     latched the moment the surface is read: the line is a briefing, given
+     once, not a meter. Collision detection goes on using the live map. */
+  const [hazardsAtReady, setHazardsAtReady] = useState<number | null>(null);
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
@@ -109,7 +118,10 @@ export default function ARView() {
           setTimeout(() => setLastHitMessage(null), 2200);
         },
         onObstacleCountChange: setPinnedCount,
-        onScan: setScanInfo,
+        onScan: (info) => {
+          setScanInfo(info);
+          setHazardsAtReady((held) => (held === null && info.coverage >= SCAN_READY ? info.hazards : held));
+        },
         onProximityAlert: setProximityAlert,
         onEnd: () => {
           setPhase(null);
@@ -117,6 +129,7 @@ export default function ARView() {
           setPinnedCount(0);
           setProximityAlert(false);
           setScanInfo({ coverage: 0, hazards: 0 });
+          setHazardsAtReady(null);
           handle.current = null;
         },
       });
@@ -316,72 +329,6 @@ export default function ARView() {
               </button>
             </div>
 
-            {/* Scanning / Placement guidance */}
-            {phase === 'searching' && (
-              <p className="arov__hint">
-                {inspect ? 'Scanning for a surface…' : 'Point at your floor or table'}
-                <small>
-                  {inspect
-                    ? 'Point at a table or floor. A dotted grid appears once it is found'
-                    : "Or just tap 'Place in front of me'"}
-                </small>
-              </p>
-            )}
-            {phase === 'ready' && (
-              <p className="arov__hint">
-                Surface locked! 🎯
-                <small>Point at the floor, then press Place track here</small>
-              </p>
-            )}
-            {phase === 'placed' && (
-              <p className="arov__hint">
-                {inspect
-                  ? `${car.name.replace('Hot Wheels ', '')} in your space`
-                  : scanInfo.coverage < 0.75
-                    ? `Reading your surface… ${Math.round(scanInfo.coverage * 100)}%`
-                    : scanInfo.hazards > 0
-                      ? 'Your track is ready'
-                      : 'Clear run, nothing in the way'}
-                <small>
-                  {inspect ? (
-                    'Pinch to resize · Drag to move · Walk around it'
-                  ) : scanInfo.coverage < 0.75 ? (
-                    'Pan slowly across the surface so we can find what is on it'
-                  ) : scanInfo.hazards > 0 ? (
-                    <>
-                      <strong>{scanInfo.hazards} real obstacles</strong> marked. Drive around them or lose 100 each
-                    </>
-                  ) : (
-                    'Put something on the surface to race around it'
-                  )}
-                </small>
-              </p>
-            )}
-            {phase === 'racing' && stats && (
-              <p className="arov__hint">
-                {lastHitMessage ? (
-                  <span style={{ color: '#ff5252', fontWeight: 700 }}>{lastHitMessage}</span>
-                ) : (
-                  <small>
-                    Hold GO · Arrows steer · <strong>Tap screen to drop hazard on real object</strong> ({pinnedCount} active)
-                  </small>
-                )}
-              </p>
-            )}
-
-            {/* Track size controls when placed */}
-            {phase === 'placed' && (
-              <div className="arov__size">
-                <button type="button" onClick={() => handle.current?.nudgeScale(1 / 1.25)} aria-label="Smaller">
-                  <IconMinus size={16} />
-                </button>
-                <span>{inspect ? 'CAR SIZE' : 'TRACK SIZE'}</span>
-                <button type="button" onClick={() => handle.current?.nudgeScale(1.25)} aria-label="Bigger">
-                  <IconPlus size={16} />
-                </button>
-              </div>
-            )}
-
             {/* In-race driving controls */}
             {phase === 'racing' && (
               <div className={'arov__drive' + (tiltDriving ? ' is-tilt' : '')}>
@@ -441,6 +388,79 @@ export default function ARView() {
               </div>
             )}
 
+            {/* One column anchored to the bottom, rather than three bands
+                positioned by hand-tuned `bottom` offsets. Those were fine
+                until a phase showed two action buttons instead of one: the
+                stack grew upward past the hint sitting above it and the two
+                overlapped. A column cannot collide with itself. */}
+            <div className="arov__bottom">
+            {/* Track size controls when placed */}
+            {phase === 'placed' && (
+              <div className="arov__size">
+                <button type="button" onClick={() => handle.current?.nudgeScale(1 / 1.25)} aria-label="Smaller">
+                  <IconMinus size={16} />
+                </button>
+                <span>{inspect ? 'CAR SIZE' : 'TRACK SIZE'}</span>
+                <button type="button" onClick={() => handle.current?.nudgeScale(1.25)} aria-label="Bigger">
+                  <IconPlus size={16} />
+                </button>
+              </div>
+            )}
+
+            {/* Scanning / Placement guidance */}
+            {phase === 'searching' && (
+              <p className="arov__hint">
+                {inspect ? 'Scanning for a surface…' : 'Point at your floor or table'}
+                <small>
+                  {inspect
+                    ? 'Point at a table or floor. A dotted grid appears once it is found'
+                    : "Or just tap 'Place in front of me'"}
+                </small>
+              </p>
+            )}
+            {phase === 'ready' && (
+              <p className="arov__hint">
+                Surface locked! 🎯
+                <small>Point at the floor, then press Place track here</small>
+              </p>
+            )}
+            {phase === 'placed' && (
+              <p className="arov__hint">
+                {inspect
+                  ? `${car.name.replace('Hot Wheels ', '')} in your space`
+                  : scanInfo.coverage < SCAN_READY
+                    ? `Reading your surface… ${Math.round(scanInfo.coverage * 100)}%`
+                    : scanInfo.hazards > 0
+                      ? 'Your track is ready'
+                      : 'Clear run, nothing in the way'}
+                <small>
+                  {inspect ? (
+                    'Pinch to resize · Drag to move · Walk around it'
+                  ) : scanInfo.coverage < SCAN_READY ? (
+                    'Pan slowly across the surface so we can find what is on it'
+                  ) : (hazardsAtReady ?? scanInfo.hazards) > 0 ? (
+                    <>
+                      <strong>{hazardsAtReady ?? scanInfo.hazards} real obstacles</strong> marked. Drive around them or
+                      lose 100 each
+                    </>
+                  ) : (
+                    'Put something on the surface to race around it'
+                  )}
+                </small>
+              </p>
+            )}
+            {phase === 'racing' && stats && (
+              <p className="arov__hint">
+                {lastHitMessage ? (
+                  <span style={{ color: '#ff5252', fontWeight: 700 }}>{lastHitMessage}</span>
+                ) : (
+                  <small>
+                    Hold GO · Arrows steer · <strong>Tap screen to drop hazard on real object</strong> ({pinnedCount} active)
+                  </small>
+                )}
+              </p>
+            )}
+
             {/* Action buttons */}
             <div className="arov__acts">
               {(phase === 'ready' || phase === 'searching') && (
@@ -463,6 +483,8 @@ export default function ARView() {
                 </>
               )}
             </div>
+            </div>
+
           </>
         )}
       </div>
