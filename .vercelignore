@@ -2,3 +2,5 @@ models-original
 node_modules
 dist
 art-originals
+storybook-static
+.storybook

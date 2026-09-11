@@ -9,3 +9,5 @@ models-original/
 art-originals/
 *.tsbuildinfo
 .env*
+# built storybook output
+storybook-static
