@@ -79,6 +79,19 @@ export default function Home() {
             onClick={() => setDetails(true)}
           />
 
+          {/* The sponsor strip every one of these storefronts carries — Cadbury
+              and Phool on Diwali, Britannia and Jacob's Creek at Christmas,
+              boAt on the GoBoult one. Small letterspaced caps between two
+              hairlines, partner beneath. Hot Wheels is a Mattel brand, so that
+              is what is actually powering this one; the mast above stays the
+              campaign lockup rather than repeating it here.
+              Set as type on purpose — swap in the official wordmark if this
+              ever goes past a concept. */}
+          <div className="cpower">
+            <span className="cpower__l">Powered by</span>
+            <span className="cpower__b">MATTEL</span>
+          </div>
+
           {/* Six tiles in two rows, which is what these storefronts actually
               do — four on Karwa Chauth, six on Hug Day, eight on Diwali. Three
               was never the pattern; the ice-cream row of three sits under a
@@ -131,6 +144,18 @@ export default function Home() {
           <span className="ctake__scallop" aria-hidden="true" />
         </section>
 
+
+        {/* The ornamental hand-off. Blinkit closes a campaign band with one of
+            these before the feed resumes — the gold flourish above "FESTIVE
+            SPECIALS" on Karwa Chauth, the plaque behind "Top Festive Finds" on
+            Diwali. Drawn rather than placed: the chequered-flag asset is a
+            glossy 3D render, which is not the house language and reads badly
+            at full size, so this is a flat chequer between two tapering rules. */}
+        <div className="cflourish" aria-hidden="true">
+          <i className="cflourish__rule" />
+          <span className="cflourish__chq" />
+          <i className="cflourish__rule" />
+        </div>
 
         <SectionHeader
           title="Drop Picks"
