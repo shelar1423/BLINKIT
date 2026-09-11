@@ -1,5 +1,6 @@
 import { createContext, lazy, Suspense, useCallback, useContext, useMemo, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
+const Diag = lazy(() => import('./pages/Diag'));
 import { BottomNav } from './design/components/BottomNav';
 import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -27,7 +28,7 @@ export const useToast = () => useContext(Ctx);
 /** Routes that take over the screen — no bottom nav, no page padding. */
 const FULLSCREEN = ['/race/play'];
 /** Routes with their own sticky action bar, where Blinkit drops the tab bar. */
-const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/checkout$/, /^\/ar(\/|$)/];
+const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/checkout$/, /^\/ar(\/|$)/, /^\/diag$/];
 
 export default function App() {
   const [msg, setMsg] = useState<string | null>(null);
@@ -63,6 +64,8 @@ export default function App() {
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
+          {/* device diagnostics — deliberately unlinked */}
+          <Route path="/diag" element={<Diag />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
