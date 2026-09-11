@@ -3,14 +3,16 @@ import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
 import { useStore } from '../store/useStore';
-import { IconCheck, IconShare, IconUsers } from '../design/elements/Icons';
+import { IconCheck, IconCopy, IconShare } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 export default function Invite() {
   const nav = useNavigate();
   const { toast } = useToast();
-  const { referralCode, invitedCount, grantExtraRace, racesLeft, bestScore } = useStore();
-  const [shared, setShared] = useState(false);
+  const { referralCode, invitedCount, racesLeft, bestScore } = useStore();
+  /** Held for a couple of seconds so the button itself confirms, rather than
+   *  leaving the toast to be the only sign anything happened. */
+  const [copied, setCopied] = useState(false);
 
   const link = `${window.location.origin}/?ref=${referralCode}`;
 
@@ -23,14 +25,25 @@ export default function Invite() {
     try {
       if (navigator.share) {
         await navigator.share(data);
-        setShared(true);
         return;
       }
       await navigator.clipboard.writeText(link);
-      setShared(true);
       toast('Invite link copied');
     } catch {
       toast('Could not open the share sheet');
+    }
+  }
+
+  /* The code, not the link: the button sits beside the code and that is what
+     it says it copies. Sharing the link is the other control. */
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(referralCode);
+      setCopied(true);
+      toast('Code copied');
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast('Could not copy the code');
     }
   }
 
@@ -48,42 +61,27 @@ export default function Invite() {
             </p>
           </div>
 
-          <div className="card" style={{ padding: 12, display: 'grid', gap: 10 }}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <div>
-                <p className="t-xs" style={{ fontWeight: 700, letterSpacing: '0.06em' }}>YOUR CODE</p>
-                <b style={{ fontSize: 'var(--f-xl)', fontWeight: 800, letterSpacing: '1px' }}>{referralCode}</b>
-              </div>
+          <div className="card invcode">
+            <div className="invcode__top">
+              <p className="invcode__k">Your code</p>
               <span className="chip chip--on">{invitedCount} joined</span>
+            </div>
+            <div className="invcode__row">
+              <b className="invcode__v">{referralCode}</b>
+              <button
+                className={'invcode__copy' + (copied ? ' is-done' : '')}
+                type="button"
+                onClick={copyCode}
+                aria-label={`Copy referral code ${referralCode}`}
+              >
+                {copied ? <IconCheck size={15} /> : <IconCopy size={15} />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
             </div>
             <Button variant="flame" block type="button" onClick={share}>
               <IconShare size={16} /> Invite a friend
             </Button>
           </div>
-
-          <div className="card" style={{ padding: 12, display: 'grid', gap: 10 }}>
-            <div className="row" style={{ gap: 9 }}>
-              <span style={{ color: 'var(--hw-r)' }}><IconUsers size={18} /></span>
-              <b style={{ fontSize: 'var(--f-md)' }}>Demo: simulate a friend racing</b>
-            </div>
-            <p className="t-xs" style={{ lineHeight: 1.55 }}>
-              There is no backend in this prototype, so nothing can genuinely confirm a friend raced. This button stands
-              in for that server callback so you can see the unlock happen.
-            </p>
-            <Button variant="outline" block
-              type="button"
-              disabled={!shared}
-              onClick={() => { grantExtraRace(); toast('+1 race unlocked'); }}
-            >
-              <IconCheck size={16} /> {shared ? 'Simulate friend completing a race' : 'Share your link first'}
-            </Button>
-          </div>
-
-          <img src="/campaign/card-leaderboard.webp" alt="" style={{ width: '100%', borderRadius: 'var(--r-lg)' }} />
-
-          <p className="t-xs" style={{ lineHeight: 1.6 }}>
-            Sharing uses your device&rsquo;s own share sheet. No contact list is read and nothing is sent on your behalf.
-          </p>
         </div>
       </main>
     </>

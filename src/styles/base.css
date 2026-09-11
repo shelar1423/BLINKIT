@@ -1418,6 +1418,38 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 
+/* ---------- invite: the referral code ----------
+   The code and its copy button sit on one line, and the button carries its own
+   confirmation. A toast alone leaves the control looking untouched at the exact
+   moment you are checking whether it worked. */
+.invcode { padding: 14px; display: grid; gap: 12px; }
+.invcode__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.invcode__k {
+  font-size: var(--f-xs); font-weight: 700; color: var(--mut);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.invcode__row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--surface-2);
+  border: 1px dashed var(--line-2);
+  border-radius: var(--r-md);
+  padding: 10px 10px 10px 14px;
+}
+.invcode__v {
+  font-size: var(--f-xl); font-weight: 800; letter-spacing: 0.1em;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis;
+}
+.invcode__copy {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 14px;
+  border: 1px solid var(--green); border-radius: var(--r-md);
+  background: #fff; color: var(--green);
+  font-size: var(--f-sm); font-weight: 800;
+}
+.invcode__copy:active { background: var(--green-tint); }
+.invcode__copy.is-done { background: var(--green); border-color: var(--green); color: #fff; }
+
 /* ---------- how it works ----------
    Blinkit's campaign explainer: a labelled panel with the mechanic shown, a
    pro tip over the art, numbered steps, and the line that makes the point.

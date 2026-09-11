@@ -383,3 +383,11 @@ export const IconSortArrows = (p: P) => (
     <path d="M16.6 19.4V4.6M13.4 7.8l3.2-3.2 3.2 3.2" />
   </S>
 );
+
+/** Copy to clipboard — two stacked sheets. */
+export const IconCopy = (p: P) => (
+  <S {...p}>
+    <rect x="9" y="9" width="11.4" height="11.4" rx="2.4" />
+    <path d="M15.6 6.6V6a2.4 2.4 0 0 0-2.4-2.4H6A2.4 2.4 0 0 0 3.6 6v7.2a2.4 2.4 0 0 0 2.4 2.4h.6" />
+  </S>
+);
