@@ -293,7 +293,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* Without the track divider overhead there is nothing to clear, so the band
    starts where the header ends and the two read as one surface. */
 .ctake--flat {
-  padding-top: 14px;
+  padding-top: 16px;
   /* The reference storefronts all sit on one saturated colour — hot pink for
      Promise Day, deep red for Diwali, a bright blue for the ice cream. This
      was a muted navy, which is why it read as pale. */
@@ -367,8 +367,8 @@ input, select, textarea { font: inherit; color: inherit; }
      glowing ICE CREAM word, the ornamental Diwali masthead. Cutting it to
      132px to save space took the occasion out of it. Back up, but short of the
      218px billboard that pushed the shop off the screen. */
-  margin: 1px auto 0;
-  max-width: 112px;
+  margin: 14px auto 0;
+  max-width: 100px;
   line-height: 0;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
@@ -383,7 +383,7 @@ input, select, textarea { font: inherit; color: inherit; }
    back exactly the rectangle the feathering exists to remove. */
 .mystery {
   width: calc(100% + var(--gut) * 2);
-  margin: 0 calc(var(--gut) * -1) 0;
+  margin: 22px calc(var(--gut) * -1) 0;
 }
 .mystery__plate {
   display: block; width: 100%;
@@ -408,8 +408,8 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* The rule as a line of type, not a panel. */
 .mystery__prog {
-  margin: 4px var(--gut) 0;
-  padding-bottom: 18px;
+  margin: 14px var(--gut) 0;
+  padding-bottom: 22px;
   text-align: center;
   font-size: var(--f-xs); font-weight: 600;
   color: rgba(255, 255, 255, 0.72);
@@ -1097,7 +1097,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .dropclock {
   display: block; width: 100%;
   background: none; border: 0;
-  padding: 0;
+  padding: 10px 0 0;
   text-align: center;
   color: #fff;
 }
@@ -1106,7 +1106,7 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-2xs); font-weight: 800;
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--yellow);
-  margin-bottom: 3px;
+  margin-bottom: 9px;
 }
 /* The dates were a 9px grey line under everything and were being lost. Set as
    a solid chip beside the lead, they read at a glance and stop competing with
@@ -1115,7 +1115,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .dropclock__cell { display: block; }
 .dropclock__flaps { display: flex; gap: 3px; }
 .dropclock__cell small {
-  display: block; margin-top: 6px;
+  display: block; margin-top: 9px;
   font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
   color: rgba(255, 255, 255, 0.6);
 }
@@ -1184,36 +1184,6 @@ input, select, textarea { font: inherit; color: inherit; }
   .flip__leaf { display: none; }
 }
 
-
-/* ---------- campaign sponsor strip ----------
-   "· POWERED BY ·" in small letterspaced caps between two hairlines, the
-   partner set beneath. Every festive storefront carries one of these between
-   the masthead and the tile grid. */
-.cpower {
-  margin: 0 auto;
-  display: flex; flex-direction: column; align-items: center; gap: 0;
-}
-.cpower__l {
-  position: relative;
-  display: flex; align-items: center; gap: 10px;
-  font-size: 8px; font-weight: 700; letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
-}
-/* The hairlines fade out rather than stopping dead, which is what makes the
-   strip read as an ornament instead of a divider with text in it. */
-.cpower__l::before,
-.cpower__l::after {
-  content: '';
-  width: 52px; height: 1px;
-  background: linear-gradient(90deg, rgba(248, 203, 70, 0), rgba(248, 203, 70, 0.75));
-}
-.cpower__l::after { transform: scaleX(-1); }
-.cpower__b {
-  font-size: 13px; font-weight: 800; letter-spacing: 0.16em;
-  color: var(--yellow);
-  text-shadow: 0 1px 8px rgba(248, 203, 70, 0.35);
-}
 
 /* ---------- how it works ----------
    Blinkit's campaign explainer: a labelled panel with the mechanic shown, a

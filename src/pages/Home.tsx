@@ -84,19 +84,6 @@ export default function Home() {
             lead={drop.phase === 'ended' ? 'Drop ended' : drop.lead}
           />
 
-          {/* The sponsor strip every one of these storefronts carries — Cadbury
-              and Phool on Diwali, Britannia and Jacob's Creek at Christmas,
-              boAt on the GoBoult one. Small letterspaced caps between two
-              hairlines, partner beneath. Hot Wheels is a Mattel brand, so that
-              is what is actually powering this one; the mast above stays the
-              campaign lockup rather than repeating it here.
-              Set as type on purpose — swap in the official wordmark if this
-              ever goes past a concept. */}
-          <div className="cpower">
-            <span className="cpower__l">Powered by</span>
-            <span className="cpower__b">MATTEL</span>
-          </div>
-
           {/* The four tiles are replaced by the thing the campaign is actually
               selling: the car nobody has seen yet. The plate is feathered to
               transparent on every edge so it melts into the band's gradient
