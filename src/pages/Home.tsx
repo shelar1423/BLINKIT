@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
 import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
-import { useStore, MAX_RACE_ATTEMPTS } from '../store/useStore';
+import { useStore, MAX_RACE_ATTEMPTS, MYSTERY_UNLOCK_POINTS } from '../store/useStore';
 import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
@@ -15,6 +15,8 @@ export default function Home() {
   const nav = useNavigate();
   const { toast } = useToast();
   const racesLeft = useStore((s) => s.racesLeft);
+  const totalPoints = useStore((s) => s.totalPoints);
+  const mysteryUnlocked = useStore((s) => s.mysteryUnlocked);
   const { status: drop, parts } = useDrop();
   const [details, setDetails] = useState(false);
 
@@ -89,17 +91,40 @@ export default function Home() {
               Everything the tiles linked to still has a home — the sheet this
               opens carries The Drop, Rewards, Leaderboard and the race, so
               nothing was orphaned by taking the grid away. */}
-          <button className="mystery" type="button" onClick={() => setDetails(true)}>
-            <img className="mystery__im" src="/campaign/mystery-banner.webp" alt="" />
-            {/* Below the plate rather than over it. Set on the artwork it
-                landed across the platform's lit rim and fought the one thing
-                the image exists to show. The date line is gone with it — the
-                chip beside the countdown already carries the window. */}
-            <span className="mystery__cap">
-              <b>The mystery car</b>
-              <span className="mystery__cta">See what&rsquo;s coming</span>
-            </span>
-          </button>
+          <div className="mystery">
+            {/* The plate itself opens the detail. It is a separate control from
+                the CTA below because a button cannot contain a button. */}
+            <button className="mystery__plate" type="button" onClick={() => setDetails(true)} aria-label="About the mystery car">
+              <img className="mystery__im" src="/campaign/mystery-banner.webp" alt="" />
+            </button>
+
+            {/* The copy says what is actually true: the cover comes off at
+                MYSTERY_UNLOCK_POINTS, and points come from racing. The number
+                is read from the store rather than written here, so the promise
+                cannot drift from the rule that enforces it. */}
+            <div className="mystcta">
+              <span className="mystcta__c">
+                <b>{mysteryUnlocked ? 'You lifted the cover' : 'Race to lift the cover'}</b>
+                <small>
+                  {mysteryUnlocked
+                    ? 'The final drop car is yours to see'
+                    : `${totalPoints.toLocaleString('en-IN')} of ${MYSTERY_UNLOCK_POINTS.toLocaleString('en-IN')} points`}
+                </small>
+                {!mysteryUnlocked && (
+                  <span className="mystcta__bar">
+                    <i style={{ width: `${Math.min(100, (totalPoints / MYSTERY_UNLOCK_POINTS) * 100)}%` }} />
+                  </span>
+                )}
+              </span>
+              <button
+                className="mystcta__go"
+                type="button"
+                onClick={() => nav(mysteryUnlocked ? '/hot-wheels/mystery' : '/race')}
+              >
+                {mysteryUnlocked ? 'See it' : 'Race now'}
+              </button>
+            </div>
+          </div>
 
           <span className="ctake__scallop" aria-hidden="true" />
         </section>

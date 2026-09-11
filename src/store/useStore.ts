@@ -179,7 +179,7 @@ export const useStore = create<State>()(
           bestScore: Math.max(s.bestScore, r.score),
           lastResult: result,
           unlockedRewards: tier && !s.unlockedRewards.includes(tier.id) ? [...s.unlockedRewards, tier.id] : s.unlockedRewards,
-          mysteryUnlocked: s.mysteryUnlocked || s.totalPoints + r.score >= 5000,
+          mysteryUnlocked: s.mysteryUnlocked || s.totalPoints + r.score >= MYSTERY_UNLOCK_POINTS,
         }));
         return result;
       },
@@ -254,6 +254,11 @@ export const useStore = create<State>()(
     },
   ),
 );
+
+/** Points that lift the cover on the mystery car. Exported because the home
+ *  screen states this number to the player — a copy deck holding its own
+ *  private "5,000" would silently start lying the day this changes. */
+export const MYSTERY_UNLOCK_POINTS = 5000;
 
 export const MAX_RACE_ATTEMPTS = MAX_RACES;
 
