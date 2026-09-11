@@ -76,12 +76,10 @@ export type FlipClockProps = {
   parts: DropParts;
   /** "Ends in" / "Starts in" */
   lead: string;
-  /** The drop window, set beside the lead so it reads as a fact, not a footnote. */
-  dates?: string;
   onClick?: () => void;
 };
 
-export function FlipClock({ parts, lead, dates, onClick }: FlipClockProps) {
+export function FlipClock({ parts, lead, onClick }: FlipClockProps) {
   /* Days and hours. Minutes and seconds both moved faster than anyone acts on
      a three-day drop, and folding days into hours turned a readable "2 days"
      into a 58 nobody parses at a glance. */
@@ -109,7 +107,6 @@ export function FlipClock({ parts, lead, dates, onClick }: FlipClockProps) {
           </span>
         ))}
       </span>
-      {dates && <span className="dropclock__dates">{dates}</span>}
     </Tag>
   );
 }

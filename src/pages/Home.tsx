@@ -44,10 +44,17 @@ export default function Home() {
               smudge rather than as decoration. */}
           <img className="ctake__streaks" src="/decor/26-03-speed-line-streaks-element.webp" alt="" aria-hidden="true" />
 
-          <div className="ctake__mast">
-            <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
-            <span className="ctake__x">&times;</span>
-            <BlinkitMark className="ctake__bm bmark--on-dark" />
+          {/* Lockup left, drop window right — the shape the festive storefronts
+              use for their title row. It also gets the dates out from under the
+              flaps, where they were reading as a third unit of the countdown,
+              and buys back the height the wordmark now spends. */}
+          <div className="ctake__top">
+            <span className="ctake__mast">
+              <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
+              <span className="ctake__x">&times;</span>
+              <BlinkitMark className="ctake__bm bmark--on-dark" />
+            </span>
+            <span className="ctake__when">{DROP_DATES}</span>
           </div>
 
           {/* Every one of these storefronts sets the campaign name as its own
@@ -65,7 +72,6 @@ export default function Home() {
           <FlipClock
             parts={parts}
             lead={drop.phase === 'ended' ? 'Drop ended' : drop.lead}
-            dates={DROP_DATES}
             onClick={() => setDetails(true)}
           />
 

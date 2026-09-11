@@ -314,7 +314,20 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative; z-index: 1;
 }
 
-.ctake__mast { display: flex; align-items: center; justify-content: center; gap: 9px; }
+/* Title row: lockup hard left, drop window hard right. */
+.ctake__top {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 24px;
+}
+.ctake__mast { display: flex; align-items: center; gap: 8px; }
+.ctake__when {
+  flex: 0 0 auto;
+  background: var(--yellow); color: var(--ink);
+  border-radius: 999px;
+  padding: 4px 10px 5px;
+  font-size: var(--f-2xs); font-weight: 800;
+  letter-spacing: 0.02em; white-space: nowrap;
+}
 /* The mark ships as a flat #ED1C24. Red on the campaign blue technically
    clears contrast, but two saturated hues at the same luminance vibrate against
    each other. White is cleaner and reads at 13.4:1 — and a knocked-out white
@@ -339,8 +352,8 @@ input, select, textarea { font: inherit; color: inherit; }
      glowing ICE CREAM word, the ornamental Diwali masthead. Cutting it to
      132px to save space took the occasion out of it. Back up, but short of the
      218px billboard that pushed the shop off the screen. */
-  margin: 0 auto 2px;
-  max-width: 72px;
+  margin: 1px auto 0;
+  max-width: 112px;
   line-height: 0;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
@@ -370,7 +383,7 @@ input, select, textarea { font: inherit; color: inherit; }
    the artwork and the one thing there is to do, which is what it replaced. */
 .mystery__go {
   display: block;
-  margin: -34px auto 0;
+  margin: -40px auto 0;
   position: relative; z-index: 2;
   background: var(--yellow);
   color: var(--ink);
@@ -1098,29 +1111,16 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-2xs); font-weight: 800;
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--yellow);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 /* The dates were a 9px grey line under everything and were being lost. Set as
    a solid chip beside the lead, they read at a glance and stop competing with
    the flaps for the same greyed-out register. */
-/* Under the flaps rather than beside the lead. The window is a fact about the
-   drop, not part of the sentence the countdown is saying. */
-.dropclock__dates {
-  display: inline-block;
-  margin-top: 3px;
-  background: var(--yellow);
-  color: var(--ink);
-  border-radius: 999px;
-  padding: 3px 10px 4px;
-  font-size: var(--f-2xs); font-weight: 800;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
 .dropclock__row { display: flex; align-items: flex-start; justify-content: center; gap: 16px; }
 .dropclock__cell { display: block; }
 .dropclock__flaps { display: flex; gap: 3px; }
 .dropclock__cell small {
-  display: block; margin-top: 8px;
+  display: block; margin-top: 6px;
   font-size: 8px; font-weight: 700; letter-spacing: 0.14em;
   color: rgba(255, 255, 255, 0.6);
 }
@@ -1195,7 +1195,7 @@ input, select, textarea { font: inherit; color: inherit; }
    partner set beneath. Every festive storefront carries one of these between
    the masthead and the tile grid. */
 .cpower {
-  margin: 2px auto 0;
+  margin: 0 auto;
   display: flex; flex-direction: column; align-items: center; gap: 0;
 }
 .cpower__l {
