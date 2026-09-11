@@ -18,7 +18,7 @@ export default function Invite() {
 
   async function share() {
     const data = {
-      title: 'Race It Home — Blinkit × Hot Wheels',
+      title: 'Race It Home · Blinkit × Hot Wheels',
       text: `I scored ${bestScore.toLocaleString('en-IN')} pts. Beat it?`,
       url: link,
     };

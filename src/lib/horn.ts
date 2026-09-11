@@ -1,3 +1,4 @@
+import { haptic } from './haptics';
 /* ============================================================
    Car horn + a couple of race stingers, synthesised with
    WebAudio. No audio files to download, and no autoplay
@@ -46,7 +47,7 @@ function tone({ freq, type = 'sawtooth', gain = 0.2, start = 0, dur, slideTo }: 
 export function horn() {
   tone({ freq: 440, gain: 0.17, dur: 0.42 });
   tone({ freq: 554.4, gain: 0.14, dur: 0.42 });
-  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(30);
+  haptic(30);
 }
 
 /** Rising chirp when the handbrake comes on. */

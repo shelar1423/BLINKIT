@@ -54,7 +54,7 @@ export default function Rewards() {
                   {isClaimed ? (
                     <span className="chip chip--live">APPLIED</span>
                   ) : unlocked ? (
-                    <Button variant="flame" size="sm"
+                    <Button variant="primary" size="sm"
                       type="button"
                       onClick={() => { claimReward(t.id); toast(`${t.label} applied to your cart`); nav('/cart'); }}
                     >

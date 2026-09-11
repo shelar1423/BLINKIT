@@ -548,7 +548,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   if (!hitSource) {
     // Without hit-test there is no reticle, but the fallback placement still
     // gives the player a working circuit rather than a dead screen.
-    opts.onError('Surface detection is unavailable — you can still place the track in front of you.');
+    opts.onError('Surface detection is unavailable. You can still place the track in front of you.');
   }
 
   session.addEventListener('select', () => {

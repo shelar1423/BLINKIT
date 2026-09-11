@@ -42,6 +42,10 @@ export default function ARView() {
   /* "View in your space" on the product page means look at the car, not race
      it. The race entry point passes no mode and still gets the circuit. */
   const inspect = search.get('mode') === 'inspect';
+  /* Set by the screens whose button already said "view in your space" — the
+     choice was made there, so this screen should not ask again. */
+  const autoStart = search.get('go') === '1';
+  const triedAuto = useRef(false);
   const [phase, setPhase] = useState<ARPhase | null>(null);
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<RaceStats | null>(null);
@@ -73,7 +77,7 @@ export default function ARView() {
     [finishRace],
   );
 
-  const launch = useCallback(async () => {
+  const launch = useCallback(async (silent = false) => {
     if (!car.glb || !overlay.current) return;
     setBusy(true);
     try {
@@ -112,6 +116,12 @@ export default function ARView() {
         },
       });
     } catch (e) {
+      /* A silent attempt is the automatic one. Safari will only open a camera
+         from a gesture in the current document, and the tap that got us here
+         happened in the previous one — so this failing is expected, not an
+         error to report. The gate is already rendered underneath; letting the
+         user see it is the whole fallback. */
+      if (silent) return;
       const msg = e instanceof Error ? e.message : 'AR could not start';
       toast(msg.includes('denied') || msg.includes('NotAllowed') ? 'Camera permission was denied' : msg);
       setPhase(null);
@@ -119,6 +129,18 @@ export default function ARView() {
       setBusy(false);
     }
   }, [car.glb, onFinish, toast, support, inspect]);
+
+  /* Arriving with ?go=1 means the tap that got here already said "view in your
+     space". Try to open the camera straight away rather than showing a second
+     button with the same words on it. Once only: a failure leaves the gate
+     showing, and retrying it in a loop would just re-prompt for permission. */
+  useEffect(() => {
+    if (!autoStart || triedAuto.current) return;
+    if (!(support?.kind === 'webxr' || support?.kind === 'camera')) return;
+    if (!car.glb || !overlay.current || handle.current) return;
+    triedAuto.current = true;
+    void launch(true);
+  }, [autoStart, support, car.glb, launch]);
 
   /* ---------- driving while racing in AR ---------- */
   const [drift, setDrift] = useState(false);
@@ -295,7 +317,7 @@ export default function ARView() {
                 {inspect ? 'Scanning for a surface…' : 'Point at your floor or table'}
                 <small>
                   {inspect
-                    ? 'Point at a table or floor — a dotted grid appears once it is found'
+                    ? 'Point at a table or floor. A dotted grid appears once it is found'
                     : "Or just tap 'Place in front of me'"}
                 </small>
               </p>
@@ -314,7 +336,7 @@ export default function ARView() {
                     ? `Reading your surface… ${Math.round(scanInfo.coverage * 100)}%`
                     : scanInfo.hazards > 0
                       ? 'Your track is ready'
-                      : 'Clear run — nothing in the way'}
+                      : 'Clear run, nothing in the way'}
                 <small>
                   {inspect ? (
                     'Pinch to resize · Drag to move · Walk around it'
@@ -322,7 +344,7 @@ export default function ARView() {
                     'Pan slowly across the surface so we can find what is on it'
                   ) : scanInfo.hazards > 0 ? (
                     <>
-                      <strong>{scanInfo.hazards} real obstacles</strong> marked — drive around them or lose 100 each
+                      <strong>{scanInfo.hazards} real obstacles</strong> marked. Drive around them or lose 100 each
                     </>
                   ) : (
                     'Put something on the surface to race around it'
@@ -417,7 +439,7 @@ export default function ARView() {
             {/* Action buttons */}
             <div className="arov__acts">
               {(phase === 'ready' || phase === 'searching') && (
-                <Button variant="flame" block type="button" onClick={() => handle.current?.placeNow()}>
+                <Button variant="hwBlue" block type="button" onClick={() => handle.current?.placeNow()}>
                   {phase === 'ready'
                     ? inspect ? 'Place car here' : 'Place track here'
                     : 'Place in front of me'}
@@ -426,7 +448,7 @@ export default function ARView() {
               {phase === 'placed' && (
                 <>
                   {!inspect && (
-                    <Button variant="flame" block type="button" onClick={() => handle.current?.startRace()}>
+                    <Button variant="hwBlue" block type="button" onClick={() => handle.current?.startRace()}>
                       Start race
                     </Button>
                   )}
@@ -457,10 +479,10 @@ export default function ARView() {
             </div>
           </div>
 
-          <Button variant="flame" size="lg" block
+          <Button variant="hwBlue" size="lg" block
             type="button"
             disabled={!(support?.kind === 'webxr' || support?.kind === 'camera') || busy}
-            onClick={launch}
+            onClick={() => launch()}
           >
             <IconAR size={17} />
             {busy
@@ -500,17 +522,17 @@ export default function ARView() {
               {inspect ? (
                 <>
                   <li><b>Open camera</b>: Works directly in Safari on iPhone, or Chrome on Android.</li>
-                  <li><b>Scan</b>: Point at a table or floor — a dotted grid spreads across the surface once it is found.</li>
+                  <li><b>Scan</b>: Point at a table or floor. A dotted grid spreads across the surface once it is found.</li>
                   <li><b>Place</b>: Tap &apos;Place car here&apos; to stand it on that spot.</li>
                   <li><b>Look</b>: Pinch to resize, drag to move, and walk around it. It renders at true 1:64 scale, about 7 cm long.</li>
                 </>
               ) : (
                 <>
                   <li><b>Open Camera</b>: Works directly in Safari on iPhone (or Chrome on Android).</li>
-                  <li><b>Scan Surface</b>: Point at your floor or a flat desk — an animated radar ring locks onto the surface.</li>
+                  <li><b>Scan Surface</b>: Point at your floor or a flat desk. An animated radar ring locks onto the surface.</li>
                   <li><b>Drop Track</b>: Keep the ring on the surface and press &apos;Place track here&apos;.</li>
                   <li><b>Adjust</b>: Pinch to resize the circuit, drag to reposition.</li>
-                  <li><b>Drive</b>: Hold GO and tilt the phone to steer — no thumbs on the screen.</li>
+                  <li><b>Drive</b>: Hold GO and tilt the phone to steer. No thumbs on the screen.</li>
                 </>
               )}
             </ul>
@@ -518,7 +540,7 @@ export default function ARView() {
 
           <p className="t-xs" style={{ lineHeight: 1.6, color: 'var(--mut)' }}>
             {inspect
-              ? 'The real die-cast model, rendered at true 1:64 scale — about 7 cm long, the size it is in the box.'
+              ? 'The real die-cast model, rendered at true 1:64 scale: about 7 cm long, the size it is in the box.'
               : 'Rendered with high-detail 3D Hot Wheels scale model, road asphalt textures, and interactive chase camera tracking.'}
           </p>
         </div>

@@ -41,6 +41,9 @@ export default function RacePlay() {
   });
   const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
+  /* Tilt is an upgrade, not a gate. Touch steering already works, so this only
+     has to be offered once and then go away for good. */
+  const [tiltAsked, setTiltAsked] = useState(false);
 
   // guard: no attempts left
   useEffect(() => {
@@ -271,14 +274,36 @@ export default function RacePlay() {
           )}
 
           {/* iOS gates motion access behind a gesture, so it has to be asked for
-              here rather than silently on mount. */}
-          {tiltState === 'needs-permission' && (
+              here rather than silently on mount. As a panel in the middle of
+              the stage it read as a second choice to make immediately after
+              choosing 3D, and it sat over a race that had already started with
+              no way to dismiss it. It is a strip now, out of the racing line,
+              and it closes. */}
+          {tiltState === 'needs-permission' && !tiltAsked && (
             <div className="tiltask" onPointerDown={(e) => e.stopPropagation()}>
-              <p className="tiltask__t">Steer by tilting your phone</p>
-              <p className="tiltask__s">Needs access to motion sensors.</p>
-              <Button variant="flame" size="sm" type="button" onClick={enableTilt}>
-                Enable tilt steering
+              <span className="tiltask__c">
+                <b>Steer by tilting</b>
+                <small>Touch steering works either way</small>
+              </span>
+              <Button
+                variant="hwBlue"
+                size="sm"
+                type="button"
+                onClick={() => {
+                  setTiltAsked(true);
+                  void enableTilt();
+                }}
+              >
+                Enable
               </Button>
+              <button
+                className="tiltask__x"
+                type="button"
+                aria-label="Keep touch steering"
+                onClick={() => setTiltAsked(true)}
+              >
+                <IconClose size={15} />
+              </button>
             </div>
           )}
           {/* the whole stage is a steering surface, so a tap on these buttons
@@ -383,7 +408,7 @@ export default function RacePlay() {
               </Button>
             )}
             {!tier && (
-              <Button variant="primary" size="lg" block
+              <Button variant="hwBlue" size="lg" block
                 type="button"
                 disabled={useStore.getState().racesLeft <= 0}
                 onClick={() => window.location.reload()}

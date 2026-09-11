@@ -6,6 +6,7 @@ import { GroceryPlacer } from './groceryPlacer';
 import { SpatialPhysics } from './spatialPhysics';
 import { rallyAudio } from './audioEffects';
 import type { RallySessionOpts, RoomRallyHandle, RallyPhase } from './roomRallySession';
+import { haptic } from '../../haptics';
 
 /**
  * Camera AR Fallback Session for iOS Safari & browsers without native WebXR.
@@ -260,7 +261,7 @@ export async function startCameraRallySession(opts: RallySessionOpts): Promise<R
         score += pts;
         rallyAudio.playPickup(combo);
         opts.onPickup(pts, collected.name, combo);
-        if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+        haptic(20);
       }
 
       const dist = Math.hypot(physics.position.x - finishPoint.x, physics.position.z - finishPoint.z);

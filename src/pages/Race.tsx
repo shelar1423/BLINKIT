@@ -50,7 +50,7 @@ export default function Race() {
               </li>
               <li>
                 <span className="howsteps__n">3</span>
-                <span className="howsteps__t">Grab groceries on the way &mdash; the bag is worth 500</span>
+                <span className="howsteps__t">Grab groceries on the way. The bag is worth 500</span>
               </li>
             </ol>
             <p className="howcard__foot">
@@ -96,10 +96,10 @@ export default function Race() {
         </div>
 
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 8 }}>
-          <Button variant="flame" size="lg" block
+          <Button variant="hwBlue" size="lg" block
             type="button"
             disabled={racesLeft <= 0}
-            onClick={() => nav(`/ar/${car.id}`)}
+            onClick={() => nav(`/ar/${car.id}?go=1`)}
           >
             <IconAR size={17} />
             {racesLeft > 0 ? 'Race in your space' : 'No races left today'}

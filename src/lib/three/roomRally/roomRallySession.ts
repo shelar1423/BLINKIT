@@ -5,6 +5,7 @@ import { OccupancyGrid, CellType, type GridPoint } from './occupancyGrid';
 import { GroceryPlacer } from './groceryPlacer';
 import { SpatialPhysics, type CollisionEvent } from './spatialPhysics';
 import { rallyAudio } from './audioEffects';
+import { haptic } from '../../haptics';
 
 export type RallyPhase =
   | 'detecting'
@@ -335,8 +336,8 @@ export async function startRoomRallySession(opts: RallySessionOpts): Promise<Roo
         rallyAudio.playPickup(combo);
         opts.onPickup(awardedPoints, collected.name, combo);
 
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate(20);
+        {
+          haptic(20);
         }
       }
 

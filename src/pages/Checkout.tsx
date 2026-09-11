@@ -110,7 +110,7 @@ export default function Checkout() {
             </div>
           </div>
 
-          <p className="t-xs">This is a campaign prototype — no payment is taken and no order is really dispatched.</p>
+          <p className="t-xs">This is a campaign prototype. No payment is taken and no order is really dispatched.</p>
         </div>
       </main>
 

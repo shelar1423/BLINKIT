@@ -297,7 +297,7 @@ export default function Product() {
                   type="button"
                   onClick={() => {
                     selectCar(product.id);
-                    nav(`/ar/${product.id}?mode=inspect`);
+                    nav(`/ar/${product.id}?mode=inspect&go=1`);
                   }}
                 >
                   <IconAR size={16} />

@@ -59,7 +59,7 @@ export default function Campaign() {
                 <i key={i} className={i < racesLeft ? 'on' : ''} />
               ))}
             </div>
-            <Button variant="flame" block
+            <Button variant="hwBlue" block
               type="button"
               disabled={racesLeft <= 0}
               onClick={() => nav('/race')}

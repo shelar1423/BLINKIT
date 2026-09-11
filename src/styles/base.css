@@ -105,17 +105,15 @@ input, select, textarea { font: inherit; color: inherit; }
 /* campaign CTA — Hot Wheels flame red, never used for commerce actions */
 .btn--flame { background: var(--hw-r); color: #fff; }
 .btn--flame:not(:disabled):active { background: var(--hw-r-dk); }
-/* Hot Wheels blue. The other half of the brand's pair, and the one that can
-   carry a CTA on a campaign ground without being mistaken for Blinkit's green
-   (which means commerce) or its red (which means the campaign itself). Shares
-   the light variant's geometry so the two are interchangeable in place. */
-.btn--hwBlue {
-  background: var(--hw-b); color: #fff; font-weight: 800;
-  border-radius: 16px;
-  padding: 0 26px;
-  box-shadow: 0 8px 22px rgba(11, 95, 208, 0.42);
-}
+/* Hot Wheels blue — every control that starts or restarts a race. The other
+   half of the brand's pair, and the one that can carry a CTA without being
+   mistaken for Blinkit's green (which means commerce) or its red (which means
+   the campaign itself). Colour only: the campaign band's copy of it takes its
+   own geometry, and a block button in a page has to look like a block button
+   in a page. */
+.btn--hwBlue { background: var(--hw-b); color: #fff; font-weight: 800; }
 .btn--hwBlue:not(:disabled):active { background: #094FAD; }
+.btn--hwBlue:disabled { background: #A7BEDC; }
 .btn--outline { border: 1px solid var(--line); background: #fff; color: var(--ink); font-weight: 600; }
 .btn--outline:not(:disabled):active { background: var(--surface-2); }
 .btn--ghostDark { border: 1px solid var(--tk-line); background: rgba(255,255,255,0.08); color: #fff; font-weight: 600; }
@@ -497,6 +495,11 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex; width: fit-content;
   margin: -42px auto 0;
   position: relative; z-index: 2;
+  /* Sitting on the campaign art, this one is lifted: rounded, roomy, and given
+     a shadow deep enough to separate it from the blue behind it. */
+  border-radius: 16px;
+  padding: 0 26px;
+  box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
 .mystery__go:active { transform: scale(0.97); }
 
@@ -1214,16 +1217,26 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ---------- tilt steering prompt ---------- */
+/* A strip along the top, clear of the car and the steering pads. It used to be
+   a panel in the middle of the stage with no way out, which is the wrong shape
+   for an optional control: the race is already running behind it. */
 .tiltask {
-  position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%);
-  z-index: 12; width: min(300px, calc(100% - 32px));
-  background: rgba(10, 12, 18, 0.9); color: #fff;
-  border: 1px solid var(--tk-line); border-radius: var(--r-lg);
-  padding: 14px; text-align: center; display: grid; gap: 4px; justify-items: center;
+  position: absolute; left: 12px; right: 12px; top: 74px;
+  z-index: 12;
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(10, 12, 18, 0.86); color: #fff;
+  border: 1px solid var(--tk-line); border-radius: 14px;
+  padding: 9px 10px 9px 13px;
   backdrop-filter: blur(6px);
 }
-.tiltask__t { font-size: var(--f-base); font-weight: 800; letter-spacing: -0.2px; }
-.tiltask__s { font-size: var(--f-xs); color: var(--tk-mut); margin-bottom: 6px; }
+.tiltask__c { flex: 1; min-width: 0; display: grid; }
+.tiltask__c b { font-size: var(--f-md); font-weight: 800; letter-spacing: -0.1px; }
+.tiltask__c small { font-size: var(--f-2xs); color: var(--tk-mut); }
+.tiltask__x {
+  flex: none; width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  color: var(--tk-mut); background: rgba(255, 255, 255, 0.08);
+}
 
 /* ---------- Element: Tag ---------- */
 .tag--green { background: var(--green-tint); color: var(--green); }

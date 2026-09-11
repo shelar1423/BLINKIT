@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { color } from '../../design/constants';
 import { rallyAudio } from './roomRally/audioEffects';
+import { haptic } from '../haptics';
 
 export interface PinnedObstacle {
   id: string;
@@ -437,8 +438,8 @@ export class VisionObstacleSystem {
     rallyAudio.playCollision(1.3);
 
     // Haptic feedback
-    if (typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([45, 30, 70]);
+    {
+      haptic([45, 30, 70]);
     }
 
     // Position visual 3D shockwave

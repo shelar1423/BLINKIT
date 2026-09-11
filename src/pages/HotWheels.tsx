@@ -49,8 +49,8 @@ const GROUPS: Group[] = [
 type SortId = 'featured' | 'priceAsc' | 'priceDesc' | 'rating';
 const SORTS: { id: SortId; label: string }[] = [
   { id: 'featured', label: 'Featured' },
-  { id: 'priceAsc', label: 'Price — low to high' },
-  { id: 'priceDesc', label: 'Price — high to low' },
+  { id: 'priceAsc', label: 'Price: low to high' },
+  { id: 'priceDesc', label: 'Price: high to low' },
   { id: 'rating', label: 'Customer rating' },
 ];
 
@@ -198,7 +198,7 @@ export default function HotWheels() {
               onClick={() => setSheet('sort')}
             >
               <IconSortArrows size={15} />
-              {sort === 'featured' ? 'Sort' : sortLabel.replace(/ —.*/, '')}
+              {sort === 'featured' ? 'Sort' : sortLabel.replace(/:.*/, '')}
               <IconChevronDown size={14} />
             </button>
             <button className={'catchip' + (band ? ' is-on' : '')} type="button" onClick={() => setSheet('price')}>

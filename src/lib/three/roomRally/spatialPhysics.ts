@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OccupancyGrid, CellType } from './occupancyGrid';
 import { rallyAudio } from './audioEffects';
+import { haptic } from '../../haptics';
 
 export type CollisionEvent = {
   intensity: number;
@@ -209,8 +210,8 @@ export class SpatialPhysics {
         this.lastCollisionTime = now;
 
         // Trigger subtle haptics
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate([30, 40]);
+        {
+          haptic([30, 40]);
         }
 
         // Web Audio bump sound

@@ -112,10 +112,10 @@ export default function Diag() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } } });
       const track = stream.getVideoTracks()[0];
       const s = track.getSettings();
-      setCam(`ok — ${s.width}×${s.height} ${s.facingMode ?? ''}`);
+      setCam(`ok · ${s.width}×${s.height} ${s.facingMode ?? ''}`);
       stream.getTracks().forEach((t) => t.stop());
     } catch (e) {
-      setCam(e instanceof Error ? `failed — ${e.name}` : 'failed');
+      setCam(e instanceof Error ? `failed · ${e.name}` : 'failed');
     }
   };
 
@@ -152,7 +152,7 @@ export default function Diag() {
 
   return (
     <>
-      <PageHeader title="Device diagnostics" subtitle="Not linked from the app — /diag only" />
+      <PageHeader title="Device diagnostics" subtitle="Not linked from the app, /diag only" />
       <main className="page" style={{ background: 'var(--appbase)' }}>
         <div className="shell" style={{ display: 'grid', gap: 10, paddingTop: 12, paddingBottom: 24 }}>
           <Status
@@ -170,7 +170,7 @@ export default function Diag() {
             title="AR support"
             rows={[
               { label: 'detectAR()', value: ar ? ar.kind : 'checking…', ok: ar ? ar.kind === 'webxr' || ar.kind === 'camera' : null },
-              { label: 'Reason', value: ar && 'reason' in ar ? String(ar.reason ?? '—') : '—', ok: null },
+              { label: 'Reason', value: ar && 'reason' in ar ? String(ar.reason ?? '-') : '-', ok: null },
               { label: 'WebXR object', value: String('xr' in navigator), ok: 'xr' in navigator },
               { label: 'getUserMedia', value: String(!!navigator.mediaDevices?.getUserMedia), ok: !!navigator.mediaDevices?.getUserMedia },
               { label: 'Camera test', value: cam, ok: cam.startsWith('ok') ? true : cam.startsWith('failed') ? false : null },
@@ -182,16 +182,16 @@ export default function Diag() {
           </Button>
 
           <Status
-            title="Blink It — can both cameras run at once?"
+            title="Blink It: can both cameras run at once?"
             rows={[
               {
                 label: 'Rear + front together',
                 value: dual ? (dual.ok ? 'YES' : 'NO') : dualBusy ? 'testing…' : 'not run',
                 ok: dual ? dual.ok : null,
               },
-              { label: 'Front camera opened', value: dual ? String(dual.frontOpened) : '—', ok: dual ? dual.frontOpened : null },
-              { label: 'Rear kept running for', value: dual ? `${dual.rearFramesAfter}s` : '—', ok: null },
-              { label: 'Detail', value: dual ? dual.detail : '—', ok: null },
+              { label: 'Front camera opened', value: dual ? String(dual.frontOpened) : '-', ok: dual ? dual.frontOpened : null },
+              { label: 'Rear kept running for', value: dual ? `${dual.rearFramesAfter}s` : '-', ok: null },
+              { label: 'Detail', value: dual ? dual.detail : '-', ok: null },
             ]}
           />
 
@@ -200,13 +200,13 @@ export default function Diag() {
           </Button>
 
           <Status
-            title="Blink It — face tracking"
+            title="Blink It: face tracking"
             rows={[
               { label: 'Landmarker', value: blinkErr ? 'failed' : blinkOn ? 'running' : blinkBusy ? 'loading…' : 'not run', ok: blinkErr ? false : blinkOn ? true : null },
-              { label: 'Face detected', value: blink ? String(blink.faceSeen) : '—', ok: blink ? blink.faceSeen : null },
-              { label: 'Frame rate', value: blink ? `${blink.fps} fps` : '—', ok: blink ? blink.fps >= 15 : null },
-              { label: 'Eyes closed (live)', value: blink ? blink.blink.toFixed(2) : '—', ok: null },
-              { label: 'Blinks counted', value: blink ? String(blink.blinks) : '—', ok: blink ? blink.blinks > 0 : null },
+              { label: 'Face detected', value: blink ? String(blink.faceSeen) : '-', ok: blink ? blink.faceSeen : null },
+              { label: 'Frame rate', value: blink ? `${blink.fps} fps` : '-', ok: blink ? blink.fps >= 15 : null },
+              { label: 'Eyes closed (live)', value: blink ? blink.blink.toFixed(2) : '-', ok: null },
+              { label: 'Blinks counted', value: blink ? String(blink.blinks) : '-', ok: blink ? blink.blinks > 0 : null },
               ...(blinkErr ? [{ label: 'Error', value: blinkErr, ok: false }] : []),
             ]}
           />
@@ -231,7 +231,7 @@ export default function Diag() {
           </Button>
 
           <p className="t-xs" style={{ lineHeight: 1.6 }}>
-            Run <b>Test dual camera</b> first — that one answers whether the blink
+            Run <b>Test dual camera</b> first. That one answers whether the blink
             can live inside the AR race or has to replace it. Then <b>Test blink
             detection</b> and blink a few times deliberately; &ldquo;Blinks counted&rdquo;
             should climb and the frame rate should stay above 15. Screenshot the

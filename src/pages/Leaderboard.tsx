@@ -45,7 +45,7 @@ export default function Leaderboard() {
         </div>
 
         <div className="shell" style={{ paddingTop: 14, display: 'grid', gap: 8 }}>
-          <Button variant="flame" block type="button" disabled={racesLeft <= 0} onClick={() => nav('/race')}>
+          <Button variant="hwBlue" block type="button" disabled={racesLeft <= 0} onClick={() => nav('/race')}>
             {racesLeft > 0 ? `Race again · ${racesLeft} left` : 'No races left today'}
           </Button>
           <Button variant="outline" block type="button" onClick={() => nav('/invite')}>

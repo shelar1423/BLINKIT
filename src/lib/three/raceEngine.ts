@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { color, scene } from '../../design/constants';
 import { PICKUPS } from '../../data/catalog';
+import { haptic } from '../haptics';
 
 /* ============================================================
    Race It Home — arcade race engine.
@@ -799,8 +800,8 @@ export class RaceEngine {
           this.score += p.points;
           this.groceries += 1;
           // short haptic tick per grocery; longer for the 500pt Blinkit bag
-          if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            navigator.vibrate(p.points >= 500 ? [18, 36, 18] : p.points >= 250 ? 22 : 12);
+          {
+            haptic(p.points >= 500 ? [18, 36, 18] : p.points >= 250 ? 22 : 12);
           }
           this.opts.onPickup?.(p.points, p.name);
         } else {

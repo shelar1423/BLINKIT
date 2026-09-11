@@ -15,7 +15,7 @@ export const REWARD_TIERS: RewardTier[] = [
   { id: 'start', min: 1000, label: 'Free Delivery', value: 0, freeDelivery: true },
   { id: 'check', min: 2500, label: '₹25 Blinkit Cash', value: 25, freeDelivery: true },
   { id: 'pit', min: 5000, label: '₹50 Blinkit Cash', value: 50, freeDelivery: true },
-  { id: 'podium', min: 8000, label: 'Zomato Gold — 1 month', value: 75, freeDelivery: true },
+  { id: 'podium', min: 8000, label: 'Zomato Gold, 1 month', value: 75, freeDelivery: true },
 ];
 
 export function tierFor(score: number): RewardTier | null {
