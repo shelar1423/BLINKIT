@@ -173,11 +173,12 @@ input, select, textarea { font: inherit; color: inherit; }
    against. This is what Blinkit's own cards do. */
 .pcard__imwrap {
   position: relative;
+  border: 1px solid var(--line);
   border-radius: var(--r-lg);
   background: var(--appbase);
-  padding: 8px 10px 9px;
-  /* clears the ADD's overhang (20) plus the gap to the price row (14) */
-  margin-bottom: 34px;
+  padding: 8px 10px 0;
+  /* clears the ADD's overhang (7) plus the gap to the price row (14) */
+  margin-bottom: 21px;
 }
 .pcard__im {
   position: relative;
@@ -213,20 +214,25 @@ input, select, textarea { font: inherit; color: inherit; }
 .pcard__dots { display: flex; gap: 4px; padding: 5px 0 1px 2px; }
 .pcard__dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--line-2); }
 .pcard__dots i.is-on { background: var(--mut); }
-/* The pack size is part of the panel, sitting on its foot. It was being
-   dragged out of the panel along with the button, which is the one thing that
-   is meant to break the edge. */
+/* The panel's foot: a band under a hairline, holding the pack size. On the
+   real card this band is what the ADD stands on — its top edge is the divider
+   — which is why the button reads as attached to the card rather than falling
+   out of the bottom of it. Measured off the reference at 26.5% of the card's
+   width; on a 117px card that is 31px. */
 .pcard__unit {
-  display: block;
-  margin-top: 8px;
-  /* keeps clear of the button hanging in the corner */
-  padding-right: 62px;
+  display: flex; align-items: center;
+  min-height: 31px;
+  /* bled past the panel's side padding so the rule spans the full width */
+  margin: 6px -10px 0;
+  padding: 0 68px 0 10px;
+  border-top: 1px solid var(--line);
   font-size: var(--f-md); font-weight: 600; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* ADD, hung off the panel's bottom-right corner: out past the right edge and
-   down past the foot, so the panel's edge runs behind it. */
-.pcard__act { position: absolute; right: -6px; bottom: -20px; z-index: 3; }
+/* ADD stands on that band and breaks the panel's corner: 5px past the right
+   edge and 7px below the bottom, both read off the reference. It was 17px
+   below, which put two-fifths of the button outside the card. */
+.pcard__act { position: absolute; right: -6px; bottom: -7px; z-index: 3; }
 
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
 .pcard__price { font-size: var(--f-lg); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
