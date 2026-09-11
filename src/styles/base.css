@@ -278,7 +278,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake {
   position: relative;
   margin-top: -1px;
-  padding: 16px var(--gut) 16px;
+  padding: 30px var(--gut) 14px;
   /* The reference storefronts all sit on one saturated colour — hot pink for
      Promise Day, deep red for Diwali, a bright blue for the ice cream. This
      was a muted navy, which is why it read as pale. */
@@ -347,7 +347,7 @@ input, select, textarea { font: inherit; color: inherit; }
      132px to save space took the occasion out of it. Back up, but short of the
      218px billboard that pushed the shop off the screen. */
   margin: 0 auto 2px;
-  max-width: 152px;
+  max-width: 112px;
   line-height: 0;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
@@ -363,7 +363,7 @@ input, select, textarea { font: inherit; color: inherit; }
    on the dark ground, which read as a settings menu — the ground is supposed
    to be the theme and the cards are supposed to be the light on top of it. */
 .ctake__cards {
-  margin-top: 12px;
+  margin-top: 10px;
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px;
   align-items: stretch;
 }
@@ -374,8 +374,8 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative;
   border-radius: 14px;
   background: linear-gradient(172deg, #FFFDF7 0%, #FCEBBE 100%);
-  padding: 22px 10px 0;
-  min-height: 126px;
+  padding: 18px 10px 0;
+  min-height: 106px;
   text-align: left;
   overflow: hidden;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
@@ -1108,7 +1108,7 @@ input, select, textarea { font: inherit; color: inherit; }
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--r-md);
-  padding: 9px 10px 10px;
+  padding: 7px 10px 8px;
   text-align: center;
   color: #fff;
 }
@@ -1192,7 +1192,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 .dropclock__note {
-  display: block; margin-top: 6px;
+  display: block; margin-top: 4px;
   font-size: 9px; font-weight: 600; letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.58);
 }
@@ -1202,8 +1202,8 @@ input, select, textarea { font: inherit; color: inherit; }
    partner set beneath. Every festive storefront carries one of these between
    the masthead and the tile grid. */
 .cpower {
-  margin: 10px auto 0;
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  margin: 7px auto 0;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
 }
 .cpower__l {
   position: relative;
