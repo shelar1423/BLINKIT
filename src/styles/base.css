@@ -310,7 +310,7 @@ input, select, textarea { font: inherit; color: inherit; }
    the content has to be positioned too. The toggle and the track set their
    own position, so they are excluded — including them here silently reset the
    toggle to `relative` and dropped it into the flow on the left. */
-.ctake > *:not(.ctake__streaks):not(.ctake__trackwrap):not(.ctake__scallop) {
+.ctake > *:not(.ctake__streaks):not(.ctake__trackwrap):not(.ctake__edge) {
   position: relative; z-index: 1;
 }
 
@@ -382,16 +382,21 @@ input, select, textarea { font: inherit; color: inherit; }
    "Play now" — no card. A panel around it would put a second surface between
    the artwork and the one thing there is to do, which is what it replaced. */
 .mystery__go {
-  display: block;
+  display: flex; align-items: center; gap: 9px;
   margin: -40px auto 0;
   position: relative; z-index: 2;
-  background: var(--yellow);
-  color: var(--ink);
+  /* Flame red, not the campaign yellow. As a yellow pill this was the same
+     object as the 12-14 Nov chip in the corner — same fill, same radius, same
+     weight — so the one thing to press looked like a label. Red is also what
+     the race CTA already is everywhere else in the app. */
+  background: linear-gradient(180deg, #F5333B, var(--hw-r));
+  color: #fff;
   border: 0; border-radius: 999px;
-  padding: 13px 34px;
+  padding: 13px 26px 13px 22px;
   font-size: 17px; font-weight: 800; letter-spacing: -0.2px;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 10px 24px rgba(160, 12, 18, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
+.mystery__go svg { flex: 0 0 auto; }
 .mystery__go:active { transform: scale(0.97); }
 
 /* The rule as a line of type, not a panel. */
@@ -431,17 +436,20 @@ input, select, textarea { font: inherit; color: inherit; }
 .dropfacts span { display: block; font-size: var(--f-2xs); color: var(--mut); font-weight: 600; }
 .dropfacts b { display: block; margin-top: 2px; font-size: var(--f-md); font-weight: 800; }
 
-/* scalloped hand-off to the white feed */
-.ctake__scallop {
-  position: absolute; left: 0; right: 0; bottom: -1px;
-  height: 7px;
-  background: var(--surface);
-  -webkit-mask-image: radial-gradient(7px 7px at 7px 7px, transparent 0 6px, #000 6.5px);
-  mask-image: radial-gradient(7px 7px at 7px 7px, transparent 0 6px, #000 6.5px);
-  -webkit-mask-size: 14px 7px;
-  mask-size: 14px 7px;
-  -webkit-mask-repeat: repeat-x;
-  mask-repeat: repeat-x;
+/* ---- chequered edge ----
+   The hand-off back to the feed, as a start/finish line rather than the
+   scalloped semicircles that were there. Drawn in CSS so it stays crisp at any
+   pixel density, and two rows deep so it reads as a flag rather than a dashed
+   rule. */
+.ctake__edge {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 12px;
+  background-color: var(--ink);
+  background-image:
+    linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%),
+    linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 6px 6px;
 }
 
 /* ---------- stat strip ---------- */
@@ -1218,40 +1226,6 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: 13px; font-weight: 800; letter-spacing: 0.16em;
   color: var(--yellow);
   text-shadow: 0 1px 8px rgba(248, 203, 70, 0.35);
-}
-
-/* ---------- ornamental hand-off to the feed ----------
-   Sits on the white feed just under the band's scalloped edge. Two rules
-   tapering away from a flat chequer — the racing equivalent of the gold
-   flourish above "FESTIVE SPECIALS". */
-.cflourish {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 14px var(--gut) 2px;
-}
-.cflourish__rule {
-  flex: 0 1 96px; height: 1px;
-  background: linear-gradient(90deg, rgba(31, 31, 31, 0), rgba(31, 31, 31, 0.28));
-}
-.cflourish__rule:last-child { transform: scaleX(-1); }
-.cflourish__chq {
-  flex: 0 0 auto;
-  width: 56px; height: 12px;
-  border-radius: 2px;
-  /* a real chequer rather than a picture of one: crisp at any density, and it
-     cannot drift out of the house style the way a render can */
-  background-image:
-    linear-gradient(45deg, var(--ink) 25%, transparent 25%, transparent 75%, var(--ink) 75%),
-    linear-gradient(45deg, var(--ink) 25%, transparent 25%, transparent 75%, var(--ink) 75%);
-  background-size: 12px 12px;
-  background-position: 0 0, 6px 6px;
-  background-color: #fff;
-  box-shadow: 0 0 0 1px rgba(31, 31, 31, 0.14);
-}
-
-/* The mystery drop's placeholder mark, inside the sheet. */
-.mystrow__ic {
-  font-size: 17px; font-weight: 800; color: var(--hw-r);
-  background: #FFE8E4;
 }
 
 /* ---------- how it works ----------

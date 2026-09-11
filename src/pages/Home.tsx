@@ -106,6 +106,7 @@ export default function Home() {
                 sitting straight on the campaign ground — boxing it put a
                 second surface between the artwork and the one thing to do. */}
             <button className="mystery__go" type="button" onClick={() => nav('/race')}>
+              <IconFlag size={17} />
               Race now
             </button>
 
@@ -124,21 +125,9 @@ export default function Home() {
             <IconChevronRight size={16} />
           </button>
 
-          <span className="ctake__scallop" aria-hidden="true" />
+          <span className="ctake__edge" aria-hidden="true" />
         </section>
 
-
-        {/* The ornamental hand-off. Blinkit closes a campaign band with one of
-            these before the feed resumes — the gold flourish above "FESTIVE
-            SPECIALS" on Karwa Chauth, the plaque behind "Top Festive Finds" on
-            Diwali. Drawn rather than placed: the chequered-flag asset is a
-            glossy 3D render, which is not the house language and reads badly
-            at full size, so this is a flat chequer between two tapering rules. */}
-        <div className="cflourish" aria-hidden="true">
-          <i className="cflourish__rule" />
-          <span className="cflourish__chq" />
-          <i className="cflourish__rule" />
-        </div>
 
         <SectionHeader
           title="Drop Picks"
