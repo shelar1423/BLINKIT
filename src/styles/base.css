@@ -304,7 +304,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake__x { font-size: 12px; opacity: 0.65; font-weight: 600; }
 .ctake__bm { font-size: 16px; }
 .ctake__kick {
-  margin-top: 10px; text-align: center;
+  margin-top: 6px; text-align: center;
   font-size: var(--f-2xs); font-weight: 800;
   letter-spacing: 0.2em; color: #FFA24D;
 }
@@ -315,55 +315,90 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 @media (min-width: 768px) { .ctake__t { font-size: 36px; } }
 
-/* one tall tile plus a 2x2 — the shape Blinkit uses for a festival grid */
-.ctake__grid {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: 1.08fr 1fr 1fr;
-  grid-auto-rows: 104px;
-  gap: 8px;
+/* ---- campaign name, set as artwork rather than plain type ----
+   Blinkit renders the campaign name as a graphic: the glowing "ICE CREAM"
+   lockup, the ornamental Ganesh Chaturthi masthead. Until the rendered
+   word-art lands this is a CSS approximation — heavy, tight, with a warm
+   flame gradient and a glow, so it reads as a logo rather than a heading. */
+.ctake__t {
+  margin-top: 12px; text-align: center;
+  font-size: 40px; font-weight: 900; line-height: 0.98;
+  letter-spacing: -0.035em; text-transform: uppercase;
+  background: linear-gradient(178deg, #FFF3D2 0%, #FFC24A 42%, #FF7A1A 72%, #E0400C 100%);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.32)) drop-shadow(0 0 18px rgba(255, 140, 40, 0.45));
+  font-style: italic;
 }
-.ctile {
+@media (min-width: 768px) { .ctake__t { font-size: 52px; } }
+
+/* ---- offer cards ----
+   Three equal cards, each with its hook on a tab that sits over the card's top
+   edge — the "Starting at ₹29" device. A campaign card should carry a reason to
+   tap, not only a name. */
+.ctake__cards {
+  margin-top: 16px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  align-items: start;
+}
+.ccard {
   position: relative;
   border-radius: var(--r-md);
-  background: linear-gradient(170deg, #FFF6DF, #F8DFA6);
-  overflow: hidden;
+  background: linear-gradient(172deg, #FFFDF7, #FCEBBE);
+  padding: 26px 9px 0;
+  min-height: 132px;
   text-align: left;
-  padding: 9px 10px;
+  overflow: hidden;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
   display: flex; flex-direction: column;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
 }
-.ctile--tall { grid-row: span 2; }
-.ctile__l {
+.ccard__tab {
+  position: absolute; top: 0; left: 0; z-index: 3;
+  background: var(--ink); color: #fff;
+  font-size: 9px; font-weight: 800; letter-spacing: -0.01em;
+  padding: 4px 8px 4px 9px;
+  border-radius: var(--r-md) 0 var(--r-md) 0;
+  white-space: nowrap;
+}
+.ccard__tab--flame { background: var(--hw-r); }
+.ccard__l {
   position: relative; z-index: 2;
-  font-size: var(--f-md); font-weight: 800; line-height: 1.15;
+  font-size: var(--f-sm); font-weight: 800; line-height: 1.15;
   color: #6E0C0A; letter-spacing: -0.2px;
 }
-.ctile--tall .ctile__l { font-size: var(--f-xl); }
-.ctile__s {
-  position: relative; z-index: 2;
-  font-size: var(--f-xs); font-weight: 600; color: #A8471C; margin-top: 2px;
-}
-.ctile img {
+.ccard img {
   position: absolute; z-index: 1;
-  right: -4px; bottom: -4px;
-  width: 76%; height: auto; object-fit: contain;
+  left: 50%; transform: translateX(-50%);
+  bottom: -6px; width: 92%; height: auto; object-fit: contain;
 }
-.ctile--tall img { width: 104%; right: -8px; bottom: -6px; }
+.ccard:active { transform: scale(0.985); }
 
-/* The label sits over the artwork, so it needs its own ground. A soft wash of
-   the tile's own colour from the top-left keeps the type legible without
-   putting a visible plate on the card. */
-.ctile::before {
-  content: '';
-  position: absolute; inset: 0; z-index: 1;
-  background: linear-gradient(148deg, #FFF7E2 0%, rgba(255, 247, 226, 0.92) 18%, rgba(255, 247, 226, 0) 48%);
-  pointer-events: none;
+/* ---- activation strip ----
+   Where the campaign's actual mechanic lives. On the ice-cream campaign this is
+   the scream challenge; here it is the race. Own lockup, own dark pill CTA. */
+.cact {
+  margin-top: 10px;
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(100deg, #FFE9A8, #FFF6DC 62%);
+  border-radius: var(--r-md);
+  padding: 10px 10px 10px 6px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
 }
-/* the leaderboard card is 2:1 in a square tile, so it needs lifting off the
-   floor or it reads as a sliver stuck to the bottom edge */
-.ctile--wide img { bottom: 14%; right: -2px; width: 92%; }
-.ctile:active { transform: scale(0.985); }
+.cact__art { flex: 0 0 74px; height: 54px; position: relative; overflow: hidden; }
+.cact__art img { position: absolute; left: -4px; bottom: -8px; width: 118%; height: auto; }
+.cact__c { flex: 1; min-width: 0; }
+.cact__c b {
+  display: block; font-size: var(--f-base); font-weight: 800;
+  color: #6E0C0A; letter-spacing: -0.25px; line-height: 1.2;
+}
+.cact__c small { display: block; font-size: var(--f-xs); color: #A8471C; margin-top: 2px; }
+.cact__cta {
+  flex: 0 0 auto;
+  background: var(--ink); color: #fff;
+  border-radius: 999px; padding: 9px 15px;
+  font-size: var(--f-sm); font-weight: 800; white-space: nowrap;
+}
+.cact__cta:active { transform: scale(0.96); }
 
 /* scalloped hand-off to the white feed */
 .ctake__scallop {
