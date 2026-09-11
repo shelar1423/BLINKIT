@@ -161,7 +161,8 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--r-md);
   background: #fff;
   padding: 8px 8px 0;
-  margin-bottom: 14px;
+  /* clears the ADD's overhang (17) plus the gap to the price row (14) */
+  margin-bottom: 31px;
 }
 .pcard__im {
   position: relative;
@@ -190,13 +191,20 @@ input, select, textarea { font: inherit; color: inherit; }
 .pcard__dots { display: flex; justify-content: center; gap: 4px; padding: 4px 0 2px; }
 .pcard__dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--line-2); }
 .pcard__dots i.is-on { background: var(--mut); }
+/* The overhang. On Blinkit's card the frame's bottom border runs through the
+   middle of ADD and its right edge clears the corner — the button is sitting
+   on the card, not inside it. The negative margins are what buy that. */
 .pcard__foot {
   display: flex; align-items: center; justify-content: space-between; gap: 6px;
-  /* the negative right/bottom is the overhang: ADD leaves the frame */
-  padding: 6px 0 8px;
-  margin: 0 -4px -12px 0;
+  padding: 6px 0 0;
+  margin: 0 -14px -17px 0;
   min-height: 34px;
 }
+/* Explicit, not incidental. ADD only painted above the frame border and the
+   price row because it happened to come first in the DOM; once it overhangs by
+   half its height, the text below would win on paint order without this. */
+.pcard__foot .add,
+.pcard__foot .stepper { position: relative; z-index: 3; }
 .pcard__unit {
   font-size: var(--f-sm); font-weight: 600; color: var(--ink);
   padding-left: 2px;
@@ -741,33 +749,48 @@ input, select, textarea { font: inherit; color: inherit; }
    a sheet with a dismiss chevron, a white image stage over a
    light app-base ground, and stacked white cards below.
    ============================================================ */
+/* Floats over the product shot rather than sitting in a bar above it, so the
+   image runs to the top of the sheet the way Blinkit's does. The controls
+   carry their own white discs, which is what keeps them legible over whatever
+   the photo happens to be. */
 .shdr {
   position: sticky; top: 0; z-index: 30;
-  background: #fff;
+  height: var(--shdr-h);
   padding: calc(var(--safe-t) + 8px) var(--gut) 8px;
-  display: flex; align-items: center; gap: 2px;
-  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  display: flex; align-items: center; gap: 8px;
+  pointer-events: none;
 }
 .shdr__ic {
+  pointer-events: auto;
   width: 38px; height: 38px; border-radius: 50%;
   display: grid; place-items: center; color: var(--ink);
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(16, 20, 24, 0.14);
 }
 .shdr__ic:active { background: var(--surface-2); }
+.shdr__ic.is-on { color: var(--hw-r); }
+.shdr__ic.is-on svg { fill: currentColor; }
 
 .pdp { background: var(--appbase); }
-/* White by default, like Blinkit's own PDP — and necessary, because only the
-   five GLB-rendered shots carry alpha; the other catalogue photos are opaque
-   and would sit on the garage as a white rectangle. */
-.pdp__stage { position: relative; aspect-ratio: 1 / 0.86; background: #fff; }
-
-/* The garage is a stage for the 3D model specifically. The renderer is
-   alpha:true so the car composites straight onto it, and the backdrop is
-   positioned so the platform meets the car's own contact shadow. */
-.pdp__stage--garage {
-  background: #0E1319 url('/decor/pdp-garage.webp') center 68% / cover no-repeat;
+/* White, always. Blinkit shoots every product on white, and a lit set — the
+   garage backdrop this used to carry — only ever suited the five rendered
+   cars; the other catalogue photos are opaque and sat on it as a white
+   rectangle. The depth comes from a soft shadow under the car instead. */
+.pdp__stage {
+  position: relative; aspect-ratio: 1 / 0.86; background: #fff;
+  margin-top: calc(var(--shdr-h) * -1);
+  padding-top: var(--shdr-h);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
 }
-.pdp__stage > img { width: 100%; height: 100%; object-fit: contain; padding: 20px; }
-.pdp__3d { position: absolute; inset: 0; }
+.pdp__stage::after {
+  content: '';
+  position: absolute; left: 50%; bottom: 13%;
+  width: 58%; height: 22px; transform: translateX(-50%);
+  background: radial-gradient(50% 50% at 50% 50%, rgba(16, 20, 24, 0.20), rgba(16, 20, 24, 0) 72%);
+  pointer-events: none;
+}
+.pdp__stage > img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: contain; padding: 20px; }
+.pdp__3d { position: absolute; inset: var(--shdr-h) 0 0; }
 .pdp__tools { position: absolute; right: 10px; bottom: 10px; display: grid; gap: 6px; z-index: 3; }
 .pdp__tool { width: 36px; height: 36px; border-radius: var(--r); background: rgba(255,255,255,0.94);
   border: 1px solid var(--line); color: var(--ink); display: grid; place-items: center; box-shadow: var(--sh-1); }
@@ -775,8 +798,7 @@ input, select, textarea { font: inherit; color: inherit; }
   background: rgba(31,31,31,0.82); color: #fff; font-size: var(--f-2xs); font-weight: 700;
   padding: 4px 8px; border-radius: var(--r-xs); }
 .pdp__hint { position: absolute; left: 0; right: 0; top: 14px; text-align: center; font-size: var(--f-2xs);
-  color: rgba(255, 255, 255, 0.72); font-weight: 600; letter-spacing: 0.04em; pointer-events: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6); }
+  color: var(--mut-2); font-weight: 600; letter-spacing: 0.04em; pointer-events: none; }
 
 /* view pager — one dot per view that actually exists */
 .pdp__pager { background: #fff; display: flex; justify-content: center; gap: 7px; padding: 4px 0 14px; }
@@ -784,21 +806,29 @@ input, select, textarea { font: inherit; color: inherit; }
 .pdp__dot.is-on { background: var(--ink); }
 
 /* spec chips + View details, straight off the real PDP */
+/* Scrolls sideways rather than squeezing: the facts are short labels that go
+   unreadable the moment they wrap, and a category can carry four or five. */
 .pdp__chips {
-  display: grid; grid-template-columns: 1fr 1.35fr auto; gap: 8px;
+  display: flex; gap: 8px;
   background: #fff; padding: 0 var(--gut) 14px;
+  overflow-x: auto; scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
+.pdp__chips::-webkit-scrollbar { display: none; }
 .chipbox {
+  flex: none;
   background: var(--surface-2); border-radius: var(--r-md);
-  padding: 8px 11px; min-width: 0; text-align: left;
+  padding: 7px 9px; min-width: 0; text-align: left;
+  white-space: nowrap;
 }
-.chipbox span { display: block; font-size: var(--f-xs); color: var(--mut); line-height: 1.3; }
-.chipbox b { display: block; font-size: var(--f-md); font-weight: 700; margin-top: 2px; }
+.chipbox span { display: block; font-size: var(--f-2xs); color: var(--mut); line-height: 1.3; }
+.chipbox b { display: block; font-size: var(--f-sm); font-weight: 700; margin-top: 2px; }
 .chipbox--cta {
   display: grid; place-items: center;
+  white-space: normal; text-align: center; max-width: 68px; line-height: 1.2;
   background: var(--green-tint); border: 1px solid #BEE3C4;
-  color: var(--green); font-size: var(--f-md); font-weight: 700;
-  padding: 8px 12px; line-height: 1.25; max-width: 84px;
+  color: var(--green); font-size: var(--f-sm); font-weight: 700;
+  padding: 8px 10px;
 }
 
 /* stacked white cards on the app-base ground */
@@ -808,7 +838,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag { font-size: var(--f-2xs); font-weight: 700; padding: 3px 7px; border-radius: var(--r-xs); }
 .tag--blue { background: #EDF4FF; color: #1155CB; }
 .tag--dark { background: var(--surface-2); color: var(--mut); }
-.pdp__rate { display: inline-flex; align-items: center; gap: 4px; font-size: var(--f-xs); color: var(--mut); }
+.pdp__rate { display: inline-flex; align-items: center; gap: 4px; font-size: var(--f-xs); color: var(--mut); margin-left: auto; }
 .pdp__rate svg { color: var(--yellow-dk); }
 .pdp__rate b { color: var(--ink); font-weight: 700; }
 .pdp__name { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; margin-top: 8px; }
@@ -850,6 +880,77 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .pdp .sec { padding-top: 18px; }
 .pdp .prail { padding-bottom: 4px; }
+
+/* ============================================================
+   PDP deck — the next product is already behind this one.
+
+   Blinkit's product page is a horizontally paged deck: the sheet you are on
+   fills the column, the next one shows as a sliver down the right edge, and a
+   flick carries you onto it. Going back to the list to open the next car is
+   the thing this replaces.
+
+   At rest nothing here is transformed. That matters: a transform on an
+   ancestor would make the sheet its own containing block, and the sticky
+   header and action bar would start behaving relative to it rather than to the
+   page. The transform only exists while a finger is down or the deck is
+   gliding to its landing.
+   ============================================================ */
+/* The sheet gives up its right 12px to the sliver. Overlaying it instead put
+   the peek on top of live controls — the reset tool and the View details chip
+   both ended up half under it. */
+.pdpdeck {
+  flex: 1; display: flex; flex-direction: column; min-height: 0;
+  margin-right: var(--peek-w);
+  background: var(--appbase);
+  touch-action: pan-y;
+}
+.pdpdeck.is-gliding, .pdpstack__track.is-gliding { transition: transform 260ms cubic-bezier(0.25, 0.8, 0.3, 1); }
+
+/* The neighbours ride in a fixed layer pinned to the app column, so the sliver
+   stays on the right edge while the current sheet scrolls under it. */
+.pdpstack {
+  position: fixed; inset: 0;
+  max-width: 520px; margin: 0 auto;
+  overflow: hidden; pointer-events: none;
+  z-index: 24;
+}
+@media (min-width: 1024px) { .pdpstack { max-width: 560px; } }
+.pdpstack__track { position: absolute; inset: 0; }
+
+.pdppeek {
+  position: absolute; top: 0; bottom: 0; width: 100%;
+  background: #fff;
+  display: flex; flex-direction: column;
+}
+.pdppeek--next {
+  /* 12px of it showing at rest: enough to read as another card behind this
+     one, not enough to look like a broken layout. */
+  left: calc(100% - 12px);
+  border-radius: var(--r-lg) 0 0 var(--r-lg);
+  box-shadow: -10px 0 30px rgba(16, 20, 24, 0.16);
+}
+.pdppeek--prev {
+  left: -100%;
+  border-radius: 0 var(--r-lg) var(--r-lg) 0;
+  box-shadow: 10px 0 30px rgba(16, 20, 24, 0.16);
+}
+.pdppeek__stage {
+  aspect-ratio: 1 / 0.86; flex: none;
+  display: grid; place-items: center; padding: 26px;
+}
+.pdppeek__stage img { width: 100%; height: 100%; object-fit: contain; }
+.pdppeek__body { padding: 4px var(--gut) 0; }
+.pdppeek__nm { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; }
+.pdppeek__pr { font-size: 24px; font-weight: 800; margin-top: 8px; font-variant-numeric: tabular-nums; }
+
+/* The sliver is also a target. A gesture that has no button behind it is not
+   reachable by keyboard, and not discoverable by anyone who does not flick. */
+.pdpstack__tap {
+  position: fixed; top: 0; bottom: 0; right: 0; width: 14px;
+  z-index: 25; background: none;
+}
+@media (min-width: 521px) { .pdpstack__tap { right: calc(50% - 260px); } }
+@media (min-width: 1024px) { .pdpstack__tap { right: calc(50% - 280px); } }
 
 /* ---------- sticky action bar ---------- */
 .actionbar {
@@ -1309,44 +1410,55 @@ input, select, textarea { font: inherit; color: inherit; }
    left, the grid beside it, controls above the grid. */
 .catpage { display: flex; align-items: flex-start; gap: 0; }
 .catrail {
-  flex: 0 0 84px;
+  flex: 0 0 92px;
   position: sticky; top: var(--hdr-h);
   /* its own scroller, so a long group list never drags the page with it */
   max-height: calc(100vh - var(--hdr-h));
   overflow-y: auto;
-  background: var(--surface-2);
+  background: #fff;
   border-right: 1px solid var(--line);
-  padding: 6px 0 24px;
+  padding: 8px 0 24px;
   -webkit-overflow-scrolling: touch;
 }
 .catrail__i {
   position: relative;
   width: 100%;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 9px 6px 10px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 6px 12px;
   background: none; border: 0;
   color: var(--mut);
 }
-.catrail__i small { font-size: 10px; font-weight: 600; line-height: 1.2; text-align: center; }
+.catrail__i small { font-size: var(--f-sm); font-weight: 500; line-height: 1.25; text-align: center; }
 .catrail__im {
-  width: 50px; height: 50px; border-radius: 50%;
-  background: #fff;
-  border: 1px solid var(--line);
-  display: grid; place-items: center; overflow: hidden;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--surface-2);
+  display: grid; place-items: center;
+  /* visible, not hidden: selecting a group lifts its picture out of the disc,
+     and clipping it to the circle is exactly what kills that. */
+  overflow: visible;
+  transition: background-color 180ms ease;
 }
-.catrail__im img { width: 86%; height: 86%; object-fit: contain; }
-/* The active group is marked by a bar on the rail's INNER edge — the boundary
-   it shares with the grid — so it reads as the rail pointing at the products
-   it is showing. On the outer edge it just looks like a selected list row. */
-.catrail__i.is-on { background: #fff; color: var(--ink); }
-.catrail__i.is-on small { font-weight: 800; }
+.catrail__im img {
+  width: 76%; height: 76%; object-fit: contain;
+  transform-origin: center;
+  transition: transform 220ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+/* The active group does two things at once: the disc tints to brand green and
+   the picture scales past its edge. The tint alone reads as a selected list
+   row; it is the picture breaking the circle that makes the rail feel like it
+   is presenting the group rather than just marking it. */
+.catrail__i.is-on { color: var(--ink); }
+.catrail__i.is-on small { font-weight: 700; }
+.catrail__i.is-on .catrail__im { background: #E8F6EA; }
+.catrail__i.is-on .catrail__im img { transform: scale(1.42); }
+/* The bar goes on the rail's INNER edge — the boundary it shares with the grid
+   — so it reads as the rail pointing at the products it is showing. */
 .catrail__i.is-on::before {
   content: '';
-  position: absolute; right: 0; top: 4px; bottom: 4px;
+  position: absolute; right: 0; top: 2px; bottom: 2px;
   width: 4px; border-radius: 4px 0 0 4px;
   background: var(--green);
 }
-.catrail__i.is-on .catrail__im { border-color: var(--green); }
 
 .catmain { flex: 1; min-width: 0; padding-bottom: 20px; }
 /* Control row. Scrolls sideways rather than wrapping: a second line of chips
@@ -1412,25 +1524,6 @@ input, select, textarea { font: inherit; color: inherit; }
 .tick.is-on { background: var(--green); border-color: var(--green); }
 .sortrow:last-child { border-bottom: 0; }
 .sortrow.is-on { font-weight: 800; color: var(--green); }
-
-/* ---------- PDP: trust strip ----------
-   Three claims about the service rather than the product, sitting directly
-   under the buying decision. Blinkit carries this on every PDP. */
-.pdpwhy { padding: 12px; }
-.pdpwhy__h {
-  font-size: var(--f-sm); font-weight: 800; color: var(--ink);
-  margin-bottom: 10px;
-}
-.pdpwhy__row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.pdpwhy__row > div { text-align: center; display: grid; gap: 3px; justify-items: center; }
-.pdpwhy__ic {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--green-tint); color: var(--green);
-  display: grid; place-items: center;
-  margin-bottom: 2px;
-}
-.pdpwhy__row b { font-size: var(--f-2xs); font-weight: 800; color: var(--ink); line-height: 1.25; }
-.pdpwhy__row small { font-size: 9px; color: var(--mut); line-height: 1.25; }
 
 /* ---------- PDP: product details ----------
    Expandable, because the attribute list is long and most people came to buy

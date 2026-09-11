@@ -187,22 +187,22 @@
   padding: 6px 4px;
   box-shadow: 0 6px 22px rgba(31, 31, 31, 0.14);
 }
+/* The lozenge sits behind the whole tab — icon and label together — not just
+   behind the icon. Blinkit's is barely there: the two-tone glyph and the bold
+   label carry the state, and the shape only groups them. */
 .bnav__i {
-  display: grid; justify-items: center; gap: 2px;
-  padding: 2px; color: var(--mut);
-  font-size: var(--f-2xs); font-weight: 600;
-  min-width: 0;
-}
-.bnav__ic {
-  display: grid; place-items: center;
-  width: 40px; height: 26px; border-radius: 999px;
+  position: relative;
+  display: grid; justify-items: center; gap: 3px;
+  padding: 5px 2px 4px; color: var(--ink);
+  font-size: var(--f-sm); font-weight: 500;
+  min-width: 0; border-radius: 999px;
   transition: background-color 0.16s ease;
 }
-.bnav__ic.is-on { background: var(--yellow); color: var(--ink); }
+.bnav__ic { display: grid; place-items: center; height: 24px; }
 .bnav__l { line-height: 1.2; text-align: center; white-space: nowrap; }
-.bnav__i.is-on { color: var(--ink); }
+.bnav__i.is-on { background: rgba(31, 31, 31, 0.05); }
 .bnav__i.is-on .bnav__l { font-weight: 800; }
-.bnav__i.is-inert { opacity: 0.5; cursor: default; pointer-events: none; }
+.bnav__i.is-inert { color: var(--ink); cursor: default; pointer-events: none; }
 
 /* partner shortcut beside the bar — District in the live app, the race here */
 .bnav__fab {

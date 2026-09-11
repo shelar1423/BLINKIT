@@ -1,12 +1,14 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { rupees } from '../../data/catalog';
 import { useCartCount, useStore, useTotals } from '../../store/useStore';
-import { IconBag, IconGrid, IconHouse, IconPrint, IconScooter } from '../elements/Icons';
+import { IconScooter } from '../elements/Icons';
+import { NavCategories, NavHome, NavOrders, NavPrint } from '../elements/NavIcons';
 
 /**
  * Blinkit's real bottom navigation: a floating white pill that rides above the
  * content rather than a flat docked bar. Tabs are Home · Order Again ·
- * Categories · Print, and the active one gets a yellow lozenge behind its icon.
+ * Categories · Print, and the active one is repainted rather than highlighted:
+ * the glyph itself goes two-tone and a soft lozenge sits behind the whole tab.
  *
  * It is permanent product chrome — a campaign never adds a tab to it, so Race
  * It Home lives in the category rail and the home takeover instead.
@@ -62,8 +64,8 @@ export function BottomNav() {
           <NavLink to="/" end className={({ isActive }) => 'bnav__i' + (isActive ? ' is-on' : '')}>
             {({ isActive }) => (
               <>
-                <span className={'bnav__ic' + (isActive ? ' is-on' : '')}>
-                  <IconHouse size={21} />
+                <span className="bnav__ic">
+                  <NavHome size={23} active={isActive} />
                 </span>
                 <span className="bnav__l">Home</span>
               </>
@@ -75,7 +77,7 @@ export function BottomNav() {
               misleading. */}
           <span className="bnav__i is-inert" aria-disabled="true">
             <span className="bnav__ic">
-              <IconBag size={21} />
+              <NavOrders size={23} />
             </span>
             <span className="bnav__l">Order Again</span>
           </span>
@@ -83,8 +85,8 @@ export function BottomNav() {
           <NavLink to="/hot-wheels" className={({ isActive }) => 'bnav__i' + (isActive ? ' is-on' : '')}>
             {({ isActive }) => (
               <>
-                <span className={'bnav__ic' + (isActive ? ' is-on' : '')}>
-                  <IconGrid size={21} />
+                <span className="bnav__ic">
+                  <NavCategories size={23} active={isActive} />
                 </span>
                 <span className="bnav__l">Categories</span>
               </>
@@ -93,7 +95,7 @@ export function BottomNav() {
 
           <span className="bnav__i is-inert" aria-disabled="true">
             <span className="bnav__ic">
-              <IconPrint size={21} />
+              <NavPrint size={23} />
             </span>
             <span className="bnav__l">Print</span>
           </span>
