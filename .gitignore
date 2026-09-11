@@ -8,3 +8,4 @@ models-original/
 # pre-rebrand artwork, kept so the violet recolour stays reversible
 art-originals/
 *.tsbuildinfo
+.env*
