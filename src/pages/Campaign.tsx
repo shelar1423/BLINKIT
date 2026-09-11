@@ -91,33 +91,33 @@ export default function Campaign() {
         )}
 
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 8 }}>
-          <button className="pdp__rowbtn" type="button" onClick={() => nav('/rewards')}>
-            <span className="ic" style={{ background: '#FFF6D6', color: '#8A6800' }}>
+          <button className="card rowcard" type="button" onClick={() => nav('/rewards')}>
+            <span className="rowcard__ic" style={{ background: '#FFF6D6', color: '#8A6800' }}>
               <IconTrophy size={19} />
             </span>
             <span className="grow">
               <b>Rewards</b>
-              <span>{unlockedRewards.length} of {REWARD_TIERS.length} tiers unlocked</span>
+              <small>{unlockedRewards.length} of {REWARD_TIERS.length} tiers unlocked</small>
             </span>
             <IconChevronRight size={17} />
           </button>
-          <button className="pdp__rowbtn" type="button" onClick={() => nav('/leaderboard')}>
-            <span className="ic" style={{ background: '#EAF0FF', color: 'var(--hw-b)' }}>
+          <button className="card rowcard" type="button" onClick={() => nav('/leaderboard')}>
+            <span className="rowcard__ic" style={{ background: '#EAF0FF', color: 'var(--hw-b)' }}>
               <IconTrophy size={19} />
             </span>
             <span className="grow">
               <b>Leaderboard</b>
-              <span>See where you sit in the city</span>
+              <small>See where you sit in the city</small>
             </span>
             <IconChevronRight size={17} />
           </button>
-          <button className="pdp__rowbtn" type="button" onClick={() => nav('/invite')}>
-            <span className="ic" style={{ background: '#FFEDDD', color: '#B34A00' }}>
+          <button className="card rowcard" type="button" onClick={() => nav('/invite')}>
+            <span className="rowcard__ic" style={{ background: '#FFEDDD', color: '#B34A00' }}>
               <IconUsers size={19} />
             </span>
             <span className="grow">
               <b>Race a friend</b>
-              <span>Invite someone to unlock +1 race</span>
+              <small>Invite someone to unlock +1 race</small>
             </span>
             <IconChevronRight size={17} />
           </button>

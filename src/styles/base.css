@@ -268,17 +268,32 @@ input, select, textarea { font: inherit; color: inherit; }
    Campaign takeover.
 
    Blinkit runs a festival as a themed block that starts in the header's own
-   colours and ends in a scalloped edge handing back to the white feed. The
-   Hot Wheels drop uses the same device in flame red.
+   colours and ends in a scalloped edge handing back to the white feed. That
+   structure is the thing worth borrowing; the colours should be the campaign's.
+
+   Hot Wheels' are the blue blister card, the flame, the orange track and the
+   chequered flag — so the block runs blue, opens on a chequer strip, and keeps
+   the flame as the accent.
    ============================================================ */
 .ctake {
   position: relative;
   margin-top: -1px;
-  padding: 16px var(--gut) 30px;
+  padding: 24px var(--gut) 30px;
   background:
-    radial-gradient(90% 60% at 50% 0%, rgba(255, 160, 40, 0.4) 0%, rgba(255, 160, 40, 0) 62%),
-    linear-gradient(180deg, #9E1410 0%, #7E0F0C 100%);
+    radial-gradient(85% 55% at 50% 0%, rgba(255, 122, 26, 0.30) 0%, rgba(255, 122, 26, 0) 62%),
+    linear-gradient(180deg, #102A6B 0%, #0A1A4A 100%);
   color: #fff;
+}
+
+/* chequered flag strip across the top of the block — the fastest possible
+   signal that this is a race, and Hot Wheels' own motif */
+.ctake__flag {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  height: 10px;
+  background:
+    repeating-conic-gradient(#F2F4F8 0% 25%, #0A1A4A 0% 50%) 0 0 / 16px 16px;
+  opacity: 0.92;
 }
 .ctake__mast { display: flex; align-items: center; justify-content: center; gap: 9px; }
 .ctake__hw { height: 21px; width: auto; }
@@ -287,7 +302,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake__kick {
   margin-top: 10px; text-align: center;
   font-size: var(--f-2xs); font-weight: 800;
-  letter-spacing: 0.2em; color: var(--yellow);
+  letter-spacing: 0.2em; color: #FFA24D;
 }
 .ctake__t {
   margin-top: 2px; text-align: center;
@@ -640,8 +655,11 @@ input, select, textarea { font: inherit; color: inherit; }
 /* brand / race / policy rows */
 .rowcard {
   display: flex; align-items: center; gap: 11px;
-  padding: 11px 12px; text-align: left; width: calc(100% - var(--gut) * 2);
+  padding: 11px 12px; text-align: left; width: 100%;
 }
+/* inside the PDP the cards are full-bleed children, so they carry their own
+   side inset; elsewhere a .shell parent already provides it */
+.pdp .rowcard { width: calc(100% - var(--gut) * 2); }
 .rowcard--static { cursor: default; }
 .rowcard b { display: block; font-size: var(--f-base); font-weight: 700; }
 .rowcard small { display: block; font-size: var(--f-xs); color: var(--mut); line-height: 1.4; margin-top: 1px; }

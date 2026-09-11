@@ -110,11 +110,11 @@ export default function OrderSuccess() {
           </div>
         </div>
 
-        <button className="pdp__rowbtn" type="button" onClick={() => nav('/campaign')}>
-          <span className="ic" style={{ background: '#F3EAFE', color: 'var(--purple)' }}>+250</span>
+        <button className="card rowcard" type="button" onClick={() => nav('/campaign')}>
+          <span className="rowcard__ic" style={{ background: 'var(--green-tint)', color: 'var(--green)', fontWeight: 800, fontSize: 'var(--f-sm)' }}>+250</span>
           <span className="grow">
             <b>You earned 250 campaign points</b>
-            <span>Buying a drop car adds to your race total</span>
+            <small>Buying a drop car adds to your race total</small>
           </span>
           <IconChevronRight size={17} />
         </button>

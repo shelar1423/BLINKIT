@@ -41,7 +41,7 @@ export default function Checkout() {
       <main className="page">
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 12 }}>
           <div className="card" style={{ padding: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-            <span style={{ color: 'var(--purple)' }}><IconPin size={18} /></span>
+            <span style={{ color: 'var(--green)' }}><IconPin size={18} /></span>
             <div className="grow">
               <p style={{ fontSize: 'var(--f-md)', fontWeight: 700 }}>Work</p>
               <p className="t-xs">h.no 9-1-62/2, dubaigate, Hyderabad 500008</p>

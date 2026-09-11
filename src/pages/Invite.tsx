@@ -62,7 +62,7 @@ export default function Invite() {
 
           <div className="card" style={{ padding: 12, display: 'grid', gap: 10 }}>
             <div className="row" style={{ gap: 9 }}>
-              <span style={{ color: 'var(--purple)' }}><IconUsers size={18} /></span>
+              <span style={{ color: 'var(--hw-r)' }}><IconUsers size={18} /></span>
               <b style={{ fontSize: 'var(--f-md)' }}>Demo: simulate a friend racing</b>
             </div>
             <p className="t-xs" style={{ lineHeight: 1.55 }}>

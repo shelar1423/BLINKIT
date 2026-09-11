@@ -19,6 +19,7 @@ export default function Home() {
              block, exactly how Blinkit carries a festival theme down the page,
              and the scalloped edge hands back to the white product feed. --- */}
         <section className="ctake" aria-label="Hot Wheels x Blinkit campaign">
+          <span className="ctake__flag" aria-hidden="true" />
           <div className="ctake__mast">
             <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
             <span className="ctake__x">&times;</span>

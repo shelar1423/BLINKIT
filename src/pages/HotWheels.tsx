@@ -17,7 +17,7 @@ export default function HotWheels() {
       <main className="page">
         <div className="shell" style={{ paddingTop: 12 }}>
           <div className="card" style={{ display: 'flex', gap: 11, alignItems: 'center', padding: 12 }}>
-            <span style={{ color: 'var(--purple)' }}>
+            <span style={{ color: 'var(--hw-r)' }}>
               <IconFlag size={20} />
             </span>
             <div className="grow">

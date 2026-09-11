@@ -14,8 +14,14 @@
    Home header.
 
    Default is Blinkit's yellow block. During a campaign Blinkit re-skins the
-   whole header in the campaign's colours (Ganeshotsav runs deep maroon), so
-   `.bhdr--campaign` runs the Hot Wheels takeover in flame red.
+   whole header in the campaign's colours — that's the pattern to borrow from
+   Ganeshotsav, not its palette.
+
+   So this runs Hot Wheels' own identity: the deep blue of the blister card,
+   with the flame as the accent. That is also the fix for a real contrast bug —
+   the mark is a flat #ED1C24, which scored 1.35:1 on the old red ground and
+   effectively disappeared. On this blue it scores 3.06:1, and white type goes
+   from 5.9:1 to 13.4:1. The card is blue precisely because the flame is red.
    ============================================================ */
 .bhdr {
   position: relative;
@@ -26,8 +32,10 @@
 }
 .bhdr--campaign {
   background:
-    radial-gradient(120% 80% at 82% 4%, rgba(255, 160, 40, 0.55) 0%, rgba(255, 160, 40, 0) 58%),
-    linear-gradient(178deg, #E03A12 0%, #C41F14 52%, #9E1410 100%);
+    /* flame glow, Hot Wheels' signature accent */
+    radial-gradient(130% 85% at 86% 0%, rgba(255, 122, 26, 0.55) 0%, rgba(255, 122, 26, 0) 55%),
+    radial-gradient(90% 60% at 8% 100%, rgba(11, 95, 208, 0.45) 0%, rgba(11, 95, 208, 0) 60%),
+    linear-gradient(178deg, #1B4FD1 0%, #17399B 55%, #102A6B 100%);
   color: #fff;
 }
 
