@@ -9,6 +9,7 @@ import {
   IconBolt,
   IconChevronDown,
   IconChevronRight,
+  IconBasket,
   IconCube,
   IconFlag,
   IconHeart,
@@ -19,6 +20,7 @@ import {
   IconSearch,
   IconShare,
   IconStar,
+  IconTicket,
 } from '../design/elements/Icons';
 import { ProductCard } from '../design/components/ProductCard';
 import { SectionHeader } from '../design/components/Chrome';
@@ -64,6 +66,8 @@ export default function Product() {
   const [err, setErr] = useState<string | null>(null);
   /** 0 = interactive 3D, 1 = studio photo. Only shown when both genuinely exist. */
   const [view, setView] = useState(0);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const specRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!product?.glb || !host.current) return;
@@ -189,7 +193,17 @@ export default function Product() {
             <span>Assembly Required</span>
             <b>No</b>
           </div>
-          <button className="chipbox chipbox--cta" type="button" onClick={() => toast('Full specifications are out of scope for this build')}>
+          <button
+            className="chipbox chipbox--cta"
+            type="button"
+            onClick={() => {
+              setDetailsOpen(true);
+              // let the block expand before scrolling to where it now ends up
+              requestAnimationFrame(() =>
+                specRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
+              );
+            }}
+          >
             View details
           </button>
         </div>
@@ -264,19 +278,62 @@ export default function Product() {
           </span>
         </div>
 
-        <div className="card pdp__spec">
-          <div>
-            <span>Scale</span>
-            <b>1:64 die-cast</b>
+        {/* Blinkit puts a trust strip on every PDP — three claims about the
+            service rather than the product, directly under the buying
+            decision. */}
+        <div className="card pdpwhy">
+          <p className="pdpwhy__h">Why shop from Blinkit?</p>
+          <div className="pdpwhy__row">
+            <div>
+              <span className="pdpwhy__ic"><IconBolt size={19} /></span>
+              <b>Superfast delivery</b>
+              <small>Get it in 8 minutes</small>
+            </div>
+            <div>
+              <span className="pdpwhy__ic"><IconTicket size={19} /></span>
+              <b>Best prices &amp; offers</b>
+              <small>Direct from Mattel</small>
+            </div>
+            <div>
+              <span className="pdpwhy__ic"><IconBasket size={19} /></span>
+              <b>Wide assortment</b>
+              <small>The full drop, in stock</small>
+            </div>
           </div>
-          <div>
-            <span>Series</span>
-            <b>{product.series}</b>
-          </div>
-          <div>
-            <span>Seller</span>
-            <b>Mattel Toys India</b>
-          </div>
+        </div>
+
+        <div className="card pdpspec" ref={specRef}>
+          <button
+            className="pdpspec__h"
+            type="button"
+            aria-expanded={detailsOpen}
+            onClick={() => setDetailsOpen((v) => !v)}
+          >
+            <span className="grow">Product details</span>
+            <span className={'pdpspec__chev' + (detailsOpen ? ' is-open' : '')}>
+              <IconChevronDown size={18} />
+            </span>
+          </button>
+          {detailsOpen && (
+            <dl className="pdpspec__list">
+              {[
+                ['Scale', '1:64 die-cast'],
+                ['Series', product.series],
+                ['Unit', product.unit],
+                ['Age group', '3+ years'],
+                ['Assembly required', 'No'],
+                ['Playable in 3D & AR', product.glb ? 'Yes' : 'No'],
+                ['Seller', 'Mattel Toys India'],
+                ['Country of origin', 'India'],
+                ['Marketed by', 'Mattel Toys (India) Pvt. Ltd.'],
+              ].map(([k, v]) => (
+                <div key={k}>
+                  <dt>{k}</dt>
+                  <dd>{v}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
 
         <SectionHeader title="Top products in this category" action="See all" onAction={() => nav('/hot-wheels')} />

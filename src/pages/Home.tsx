@@ -1,15 +1,12 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
 import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
-import { useStore, MAX_RACE_ATTEMPTS } from '../store/useStore';
 import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
-import { Sheet } from '../design/components/Sheet';
 import { Button } from '../design/elements';
-import { IconChevronRight, IconFlag, IconTicket, IconTrophy } from '../design/elements/Icons';
+import { IconFlag } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 /**
@@ -27,9 +24,7 @@ const SHOW_TRACK_DIVIDER = false;
 export default function Home() {
   const nav = useNavigate();
   const { toast } = useToast();
-  const racesLeft = useStore((s) => s.racesLeft);
   const { status: drop, parts } = useDrop();
-  const [details, setDetails] = useState(false);
 
   return (
     <>
@@ -87,7 +82,6 @@ export default function Home() {
           <FlipClock
             parts={parts}
             lead={drop.phase === 'ended' ? 'Drop ended' : drop.lead}
-            onClick={() => setDetails(true)}
           />
 
           {/* The sponsor strip every one of these storefronts carries — Cadbury
@@ -173,61 +167,6 @@ export default function Home() {
         </p>
       </main>
 
-      {/* Tapping the countdown opens the detail rather than pushing a route —
-          this is something you read once and dismiss, which is exactly what
-          Blinkit uses a sheet for. */}
-      <Sheet open={details} onClose={() => setDetails(false)} title="Race It Home">
-        <p className="t-sm" style={{ lineHeight: 1.6, color: 'var(--mut)' }}>
-          A limited Hot Wheels drop, live {DROP_DATES}. Race the car you buy, collect
-          groceries on the way home, and climb the city leaderboard.
-        </p>
-        <div className="dropfacts">
-          <div>
-            <span>{drop.phase === 'ended' ? 'Status' : drop.lead}</span>
-            <b>{drop.phase === 'ended' ? 'Ended' : drop.remaining}</b>
-          </div>
-          <div>
-            <span>Dates</span>
-            <b>{DROP_DATES}</b>
-          </div>
-          <div>
-            <span>Races today</span>
-            <b>{racesLeft} of {MAX_RACE_ATTEMPTS}</b>
-          </div>
-        </div>
-        <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/rewards'); }}>
-          <span className="rowcard__ic"><IconTrophy size={18} /></span>
-          <span className="grow"><b>Rewards</b><small>Four tiers, up to &#8377;75 back</small></span>
-          <IconChevronRight size={18} />
-        </button>
-        {/* The mystery drop lives here rather than in the grid — it is a
-            teaser, and a teaser does not need a permanent tile on the home
-            screen. This is the placeholder for the event page it should
-            eventually open. */}
-        <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/hot-wheels'); }}>
-          <span className="rowcard__ic"><IconTicket size={18} /></span>
-          <span className="grow"><b>The Drop</b><small>Limited Hot Wheels, from &#8377;179</small></span>
-          <IconChevronRight size={18} />
-        </button>
-        <button className="card rowcard mystrow" type="button" onClick={() => { setDetails(false); nav('/hot-wheels'); }}>
-          <span className="rowcard__ic mystrow__ic">?</span>
-          <span className="grow"><b>Mystery Car</b><small>Revealed on the final day of the drop</small></span>
-          <IconChevronRight size={18} />
-        </button>
-        <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/leaderboard'); }}>
-          <span className="rowcard__ic"><IconFlag size={18} /></span>
-          <span className="grow"><b>Leaderboard</b><small>See where you sit in the city</small></span>
-          <IconChevronRight size={18} />
-        </button>
-        <button className="card rowcard" type="button" onClick={() => { setDetails(false); nav('/race'); }}>
-          <span className="rowcard__ic rowcard__ic--flame"><IconFlag size={18} /></span>
-          <span className="grow"><b>Challenge friends</b><small>{racesLeft} of {MAX_RACE_ATTEMPTS} races left today</small></span>
-          <IconChevronRight size={18} />
-        </button>
-        <p className="t-xs" style={{ lineHeight: 1.6, marginTop: 10 }}>
-          Buying is independent of the game — you never need to race to own a car.
-        </p>
-      </Sheet>
     </>
   );
 }

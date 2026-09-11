@@ -785,11 +785,6 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .rowcard__ic--flame { background: var(--hw-r-tint); color: var(--hw-r); }
 
-.pdp__spec { overflow: hidden; }
-.pdp__spec > div { display: flex; justify-content: space-between; gap: 14px; padding: 11px 12px; border-top: 1px solid var(--line); font-size: var(--f-sm); }
-.pdp__spec > div:first-child { border-top: 0; }
-.pdp__spec span { color: var(--mut); }
-.pdp__spec b { font-weight: 700; text-align: right; }
 
 .pdp .sec { padding-top: 18px; }
 .pdp .prail { padding-bottom: 4px; }
@@ -1353,3 +1348,46 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .sortrow:last-child { border-bottom: 0; }
 .sortrow.is-on { font-weight: 800; color: var(--green); }
+
+/* ---------- PDP: trust strip ----------
+   Three claims about the service rather than the product, sitting directly
+   under the buying decision. Blinkit carries this on every PDP. */
+.pdpwhy { padding: 12px; }
+.pdpwhy__h {
+  font-size: var(--f-sm); font-weight: 800; color: var(--ink);
+  margin-bottom: 10px;
+}
+.pdpwhy__row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pdpwhy__row > div { text-align: center; display: grid; gap: 3px; justify-items: center; }
+.pdpwhy__ic {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--green-tint); color: var(--green);
+  display: grid; place-items: center;
+  margin-bottom: 2px;
+}
+.pdpwhy__row b { font-size: var(--f-2xs); font-weight: 800; color: var(--ink); line-height: 1.25; }
+.pdpwhy__row small { font-size: 9px; color: var(--mut); line-height: 1.25; }
+
+/* ---------- PDP: product details ----------
+   Expandable, because the attribute list is long and most people came to buy
+   rather than read it. The chip above scrolls here and opens it, which is what
+   it should have done instead of apologising in a toast. */
+.pdpspec { padding: 0; overflow: hidden; }
+.pdpspec__h {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 13px 12px;
+  background: none; border: 0;
+  font-size: var(--f-md); font-weight: 800; color: var(--ink);
+  text-align: left;
+}
+.pdpspec__chev { color: var(--mut); display: grid; place-items: center; transition: transform 180ms ease; }
+.pdpspec__chev.is-open { transform: rotate(180deg); }
+.pdpspec__list { margin: 0; padding: 0 12px 6px; }
+.pdpspec__list > div {
+  display: grid; grid-template-columns: 40% 1fr; gap: 10px;
+  padding: 9px 0;
+  border-top: 1px solid var(--line);
+}
+.pdpspec__list dt { font-size: var(--f-xs); color: var(--mut); font-weight: 600; }
+.pdpspec__list dd { margin: 0; font-size: var(--f-xs); font-weight: 700; color: var(--ink); text-align: right; }
+@media (prefers-reduced-motion: reduce) { .pdpspec__chev { transition: none; } }
