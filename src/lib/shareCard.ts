@@ -139,7 +139,14 @@ export async function renderShareCard(d: ShareCard): Promise<Blob | null> {
  * copied because there is no share sheet at all.
  */
 export async function shareScore(d: ShareCard, url: string): Promise<'file' | 'link' | 'copied' | 'cancelled'> {
-  const text = `I scored ${d.score.toLocaleString('en-IN')} in Race It Home — Hot Wheels × Blinkit. Beat it?`;
+  /* The link goes in the TEXT, not only in `url`. Every platform that accepts a
+     file drops the separate url field, so a share with the card attached was
+     arriving with no way to actually come and play — which is the entire point
+     of sending it. Passing `url` as well is still worth it on the link-only
+     path, where it previews properly. */
+  const text =
+    `I scored ${d.score.toLocaleString('en-IN')} in Race It Home · Hot Wheels × Blinkit. ` +
+    `Beat it. You get a free race for joining: ${url}`;
 
   try {
     const blob = await renderShareCard(d);

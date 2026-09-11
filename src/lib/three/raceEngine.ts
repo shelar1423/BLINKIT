@@ -38,6 +38,9 @@ export type EngineOpts = {
   duration?: number; // seconds
   onTick?: (s: RaceStats) => void;
   onPickup?: (points: number, name: string) => void;
+  /** Points taken off for hitting something. Reported from the one place that
+   *  deducts them, so every caller that bounces the car gets it for free. */
+  onPenalty?: (points: number) => void;
   onFinish?: (o: RaceOutcome) => void;
 };
 
@@ -690,7 +693,11 @@ export class RaceEngine {
     // Deflect lateral
     this.lateral += (Math.random() > 0.5 ? 1 : -1) * 0.8;
     this.driftYaw = (Math.random() - 0.5) * 0.4;
+    const before = this.score;
     this.score = Math.max(0, this.score - penaltyPoints);
+    // report what was actually lost, not what was asked for: near zero the
+    // deduction is clamped, and showing -100 off a score of 40 is a lie
+    if (before > this.score) this.opts.onPenalty?.(before - this.score);
   }
 
   /**

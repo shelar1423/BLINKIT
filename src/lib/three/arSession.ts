@@ -83,6 +83,7 @@ type Opts = {
   onPhase: (p: ARPhase) => void;
   onTick: (s: RaceStats) => void;
   onPickup: (points: number, name: string) => void;
+  onPenalty?: (points: number) => void;
   onFinish: (o: RaceOutcome) => void;
   onError: (msg: string) => void;
   onEnd: () => void;
@@ -301,6 +302,7 @@ function makeEngine(opts: Opts, onDone: () => void) {
     duration: 45,
     onTick: opts.onTick,
     onPickup: opts.onPickup,
+    onPenalty: opts.onPenalty,
     onFinish: (o) => {
       onDone();
       opts.onFinish(o);

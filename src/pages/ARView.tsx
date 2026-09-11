@@ -22,6 +22,7 @@ import {
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
+import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 /** Coverage at which the surface is considered read well enough to brief on. */
@@ -65,6 +66,7 @@ export default function ARView() {
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
   const [isBest, setIsBest] = useState(false);
+  const { pops, push: pushPop } = useScorePops();
   const [proximityAlert, setProximityAlert] = useState(false);
   const [pinnedCount, setPinnedCount] = useState(0);
   const [lastHitMessage, setLastHitMessage] = useState<string | null>(null);
@@ -104,7 +106,10 @@ export default function ARView() {
         mode: inspect ? 'inspect' : 'race',
         onPhase: setPhase,
         onTick: setStats,
-        onPickup: () => {},
+        /* AR was throwing pickups away entirely — the score moved and nothing
+           on screen said why. */
+        onPickup: (points) => pushPop(points, 'up'),
+        onPenalty: (points) => pushPop(points, 'down'),
         onFinish,
         onError: (m) => toast(m),
         onObstacleHit: (hit) => {
@@ -339,64 +344,7 @@ export default function ARView() {
               </button>
             </div>
 
-            {/* In-race driving controls */}
-            {phase === 'racing' && (
-              <div className={'arov__drive' + (tiltDriving ? ' is-tilt' : '')}>
-                <div className="arov__steer">
-                  <button
-                    type="button"
-                    className="arov__pad"
-                    aria-label="Steer left"
-                    {...hold((on) => (on ? press(-1) : release()))}
-                  >
-                    <IconChevronLeft size={26} />
-                  </button>
-                  <button
-                    type="button"
-                    className="arov__pad"
-                    aria-label="Steer right"
-                    {...hold((on) => (on ? press(1) : release()))}
-                  >
-                    <IconChevronRight size={26} />
-                  </button>
-                </div>
-                <div className="arov__drivec">
-                  <button
-                    type="button"
-                    className="arov__pad arov__pad--sm"
-                    aria-label="Horn"
-                    onClick={hornNow}
-                  >
-                    <IconHorn size={22} />
-                  </button>
-                  <button
-                    type="button"
-                    className={'arov__pad arov__pad--sm' + (drift ? ' is-on' : '')}
-                    aria-label="Drift"
-                    aria-pressed={drift}
-                    {...hold(slide)}
-                  >
-                    <IconDrift size={22} />
-                  </button>
-                  <button
-                    type="button"
-                    className="arov__pad arov__pad--sm"
-                    aria-label="Brake"
-                    {...hold(brake)}
-                  >
-                    <IconBrake size={22} />
-                  </button>
-                  <button
-                    type="button"
-                    className="arov__pad arov__pad--gas"
-                    aria-label="Accelerate"
-                    {...hold(gas)}
-                  >
-                    GO
-                  </button>
-                </div>
-              </div>
-            )}
+            {phase === 'racing' && <ScorePops pops={pops} />}
 
             {/* One column anchored to the bottom, rather than three bands
                 positioned by hand-tuned `bottom` offsets. Those were fine
@@ -469,6 +417,65 @@ export default function ARView() {
                   </small>
                 )}
               </p>
+            )}
+
+            {/* In-race driving controls */}
+            {phase === 'racing' && (
+              <div className={'arov__drive' + (tiltDriving ? ' is-tilt' : '')}>
+                <div className="arov__steer">
+                  <button
+                    type="button"
+                    className="arov__pad"
+                    aria-label="Steer left"
+                    {...hold((on) => (on ? press(-1) : release()))}
+                  >
+                    <IconChevronLeft size={26} />
+                  </button>
+                  <button
+                    type="button"
+                    className="arov__pad"
+                    aria-label="Steer right"
+                    {...hold((on) => (on ? press(1) : release()))}
+                  >
+                    <IconChevronRight size={26} />
+                  </button>
+                </div>
+                <div className="arov__drivec">
+                  <button
+                    type="button"
+                    className="arov__pad arov__pad--sm"
+                    aria-label="Horn"
+                    onClick={hornNow}
+                  >
+                    <IconHorn size={22} />
+                  </button>
+                  <button
+                    type="button"
+                    className={'arov__pad arov__pad--sm' + (drift ? ' is-on' : '')}
+                    aria-label="Drift"
+                    aria-pressed={drift}
+                    {...hold(slide)}
+                  >
+                    <IconDrift size={22} />
+                  </button>
+                  <button
+                    type="button"
+                    className="arov__pad arov__pad--sm"
+                    aria-label="Brake"
+                    {...hold(brake)}
+                  >
+                    <IconBrake size={22} />
+                  </button>
+                  <button
+                    type="button"
+                    className="arov__pad arov__pad--gas"
+                    aria-label="Accelerate"
+                    {...hold(gas)}
+                  >
+                    GO
+                  </button>
+                </div>
+              </div>
             )}
 
             {/* Action buttons */}
@@ -591,6 +598,7 @@ export default function ARView() {
           tier={tier}
           isBest={isBest}
           totalPoints={useStore.getState().totalPoints}
+          inviteUrl={`${window.location.origin}/?ref=${useStore.getState().referralCode}`}
           racesLeft={racesLeft}
           toast={toast}
           onClaim={(t) => {

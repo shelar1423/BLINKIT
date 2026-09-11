@@ -16,6 +16,7 @@ type Opts = {
   onError: (msg: string) => void;
   onTick: (s: RaceStats) => void;
   onPickup: (points: number, name: string) => void;
+  onPenalty?: (points: number) => void;
   onFinish: (o: RaceOutcome) => void;
   onProgress?: (pct: number, mb: number) => void;
   duration?: number;
@@ -121,6 +122,7 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     laps: opts.laps ?? 2,
     onTick: opts.onTick,
     onPickup: opts.onPickup,
+    onPenalty: opts.onPenalty,
     onFinish: opts.onFinish,
   };
   const engine = new RaceEngine(engineOpts);

@@ -33,6 +33,8 @@ const REWARD_ART: Record<string, string> = {
 };
 
 export type RaceResultProps = {
+  /** The sharer's referral link, so a share is also an invite. */
+  inviteUrl: string;
   outcome: RaceOutcome;
   car: Product;
   tier: RewardTier | null;
@@ -49,7 +51,7 @@ export type RaceResultProps = {
 };
 
 export function RaceResult({
-  outcome, car, tier, isBest, totalPoints, racesLeft,
+  outcome, car, tier, isBest, totalPoints, racesLeft, inviteUrl,
   onClaim, onRaceAgain, onLeaderboard, onExit, exitLabel, toast,
 }: RaceResultProps) {
   /* The number counts up. A score that is simply present reads as a fact; one
@@ -85,7 +87,7 @@ export function RaceResult({
         carImage: car.image,
         reward: tier?.label,
       },
-      `${window.location.origin}/`,
+      inviteUrl,
     );
     setSharing(false);
     if (how === 'copied') toast('Score copied to share');
@@ -190,7 +192,7 @@ export function RaceResult({
           {racesLeft > 0 ? `Race again · ${racesLeft} left` : 'No races left today'}
         </Button>
         <Button variant="outline" block type="button" onClick={share} disabled={sharing}>
-          <IconShare size={16} /> {sharing ? 'Preparing…' : 'Share your score'}
+          <IconShare size={16} /> {sharing ? 'Preparing…' : 'Share score & invite'}
         </Button>
         <div className="racts__row">
           <Button variant="outline" type="button" onClick={onLeaderboard}>

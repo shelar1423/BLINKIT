@@ -7,6 +7,7 @@ import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconRotate } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
+import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 import { useToast } from '../App';
@@ -23,7 +24,6 @@ export default function RacePlay() {
 
   const host = useRef<HTMLDivElement>(null);
   const handle = useRef<RaceHandle | null>(null);
-  const popId = useRef(0);
   const tilt = useRef<TiltSteer | null>(null);
   const [tiltState, setTiltState] = useState<TiltState>(() => initialTiltState());
 
@@ -34,7 +34,7 @@ export default function RacePlay() {
   const [stats, setStats] = useState<RaceStats>({
     score: 0, groceries: 0, timeLeft: 45, lap: 1, laps: 2, progress: 0, speedKph: 0,
   });
-  const [pops, setPops] = useState<{ id: number; text: string }[]>([]);
+  const { pops, push: pushPop } = useScorePops();
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
@@ -51,11 +51,8 @@ export default function RacePlay() {
     }
   }, [racesLeft, nav, toast]);
 
-  const onPickup = useCallback((points: number) => {
-    const id = ++popId.current;
-    setPops((p) => [...p.slice(-3), { id, text: `+${points}` }]);
-    window.setTimeout(() => setPops((p) => p.filter((x) => x.id !== id)), 700);
-  }, []);
+  const onPickup = useCallback((points: number) => pushPop(points, 'up'), [pushPop]);
+  const onPenalty = useCallback((points: number) => pushPop(points, 'down'), [pushPop]);
 
   const onFinish = useCallback(
     (o: RaceOutcome) => {
@@ -77,6 +74,7 @@ export default function RacePlay() {
       onError: (m) => setErr(m),
       onTick: setStats,
       onPickup,
+      onPenalty,
       onFinish,
     });
     handle.current = h;
@@ -84,7 +82,7 @@ export default function RacePlay() {
       h.dispose();
       handle.current = null;
     };
-  }, [car.glb, onPickup, onFinish]);
+  }, [car.glb, onPickup, onPenalty, onFinish]);
 
   // 3 · 2 · 1 · GO, then start
   useEffect(() => {
@@ -261,9 +259,7 @@ export default function RacePlay() {
             <i style={{ width: `${stats.progress * 100}%` }} />
           </div>
 
-          {pops.map((p) => (
-            <span key={p.id} className="hud__pop">{p.text}</span>
-          ))}
+          <ScorePops pops={pops} />
 
           {!tiltDriving && (
             <div className="steer__pads" aria-hidden="true">
@@ -362,6 +358,7 @@ export default function RacePlay() {
           tier={tier}
           isBest={isBest}
           totalPoints={useStore.getState().totalPoints}
+          inviteUrl={`${window.location.origin}/?ref=${useStore.getState().referralCode}`}
           racesLeft={useStore.getState().racesLeft}
           toast={toast}
           onClaim={(t) => {
