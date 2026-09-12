@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { DELIVERY_ADDRESS, rupees } from '../data/catalog';
@@ -31,9 +31,6 @@ import { useToast } from '../App';
 const TRIP = 96;
 const PARTNER = 'Shekhar';
 
-/** The route the rider takes. Also the shape of the drawn road under it. */
-const ROUTE = 'M40 148 C 66 148, 74 126, 96 112 S 138 96, 176 88 S 244 78, 286 46';
-
 export default function OrderSuccess() {
   const nav = useNavigate();
   const { toast } = useToast();
@@ -43,8 +40,6 @@ export default function OrderSuccess() {
   const [t, setT] = useState(0.06);
   const [big, setBig] = useState(false);
   const [tip, setTip] = useState<number | null>(null);
-  const path = useRef<SVGPathElement>(null);
-  const [pos, setPos] = useState({ x: 40, y: 148, a: 0 });
 
   useEffect(() => {
     if (!order) return;
@@ -58,19 +53,6 @@ export default function OrderSuccess() {
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [order]);
-
-  /* Ride the marker along the real path rather than tweening between two
-     points: the route bends, and a straight interpolation would cut corners
-     across the roads it is meant to follow. */
-  useEffect(() => {
-    const p = path.current;
-    if (!p) return;
-    const len = p.getTotalLength();
-    const at = p.getPointAtLength(len * t);
-    // a point just ahead gives the heading, so the rider leans into the turns
-    const nx = p.getPointAtLength(Math.min(len, len * t + 1));
-    setPos({ x: at.x, y: at.y, a: (Math.atan2(nx.y - at.y, nx.x - at.x) * 180) / Math.PI });
-  }, [t]);
 
   const minsLeft = Math.max(1, Math.ceil(((1 - t) * TRIP) / 60));
   const arrived = t >= 1;
@@ -103,54 +85,20 @@ export default function OrderSuccess() {
         </h1>
       </header>
 
-      {/* ---- the map ---- */}
+      {/* ---- the map ----
+           The campaign's own Hot Wheels map: a city with the track threaded
+           through it, the car on its way, and YOUR LOCATION pinned. It already
+           carries its own route and vehicle, so nothing is drawn over it —
+           a second marker would be a second car on the same trip. The asset is
+           the campaign map with its baked-in app chrome cropped off: it shipped
+           with a back arrow, a settings button and the wordmark drawn across
+           the top, which inside our own card read as dead controls. */}
       <div className={'trk__mapwrap' + (big ? ' is-big' : '')}>
-        <svg className="trk__map" viewBox="0 0 320 180" role="img" aria-label={`Rider ${PARTNER} on the way to you`}>
-          <rect x="0" y="0" width="320" height="180" fill="#E9ECF0" />
-          {/* blocks, so the empty ground reads as a neighbourhood */}
-          <g fill="#DFE3E8">
-            <rect x="12" y="16" width="70" height="46" rx="4" />
-            <rect x="104" y="10" width="58" height="38" rx="4" />
-            <rect x="196" y="92" width="72" height="52" rx="4" />
-            <rect x="18" y="96" width="46" height="40" rx="4" />
-            <rect x="118" y="128" width="62" height="42" rx="4" />
-          </g>
-          {/* roads */}
-          <g stroke="#FFFFFF" strokeLinecap="round" fill="none">
-            <path d="M0 78 H320" strokeWidth="13" />
-            <path d="M92 0 V180" strokeWidth="11" />
-            <path d="M0 150 H320" strokeWidth="9" />
-            <path d="M232 0 V180" strokeWidth="9" />
-          </g>
-          {/* the route, with the travelled part solid and the rest faded */}
-          <path ref={path} d={ROUTE} fill="none" stroke="#B9C6DA" strokeWidth="5" strokeLinecap="round" />
-          <path
-            d={ROUTE}
-            fill="none"
-            stroke="#2B6DF6"
-            strokeWidth="5"
-            strokeLinecap="round"
-            pathLength={1}
-            strokeDasharray={1}
-            strokeDashoffset={1 - t}
-          />
-          {/* destination */}
-          <g transform="translate(286 46)">
-            <circle r="11" fill="#fff" />
-            <circle r="7.5" fill="none" stroke="#1F1F1F" strokeWidth="2" />
-            <circle r="2.6" fill="#1F1F1F" />
-          </g>
-          {/* the rider */}
-          <g transform={`translate(${pos.x} ${pos.y})`}>
-            <circle r="14" fill="#fff" opacity="0.9" />
-            <circle r="11" fill="var(--green)" />
-            <g transform={`rotate(${pos.a})`}>
-              <path d="M-4.5 1.5h6l2.5-3.5" stroke="#fff" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-              <circle cx="-4.5" cy="2.5" r="2.4" fill="none" stroke="#fff" strokeWidth="1.6" />
-              <circle cx="4.5" cy="2.5" r="2.4" fill="none" stroke="#fff" strokeWidth="1.6" />
-            </g>
-          </g>
-        </svg>
+        <img className="trk__map" src="/campaign/delivery-map-clean.webp" alt={`${PARTNER} on the way to your location`} />
+        <span className="trk__live">
+          <i aria-hidden="true" />
+          LIVE
+        </span>
         <button
           className="trk__zoom"
           type="button"
