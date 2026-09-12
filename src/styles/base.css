@@ -1024,6 +1024,17 @@ input, select, textarea { font: inherit; color: inherit; }
   margin-right: var(--peek-w);
   background: var(--appbase);
   touch-action: pan-y;
+  /* The sheet paints OVER its neighbours, not under them. Both layers read the
+     same offset, but they are two separate composited layers, and two layers
+     moved by one style change can still tear by a frame — iOS in particular
+     rasterises a tall promoted layer on its own schedule. When the peek layer
+     is on top, a tear means a full-width neighbouring card sliding across live
+     content. Underneath, the worst a tear can do is show a hairline of
+     background at the edge the sheet is travelling from. The sliver is still
+     visible at rest because the sheet gives up its right 12px by margin, not
+     by stacking. */
+  position: relative; z-index: 1;
+  box-shadow: 0 0 26px rgba(16, 20, 24, 0.16);
 }
 .pdpdeck.is-gliding, .pdpstack__track.is-gliding { transition: transform 260ms cubic-bezier(0.25, 0.8, 0.3, 1); }
 /* The frame a new product lands on: whatever glide was in flight is cancelled
@@ -1045,7 +1056,7 @@ input, select, textarea { font: inherit; color: inherit; }
   position: fixed; inset: 0;
   max-width: 520px; margin: 0 auto;
   overflow: hidden; pointer-events: none;
-  z-index: 24;
+  z-index: 0;
 }
 @media (min-width: 1024px) { .pdpstack { max-width: 560px; } }
 .pdpstack__track { position: absolute; inset: 0; }
