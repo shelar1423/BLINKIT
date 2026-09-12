@@ -2909,8 +2909,16 @@ input, select, textarea { font: inherit; color: inherit; }
    the rest behind a gesture. Tighter gutters than the storefront grid, because
    this one sits inside a card that already has padding. */
 .pgrid--tight {
-  gap: 14px 9px;
-  justify-content: space-between;
+  /* Centred, NOT space-between.
+
+     The tracks are a fixed 126px — the card width every other surface uses —
+     so space-between had nothing to distribute except the leftover, and it
+     threw the two columns to opposite edges of the section. That left a ~60px
+     canyon down the middle and pushed the right card's deliberately
+     overhanging ADD outside the section's padding, where it read as a button
+     that had fallen off the card. */
+  justify-content: center;
+  gap: 14px;
   padding: 4px 0 2px;
 }
 
