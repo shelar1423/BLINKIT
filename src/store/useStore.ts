@@ -7,15 +7,20 @@ export type RewardTier = {
   id: string;
   min: number;
   label: string;
-  value: number; // rupees off; 0 = free delivery only
+  value: number; // rupees off; 0 = no cash component
   freeDelivery: boolean;
+  /* What this tier gives you when it is not money off. A partner's product is
+     not Blinkit Cash and must not be counted as any: District Pass is a
+     month's membership whose headline benefit is a cinema ticket, so it
+     carries `value: 0` and says what it is here instead. */
+  perk?: string;
 };
 
 export const REWARD_TIERS: RewardTier[] = [
   { id: 'start', min: 1000, label: 'Free Delivery', value: 0, freeDelivery: true },
   { id: 'check', min: 2500, label: '₹25 Blinkit Cash', value: 25, freeDelivery: true },
   { id: 'pit', min: 5000, label: '₹50 Blinkit Cash', value: 50, freeDelivery: true },
-  { id: 'podium', min: 8000, label: 'Zomato Gold, 1 month', value: 75, freeDelivery: true },
+  { id: 'podium', min: 8000, label: 'District Pass, 1 month', value: 0, freeDelivery: true, perk: '1 free movie ticket' },
 ];
 
 export function tierFor(score: number): RewardTier | null {

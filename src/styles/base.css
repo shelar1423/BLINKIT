@@ -2292,6 +2292,48 @@ input, select, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--green-line);
   border-radius: var(--r-md);
   overflow: hidden;
+
+  --notch: 9px;
+  /* The bite's centre, measured UP from the card's bottom edge rather than
+     down from its top: the foot is a fixed 14px + 44px button + 14px, plus
+     half the 10px tear and the 1px border. Anchoring from the bottom means a
+     reward label that wraps to two lines grows the card upward and the bites
+     stay on the tear line. */
+  --tear-y: 78px;
+
+  /* Two things happen at each edge, and the order matters.
+
+     The MASK punches a disc out of the card at the tear line — and because a
+     mask cuts the element's own border along with its background, the straight
+     1px line that used to run across the notch's mouth goes with it. That line
+     was the whole problem: it closed the shape off, so what read was a
+     semicircle drawn on the card rather than a bite taken out of it.
+
+     The BACKGROUND then draws a 1px arc in the border's colour at 9-10px —
+     just outside the radius the mask cuts at, so it survives — and that arc
+     carries the outline around the curve and back into the card's own border.
+     A cut ticket, not a card with two half-circles on it. */
+  background-image:
+    radial-gradient(circle at left 0 bottom var(--tear-y),
+      transparent 0 var(--notch),
+      var(--green-line) var(--notch) calc(var(--notch) + 1px),
+      transparent calc(var(--notch) + 1px)),
+    radial-gradient(circle at right 0 bottom var(--tear-y),
+      transparent 0 var(--notch),
+      var(--green-line) var(--notch) calc(var(--notch) + 1px),
+      transparent calc(var(--notch) + 1px));
+
+  -webkit-mask-image:
+    radial-gradient(circle at left 0 bottom var(--tear-y), transparent 0 var(--notch), #000 calc(var(--notch) + 0.5px)),
+    radial-gradient(circle at right 0 bottom var(--tear-y), transparent 0 var(--notch), #000 calc(var(--notch) + 0.5px));
+  mask-image:
+    radial-gradient(circle at left 0 bottom var(--tear-y), transparent 0 var(--notch), #000 calc(var(--notch) + 0.5px)),
+    radial-gradient(circle at right 0 bottom var(--tear-y), transparent 0 var(--notch), #000 calc(var(--notch) + 0.5px));
+  /* Both masks must agree for a pixel to survive. Left at the default `add`
+     the two would union into "opaque nearly everywhere" and neither bite would
+     be cut at all. */
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
 }
 .coupon__top { display: flex; align-items: center; gap: 12px; padding: 14px; }
 .coupon__art {
@@ -2300,29 +2342,50 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center;
 }
 .coupon__art img { width: 68%; height: 68%; object-fit: contain; }
+/* A partner's own tile, not an object on a disc: it fills the slot, keeps its
+   own square-with-rounded-corners shape, and drops the green ground behind it
+   so nothing of ours is tinting someone else's mark. */
+.coupon__art.is-tile { border-radius: var(--r-sm); background: none; overflow: hidden; }
+.coupon__art.is-tile img { width: 100%; height: 100%; object-fit: cover; }
+/* Title case, so the tracking goes with the caps: 0.1em existed to open up
+   an uppercase eyebrow and only pulls a lower-case one apart. */
 .coupon__k {
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--green);
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0;
+  color: var(--green);
 }
 .coupon__v { display: block; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; margin-top: 1px; }
 .coupon__s { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 2px; }
-/* The perforation: a dashed rule with a notch bitten out of each side, which
-   is what makes it read as a ticket you tear rather than a card you scroll. */
+/* The perforation: punched holes, not a drawn line.
+
+   It was a 1px dashed rule, which is a dotted line pretending to be a
+   perforation — at this size the dashes read as a hairline border and the
+   ticket read as a card with a divider in it. These are actual holes: each one
+   is the page's own ground showing through, ringed so the card looks cut
+   rather than printed on. The two at the ends are the same hole bisected by
+   the card's edge, which is what a real ticket has and what stops the tear
+   line from simply stopping short of the sides. */
 .coupon__tear {
-  display: block; position: relative;
-  border-top: 1px dashed var(--green-line);
-  margin: 0 14px;
+  display: block;
+  height: 10px; margin: 0 10px;
+  /* Each hole is a dark centre inside a darker rim. A hole that literally
+     shows the page through it cannot work here — the card is white and the
+     page behind it is #F5F8FA, two per cent apart — so the hole is drawn as
+     the shadow a punch leaves rather than as the ground beneath. That also
+     makes it independent of whatever the card is sitting on. */
+  background-image: radial-gradient(
+    circle at center,
+    rgba(17, 24, 39, 0.10) 0 2.9px,
+    rgba(17, 24, 39, 0.22) 2.9px 3.5px,
+    transparent 3.6px
+  );
+  background-size: 12px 10px;
+  /* `space`, not `repeat-x`: repeat lays down partial tiles at the ends, and a
+     tile cut through its hole is a half-circle — exactly the shape this is
+     meant to stop being. `space` fits whole tiles only and pushes the
+     remainder into the gaps, so every hole is a whole hole at every width. */
+  background-repeat: space no-repeat;
+  background-position: center;
 }
-.coupon__tear::before,
-.coupon__tear::after {
-  content: '';
-  position: absolute; top: -9px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--appbase);
-  border: 1px solid var(--green-line);
-}
-.coupon__tear::before { left: -23px; }
-.coupon__tear::after { right: -23px; }
 .coupon__foot { padding: 14px; }
 
 /* ============================================================
@@ -2336,7 +2399,20 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwhero {
   position: relative;
   padding: 26px 16px 22px;
-  background: radial-gradient(120% 90% at 50% 0%, #1B3157 0%, #0E1B33 55%, #070E1E 100%);
+  /* Three background layers, first painted on top: a scrim, the campaign's
+     city plate, then a flat blue underneath it for any sliver `cover` cannot
+     reach. Doing the scrim as a background layer rather than an ::after keeps
+     the children painting above it on their own, so nothing here needs a
+     stacking context and the chequer strip keeps the absolute position its own
+     rule gives it.
+
+     The scrim is there because the plate is a mid blue and every word on this
+     block is white: heaviest top and bottom where the type and the lane's
+     label land, clearing through the middle so the skyline still reads. */
+  background:
+    linear-gradient(180deg, rgba(5, 18, 48, 0.42) 0%, rgba(5, 18, 48, 0.10) 44%, rgba(5, 18, 48, 0.40) 100%),
+    url('/campaign/reward-banner.webp') 62% 100% / cover no-repeat,
+    #1668E3;
   color: #fff; text-align: center;
 }
 .rwhero__chequer {
@@ -2347,9 +2423,67 @@ input, select, textarea { font: inherit; color: inherit; }
     #101828;
   background-repeat: repeat-x;
 }
+/* ---------- the leg of track to the next reward ----------
+   One length of the campaign's own track, the car on it, the flag at the end.
+   The road is a single bright image with a scrim over the part not yet driven,
+   rather than two images that would have to stay in register with each other
+   as the car moves. */
+.rwlane { position: relative; margin: 16px auto 0; max-width: 296px; }
+/* Road still to drive: a dark lane with a centre line, so it reads as road
+   rather than as the empty half of a progress bar. */
+.rwlane__road {
+  position: relative;
+  height: 18px; border-radius: 5px; overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.11);
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.34) 0 7px,
+    rgba(255, 255, 255, 0) 7px 15px
+  );
+  background-size: 100% 2px;
+  background-position: center;
+  background-repeat: repeat-x;
+}
+/* Road already driven: Hot Wheels track orange, lit along its top edge.
+   Painting the driven stretch rather than dimming the undriven one keeps the
+   orange actually orange — a dark scrim over it turned the whole lane brown. */
+.rwlane__done {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: calc(var(--p) * 100%);
+  border-radius: 5px 2px 2px 5px;
+  background: linear-gradient(180deg, #FFB259 0%, #FA8318 44%, #DD5F07 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  transition: width 1000ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Travel is inset by half the car at one end and the flag's width at the
+   other, so it never hangs off the lane and never drives through the finish. */
+.rwlane__car {
+  position: absolute; top: -1px; z-index: 2;
+  left: calc(var(--p) * (100% - 56px) + 20px);
+  transform: translateX(-50%);
+  width: 34px; height: auto;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.5));
+  transition: left 1000ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* The prize, standing at the finish. Raised clear of the lane so the car can
+   run right up under it, and shadowed so it sits above the road rather than
+   printed on it. */
+.rwlane__prize {
+  position: absolute; right: -3px; top: -13px; z-index: 3;
+  width: 32px; height: 32px; object-fit: contain;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.55));
+}
+/* A brand tile keeps its own corners; the cut-out illustrations need none. */
+.rwlane__prize.is-tile { border-radius: 7px; }
+.rwlane__l { margin-top: 11px; font-size: var(--f-xs); color: rgba(255, 255, 255, 0.72); }
+.rwlane__l b { color: #fff; font-weight: 800; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  .rwlane__car, .rwlane__done { transition: none; }
+}
+
 .rwhero__k {
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.18em;
-  text-transform: uppercase; color: rgba(255, 255, 255, 0.55);
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.55);
 }
 .rwhero__v {
   font-size: clamp(46px, 16vw, 64px); font-weight: 800;
@@ -2365,6 +2499,13 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwhero__s b { color: #fff; font-weight: 800; }
 
 .rwbody { padding-top: 14px; padding-bottom: 20px; display: grid; gap: 14px; }
+
+/* Heading and list are one block, so the 8px between them reads as a title
+   attached to its list rather than as another 14px item in the page's stack. */
+.rwlist { display: grid; gap: 8px; }
+.rwsec { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.rwsec__t { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; }
+.rwsec__n { flex: 0 0 auto; font-size: var(--f-xs); color: var(--mut); font-weight: 600; }
 
 /* ---------- the track ---------- */
 .rwtrack {
@@ -2408,6 +2549,8 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center;
 }
 .rwstop__art img { width: 70%; height: 70%; object-fit: contain; }
+.rwstop__art.is-tile { border-radius: var(--r-sm); background: none; overflow: hidden; }
+.rwstop__art.is-tile img { width: 100%; height: 100%; object-fit: cover; }
 /* A tier you have not reached is quiet — it is context, not an offer. */
 .rwstop:not(.is-on) .rwstop__art img { filter: grayscale(1); opacity: 0.5; }
 .rwstop__t { display: block; font-size: var(--f-base); font-weight: 700; }
@@ -2420,7 +2563,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .rwstop__gap small {
   display: block; font-size: var(--f-2xs); font-weight: 700;
-  letter-spacing: 0.06em; text-transform: uppercase; color: var(--mut-2);
+  letter-spacing: 0; color: var(--mut-2);
 }
 
 /* ---------- car picker ---------- */

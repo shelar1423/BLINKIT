@@ -24,11 +24,15 @@ import { IconBasket, IconBolt, IconClose, IconFlag, IconShare } from '../element
 
 /** The prize, phrased for a ticket: a headline you can read across the room. */
 function prize(tier: RewardTier) {
+  /* Named perks are tested first. Every tier carries free delivery, and
+     District Pass has no cash value, so the `freeDelivery && !value` branch
+     below would otherwise swallow it and announce the top reward of the drop
+     as "FREE DELIVERY". */
+  if (tier.perk) {
+    return { head: 'DISTRICT', sub: 'PASS · 1 MONTH', fine: `${tier.perk}, plus free delivery on Blinkit for a month` };
+  }
   if (tier.freeDelivery && tier.value === 0) {
     return { head: 'FREE', sub: 'DELIVERY', fine: 'Applied automatically on your next Blinkit order' };
-  }
-  if (tier.id === 'podium') {
-    return { head: 'GOLD', sub: '1 MONTH FREE', fine: 'Zomato Gold, plus free delivery on Blinkit for a month' };
   }
   return {
     head: `${rupees(tier.value)} OFF`,
