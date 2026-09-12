@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
-import { HERO_CARS, rupees } from '../data/catalog';
+import { HERO_CARS } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, useStore } from '../store/useStore';
 import { preloadCar } from '../lib/three/modelLoader';
 import { IconAR, IconCheck, IconFlag } from '../design/elements/Icons';
@@ -93,8 +93,9 @@ export default function Race() {
                   </span>
                 )}
               </span>
-              <span className="carpick__n">{c.name.replace('Hot Wheels ', '')}</span>
-              <span className="carpick__p">{rupees(c.price)}</span>
+              {/* Name only. You are picking a car to drive, not to buy — a price
+                  here turned the starting grid into a second shelf. */}
+              <span className="carpick__n">{c.name.replace('Hot Wheels ', '').replace(' Die Cast Car', '')}</span>
             </button>
           ))}
         </div>

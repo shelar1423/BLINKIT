@@ -141,7 +141,12 @@ export default function Home() {
               artwork instead of a cloth over something withheld, so there is
               nothing left for a reveal plate to conceal. */}
           <div className="mystery">
-            <Button variant="light" className="mystery__go" onClick={() => nav('/race')}>
+            {/* The hub, not the starting grid. Race now from the storefront is an
+                invitation into the campaign — your points, your Blinkit Cash,
+                your best run — and the race itself is one press further in.
+                Jumping straight to the grid skipped everything the campaign is
+                keeping score of. */}
+            <Button variant="light" className="mystery__go" onClick={() => nav('/campaign')}>
               <IconFlag size={17} />
               Race now
             </Button>
