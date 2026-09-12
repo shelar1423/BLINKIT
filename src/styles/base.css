@@ -19,7 +19,15 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html, body, #root { height: 100%; }
+/* min-height on the body, not height.
+   At a fixed 100% the body is exactly one viewport tall and its background
+   stops there — so once html was given the campaign blue for the iOS rubber
+   band, everything below the first screenful showed blue in the column's
+   gutters on a wide window. Growing the body to its content keeps the app's
+   surface under the whole page, and the blue is then only ever seen in the
+   overscroll, which is the one place it was wanted. */
+html { height: 100%; }
+body, #root { min-height: 100%; }
 
 /* The rubber band at the top of an iOS scroll shows the ROOT element, not the
    body — so the campaign blue goes here. The body stays the app's own surface,
@@ -1017,12 +1025,21 @@ input, select, textarea { font: inherit; color: inherit; }
 /* Read off the real grid at a 393pt width: 84pt tiles, an 11pt column gap and
    a 13pt row gap. The row gap is the smaller of the two vertical spaces on
    purpose — see .cat below. */
-.cats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px 11px; padding: 9px var(--gut) 10px; }
+/* align-items: start is what keeps the labels top-aligned. Without it a cell
+   stretches to the tallest in its row and its contents sit centred in that
+   space, so a two-line label started 21px under its tile while a three-line one
+   started at 12 — measured across the eight. Every label now begins the same
+   distance below its own tile whatever its length. */
+.cats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  align-items: start;
+  gap: 13px 11px; padding: 9px var(--gut) 10px;
+}
 /* 12px between a tile and its own label, against 13px to the next row. The
    label has to sit closer to the tile it names than to the tile under it; at
    6px over 16px it did the opposite, and every label read as a caption for the
    row below. */
-.cat { display: grid; gap: 12px; justify-items: center; }
+.cat { display: grid; align-content: start; gap: 12px; justify-items: center; }
 /* `contain` with a little inset, not `cover`: the art is a centred grouping on
    a transparent ground, so cropping it to fill the tile clips the edges of the
    composition for nothing. */
@@ -1040,7 +1057,13 @@ input, select, textarea { font: inherit; color: inherit; }
 .cat__im img { width: 100%; height: 100%; object-fit: contain; }
 /* Semibold. The strokes on the real labels are about 12% of their cap height,
    which is a 600 — at 500 ours were a shade light against the same art. */
-.cat__l { font-size: var(--f-base); line-height: 1.28; text-align: center; font-weight: 600; color: var(--ink); }
+/* text-wrap: balance so a long name splits into two even lines instead of
+   filling the first and dropping one word onto the second. */
+.cat__l {
+  font-size: var(--f-base); line-height: 1.28;
+  text-align: center; font-weight: 600; color: var(--ink);
+  text-wrap: balance;
+}
 
 /* ---------- end-of-feed footer ----------
    Blinkit's own sign-off: the line set very large and ghosted back into the
