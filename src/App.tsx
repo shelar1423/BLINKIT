@@ -17,6 +17,7 @@ import Rewards from './pages/Rewards';
 import Leaderboard from './pages/Leaderboard';
 import Invite from './pages/Invite';
 import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
 import NotFound from './pages/NotFound';
 
@@ -82,9 +83,7 @@ export default function App() {
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/invite" element={<Invite />} />
           <Route path="/cart" element={<Cart />} />
-          {/* One page. /checkout still resolves so nothing that links to it
-              breaks — it simply renders the same screen. */}
-          <Route path="/checkout" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
           {/* device diagnostics — deliberately unlinked */}
           <Route path="/diag" element={<Diag />} />

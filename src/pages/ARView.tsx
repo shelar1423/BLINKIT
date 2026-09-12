@@ -549,11 +549,9 @@ export default function ARView() {
       <main className="page">
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 12 }}>
           <img
-            src="/campaign/banner-ar.webp"
+            src="/campaign/14-ar-toy-car-placement.webp"
             alt="A Hot Wheels car placed on a table in AR"
-            /* 2.4:1, the shape the supplied banner is drawn at. Forcing it
-               into the old 4:3 crop would cut the artwork top and bottom. */
-            style={{ width: '100%', aspectRatio: '2.4 / 1', objectFit: 'cover', borderRadius: 'var(--r-lg)' }}
+            style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', objectPosition: '50% 62%', borderRadius: 'var(--r-lg)' }}
           />
 
           <div className={'arstat ' + s.cls}>

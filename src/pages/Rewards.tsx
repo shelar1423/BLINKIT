@@ -4,7 +4,7 @@ import { PageHeader } from '../design/components/Chrome';
 import { rupees } from '../data/catalog';
 import { REWARD_TIERS, useStore } from '../store/useStore';
 import { useToast } from '../App';
-import { IconCheck, IconLock, IconTrophy } from '../design/elements/Icons';
+import { IconCheck, IconFlag, IconLock, IconTrophy } from '../design/elements/Icons';
 
 /* ============================================================
    Racing rewards.
@@ -26,13 +26,13 @@ import { IconCheck, IconLock, IconTrophy } from '../design/elements/Icons';
 
 /* Three of the four now have artwork drawn for the exact reward they name —
    the scooter for free delivery, the notes for each cash tier — rather than a
-   generic coin or wallet standing in. Zomato Gold now carries its own mark
-   rather than the generic membership badge it was borrowing. */
+   generic coin or wallet standing in. Zomato Gold keeps the membership icon,
+   because nothing in the set depicts it. */
 const ART: Record<string, string> = {
   start: '/icons/free-delivery.webp',
   check: '/icons/cash-25.webp',
   pit: '/icons/cash-50.webp',
-  podium: '/brand/zomato-gold.svg',
+  podium: '/rewards/25-06-premium-membership-icon.webp',
 };
 
 export default function Rewards() {
@@ -43,16 +43,9 @@ export default function Rewards() {
   const top = REWARD_TIERS[REWARD_TIERS.length - 1].min;
   const next = REWARD_TIERS.find((t) => totalPoints < t.min);
   const isUnlocked = (id: string, min: number) => unlockedRewards.includes(id) || totalPoints >= min;
-  /* The highest earned tier, and only while nothing is already applied.
-
-     It used to fall through to the next tier down the moment you claimed, so
-     pressing Claim swapped one card for another and the page looked unchanged.
-     One reward applies per order — the footnote at the bottom of this page
-     says so — which means once something is applied there is nothing here to
-     press, the card goes, and the list below moves up into the space. */
-  const claimable = claimedReward
-    ? null
-    : [...REWARD_TIERS].reverse().find((t) => isUnlocked(t.id, t.min));
+  /* The highest tier that is earned and still unspent: the one thing on this
+     page that is worth pressing. */
+  const claimable = [...REWARD_TIERS].reverse().find((t) => isUnlocked(t.id, t.min) && claimedReward?.id !== t.id);
 
   const claim = (id: string, label: string) => {
     claimReward(id);
@@ -107,15 +100,6 @@ export default function Rewards() {
             </div>
           )}
 
-          {/* The list arrived with no heading, so it read as a continuation of
-              the card above it rather than as the ledger of what you hold. */}
-          <div className="rwhd">
-            <h2 className="rwhd__t">Your rewards</h2>
-            <span className="rwhd__n">
-              {REWARD_TIERS.filter((t) => isUnlocked(t.id, t.min)).length} of {REWARD_TIERS.length} unlocked
-            </span>
-          </div>
-
           {/* The track. The rail fills to the points earned, so the list is
               also the progress bar rather than sitting under one. */}
           <div className="rwtrack">
@@ -129,12 +113,8 @@ export default function Rewards() {
               const claimed = claimedReward?.id === t.id;
               return (
                 <div key={t.id} className={'rwstop' + (unlocked ? ' is-on' : '')}>
-                  {/* A check for anything completed, claimed or not. The flag
-                      that used to mark "earned but unspent" made a reached
-                      tier look like a pending one, so a fully cleared track
-                      showed three different glyphs for the same state. */}
                   <span className="rwstop__pin" aria-hidden="true">
-                    {unlocked ? <IconCheck size={12} /> : <IconLock size={11} />}
+                    {claimed ? <IconCheck size={12} /> : unlocked ? <IconFlag size={12} /> : <IconLock size={11} />}
                   </span>
                   <span className="rwstop__art">
                     <img src={ART[t.id]} alt="" loading="lazy" />

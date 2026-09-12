@@ -98,31 +98,6 @@ input, select, textarea { font: inherit; color: inherit; }
 .sec__s { font-size: var(--f-sm); color: var(--mut); margin-top: 2px; }
 .sec__a { font-size: var(--f-sm); font-weight: 700; color: var(--green); flex: 0 0 auto; }
 
-/* ---- the campaign shelf's own heading ----
-   Centred display lettering with a flame rule either side, in the Hot Wheels
-   palette. This shelf sits inside the campaign band; the left-aligned grey
-   section header the rest of the storefront uses is the label for an ordinary
-   grocery shelf, which this is not. */
-.dsec {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 18px var(--gut) 2px;
-  text-align: center;
-}
-.dsec__t {
-  font-size: var(--f-3xl); font-weight: 900;
-  letter-spacing: -0.6px; line-height: 1.1;
-  color: var(--hw-o);
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
-}
-.dsec__s { font-size: var(--f-sm); color: var(--ink-2); margin-top: 2px; }
-/* The rule tapers to nothing at the outer end, so it reads as a flourish
-   rather than as a divider that has been cut short. */
-.dsec__orn {
-  flex: 1 1 auto; max-width: 54px; height: 3px; border-radius: 3px;
-  background: linear-gradient(90deg, rgba(240, 126, 26, 0) 0%, var(--hw-o) 100%);
-}
-.dsec__orn--r { background: linear-gradient(90deg, var(--hw-o) 0%, rgba(240, 126, 26, 0) 100%); }
-
 /* ---------- buttons: flat, compact, modest radius ---------- */
 .btn {
   display: inline-flex;
@@ -142,15 +117,6 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn--primary { background: var(--green); color: #fff; }
 .btn--primary:not(:disabled):active { background: var(--green-dk); }
 .btn--dark { background: var(--ink); color: #fff; }
-/* WhatsApp's own green, because a button that says "Invite via WhatsApp" in
-   the campaign's blue is asking to be read as something else. Rendered as an
-   <a>, so it needs the block layout .btn--block would otherwise give it. */
-.btn--wa {
-  display: flex; width: 100%;
-  background: #25D366; color: #0A2E17;
-  font-weight: 800;
-}
-.btn--wa:active { background: #1EB955; }
 .btn--dark:not(:disabled):active { background: #000; }
 /* the button you press on a campaign ground — see ButtonVariant for why this
    is white rather than green, red or yellow */
@@ -302,9 +268,7 @@ input, select, textarea { font: inherit; color: inherit; }
   width: 26px; height: 26px;
   /* see .hit44 — drawn at 26, tappable at 44 */
   display: grid; place-items: center;
-  /* Light gray per the audit, matching the real listing — the heart is an
-     affordance sitting on the product photo, not a mark competing with it. */
-  background: none; border: 0; color: #C4C8D0;
+  background: none; border: 0; color: var(--mut);
 }
 /* White fill AND a stroke. The reference heart is white because it sits on
    dark lifestyle photography; our cut-outs are on a near-white ground, where a
@@ -335,20 +299,14 @@ input, select, textarea { font: inherit; color: inherit; }
   aspect-ratio: 100 / 36;
   padding: 0 50% 0 10px;
   border-top: 1px solid var(--line);
-  /* Down 2px per the audit: the pack size is a qualifier on the button beside
-     it, not a peer of the price below. */
-  font-size: calc(var(--f-base) - 2px); font-weight: 700; color: var(--ink);
+  font-size: var(--f-base); font-weight: 700; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 /* ADD is flush with the panel's right edge — not hanging past it — and a
    little taller than the band, so it breaks the divider above and the panel's
    bottom below. 50% of the card wide, 35% of the card tall. */
 .pcard__act {
-  /* Further out of the frame per the audit. It already broke the panel's
-     bottom edge by 3px; the point of the overhang is that the button is not
-     part of the band it sits over, and 3px reads as a misalignment rather than
-     as a deliberate break. */
-  position: absolute; right: -2px; bottom: -8px; z-index: 3;
+  position: absolute; right: 0; bottom: -3px; z-index: 3;
   width: 50%;
 }
 /* Sized off the real listing and left alone. The button is HALF the card wide
@@ -368,34 +326,6 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--r-ctl);
   padding: 0 6px;
 }
-/* "Shiny green puffy button". Puffy is the lift — a raised edge above and a
-   coloured shadow below, so it sits ON the card rather than in it. Shiny is a
-   single soft highlight across the top half, the way a moulded plastic button
-   catches light. Both are drawn with gradients and shadow rather than an
-   overlay, so nothing sits above the label. */
-.pcard__act .add {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 52%),
-    #fff;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 2px 0 var(--green-line),
-    0 4px 10px rgba(12, 131, 31, 0.18);
-}
-.pcard__act .add:active {
-  background: var(--green-tint);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 0 var(--green-line);
-  transform: translateY(1px);
-}
-.pcard__act .stepper {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 54%),
-    var(--green);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 2px 0 var(--green-dk),
-    0 4px 10px rgba(12, 131, 31, 0.28);
-}
 
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
 /* Sized as a share of the card, off the real listing: the price is 14.7% of
@@ -403,8 +333,7 @@ input, select, textarea { font: inherit; color: inherit; }
    land on --f-xl / --f-lg / --f-base exactly — so they are taken from the scale
    rather than hardcoded, and the card grows with everything else at 768px
    instead of staying still while the page around it steps up. */
-/* Up 2px — the audit's "big text". It is the figure the card is built around. */
-.pcard__price { font-size: calc(var(--f-xl) + 2px); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+.pcard__price { font-size: var(--f-xl); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
 /* The locked car has no price yet, and saying so in price-sized bold made it
    read as a product whose data failed to load. Smaller, lighter, and carrying
    the campaign's red, it reads as a state instead of a value. */
@@ -412,9 +341,7 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-md); font-weight: 700; letter-spacing: 0.04em;
   text-transform: uppercase; color: var(--hw-r-label);
 }
-/* Light gray: the struck price is context for the live one, and at --mut-2 it
-   was reading as a second value rather than as what the price used to be. */
-.pcard__mrp { font-size: var(--f-md); color: #AFB4BE; }
+.pcard__mrp { font-size: var(--f-md); color: var(--mut-2); }
 /* Blinkit sets the saving in blue, not in the brand green — green is the
    action colour on this card and the discount is information, not a control.
    A step down from the name: it is a qualifier on the price above it, and at
@@ -425,33 +352,21 @@ input, select, textarea { font: inherit; color: inherit; }
    every card has to reserve the same space whether it uses it or not.
    Semibold, not regular — on the real card the name carries nearly as much
    weight as the price, and at 500 ours read as a caption under it. */
-/* Shown in full, never clamped, and up 2px.
-
-   It used to be clamped to two lines with a matching min-height, on the
-   reasoning that a reserved box keeps a grid of cards level. The real listing
-   does not do that — names run to three and four lines there and the cards
-   below them sit at different heights — and a truncated product name is worse
-   than a ragged row: "Hot Wheels Ballistik Die Cast…" is not the name of
-   anything you can buy. The min-height stays as a floor so a one-word name
-   still reserves two lines and short cards do not collapse. */
 .pcard__nm {
-  font-size: calc(var(--f-lg) + 2px); line-height: 1.3; font-weight: 600; color: var(--ink);
-  min-height: calc((var(--f-lg) + 2px) * 1.3 * 2);
+  font-size: var(--f-lg); line-height: 1.3; font-weight: 600; color: var(--ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: calc(var(--f-lg) * 1.3 * 2);
   margin-top: 2px;
 }
 .pcard__un { font-size: var(--f-xs); color: var(--mut); }
-/* The chip, the rating and the delivery line are one block — the audit's
-   "bring these 3 together as unit". Spread on 4/3/3px they read as three
-   separate afterthoughts under the name; closed up, they read as the card's
-   footer. */
-.pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; margin-top: 7px; }
+.pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; margin-top: 4px; }
 .pcard__spec {
   flex: 0 0 auto; white-space: nowrap;
   background: var(--yellow-tint); border: 1px solid #F0E3BC;
   color: #6B5A1E; font-size: var(--f-2xs); font-weight: 700;
   border-radius: var(--r-xs); padding: 3px 7px;
 }
-.pcard__rt { display: flex; align-items: center; gap: 4px; font-size: var(--f-xs); margin-top: 1px; }
+.pcard__rt { display: flex; align-items: center; gap: 4px; font-size: var(--f-xs); margin-top: 3px; }
 /* Named, not `.pcard__rt span`: a bare descendant selector also caught the
    spans inside the star row and outranked their own colours, which greyed the
    fill out. */
@@ -461,7 +376,7 @@ input, select, textarea { font: inherit; color: inherit; }
   /* The delivery promise is the one thing on this card that is a promise, so
      it is set in the ink colour at full weight rather than as grey meta. */
   font-size: var(--f-xs); color: var(--ink-2); font-weight: 800;
-  margin-top: 1px;
+  margin-top: 3px;
 }
 .pcard__meta span { display: inline-flex; align-items: center; gap: 3px; }
 
@@ -700,22 +615,15 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Widths are set so the lockup keeps the same HEIGHT on the band. The new
      artwork is 2.18:1 against the old 1.46:1, so holding the old 100px width
      would have quietly shrunk the campaign name by a third. */
-  /* Another 20%, to 216px, now that the co-brand lockup and the date pill
-     above it are gone and the band belongs to this alone. */
+  /* Up 20% from 150px — the lockup is the campaign's name and was reading
+     smaller than the countdown sitting under it. */
   margin: 14px auto 0;
-  max-width: 216px;
+  max-width: 180px;
   line-height: 0;
-  /* It arrives rather than being present — the one piece of motion the band
-     gets, the way Blinkit's festive mastheads animate their lettering in. */
-  animation: ctakeIn 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
-@media (min-width: 768px) { .ctake__t { max-width: 476px; } }
-@keyframes ctakeIn {
-  from { transform: scale(0.86) translateY(10px); opacity: 0; }
-  to { transform: none; opacity: 1; }
-}
+@media (min-width: 768px) { .ctake__t { max-width: 396px; } }
 
 
 
@@ -755,35 +663,6 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
 .mystery__go:active { transform: scale(0.97); }
-/* A reflective sweep travelling across the face, so the button reads as the
-   same chrome-and-flame material the lockup above it is made of rather than a
-   flat orange rectangle sitting under it. Clipped to the button, skewed so the
-   highlight rakes rather than wipes, and paused for anyone who has asked for
-   less motion. */
-.mystery__go { position: relative; overflow: hidden; }
-.mystery__go::after {
-  content: '';
-  position: absolute; top: -60%; bottom: -60%; left: -40%;
-  width: 32%;
-  background: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.62) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: skewX(-18deg);
-  animation: goSheen 3.4s ease-in-out 1.2s infinite;
-  pointer-events: none;
-}
-@keyframes goSheen {
-  0% { left: -40%; }
-  /* the sweep is a moment, not a loop — most of the cycle is the wait */
-  22%, 100% { left: 118%; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .ctake__t { animation: none; }
-  .mystery__go::after { display: none; }
-}
 
 .dropfacts > div { padding: 10px 8px; text-align: center; border-left: 1px solid var(--line); }
 .dropfacts > div:first-child { border-left: 0; }
@@ -862,17 +741,9 @@ input, select, textarea { font: inherit; color: inherit; }
 /* All three are cut-outs on a common canvas, already sitting on its floor and
    already balanced against each other, so the tile just needs to place that
    canvas: full width, anchored to the bottom, contained. */
-/* Inset, so every product sits on the same optical centre.
-
-   These ran the full width of the tile with `object-fit: contain`, which
-   centres the IMAGE FILE and not the thing inside it — and the three files
-   carry different amounts of empty margin, so a wide car filled its tile edge
-   to edge while a narrower one floated. Padding the box equally on both sides
-   gives them a common frame to be centred in, which is what makes them read as
-   a set rather than three unrelated crops. */
 .ctile__im {
   position: absolute; left: 0; right: 0; bottom: 0;
-  width: calc(100% - 24px); margin: 0 12px; height: 56%;
+  width: 100%; height: 56%;
   object-fit: contain; object-position: 50% 100%;
 }
 .ctile:active { transform: scale(0.985); }
@@ -915,193 +786,13 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* ---------- stat strip ---------- */
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
-/* Icon and figure both up, per the audit. They were sized on the reasoning
-   that a small icon keeps the number first — but at 26px and --f-lg the whole
-   row read as a legend rather than as the player's standing, which is the one
-   thing on this screen that is actually theirs. */
-.stats > div { padding: 13px 8px 13px; text-align: center; border-left: 1px solid var(--line); }
-.stats__ic { display: block; width: 38px; height: 38px; margin: 0 auto 7px; object-fit: contain; }
+/* The icon sits above the figure it belongs to, small enough that the number
+   stays the thing you read first. */
+.stats > div { padding: 10px 8px 11px; text-align: center; border-left: 1px solid var(--line); }
+.stats__ic { display: block; width: 26px; height: 26px; margin: 0 auto 6px; object-fit: contain; }
 .stats > div:first-child { border-left: 0; }
-.stats b { display: block; font-size: var(--f-2xl); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.4px; }
+.stats b { display: block; font-size: var(--f-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
 .stats span { font-size: var(--f-2xs); color: var(--mut); font-weight: 600; letter-spacing: 0.04em; }
-
-/* The races-left line, up from --f-md. It is the number that says whether you
-   can play at all. */
-.hub__races { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; }
-
-/* ---- the CTA the hero band was missing ----
-   Blinkit's own campaign heroes carry the action inside the artwork; ours
-   introduced the campaign and then handed you nowhere to go. */
-.hub__go {
-  /* justify-self, not align-self: .hub__c is a grid, so align- controls the
-     block axis and left the button stretched edge to edge. */
-  justify-self: start;
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 12px;
-  height: 40px; padding: 0 16px;
-  border: 0; border-radius: var(--r-md);
-  background: var(--yellow); color: var(--ink);
-  font-size: var(--f-base); font-weight: 800;
-  box-shadow: 0 6px 16px rgba(10, 20, 40, 0.35);
-}
-.hub__go:disabled { opacity: 0.55; box-shadow: none; }
-.hub__go:not(:disabled):active { transform: scale(0.97); }
-
-/* ---- next reward, with the reward in full focus ---- */
-.nextrw { display: flex; align-items: center; gap: 13px; padding: 12px; }
-.nextrw__art { width: 62px; height: 62px; flex: 0 0 62px; object-fit: contain; }
-.nextrw__k {
-  font-size: var(--f-xs); font-weight: 700; color: var(--mut);
-  letter-spacing: 0.06em; text-transform: uppercase;
-}
-.nextrw__t { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; margin: 1px 0 7px; }
-.nextrw__n { font-size: var(--f-xs); color: var(--mut); margin-top: 5px; }
-
-/* ---- your own standing, above the board ----
-   The one line on this screen that belongs to the player. It used to be row
-   nine of a list of strangers, which on a longer board would have put it off
-   the bottom of the screen entirely. */
-.myrank {
-  display: flex; align-items: center; gap: 12px;
-  background: var(--yellow-tint);
-  border: 1px solid #F0E3BC;
-  border-radius: var(--r-lg);
-  padding: 12px 14px;
-}
-.myrank__a {
-  flex: 0 0 40px; width: 40px; height: 40px; border-radius: 50%;
-  background: var(--green-tint); color: var(--green);
-  display: grid; place-items: center;
-  font-size: var(--f-lg); font-weight: 800;
-}
-.myrank__k {
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--mut);
-}
-.myrank__r { font-size: var(--f-2xl); font-weight: 900; letter-spacing: -0.6px; line-height: 1.05; }
-.myrank__s { font-size: var(--f-xs); color: var(--ink-2); margin-top: 1px; }
-.myrank__pts { text-align: right; flex: 0 0 auto; }
-.myrank__pts b { display: block; font-size: var(--f-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
-.myrank__pts span { font-size: var(--f-2xs); color: var(--mut); font-weight: 600; }
-
-/* ---- the claim card's punched edge ----
-   A ticket, not a panel. The audit asks for the pin hole: a claimable reward
-   is a stub you tear off and hand over, and the notch is the whole of what
-   says so. Painted in the page ground on the card's own edges rather than
-   masked out of it — same reasoning as the reward screen's coupon, where a
-   mask is one unsupported property away from hiding the card entirely. */
-/* ---------- the claimable reward, as a ticket ----------
-   RESTORED. These rules were deleted with the old race-result block when that
-   screen was rebuilt — .coupon was shared with the rewards page, which has
-   been rendering an unstyled div ever since: no ground, no radius, no padding,
-   the art and the copy run together at the left edge. Verifying the screen I
-   had changed and not the other one that used the same class is what let it
-   through. */
-.coupon {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--green-line);
-  border-radius: var(--r-md);
-  overflow: hidden;
-}
-.coupon__top { display: flex; align-items: center; gap: 12px; padding: 14px; }
-.coupon__art {
-  width: 54px; height: 54px; flex: 0 0 54px;
-  border-radius: 50%; background: var(--green-tint);
-  display: grid; place-items: center;
-}
-.coupon__art img { width: 68%; height: 68%; object-fit: contain; }
-.coupon__k {
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--green);
-}
-.coupon__v { display: block; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; margin-top: 1px; }
-.coupon__s { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 2px; }
-/* The perforation: a dashed rule with a notch bitten out of each side, which
-   is what makes it read as a ticket you tear rather than a card you scroll. */
-.coupon__tear {
-  display: block; position: relative;
-  border-top: 1px dashed var(--green-line);
-  margin: 0 14px;
-}
-.coupon__tear::before,
-.coupon__tear::after {
-  content: '';
-  position: absolute; top: -9px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--appbase);
-  border: 1px solid var(--green-line);
-}
-.coupon__tear::before { left: -23px; }
-.coupon__tear::after { right: -23px; }
-.coupon__foot { padding: 14px; }
-
-/* The audit's punched edge, on top of the restored card. */
-.coupon::before, .coupon::after {
-  content: ''; position: absolute; top: 8px; bottom: 8px; width: 13px;
-  background-size: 13px 20px; background-repeat: repeat-y;
-  pointer-events: none;
-}
-.coupon::before {
-  left: 0;
-  background-image: radial-gradient(circle at 0 50%, var(--appbase) 0 5.5px, transparent 6px);
-}
-.coupon::after {
-  right: 0;
-  background-image: radial-gradient(circle at 100% 50%, var(--appbase) 0 5.5px, transparent 6px);
-}
-
-/* ---- the rewards ledger heading ---- */
-.rwhd {
-  display: flex; align-items: baseline; justify-content: space-between;
-  gap: 10px; margin: 16px 0 8px;
-}
-.rwhd__t { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; }
-.rwhd__n { font-size: var(--f-sm); color: var(--mut); font-weight: 600; }
-
-/* ---- the placement ring, alive ----
-   Over the how-it-works artwork. The ring is the one thing in that picture the
-   player has to recognise later — the same burnout they will aim at through
-   the camera — and as a still it read as part of the photograph rather than as
-   something the app draws. Two rings on one beat, offset by half of it, so it
-   pulses outward continuously instead of restarting from nothing. Positioned
-   on the car's contact patch rather than the centre of the frame. */
-.howring {
-  position: absolute; left: 50%; top: 68%;
-  width: 46%; aspect-ratio: 2.4;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.howring i {
-  position: absolute; inset: 0;
-  border: 2px solid rgba(255, 209, 74, 0.95);
-  border-radius: 50%;
-  animation: howPulse 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-}
-.howring i:nth-child(2) { animation-delay: 1.3s; }
-@keyframes howPulse {
-  0% { transform: scale(0.72); opacity: 0; }
-  18% { opacity: 1; }
-  100% { transform: scale(1.18); opacity: 0; }
-}
-
-/* ---- pro tip ----
-   Advice about the surface you are about to point a camera at, so it sits
-   beside that decision rather than inside the explainer card as a second
-   stat. */
-.protip {
-  display: flex; align-items: flex-start; gap: 9px;
-  background: var(--hw-b-tint, #EFF5FF);
-  border-radius: var(--r-md);
-  padding: 11px 13px;
-  font-size: var(--f-sm); color: var(--ink-2); line-height: 1.4;
-}
-.protip b { color: var(--ink); font-weight: 800; }
-.protip__ic {
-  flex: 0 0 22px; width: 22px; height: 22px; border-radius: 50%;
-  background: #fff; color: var(--hw-b);
-  display: grid; place-items: center;
-}
 
 /* ---------- attempts ---------- */
 .pips { display: flex; gap: 5px; }
@@ -1526,15 +1217,10 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The stage floor already carries the AR button on the left and the reset tool
    on the right, both 36px tall at bottom:10 — so the hint sits in the band
    above them rather than across them. */
-/* The rotate hint, with the 360 mark. It was set in letterspaced caps, which
-   reads as a label on the viewer rather than as an instruction to the person
-   holding the phone; sentence case with the glyph in front says what the
-   gesture is before the words do. */
 .pdp__hint {
-  position: absolute; left: 0; right: 0; bottom: 54px;
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  font-size: var(--f-xs);
-  color: var(--mut-2); font-weight: 600; letter-spacing: 0; pointer-events: none;
+  position: absolute; left: 0; right: 0; bottom: 54px; text-align: center;
+  font-size: var(--f-2xs);
+  color: var(--mut-2); font-weight: 600; letter-spacing: 0.04em; pointer-events: none;
 }
 
 /* view pager — one dot per view that actually exists */
@@ -1624,10 +1310,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag--limited { background: var(--hw-r-tint); color: var(--hw-r); }
 .tag--rare { background: var(--yellow-tint); color: var(--gold-ink); border: 1px solid #F0DFA4; }
 
-/* Up 4px and down a weight, per the audit. The name is the longest string on
-   the sheet, and at 800 it was competing with the price directly under it
-   instead of leading into it. */
-.pdp__name { font-size: calc(var(--f-xl) + 4px); font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
+.pdp__name { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
 .pdp__unit {
   display: flex; align-items: center; gap: 8px;
   font-size: var(--f-sm); color: var(--mut); margin-top: 4px;
@@ -1666,9 +1349,7 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center;
   background: var(--surface-2); color: var(--ink-2);
 }
-/* Orange, not red. The flame is Hot Wheels' accent and the red belongs to the
-   mark itself; a red tile here read as a warning sitting under the brand row. */
-.rowcard__ic--flame { background: #FFF0E2; color: var(--hw-o); }
+.rowcard__ic--flame { background: var(--hw-r-tint); color: var(--hw-r); }
 /* Drawn artwork in place of a glyph on a tinted tile. It carries its own
    colour, so it needs no tile behind it — a tinted square under an already
    illustrated icon reads as two boxes. */
@@ -2025,34 +1706,26 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd {
   /* above .arov (200): the AR overlay must never stack over the result */
   position: fixed; inset: 0; z-index: 260;
-  overflow-y: auto;
-  /* The goods row is deliberately wider than the frame so the outer two run
-     off both edges. Without this that width is scrollable, and the whole
-     screen slides left and right under a finger. */
-  overflow-x: hidden;
-  overscroll-behavior: contain;
+  overflow-y: auto; overscroll-behavior: contain;
   display: flex; flex-direction: column; align-items: center;
   padding: calc(var(--safe-t) + 10px) var(--gut) calc(18px + var(--safe-b));
   text-align: center;
   /* Blinkit's own reward ground: warm yellow with the rays thrown from behind
      the number. The campaign's blue belongs to the race; the prize belongs to
      Blinkit, and this is the screen where you are being paid. */
-  /* Flame rays over the campaign's blue, the same gradient the storefront's
-     band and the rewards hero run. The rays are orange rather than white, so
-     the sunburst reads as heat coming off the number rather than as a glare. */
   background:
     repeating-conic-gradient(from 0deg at 50% 26%,
-      rgba(255, 122, 26, 0.34) 0deg 5deg, rgba(255, 122, 26, 0) 5deg 11deg),
-    radial-gradient(120% 80% at 50% 26%, #2A5FE0 0%, #17399B 52%, #0C1E46 100%);
+      rgba(255, 255, 255, 0.30) 0deg 5deg, rgba(255, 255, 255, 0) 5deg 11deg),
+    radial-gradient(115% 75% at 50% 26%, #FFD95A 0%, #F9C63E 52%, #EFB12A 100%);
   color: var(--rwd-ink);
 }
 .rwd__bar { align-self: stretch; display: flex; align-items: center; gap: 8px; }
 .rwd__ic {
   width: 40px; height: 40px; flex: 0 0 40px;
   border-radius: 50%; border: 0;
-  background: rgba(255, 255, 255, 0.16); color: #fff;
+  background: #fff; color: var(--rwd-ink);
   display: grid; place-items: center;
-  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(93, 43, 10, 0.16);
 }
 .rwd__ic:disabled { opacity: 0.5; }
 
@@ -2067,8 +1740,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__score {
   font-size: clamp(76px, 27vw, 128px);
   font-weight: 900; line-height: 0.92; letter-spacing: -0.04em;
-  color: var(--yellow);
-  text-shadow: 0 6px 26px rgba(255, 122, 26, 0.45);
+  color: var(--rwd-ink);
   margin-top: 2px;
 }
 .rwd__stats {
@@ -2081,7 +1753,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__pb {
   margin-top: 7px;
   font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--ink); background: var(--yellow);
+  color: #fff; background: var(--rwd-ink);
   border-radius: 999px; padding: 4px 11px;
 }
 
@@ -2098,59 +1770,46 @@ input, select, textarea { font: inherit; color: inherit; }
   background: var(--rwd-card);
   border-radius: 14px;
   /* a solid offset shadow, the way a printed voucher is drawn */
-  box-shadow: -6px 9px 0 #0A1838;
+  box-shadow: -6px 9px 0 var(--rwd-ink);
 }
-/* The scallops are a real cut, not a painted one.
-
-   Painting them in the ground colour worked on the flat yellow this screen used
-   to have. It cannot work on a blue gradient with flame rays behind it — a
-   solid dot at the edge is visibly a dot, not a hole. So they are masked out,
-   behind an @supports guard: where mask-composite is missing the ticket is
-   simply a rounded rectangle, which is the one failure mode that is safe. */
-@supports ((-webkit-mask-composite: source-in) or (mask-composite: intersect)) {
-  .rwd__ticket {
-    --notch: 7px;
-    -webkit-mask-image:
-      radial-gradient(var(--notch) at left, #0000 98%, #000),
-      radial-gradient(var(--notch) at right, #0000 98%, #000);
-    mask-image:
-      radial-gradient(var(--notch) at left, #0000 98%, #000),
-      radial-gradient(var(--notch) at right, #0000 98%, #000);
-    -webkit-mask-size: 100% 21px;
-    mask-size: 100% 21px;
-    -webkit-mask-repeat: repeat-y;
-    mask-repeat: repeat-y;
-    -webkit-mask-composite: source-in;
-    mask-composite: intersect;
-  }
+.rwd__ticket::before, .rwd__ticket::after {
+  content: ''; position: absolute; top: 6px; bottom: 6px; width: 15px;
+  background-size: 15px 21px; background-repeat: repeat-y;
 }
-
+.rwd__ticket::before {
+  left: 0;
+  background-image: radial-gradient(circle at 0 50%, var(--rwd-notch) 0 6.5px, transparent 7px);
+}
+.rwd__ticket::after {
+  right: 0;
+  background-image: radial-gradient(circle at 100% 50%, var(--rwd-notch) 0 6.5px, transparent 7px);
+}
 .rwd__won {
   font-size: var(--f-md); font-weight: 800;
   letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--rwd-tick-2);
+  color: var(--rwd-ink-2);
 }
 .rwd__amt {
   font-size: clamp(40px, 13vw, 56px); font-weight: 900;
   letter-spacing: -0.03em; line-height: 1.02;
-  color: var(--hw-o); margin-top: 4px;
+  color: var(--rwd-ink); margin-top: 4px;
 }
 /* A tier name is words, not a figure — it cannot take the figure's size. */
 .rwd__amt--sm { font-size: clamp(24px, 8vw, 34px); letter-spacing: -0.02em; }
 .rwd__upto {
   font-size: var(--f-lg); font-weight: 800;
   letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--rwd-tick); margin-top: 2px;
+  color: var(--rwd-ink); margin-top: 2px;
 }
 .rwd__perf {
   display: block; height: 1px; margin: 14px 0 12px;
-  background-image: linear-gradient(90deg, var(--rwd-tick-2) 0 6px, transparent 6px 12px);
+  background-image: linear-gradient(90deg, var(--rwd-ink-2) 0 6px, transparent 6px 12px);
   background-size: 12px 1px;
   opacity: 0.5;
 }
 .rwd__fine {
   font-size: var(--f-sm); font-weight: 600; line-height: 1.38;
-  color: var(--rwd-tick-2);
+  color: var(--rwd-ink-2);
   text-wrap: balance;
 }
 
@@ -2163,21 +1822,14 @@ input, select, textarea { font: inherit; color: inherit; }
      edges. `auto` above pushes this and the button down together, so the slack
      on a tall phone falls between the ticket and the goods — which is where
      the reference puts it too. */
-  /* Exactly full-bleed, with the overspill clipped HERE rather than by the
-     screen. The row used to be 36px wider than the frame, which made the whole
-     reward screen 42px wider than the phone — clipped, but still a scrollable
-     box that slid under a finger. overflow-x: clip crops the bleed without
-     creating a scroll container, and leaves the vertical drop shadows alone. */
-  width: calc(100% + var(--gut) * 2);
-  margin: auto calc(var(--gut) * -1) 0;
-  overflow-x: clip;
-  overflow-y: visible;
+  width: calc(100% + var(--gut) * 2 + 36px);
+  margin: auto calc(var(--gut) * -1 - 18px) 0;
   pointer-events: none;
 }
 .rwd__goods img {
-  width: 43%; max-width: 178px; height: auto;
+  width: 40%; max-width: 172px; height: auto;
   object-fit: contain;
-  filter: drop-shadow(0 12px 18px rgba(6, 16, 40, 0.45));
+  filter: drop-shadow(0 12px 16px rgba(93, 43, 10, 0.28));
 }
 .rwd__goods img:nth-child(1) { transform: rotate(-12deg) translateY(10px); margin-right: -7%; }
 .rwd__goods img:nth-child(2) { transform: scale(1.1); position: relative; z-index: 1; }
@@ -2188,9 +1840,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__cta {
   width: 100%; height: 56px; border: 0;
   border-radius: 999px;
-  background: var(--hw-o); color: #fff;
+  background: var(--rwd-ink); color: #fff;
   font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.1px;
-  box-shadow: 0 8px 22px rgba(240, 126, 26, 0.42);
+  box-shadow: 0 8px 20px rgba(93, 43, 10, 0.3);
 }
 .rwd__cta:disabled { opacity: 0.5; box-shadow: none; }
 .rwd__cta:not(:disabled):active { transform: scale(0.985); }
@@ -2932,61 +2584,12 @@ input, select, textarea { font: inherit; color: inherit; }
    illustration nearly 400px tall — it filled the first screen and pushed the
    thing the page is actually for below the fold. Capped and centred, with air
    around it, so it introduces the page instead of being the page. */
-/* ---- similar products, as a grid ----
-   Six in a grid rather than three in a rail. On the sheet you have already
-   chosen a category, so the six ARE the point; a rail shows three and hides
-   the rest behind a gesture. Tighter gutters than the storefront grid, because
-   this one sits inside a card that already has padding. */
-.pgrid--tight {
-  /* Centred, NOT space-between.
-
-     The tracks are a fixed 126px — the card width every other surface uses —
-     so space-between had nothing to distribute except the leftover, and it
-     threw the two columns to opposite edges of the section. That left a ~60px
-     canyon down the middle and pushed the right card's deliberately
-     overhanging ADD outside the section's padding, where it read as a button
-     that had fallen off the card. */
-  justify-content: center;
-  gap: 14px;
-  padding: 4px 0 2px;
-}
-
-/* ---- brands in this category ---- */
-.brandrow {
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: 10px; padding: 4px 0 2px;
-}
-.brandrow__i { display: grid; justify-items: center; gap: 6px; background: none; border: 0; }
-.brandrow__im {
-  width: 100%; aspect-ratio: 1;
-  display: grid; place-items: center;
-  background: var(--surface-2); border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 8px; overflow: hidden;
-}
-.brandrow__im img { max-width: 100%; max-height: 100%; object-fit: contain; }
-/* The wordmark stand-in: set tight and dark so the tile reads as a brand and
-   not as a missing image. */
-.brandrow__wm {
-  font-style: normal; font-weight: 900; font-size: var(--f-xs);
-  letter-spacing: -0.4px; color: var(--ink-2); text-align: center; line-height: 1.05;
-}
-.brandrow__n {
-  font-size: var(--f-2xs); font-weight: 600; color: var(--ink-2);
-  text-align: center; line-height: 1.2;
-}
-
-/* ---- campaign banner ----
-   The supplied set is drawn at 2.4:1 as full-width bands, so this is no longer
-   a small centred illustration with air around it. The leaderboard's podium
-   used to sit here at 161px after the audit asked it down 30%; the banner that
-   replaces it is the artwork for the whole screen, not a spot illustration. */
 .heroart {
-  padding: 12px var(--gut) 4px;
+  display: grid; place-items: center;
+  padding: 14px var(--gut) 6px;
 }
 .heroart img {
   display: block;
-  width: 100%; aspect-ratio: 2.4 / 1;
-  object-fit: cover;
-  border-radius: var(--r-lg);
+  width: min(62%, 230px);
+  height: auto;
 }

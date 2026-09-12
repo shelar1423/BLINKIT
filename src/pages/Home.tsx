@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppHeader, SectionHeader } from '../design/components/Chrome';
+import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
 import { CARS, CATEGORIES, HERO_CARS, SHOP_CARS, rupees } from '../data/catalog';
+import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
@@ -128,17 +129,18 @@ export default function Home() {
               use for their title row. It also gets the dates out from under the
               flaps, where they were reading as a third unit of the countdown,
               and buys back the height the wordmark now spends. */}
-          {/* The co-brand lockup and the drop dates used to sit above this.
-              Both are gone per the audit: Blinkit's own festive takeovers give
-              the band to ONE piece of lettering and nothing else — Ganesh
-              Chaturthi carries no partner mark and no date — and the two of
-              them were splitting the attention the campaign name is supposed
-              to have all of. The dates still run in the countdown below. */}
+          <div className="ctake__top">
+            <span className="ctake__mast">
+              <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
+              <span className="ctake__x">&times;</span>
+              <BlinkitMark className="ctake__bm bmark--on-dark" />
+            </span>
+            <span className="ctake__when">{DROP_DATES}</span>
+          </div>
 
           {/* Every one of these storefronts sets the campaign name as its own
               piece of lettering — script for Hug Day and Karwa Chauth, a
-              glowing lockup for Ice Cream and Harry Potter. Ours is a lockup,
-              and it arrives rather than simply being present. */}
+              glowing lockup for Ice Cream and Harry Potter. Ours is a lockup. */}
           <h2 className="ctake__t">
             <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
           </h2>
@@ -215,20 +217,10 @@ export default function Home() {
             nav bar and the shelf read as an unrelated section that happened to
             contain cars. */}
         <section className="dpicks">
-          {/* Centred and set as lettering rather than as a left-aligned list
-              header — the audit's "like festive picks". On Blinkit's own
-              takeovers the shelf inside the campaign band gets a display
-              heading with ornament either side; a 15px left-aligned title with
-              a grey subtitle is how the ordinary grocery shelves are labelled,
-              and this shelf is not one of those. */}
-          <div className="dsec">
-            <span className="dsec__orn" aria-hidden="true" />
-            <div>
-              <h2 className="dsec__t">Drop Picks</h2>
-              <p className="dsec__s">Delivered in 8 minutes, like everything else</p>
-            </div>
-            <span className="dsec__orn dsec__orn--r" aria-hidden="true" />
-          </div>
+          <SectionHeader
+            title="Drop Picks"
+            subtitle="Delivered in 8 minutes, like everything else"
+          />
           <div className="prail">
             {HERO_CARS.map((p) => (
               <ProductCard key={p.id} product={p} />
