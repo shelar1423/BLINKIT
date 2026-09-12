@@ -215,10 +215,20 @@ export default function Home() {
             nav bar and the shelf read as an unrelated section that happened to
             contain cars. */}
         <section className="dpicks">
-          <SectionHeader
-            title="Drop Picks"
-            subtitle="Delivered in 8 minutes, like everything else"
-          />
+          {/* Centred and set as lettering rather than as a left-aligned list
+              header — the audit's "like festive picks". On Blinkit's own
+              takeovers the shelf inside the campaign band gets a display
+              heading with ornament either side; a 15px left-aligned title with
+              a grey subtitle is how the ordinary grocery shelves are labelled,
+              and this shelf is not one of those. */}
+          <div className="dsec">
+            <span className="dsec__orn" aria-hidden="true" />
+            <div>
+              <h2 className="dsec__t">Drop Picks</h2>
+              <p className="dsec__s">Delivered in 8 minutes, like everything else</p>
+            </div>
+            <span className="dsec__orn dsec__orn--r" aria-hidden="true" />
+          </div>
           <div className="prail">
             {HERO_CARS.map((p) => (
               <ProductCard key={p.id} product={p} />

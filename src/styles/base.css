@@ -98,6 +98,31 @@ input, select, textarea { font: inherit; color: inherit; }
 .sec__s { font-size: var(--f-sm); color: var(--mut); margin-top: 2px; }
 .sec__a { font-size: var(--f-sm); font-weight: 700; color: var(--green); flex: 0 0 auto; }
 
+/* ---- the campaign shelf's own heading ----
+   Centred display lettering with a flame rule either side, in the Hot Wheels
+   palette. This shelf sits inside the campaign band; the left-aligned grey
+   section header the rest of the storefront uses is the label for an ordinary
+   grocery shelf, which this is not. */
+.dsec {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 18px var(--gut) 2px;
+  text-align: center;
+}
+.dsec__t {
+  font-size: var(--f-3xl); font-weight: 900;
+  letter-spacing: -0.6px; line-height: 1.1;
+  color: var(--hw-o);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+.dsec__s { font-size: var(--f-sm); color: var(--ink-2); margin-top: 2px; }
+/* The rule tapers to nothing at the outer end, so it reads as a flourish
+   rather than as a divider that has been cut short. */
+.dsec__orn {
+  flex: 1 1 auto; max-width: 54px; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, rgba(240, 126, 26, 0) 0%, var(--hw-o) 100%);
+}
+.dsec__orn--r { background: linear-gradient(90deg, var(--hw-o) 0%, rgba(240, 126, 26, 0) 100%); }
+
 /* ---------- buttons: flat, compact, modest radius ---------- */
 .btn {
   display: inline-flex;
@@ -268,7 +293,9 @@ input, select, textarea { font: inherit; color: inherit; }
   width: 26px; height: 26px;
   /* see .hit44 — drawn at 26, tappable at 44 */
   display: grid; place-items: center;
-  background: none; border: 0; color: var(--mut);
+  /* Light gray per the audit, matching the real listing — the heart is an
+     affordance sitting on the product photo, not a mark competing with it. */
+  background: none; border: 0; color: #C4C8D0;
 }
 /* White fill AND a stroke. The reference heart is white because it sits on
    dark lifestyle photography; our cut-outs are on a near-white ground, where a
@@ -299,14 +326,20 @@ input, select, textarea { font: inherit; color: inherit; }
   aspect-ratio: 100 / 36;
   padding: 0 50% 0 10px;
   border-top: 1px solid var(--line);
-  font-size: var(--f-base); font-weight: 700; color: var(--ink);
+  /* Down 2px per the audit: the pack size is a qualifier on the button beside
+     it, not a peer of the price below. */
+  font-size: calc(var(--f-base) - 2px); font-weight: 700; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 /* ADD is flush with the panel's right edge — not hanging past it — and a
    little taller than the band, so it breaks the divider above and the panel's
    bottom below. 50% of the card wide, 35% of the card tall. */
 .pcard__act {
-  position: absolute; right: 0; bottom: -3px; z-index: 3;
+  /* Further out of the frame per the audit. It already broke the panel's
+     bottom edge by 3px; the point of the overhang is that the button is not
+     part of the band it sits over, and 3px reads as a misalignment rather than
+     as a deliberate break. */
+  position: absolute; right: -2px; bottom: -8px; z-index: 3;
   width: 50%;
 }
 /* Sized off the real listing and left alone. The button is HALF the card wide
@@ -326,6 +359,34 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--r-ctl);
   padding: 0 6px;
 }
+/* "Shiny green puffy button". Puffy is the lift — a raised edge above and a
+   coloured shadow below, so it sits ON the card rather than in it. Shiny is a
+   single soft highlight across the top half, the way a moulded plastic button
+   catches light. Both are drawn with gradients and shadow rather than an
+   overlay, so nothing sits above the label. */
+.pcard__act .add {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 52%),
+    #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 0 var(--green-line),
+    0 4px 10px rgba(12, 131, 31, 0.18);
+}
+.pcard__act .add:active {
+  background: var(--green-tint);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 0 var(--green-line);
+  transform: translateY(1px);
+}
+.pcard__act .stepper {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0) 54%),
+    var(--green);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 2px 0 var(--green-dk),
+    0 4px 10px rgba(12, 131, 31, 0.28);
+}
 
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
 /* Sized as a share of the card, off the real listing: the price is 14.7% of
@@ -333,7 +394,8 @@ input, select, textarea { font: inherit; color: inherit; }
    land on --f-xl / --f-lg / --f-base exactly — so they are taken from the scale
    rather than hardcoded, and the card grows with everything else at 768px
    instead of staying still while the page around it steps up. */
-.pcard__price { font-size: var(--f-xl); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+/* Up 2px — the audit's "big text". It is the figure the card is built around. */
+.pcard__price { font-size: calc(var(--f-xl) + 2px); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
 /* The locked car has no price yet, and saying so in price-sized bold made it
    read as a product whose data failed to load. Smaller, lighter, and carrying
    the campaign's red, it reads as a state instead of a value. */
@@ -341,7 +403,9 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-md); font-weight: 700; letter-spacing: 0.04em;
   text-transform: uppercase; color: var(--hw-r-label);
 }
-.pcard__mrp { font-size: var(--f-md); color: var(--mut-2); }
+/* Light gray: the struck price is context for the live one, and at --mut-2 it
+   was reading as a second value rather than as what the price used to be. */
+.pcard__mrp { font-size: var(--f-md); color: #AFB4BE; }
 /* Blinkit sets the saving in blue, not in the brand green — green is the
    action colour on this card and the discount is information, not a control.
    A step down from the name: it is a qualifier on the price above it, and at
@@ -352,21 +416,33 @@ input, select, textarea { font: inherit; color: inherit; }
    every card has to reserve the same space whether it uses it or not.
    Semibold, not regular — on the real card the name carries nearly as much
    weight as the price, and at 500 ours read as a caption under it. */
+/* Shown in full, never clamped, and up 2px.
+
+   It used to be clamped to two lines with a matching min-height, on the
+   reasoning that a reserved box keeps a grid of cards level. The real listing
+   does not do that — names run to three and four lines there and the cards
+   below them sit at different heights — and a truncated product name is worse
+   than a ragged row: "Hot Wheels Ballistik Die Cast…" is not the name of
+   anything you can buy. The min-height stays as a floor so a one-word name
+   still reserves two lines and short cards do not collapse. */
 .pcard__nm {
-  font-size: var(--f-lg); line-height: 1.3; font-weight: 600; color: var(--ink);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  min-height: calc(var(--f-lg) * 1.3 * 2);
+  font-size: calc(var(--f-lg) + 2px); line-height: 1.3; font-weight: 600; color: var(--ink);
+  min-height: calc((var(--f-lg) + 2px) * 1.3 * 2);
   margin-top: 2px;
 }
 .pcard__un { font-size: var(--f-xs); color: var(--mut); }
-.pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; margin-top: 4px; }
+/* The chip, the rating and the delivery line are one block — the audit's
+   "bring these 3 together as unit". Spread on 4/3/3px they read as three
+   separate afterthoughts under the name; closed up, they read as the card's
+   footer. */
+.pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; margin-top: 7px; }
 .pcard__spec {
   flex: 0 0 auto; white-space: nowrap;
   background: var(--yellow-tint); border: 1px solid #F0E3BC;
   color: #6B5A1E; font-size: var(--f-2xs); font-weight: 700;
   border-radius: var(--r-xs); padding: 3px 7px;
 }
-.pcard__rt { display: flex; align-items: center; gap: 4px; font-size: var(--f-xs); margin-top: 3px; }
+.pcard__rt { display: flex; align-items: center; gap: 4px; font-size: var(--f-xs); margin-top: 1px; }
 /* Named, not `.pcard__rt span`: a bare descendant selector also caught the
    spans inside the star row and outranked their own colours, which greyed the
    fill out. */
@@ -376,7 +452,7 @@ input, select, textarea { font: inherit; color: inherit; }
   /* The delivery promise is the one thing on this card that is a promise, so
      it is set in the ink colour at full weight rather than as grey meta. */
   font-size: var(--f-xs); color: var(--ink-2); font-weight: 800;
-  margin-top: 3px;
+  margin-top: 1px;
 }
 .pcard__meta span { display: inline-flex; align-items: center; gap: 3px; }
 
