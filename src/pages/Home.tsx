@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
-import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
+import { CARS, CATEGORIES, HERO_CARS, SHOP_CARS, rupees } from '../data/catalog';
 import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
@@ -21,28 +21,49 @@ import { useToast } from '../App';
  */
 const SHOW_TRACK_DIVIDER = false;
 
-/** The three ways into the catalogue that sit on the campaign band. */
-const SHOP_TILES = [
-  {
-    id: 'diecast',
-    title: 'Die-Cast Cars',
-    image: '/cars/09-02-muscle-car-orange.webp',
-    to: '/hot-wheels',
-  },
-  {
-    id: 'track',
-    title: 'Track Sets',
-    image: '/campaign/tile-tracksets.webp',
-    to: '/hot-wheels',
-  },
-  {
-    id: 'trucks',
-    title: 'Trucks & Playsets',
-    image: '/cars/09-09-performance-pickup-blue.webp',
-    to: '/hot-wheels',
-  },
-];
-
+/**
+ * The three ways into the catalogue that sit on the campaign band.
+ *
+ * Every number on these badges is computed from the catalogue rather than
+ * typed, so a tile cannot promise something the listing then contradicts. The
+ * reference artwork said "from Rs 149" and "up to 25% off"; the real figures
+ * are Rs 179 and 29%, and those are what show.
+ */
+const SHOP_TILES = (() => {
+  const cars = CARS.filter((c) => !c.mystery);
+  const cheapest = Math.min(...cars.map((c) => c.price));
+  const deepest = Math.max(
+    ...cars.map((c) => (c.mrp ? Math.round(((c.mrp - c.price) / c.mrp) * 100) : 0)),
+  );
+  // the one truck we actually sell
+  const truck = cars.find((c) => c.id === 'pickup');
+  return [
+    {
+      id: 'diecast',
+      title: 'Die-Cast Cars',
+      lead: 'Starting at',
+      value: rupees(cheapest),
+      image: '/cars/09-02-muscle-car-orange.webp',
+      to: '/hot-wheels',
+    },
+    {
+      id: 'track',
+      title: 'Track Sets',
+      lead: 'Up to',
+      value: `${deepest}% OFF`,
+      image: '/campaign/tile-tracksets.webp',
+      to: '/hot-wheels',
+    },
+    {
+      id: 'trucks',
+      title: 'Toy Trucks',
+      lead: 'Starting at',
+      value: rupees(truck?.price ?? cheapest),
+      image: '/cars/09-09-performance-pickup-blue.webp',
+      to: '/hot-wheels',
+    },
+  ];
+})();
 
 export default function Home() {
   const nav = useNavigate();
@@ -126,6 +147,10 @@ export default function Home() {
                 type="button"
                 onClick={() => nav(t.to)}
               >
+                <span className="ctile__flag">
+                  <b>{t.lead}</b>
+                  <i>{t.value}</i>
+                </span>
                 <span className="ctile__t">{t.title}</span>
                 <img className="ctile__im" src={t.image} alt="" loading="lazy" />
               </button>
