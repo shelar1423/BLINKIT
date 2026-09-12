@@ -131,19 +131,25 @@ export default function Product() {
      where the peek layer had moved and the sheet had not slid the neighbouring
      car across the current one. One writer and two readers cannot desync. */
   const dx = useRef(0);
-  const raf = useRef(0);
   const [gliding, setGliding] = useState(false);
   const grab = useRef<{ x: number; y: number; axis: 'undecided' | 'x' | 'y' } | null>(null);
 
+  /* Written straight through, not scheduled on a frame.
+     rAF batching is for work that must not run twice in a frame — but this is
+     one custom-property assignment, and the style recalc it triggers happens
+     once at frame time however many times the value was overwritten. So the
+     batching bought nothing and cost two real things: a frame of latency on
+     every drag, and a hard dependency on rAF running at all. It does not in a
+     backgrounded or hidden document, where the offset would then be read as
+     stale while the gesture itself carried on. */
   const paint = useCallback(() => {
-    raf.current = 0;
     document.documentElement.style.setProperty('--pdp-dx', `${dx.current}px`);
   }, []);
 
   const setDx = useCallback(
     (v: number) => {
       dx.current = v;
-      if (!raf.current) raf.current = requestAnimationFrame(paint);
+      paint();
     },
     [paint],
   );
@@ -165,13 +171,23 @@ export default function Product() {
   useEffect(() => {
     setGliding(false);
     dx.current = 0;
-    /* Written directly, not scheduled: a queued frame may never arrive (a
-       backgrounded tab does not run rAF) and the sheet would stay parked
-       off-screen. */
     paint();
     setView(0);
     setDetailsOpen(false);
     window.scrollTo(0, 0);
+
+    /* Land instantly. The glide that brought us here leaves a transition in
+       flight, and without this the new sheet animates in from wherever the old
+       one was sent — so for a beat you are looking at the product you just
+       swiped away, sitting off-centre. Suppressed for one frame, which is all
+       the reset needs. */
+    const root = document.documentElement;
+    root.classList.add('pdp-snap');
+    const id2 = window.setTimeout(() => root.classList.remove('pdp-snap'), 60);
+    return () => {
+      window.clearTimeout(id2);
+      root.classList.remove('pdp-snap');
+    };
   }, [id, paint]);
 
   useEffect(
