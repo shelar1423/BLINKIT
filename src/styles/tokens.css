@@ -62,12 +62,18 @@
   --surface: #FFFFFF;
   /* What shows behind the notch and at an overscroll bounce. Matches the
      campaign band so the status bar belongs to the app. */
-  /* The reward screen's own palette: a warm ground with a rust ink, taken from
-     Blinkit's reward screens rather than from the campaign's blue. */
-  --rwd-ink: #8F3B12;
-  --rwd-ink-2: #A85A2B;
+  /* The reward screen runs the CAMPAIGN's palette, not Blinkit's reward yellow.
+     The yellow came from the ice-cream screen the layout was modelled on, and
+     borrowing a layout is not the same as borrowing a theme — this is a Hot
+     Wheels screen and it should look like the rest of the campaign. Deep blue
+     ground, flame rays, and the ticket still on paper because a voucher is
+     paper whatever the campaign is. */
+  --rwd-ink: #FFFFFF;
+  --rwd-ink-2: rgba(255, 255, 255, 0.78);
   --rwd-card: #FFF6E6;
-  --rwd-notch: #F6C23C;
+  /* The ticket's own inks: navy for the words, flame for the figure. */
+  --rwd-tick: #102A6B;
+  --rwd-tick-2: #5A6684;
 
   --status-bg: #1B4FD1;
   /* Air above the PDP sheet, so it reads as a card over the page. */
