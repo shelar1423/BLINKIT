@@ -137,9 +137,42 @@ export default function Home() {
 
           {/* Every one of these storefronts sets the campaign name as its own
               piece of lettering — script for Hug Day and Karwa Chauth, a
-              glowing lockup for Ice Cream and Harry Potter. Ours is a lockup. */}
+              glowing lockup for Ice Cream and Harry Potter. Ours is a lockup.
+
+              And ours arrives the way the campaign is about arriving: streaks
+              come through from the right, the name lands with them and takes
+              the hit, and the chrome catches the light once. The whole thing
+              is the `RACE IT HOME — logo animation` rig from the Figma file,
+              played at the band's scale — speed lines, shake, impact flash,
+              two flame glows and a masked shine sweep. It plays on every load
+              because it is the first frame of the campaign, and it is over
+              inside two seconds because the countdown underneath it has to be
+              the thing still moving afterwards. */}
           <h2 className="ctake__t">
-            <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
+            {/* Six streaks, at the rig's own spacing and lengths. They bleed
+                the full width of the band rather than the width of the
+                lettering: in the rig they start off the right edge of a
+                1920-wide frame, so they are the band crossing, not a
+                decoration attached to the logo. */}
+            <span className="ctake__lines" aria-hidden="true">
+              <i className="ctake__ln ctake__ln--1" />
+              <i className="ctake__ln ctake__ln--2" />
+              <i className="ctake__ln ctake__ln--3" />
+              <i className="ctake__ln ctake__ln--4" />
+              <i className="ctake__ln ctake__ln--5" />
+              <i className="ctake__ln ctake__ln--6" />
+            </span>
+            <span className="ctake__flash" aria-hidden="true" />
+            <span className="ctake__rig">
+              <span className="ctake__glow ctake__glow--l" aria-hidden="true" />
+              <span className="ctake__glow ctake__glow--r" aria-hidden="true" />
+              <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
+              {/* The rig masks its highlight to the wordmark's own paths, so
+                  the light travels through the letters and not across the box
+                  they sit in. The artwork is RGBA with a transparent ground,
+                  which is what lets the same image serve as its own mask. */}
+              <span className="ctake__shine" aria-hidden="true" />
+            </span>
           </h2>
 
           {/* The countdown is the headline. A row of numbers that merely

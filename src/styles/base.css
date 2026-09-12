@@ -620,15 +620,184 @@ input, select, textarea { font: inherit; color: inherit; }
   margin: 14px auto 0;
   max-width: 180px;
   line-height: 0;
-  /* It arrives rather than simply being present — one scale-and-rise as the
-     screen opens, then still. Deliberately not a loop: the countdown beside it
-     is already moving, and two things ticking at once means neither is the
-     thing you look at. Size is unchanged; it was brought up 20% earlier. */
-  animation: ctakeIn 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
+  /* This element is the rig's `shake` frame: the wrapper the hit lands on, so
+     the lockup and everything hanging off it move as one object rather than
+     the letters jittering inside a still box. The delay is set to the moment
+     the lockup stops travelling — 600ms — so the shake reads as the stop
+     rather than as a wobble of its own.
+
+     (The previous `ctakeIn` named a keyframes block that no longer existed:
+     it went out with the reverted audit work and only the animation line came
+     back, so the entrance has been silently doing nothing since.) */
+  animation: hwShake 320ms cubic-bezier(0.36, 0.07, 0.19, 0.97) 600ms both;
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
 @media (min-width: 768px) { .ctake__t { max-width: 396px; } }
+
+/* ---- RACE IT HOME, arriving ----
+   The Figma rig (`RACE IT HOME — logo animation`) played at the band's scale.
+   Its parts, in the order they fire: speed lines through from the right, the
+   lockup landing with them, an impact flash and the shake above, two flame
+   glows blooming and staying lit, and one shine sweep through the letters.
+
+   Every position and size below is the rig's own, converted to a percentage of
+   the box it belongs to — so the whole thing scales with the lockup between
+   the 180px phone band and the 396px desktop one without a second set of
+   numbers. It runs once, ending at 2.0s, because the countdown directly
+   underneath has to be the thing still moving after this is over. */
+
+/* The six streaks start off the right edge of the rig's 1920-wide frame, so
+   they belong to the band and not to the lettering: this bleeds the full
+   viewport, and the band's own overflow clips it. */
+.ctake__lines {
+  position: absolute; left: 50%; top: 50%;
+  width: 100vw; height: 190px;
+  transform: translate(-50%, -50%);
+  overflow: hidden; pointer-events: none; z-index: 0;
+}
+.ctake__ln {
+  position: absolute; left: 100%;
+  height: 2px; border-radius: 999px;
+  /* Leading edge hard, tail dissolving — the streak is travelling left. */
+  background: linear-gradient(
+    90deg,
+    #fff 0%,
+    rgba(255, 214, 140, 0.85) 34%,
+    rgba(255, 138, 26, 0) 100%
+  );
+  opacity: 0;
+  animation: hwStreak 620ms cubic-bezier(0.3, 0, 0.2, 1) both;
+}
+/* y as a fraction of the rig's 1080 height, width as a fraction of its 1920
+   width, and the rig's own stagger — the long ones lead. */
+.ctake__ln--1 { top: 23.1%; width: 32.3%; height: 3px; animation-delay: 0ms; }
+.ctake__ln--2 { top: 37.2%; width: 19.8%; animation-delay: 60ms; }
+.ctake__ln--3 { top: 51.9%; width: 41.7%; height: 3px; animation-delay: 30ms; }
+.ctake__ln--4 { top: 61.9%; width: 22.9%; animation-delay: 90ms; }
+.ctake__ln--5 { top: 74.1%; width: 29.2%; animation-delay: 120ms; }
+.ctake__ln--6 { top: 30.6%; width: 15.6%; animation-delay: 45ms; }
+
+/* The 1200px ellipse the rig centres on the lockup. Behind it, so the flash
+   reads as light coming off the landing rather than a wash over the letters. */
+.ctake__flash {
+  position: absolute; left: 50%; top: 50%;
+  width: 94%; aspect-ratio: 1;
+  margin: -47% 0 0 -47%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 226, 160, 0.68) 34%,
+    rgba(255, 140, 30, 0.26) 58%,
+    rgba(255, 120, 20, 0) 76%
+  );
+  opacity: 0; pointer-events: none; z-index: 0;
+  animation: hwFlash 520ms cubic-bezier(0.16, 1, 0.3, 1) 590ms both;
+}
+
+/* The rig's `logo rig` frame: the thing that actually travels. */
+.ctake__rig {
+  display: block; position: relative; z-index: 1;
+  animation: hwLand 540ms cubic-bezier(0.6, 0.04, 0.28, 1) 120ms both;
+}
+.ctake__rig img { filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45)); }
+
+/* Two flame glows, lower-left and upper-right, at the rig's offsets. They are
+   the one part that does not end: they bloom on impact and stay lit, which is
+   what keeps the lockup looking like hot chrome once everything else has
+   stopped. Centred with negative percentage margins rather than a translate,
+   because the transform is spoken for by the bloom. */
+.ctake__glow {
+  position: absolute; border-radius: 50%;
+  pointer-events: none; z-index: 0; opacity: 0;
+  animation: hwGlow 900ms cubic-bezier(0.22, 1, 0.36, 1) 620ms both;
+}
+.ctake__glow--l {
+  width: 26%; aspect-ratio: 1; margin: -13% 0 0 -13%;
+  left: 11%; top: 75%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 96, 16, 0.85) 0%,
+    rgba(237, 28, 36, 0.38) 42%,
+    rgba(237, 28, 36, 0) 72%
+  );
+}
+.ctake__glow--r {
+  width: 22%; aspect-ratio: 1; margin: -11% 0 0 -11%;
+  left: 91%; top: 11%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 214, 92, 0.9) 0%,
+    rgba(255, 138, 26, 0.36) 44%,
+    rgba(255, 138, 26, 0) 74%
+  );
+}
+
+/* The rig masks its highlight to the wordmark's own paths. The artwork is
+   RGBA on a transparent ground, so the same file is its own mask and the
+   light travels through the letters instead of across the box. */
+.ctake__shine {
+  position: absolute; inset: 0;
+  overflow: hidden; pointer-events: none; z-index: 2;
+  -webkit-mask-image: url('/campaign/race-it-home-wordmark.webp');
+  mask-image: url('/campaign/race-it-home-wordmark.webp');
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+.ctake__shine::before {
+  content: '';
+  position: absolute; top: -30%; bottom: -30%;
+  left: -42%; width: 24%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.85) 48%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  /* Raked rather than wiped, and at the same angle as the sheen on Race now
+     below it, so the two read as the same material catching the same light. */
+  transform: skewX(-18deg);
+  animation: hwShine 880ms cubic-bezier(0.4, 0, 0.2, 1) 1120ms both;
+}
+
+@keyframes hwStreak {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0; }
+  12%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { transform: translate3d(calc(-100vw - 100%), 0, 0); opacity: 0; }
+}
+@keyframes hwLand {
+  0%   { opacity: 0; transform: translate3d(46%, 0, 0) scale(1.12); }
+  30%  { opacity: 1; }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes hwShake {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+  14%  { transform: translate3d(-3px, 2px, 0) rotate(-0.5deg); }
+  30%  { transform: translate3d(3px, -2px, 0) rotate(0.45deg); }
+  46%  { transform: translate3d(-2px, 1px, 0) rotate(-0.3deg); }
+  62%  { transform: translate3d(2px, -1px, 0) rotate(0.2deg); }
+  80%  { transform: translate3d(-1px, 0, 0) rotate(-0.1deg); }
+  100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+}
+@keyframes hwFlash {
+  0%   { opacity: 0; transform: scale(0.35); }
+  18%  { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.7); }
+}
+@keyframes hwGlow {
+  0%   { opacity: 0; transform: scale(0.5); }
+  40%  { opacity: 1; transform: scale(1.16); }
+  100% { opacity: 0.72; transform: scale(1); }
+}
+@keyframes hwShine {
+  0%   { left: -42%; opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { left: 120%; opacity: 0; }
+}
 
 
 
@@ -693,7 +862,17 @@ input, select, textarea { font: inherit; color: inherit; }
   22%, 100% { left: 118%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ctake__t { animation: none; }
+  /* The lockup is simply there, already lit. Nothing travels, nothing flashes
+     — the glows keep their settled value so the artwork does not lose the
+     heat it is meant to sit in. */
+  .ctake__t,
+  .ctake__rig,
+  .ctake__ln,
+  .ctake__flash,
+  .ctake__glow { animation: none; }
+  .ctake__glow { opacity: 0.72; }
+  .ctake__lines, .ctake__flash { display: none; }
+  .ctake__shine::before { display: none; }
   .mystery__go::after { display: none; }
 }
 
