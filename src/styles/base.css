@@ -796,14 +796,23 @@ input, select, textarea { font: inherit; color: inherit; }
 .tlabels b.on { color: var(--green); }
 
 /* ---------- category grid ---------- */
-.cats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 12px var(--gut) 4px; }
+/* Four across, and the row gap is wider than the column gap so the two-line
+   labels have somewhere to sit without crowding the next row of tiles. */
+.cats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 9px; padding: 4px var(--gut) 6px; }
 .cat { display: grid; gap: 6px; justify-items: center; }
 /* `contain` with a little inset, not `cover`: the art is a centred grouping on
    a transparent ground, so cropping it to fill the tile clips the edges of the
    composition for nothing. */
-.cat__im { width: 100%; aspect-ratio: 1; border-radius: var(--r-md); background: var(--appbase); overflow: hidden; padding: 5px; }
+/* Slightly wider than tall, on the pale blue-grey the real app uses for these
+   — not the app base, which is a warmer grey and let the tiles disappear into
+   the page. */
+.cat__im {
+  width: 100%; aspect-ratio: 1 / 0.89;
+  border-radius: 14px; background: #E7EFF1;
+  overflow: hidden; padding: 7px;
+}
 .cat__im img { width: 100%; height: 100%; object-fit: contain; }
-.cat__l { font-size: var(--f-2xs); line-height: 1.25; text-align: center; font-weight: 600; }
+.cat__l { font-size: 13px; line-height: 1.2; text-align: center; font-weight: 500; color: var(--ink); }
 
 /* ---------- end-of-feed footer ----------
    Blinkit's own sign-off: the line set very large and ghosted back into the
@@ -943,10 +952,25 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: 8px 10px;
 }
 
-/* stacked white cards on the app-base ground */
-.pdp .card, .pdp .rowcard { margin: 10px var(--gut) 0; }
+/* stacked white cards on the app-base ground.
+   The real PDP runs its cards close: the stack reads as one column of facts,
+   not a list of separate panels. */
+.pdp .card, .pdp .rowcard { margin: 8px var(--gut) 0; }
 .pdp__info { padding: 12px; display: grid; gap: 0; }
-.pdp__tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* The card's first line: how fast it lands, how it is rated, and the campaign
+   flags in the space the real PDP leaves empty. */
+.pdp__meta { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.pdp__sep { width: 1px; height: 12px; background: var(--line-2); flex: none; }
+.pdp__eta {
+  display: inline-flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+  font-size: var(--f-xs); font-weight: 700; color: var(--ink-2);
+}
+.pdp__eta svg { color: var(--mut); }
+.pdp__rate { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: var(--f-xs); color: var(--mut); }
+.pdp__tags { display: inline-flex; align-items: center; gap: 5px; margin-left: auto; flex: none; }
+
 .tag { font-size: var(--f-2xs); font-weight: 700; padding: 3px 7px; border-radius: var(--r-xs); }
 .tag--blue { background: #EDF4FF; color: #1155CB; }
 .tag--dark { background: var(--surface-2); color: var(--mut); }
@@ -955,25 +979,25 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag--new { background: var(--surface-2); color: var(--ink); }
 .tag--limited { background: var(--hw-r-tint); color: var(--hw-r); }
 .tag--rare { background: var(--yellow-tint); color: #8A6D08; border: 1px solid #F0DFA4; }
-.pdp__rate { display: inline-flex; align-items: center; gap: 4px; font-size: var(--f-xs); color: var(--mut); margin-left: auto; }
-.pdp__rate svg { color: var(--yellow-dk); }
-.pdp__rate b { color: var(--ink); font-weight: 700; }
-.pdp__name { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; margin-top: 8px; }
-.pdp__unit { font-size: var(--f-sm); color: var(--mut); margin-top: 3px; }
-.pdp__price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.pdp__price b { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
-.pdp__price s { font-size: var(--f-base); color: var(--mut-2); }
-.pdp__off { background: var(--green-tint); color: var(--green); font-size: var(--f-xs); font-weight: 700; padding: 2px 6px; border-radius: var(--r-xs); }
-.pdp__tax { font-size: var(--f-xs); color: var(--mut); margin-top: 2px; }
-.pdp__eta {
-  display: flex; align-items: center; gap: 6px; margin-top: 10px;
-  color: var(--green); font-weight: 700; font-size: var(--f-sm);
-}
 
-/* brand / race / policy rows */
+.pdp__name { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
+.pdp__unit {
+  display: flex; align-items: center; gap: 8px;
+  font-size: var(--f-sm); color: var(--mut); margin-top: 4px;
+}
+.pdp__stock { display: inline-flex; align-items: center; gap: 4px; }
+.pdp__price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
+.pdp__price b { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+/* "MRP ₹799" — the label is not struck through, only the number is. */
+.pdp__mrp { font-size: var(--f-sm); color: var(--mut); }
+.pdp__mrp s { color: var(--mut); }
+
+/* brand / race / policy rows.
+   Sized off the reference: a 40px tile and a 10px band, so a two-line row lands
+   near 56px and a single-line policy row near 42px. */
 .rowcard {
-  display: flex; align-items: center; gap: 11px;
-  padding: 11px 12px; text-align: left; width: 100%;
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; text-align: left; width: 100%;
 }
 /* inside the PDP the cards are full-bleed children, so they carry their own
    side inset; elsewhere a .shell parent already provides it */
@@ -982,20 +1006,28 @@ input, select, textarea { font: inherit; color: inherit; }
 .rowcard b { display: block; font-size: var(--f-base); font-weight: 700; }
 .rowcard small { display: block; font-size: var(--f-xs); color: var(--mut); line-height: 1.4; margin-top: 1px; }
 /* A square tile, like the icon tile beside it in the same stack. The logotype
-   is nearly 3:1, so in a 46x38 box it letterboxed down to an unreadable smear;
+   is nearly 3:1, so in a small box it letterboxes down to an unreadable smear;
    fitted by width in a square it reads as the mark it is. */
 .rowcard__brand {
-  width: 52px; height: 52px; flex: 0 0 52px;
-  border: 1px solid var(--line); border-radius: var(--r-md);
-  display: grid; place-items: center; padding: 5px; background: #fff;
+  width: 40px; height: 40px; flex: 0 0 40px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  display: grid; place-items: center; padding: 4px; background: #fff;
 }
 .rowcard__brand img { width: 100%; height: auto; object-fit: contain; }
 .rowcard__ic {
-  width: 52px; height: 52px; border-radius: var(--r-md); flex: 0 0 52px;
+  width: 40px; height: 40px; border-radius: var(--r-sm); flex: 0 0 40px;
   display: grid; place-items: center;
   background: var(--surface-2); color: var(--ink-2);
 }
 .rowcard__ic--flame { background: var(--hw-r-tint); color: var(--hw-r); }
+/* A policy is a footnote, not a feature: the glyph sits on the card itself.
+   In a tinted tile it carried the same weight as the brand and the race row,
+   which is more than "we will swap it" is worth. */
+.rowcard__glyph {
+  width: 30px; flex: 0 0 30px;
+  display: grid; place-items: center; color: var(--ink-2);
+}
+.rowcard--policy { padding: 11px 12px; }
 
 
 .pdptop { padding: 0 0 4px; overflow: hidden; }
@@ -1103,6 +1135,14 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: 10px var(--gut) calc(10px + var(--safe-b));
   display: flex; gap: 10px; align-items: center;
 }
+/* The bar repeats the price because the card scrolls away, and carries the tax
+   line, which on the real PDP lives here rather than in the card. */
+.ab__price { flex: none; min-width: 0; }
+.ab__unit { font-size: var(--f-xs); color: var(--mut); }
+.ab__amt { display: flex; align-items: baseline; gap: 6px; margin-top: 1px; }
+.ab__amt b { font-size: var(--f-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
+.ab__amt .pdp__mrp { font-size: var(--f-xs); }
+.ab__tax { font-size: var(--f-2xs); color: var(--mut); margin-top: 1px; }
 
 /* ============================================================
    Order tracking.

@@ -136,7 +136,10 @@ export default function Home() {
           ))}
         </div>
 
-        <SectionHeader title="Shop by category" action="See all" onAction={() => toast('Categories are out of scope for this build')} />
+        {/* No action on this one: the grid already IS every category, so a
+            "See all" leads nowhere. The real app titles the block by what is in
+            it rather than by what you do with it. */}
+        <SectionHeader title="Grocery & Kitchen" />
         <div className="cats-grid">
           {CATEGORIES.map((c) => (
             <button key={c.id} className="cat" type="button" onClick={() => toast('Only the Hot Wheels category is built out')}>

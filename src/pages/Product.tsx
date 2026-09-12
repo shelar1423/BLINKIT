@@ -6,8 +6,8 @@ import { useStore } from '../store/useStore';
 import { createProductViewer, type ViewerHandle } from '../lib/three/productViewer';
 import {
   IconAR,
-  IconBolt,
   IconChevronDown,
+  IconClock,
   IconChevronRight,
   IconCube,
   IconFlag,
@@ -18,9 +18,9 @@ import {
   IconRotate,
   IconSearch,
   IconShare,
-  IconStar,
+  IconStock,
 } from '../design/elements/Icons';
-import { ProductCard } from '../design/components/ProductCard';
+import { ProductCard, Stars } from '../design/components/ProductCard';
 import { SectionHeader } from '../design/components/Chrome';
 import { useToast } from '../App';
 
@@ -273,7 +273,6 @@ export default function Product() {
     );
   }
 
-  const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
   const has3D = Boolean(product.glb);
   const alsoLike = CARS.filter((c) => c.id !== product.id && !c.mystery).slice(0, 6);
 
@@ -411,33 +410,56 @@ export default function Product() {
             </button>
           </div>
 
+          {/* Blinkit leads the card with how fast it lands and how it is rated —
+              the two facts that decide the purchase — then the name, the pack
+              and the price. The drop tags moved onto the stage: on the real PDP
+              this first row is the ETA and the stars, nothing else. */}
           <section className="card pdp__info">
-            <div className="pdp__tags">
-              <span className="tag tag--blue">Limited Drop</span>
-              {product.badge && <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>}
+            <div className="pdp__meta">
+              <span className="pdp__eta">
+                <IconClock size={13} />
+                {ETA_MINS} mins
+              </span>
               {product.rating && (
-                <span className="pdp__rate">
-                  <IconStar size={12} />
-                  <b>{product.rating}</b>
-                  <span>{product.ratings}</span>
-                </span>
+                <>
+                  <i className="pdp__sep" aria-hidden="true" />
+                  <span className="pdp__rate">
+                    <Stars value={product.rating} size={13} />
+                    <span>{product.ratings?.toLocaleString('en-IN')}</span>
+                  </span>
+                </>
               )}
+              {/* The campaign's own flags. The real PDP leaves the right of this
+                  row empty, so they cost no extra line. */}
+              <span className="pdp__tags">
+                <span className="tag tag--blue">Limited Drop</span>
+                {product.badge && <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>}
+              </span>
             </div>
 
             <h1 className="pdp__name">{product.name}</h1>
-            <p className="pdp__unit">{product.unit}</p>
+
+            <p className="pdp__unit">
+              {product.unit}
+              {product.stock ? (
+                <>
+                  <i className="pdp__sep" aria-hidden="true" />
+                  <span className="pdp__stock">
+                    <IconStock size={13} />
+                    {product.stock} left
+                  </span>
+                </>
+              ) : null}
+            </p>
 
             <div className="pdp__price">
               <b>{rupees(product.price)}</b>
-              {product.mrp && <s>{rupees(product.mrp)}</s>}
-              {off > 0 && <span className="pdp__off">{off}% OFF</span>}
+              {product.mrp && (
+                <span className="pdp__mrp">
+                  MRP <s>{rupees(product.mrp)}</s>
+                </span>
+              )}
             </div>
-            <p className="pdp__tax">Inclusive of all taxes</p>
-
-            <p className="pdp__eta">
-              <IconBolt size={14} />
-              Delivery in {ETA_MINS} minutes
-            </p>
           </section>
 
           <button className="card rowcard" type="button" onClick={() => nav('/hot-wheels')}>
@@ -471,15 +493,22 @@ export default function Product() {
             </button>
           )}
 
-          <div className="card rowcard rowcard--static">
-            <span className="rowcard__ic">
-              <IconReplace size={23} />
+          {/* Bare icon, single line. On the real PDP the policy rows carry the
+              glyph on the card itself — the tinted tile is for a brand or an
+              action, and putting one here made a footnote look like a feature. */}
+          <button
+            className="card rowcard rowcard--policy"
+            type="button"
+            onClick={() => toast('Replacement details are out of scope for this prototype')}
+          >
+            <span className="rowcard__glyph">
+              <IconReplace size={22} />
             </span>
             <span className="grow">
               <b>72 hours only replacement</b>
-              <small>Damaged or wrong item? We&rsquo;ll swap it.</small>
             </span>
-          </div>
+            <IconChevronRight size={18} />
+          </button>
 
           <div className="card pdpspec" ref={specRef}>
             <button
@@ -530,11 +559,19 @@ export default function Product() {
         </main>
 
         <div className="actionbar">
-          <div>
-            <p className="t-xs">{product.unit}</p>
-            <b style={{ fontSize: 'var(--f-lg)', fontWeight: 800 }} className="t-num">
-              {rupees(product.price)}
-            </b>
+          {/* The price block reads the same as the card's, plus the tax line
+              the real PDP keeps down here rather than in the card. */}
+          <div className="ab__price">
+            <p className="ab__unit">{product.unit}</p>
+            <p className="ab__amt">
+              <b className="t-num">{rupees(product.price)}</b>
+              {product.mrp && (
+                <span className="pdp__mrp">
+                  MRP <s>{rupees(product.mrp)}</s>
+                </span>
+              )}
+            </p>
+            <p className="ab__tax">Inclusive of all taxes</p>
           </div>
           {qty === 0 ? (
             <Button variant="primary" size="lg" className="grow"

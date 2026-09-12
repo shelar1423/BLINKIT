@@ -60,7 +60,7 @@ export function AddControl({ product, size = 'sm' }: { product: Product; size?: 
  * decimal. A single star glyph beside a number is a readout; the row is what
  * you actually scan a grid with.
  */
-function Stars({ value, size = 12 }: { value: number; size?: number }) {
+export function Stars({ value, size = 12 }: { value: number; size?: number }) {
   return (
     <span className="stars" aria-label={`${value} out of 5`}>
       {[0, 1, 2, 3, 4].map((i) => {
