@@ -373,17 +373,23 @@ export const IconClock = (p: P) => (
 );
 
 /**
- * The delivery promise. Solid, with the hands knocked out of it — the same
- * glyph the real listing uses, and the reason it reads as a fact rather than a
- * decorative outline next to it.
+ * The delivery promise, as the real listing draws it: a solid disc with a pie
+ * WEDGE cut out of it, not an outline and not thin hands.
+ *
+ * The wedge runs 12 o'clock to 4 o'clock and is knocked through to whatever is
+ * behind, so the icon picks up the card it sits on. Two subpaths under
+ * evenodd — the disc, then the wedge, which the fill rule removes.
  */
 export const IconClockFill = (p: P) => (
   <F {...p}>
-    <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm.95 4.6v4.03l2.62 1.57a.95.95 0 1 1-.98 1.63l-3.07-1.84a.95.95 0 0 1-.46-.82V7.6a.95.95 0 0 1 1.9 0z" />
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 12V3a9 9 0 0 1 7.79 13.5z"
+    />
   </F>
 );
 
-/** "N left" — a stock gauge, drawn part-full like Blinkit's. */
 export const IconStock = (p: P) => (
   <S {...p}>
     <rect x="3.2" y="8.4" width="17.6" height="7.2" rx="2.4" />

@@ -250,7 +250,7 @@ export function ProductCard({ product }: { product: Product }) {
           carries no stock counter — that lives on the product page. */}
       <p className="pcard__meta">
         <span>
-          <IconClockFill size={12} /> {ETA_MINS} mins
+          <IconClockFill size={13} /> {ETA_MINS} mins
         </span>
       </p>
     </div>
