@@ -1162,6 +1162,11 @@ input, select, textarea { font: inherit; color: inherit; }
 .shdr.is-solid .shdr__t { opacity: 1; }
 .shdr__ic {
   pointer-events: auto;
+  /* Fixed, and NOT allowed to shrink. These sit in a flex row that now also
+     carries the product's name, and with flex-shrink at its default of 1 a
+     long name squeezed the discs horizontally — perfect circles pressed into
+     ovals. */
+  flex: 0 0 38px;
   width: 38px; height: 38px; border-radius: 50%;
   display: grid; place-items: center; color: var(--ink);
   background: #fff;
@@ -1410,8 +1415,10 @@ input, select, textarea { font: inherit; color: inherit; }
   transform: translate3d(var(--pdp-dx, 0px), 0, 0);
   will-change: transform;
   /* Expanding is the slower half on purpose — the recording spends ~120ms
-     letting the gutters go and ~70ms taking them back. */
-  transition: margin 130ms ease, border-radius 130ms ease;
+     letting the gutters go and ~70ms taking them back. Eased rather than
+     linear at both ends so the gutters do not appear to snap open. */
+  transition: margin 160ms cubic-bezier(0.22, 1, 0.36, 1),
+              border-radius 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* Scrolled away from the top, the sheet IS the screen: it takes the gutters,
    the rounded corners and the strip above it, and the neighbours go with it.
@@ -1420,7 +1427,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .pdpdeck.is-wide {
   margin: 0;
   border-radius: 0;
-  transition: margin 80ms ease, border-radius 80ms ease;
+  transition: margin 110ms cubic-bezier(0.22, 1, 0.36, 1),
+              border-radius 110ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .pdppeek { transition: opacity 110ms ease; }
 .pdpstack.is-wide .pdppeek { opacity: 0; }

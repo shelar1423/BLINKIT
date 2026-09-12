@@ -187,7 +187,15 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
 /** Past this fraction of the width, letting go commits to the neighbour. */
 const COMMIT = 0.26;
 /** Movement before the gesture decides whether it is a scroll or a flick. */
-const SLOP = 10;
+const SLOP = 6;
+/* How much one axis has to lead the other before the gesture commits to it.
+   A real sideways flick on a phone is never level — it arcs, and by 10px of
+   travel it has usually drifted as far down as it has gone across. Comparing
+   the two deltas outright therefore sent most honest swipes to the scroller.
+   Horizontal only has to be within about 50 degrees of level to win; vertical
+   has to clearly lead, so an actual scroll is never stolen. */
+const X_BIAS = 0.8;
+const Y_BIAS = 1.6;
 /* Matches .pdpdeck.is-gliding. ~180ms of deceleration is what the recording
    shows once the finger leaves. */
 const GLIDE_MS = 190;
@@ -364,10 +372,16 @@ export default function Product() {
     const ddx = e.clientX - g.x;
     const ddy = e.clientY - g.y;
     if (g.axis === 'undecided') {
-      if (Math.abs(ddx) < SLOP && Math.abs(ddy) < SLOP) return;
+      const ax = Math.abs(ddx);
+      const ay = Math.abs(ddy);
+      if (ax < SLOP && ay < SLOP) return;
       /* Committed for the rest of the gesture. Re-deciding mid-drag makes the
-         page snatch sideways halfway through a scroll. */
-      g.axis = Math.abs(ddx) > Math.abs(ddy) ? 'x' : 'y';
+         page snatch sideways halfway through a scroll. Staying undecided while
+         neither axis leads is deliberate: the alternative is committing on the
+         first pixel of an arc, which is what made a sideways flick scroll. */
+      if (ax >= ay * X_BIAS) g.axis = 'x';
+      else if (ay > ax * Y_BIAS) g.axis = 'y';
+      else return;
     }
     if (g.axis !== 'x') return;
     setDx(ddx);

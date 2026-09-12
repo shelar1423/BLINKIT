@@ -187,7 +187,31 @@ export function createProductViewer(container: HTMLElement, glbUrl: string, opts
   el.addEventListener('touchmove', onTouchMove, { passive: false });
   el.addEventListener('touchend', onTouchEnd);
 
-  const ro = new ResizeObserver(frame);
+  /* Coalesced to one re-frame per animation frame, and skipped entirely when
+     the box has not actually changed size.
+
+     The sheet animates its own width when the page is scrolled — it gives up
+     its side gutters and goes full-bleed — and an observer wired straight to
+     `frame` re-sized the renderer, rebuilt the camera framing and forced a
+     WebGL draw on EVERY frame of that transition. That is what made the widen
+     stutter: not the CSS, but a 3D scene re-framing eight times inside 130ms.
+     The final size is the one that matters, and this lands on it a frame
+     later at most. */
+  let roPending = 0;
+  let lastW = -1;
+  let lastH = -1;
+  const ro = new ResizeObserver(() => {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    if (w === lastW && h === lastH) return;
+    lastW = w;
+    lastH = h;
+    if (roPending) return;
+    roPending = requestAnimationFrame(() => {
+      roPending = 0;
+      frame();
+    });
+  });
   ro.observe(container);
   frame();
 
@@ -218,6 +242,7 @@ export function createProductViewer(container: HTMLElement, glbUrl: string, opts
       disposed = true;
       renderer.setAnimationLoop(null);
       ro.disconnect();
+      if (roPending) cancelAnimationFrame(roPending);
       el.removeEventListener('pointerdown', onDown);
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);
