@@ -257,6 +257,15 @@ export const IconWhatsapp = ({ size = 20, ...p }: P) => (
   </svg>
 );
 
+/** 360 rotate: an orbit arrow round a body, for the drag-to-rotate hint. */
+export const IconRotate3d = (p: P) => (
+  <S {...p}>
+    <path d="M12 6.2c4.7 0 8.5 1.6 8.5 3.6S16.7 13.4 12 13.4 3.5 11.8 3.5 9.8 7.3 6.2 12 6.2Z" />
+    <path d="M8.6 15.2 12 18.6l3.4-3.4" />
+    <path d="M12 11.4v7" />
+  </S>
+);
+
 export const IconBulb = (p: P) => (
   <S {...p}>
     <path d="M9 17.5h6M10 20.5h4" />

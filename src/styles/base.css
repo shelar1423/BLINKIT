@@ -1526,10 +1526,15 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The stage floor already carries the AR button on the left and the reset tool
    on the right, both 36px tall at bottom:10 — so the hint sits in the band
    above them rather than across them. */
+/* The rotate hint, with the 360 mark. It was set in letterspaced caps, which
+   reads as a label on the viewer rather than as an instruction to the person
+   holding the phone; sentence case with the glyph in front says what the
+   gesture is before the words do. */
 .pdp__hint {
-  position: absolute; left: 0; right: 0; bottom: 54px; text-align: center;
-  font-size: var(--f-2xs);
-  color: var(--mut-2); font-weight: 600; letter-spacing: 0.04em; pointer-events: none;
+  position: absolute; left: 0; right: 0; bottom: 54px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: var(--f-xs);
+  color: var(--mut-2); font-weight: 600; letter-spacing: 0; pointer-events: none;
 }
 
 /* view pager — one dot per view that actually exists */
@@ -1619,7 +1624,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag--limited { background: var(--hw-r-tint); color: var(--hw-r); }
 .tag--rare { background: var(--yellow-tint); color: var(--gold-ink); border: 1px solid #F0DFA4; }
 
-.pdp__name { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
+/* Up 4px and down a weight, per the audit. The name is the longest string on
+   the sheet, and at 800 it was competing with the price directly under it
+   instead of leading into it. */
+.pdp__name { font-size: calc(var(--f-xl) + 4px); font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
 .pdp__unit {
   display: flex; align-items: center; gap: 8px;
   font-size: var(--f-sm); color: var(--mut); margin-top: 4px;
@@ -1658,7 +1666,9 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center;
   background: var(--surface-2); color: var(--ink-2);
 }
-.rowcard__ic--flame { background: var(--hw-r-tint); color: var(--hw-r); }
+/* Orange, not red. The flame is Hot Wheels' accent and the red belongs to the
+   mark itself; a red tile here read as a warning sitting under the brand row. */
+.rowcard__ic--flame { background: #FFF0E2; color: var(--hw-o); }
 /* Drawn artwork in place of a glyph on a tinted tile. It carries its own
    colour, so it needs no tile behind it — a tinted square under an already
    illustrated icon reads as two boxes. */

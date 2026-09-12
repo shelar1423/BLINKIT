@@ -16,6 +16,7 @@ import {
   IconPlus,
   IconReplace,
   IconRotate,
+  IconRotate3d,
   IconSearch,
   IconShare,
   IconStock,
@@ -518,7 +519,12 @@ export default function Product() {
                     <IconRotate size={17} />
                   </button>
                 </div>
-                {ready && <p className="pdp__hint">DRAG TO ROTATE · PINCH TO ZOOM</p>}
+                {ready && (
+                  <p className="pdp__hint">
+                    <IconRotate3d size={15} />
+                    Drag to rotate · pinch to zoom
+                  </p>
+                )}
               </>
             ) : (
               <img src={product.image} alt={product.name} />
@@ -584,6 +590,12 @@ export default function Product() {
               <span>Material</span>
               <b>Diecast</b>
             </div>
+            {/* The collector's fact. A die-cast car is bought by scale before
+                anything else, and it was the one spec the sheet did not carry. */}
+            <div className="chipbox">
+              <span>Scale</span>
+              <b>1:64</b>
+            </div>
             <button
               className="chipbox chipbox--cta"
               type="button"
@@ -618,12 +630,15 @@ export default function Product() {
                   </span>
                 </>
               )}
-              {/* The campaign's own flags. The real PDP leaves the right of this
-                  row empty, so they cost no extra line. */}
-              <span className="pdp__tags">
-                <span className="tag tag--blue">Limited Drop</span>
-                {product.badge && <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>}
-              </span>
+              {/* Limited Drop is gone with Recently Viewed. The real PDP leaves
+                  the right of this row empty, and a flag that is on every
+                  product in the drop tells a reader nothing. The per-product
+                  badge stays: that one does vary. */}
+              {product.badge && (
+                <span className="pdp__tags">
+                  <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>
+                </span>
+              )}
             </div>
 
             <h1 className="pdp__name">{product.name}</h1>
@@ -641,6 +656,13 @@ export default function Product() {
               ) : null}
             </p>
 
+            {/* Left as the recordings show it: price first, then "MRP ₹349"
+                with only the number struck.
+
+                The audit asks for the reverse — MRP first, bold price, nothing
+                crossed out — but the audit was written before the screen
+                recordings, and the recordings are the newer reference. Flagged
+                rather than changed silently. */}
             <div className="pdp__price">
               <b>{rupees(product.price)}</b>
               {product.mrp && (
