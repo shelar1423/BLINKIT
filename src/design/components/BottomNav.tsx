@@ -1,7 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
+import { productById } from '../../data/catalog';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { rupees } from '../../data/catalog';
-import { useCartCount, useStore, useTotals } from '../../store/useStore';
-import { IconScooter } from '../elements/Icons';
+import { useCartCount, useStore } from '../../store/useStore';
+import { IconChevronRight } from '../elements/Icons';
 import { NavCategories, NavHome, NavOrders, NavPrint } from '../elements/NavIcons';
 import { DistrictMark } from './Chrome';
 
@@ -14,9 +15,45 @@ import { DistrictMark } from './Chrome';
  * It is permanent product chrome — a campaign never adds a tab to it, so Race
  * It Home lives in the category rail and the home takeover instead.
  */
+/** Thumbnails the pill shows at once. The fourth add drops the oldest. */
+const MAX_THUMBS = 3;
+/** Must match .cartpill__th's leave animation. */
+const LEAVE_MS = 260;
+
+/**
+ * The strip of item thumbnails on the cart pill.
+ *
+ * The cart is keyed by product id and objects keep insertion order, so the
+ * order items were added is already there to read — the last three are the
+ * three the pill shows, newest on the right. A thumbnail pushed off the left
+ * has to outlive the state change that removed it, or it would vanish on the
+ * same frame the new one arrives instead of being seen to leave, so departures
+ * are held for the length of their animation and rendered alongside.
+ */
+function useThumbStrip(ids: string[]) {
+  const keep = ids.slice(-MAX_THUMBS);
+  const [shown, setShown] = useState(keep);
+  const [leaving, setLeaving] = useState<string[]>([]);
+  const sig = keep.join(',');
+
+  useEffect(() => {
+    setShown((prev) => {
+      const gone = prev.filter((id) => !keep.includes(id));
+      if (gone.length) {
+        setLeaving(gone);
+        window.setTimeout(() => setLeaving([]), LEAVE_MS);
+      }
+      return keep;
+    });
+    // keep is rebuilt every render; sig is the value that actually changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sig]);
+
+  return { shown, leaving };
+}
+
 export function BottomNav() {
   const count = useCartCount();
-  const totals = useTotals();
   const lines = useStore((s) => s.cart);
   const nav = useNavigate();
   const loc = useLocation();
@@ -30,40 +67,51 @@ export function BottomNav() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const firstId = Object.keys(lines)[0];
-  const freeDelivery = totals.items > 0 && totals.delivery === 0;
   const onCart = loc.pathname === '/cart' || loc.pathname === '/checkout';
+
+  const { shown, leaving } = useThumbStrip(Object.keys(lines));
+
+  /* The pill's first appearance is its own move: it rises from below the
+     screen as a single circle and unfurls into the bar. Every add after that
+     is just a thumbnail dropping into a bar that is already there, so the
+     open only plays on the transition from an empty cart. */
+  const [opening, setOpening] = useState(false);
+  const wasEmpty = useRef(true);
+  useEffect(() => {
+    if (wasEmpty.current && count > 0) {
+      setOpening(true);
+      const t = window.setTimeout(() => setOpening(false), 760);
+      wasEmpty.current = false;
+      return () => window.clearTimeout(t);
+    }
+    if (count === 0) wasEmpty.current = true;
+  }, [count]);
 
   return (
     <div className="bnav-wrap">
       {count > 0 && !onCart && (
-        <div className="floatbar">
-          <div className="freepill">
-            <span className="freepill__ic">
-              <IconScooter size={17} />
+        <div className="cartbar">
+          <button
+            className={'cartpill' + (opening ? ' is-opening' : '')}
+            type="button"
+            onClick={() => nav('/cart')}
+          >
+            <span className="cartpill__thumbs">
+              {leaving.map((id) => (
+                <img key={id} className="cartpill__th is-out" src={productById(id)?.image} alt="" />
+              ))}
+              {shown.map((id) => (
+                <img key={id} className="cartpill__th" src={productById(id)?.image} alt="" />
+              ))}
             </span>
-            <span className="grow">
-              {freeDelivery ? (
-                <b className="freepill__t">Free delivery unlocked</b>
-              ) : (
-                <>
-                  <b className="freepill__t">
-                    Add {rupees(totals.freeDeliveryShortfall)} more for free delivery
-                  </b>
-                  <span className="freepill__bar" aria-hidden="true">
-                    <i style={{ width: `${totals.freeDeliveryProgress * 100}%` }} />
-                  </span>
-                </>
-              )}
-            </span>
-          </div>
-          <button className="cartpill" type="button" onClick={() => nav('/cart')}>
-            {firstId && <img src={`/cars/${cartThumb(firstId)}`} alt="" />}
-            <span>
-              <b>Cart</b>
+            <span className="cartpill__txt">
+              <b>View cart</b>
               <small>
-                {count} item{count > 1 ? 's' : ''}
+                {count} Item{count > 1 ? 's' : ''}
               </small>
+            </span>
+            <span className="cartpill__go" aria-hidden="true">
+              <IconChevronRight size={20} />
             </span>
           </button>
         </div>
@@ -126,25 +174,4 @@ export function BottomNav() {
       </div>
     </div>
   );
-}
-
-/** Cart thumbnails come from the catalogue image path. */
-function cartThumb(id: string) {
-  const map: Record<string, string> = {
-    ballistik: 'ballistik-diecast.webp',
-    battlespec: 'battlespec-diecast.webp',
-    jackhammer: 'jackhammer-diecast.webp',
-    hollowback: 'hollowback-diecast.webp',
-    kitt: 'kitt-diecast.webp',
-    muscle: '09-02-muscle-car-orange.webp',
-    retro: '09-05-retro-racing-car-yellow.webp',
-    supercar: '09-07-supercar-purple.webp',
-    pickup: '09-09-performance-pickup-blue.webp',
-    proto: '09-10-race-prototype-red.webp',
-    metallic: '09-11-rare-metallic-edition.webp',
-    premium: '09-12-premium-limited-racer.webp',
-    featured: '10-featured-limited-drop-car.webp',
-    mystery: '23-rare-car-reveal.webp',
-  };
-  return map[id] ?? 'ballistik-diecast.webp';
 }
