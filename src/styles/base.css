@@ -445,22 +445,44 @@ input, select, textarea { font: inherit; color: inherit; }
    the band. Ours is a racing one — speed streaks washing through the ground,
    and a chequered flag in the corner. Both sit behind everything and are
    deliberately faint; they are texture, not content. */
-.ctake__streaks {
-  position: absolute;
-  pointer-events: none;
+/* The campaign artwork IS the band. It is pinned to the top, cropped to the
+   column, and masked out towards the bottom so it hands over to the same blue
+   the tiles below sit on — no seam, and no rectangle of photo ending mid-band. */
+/* A scrim over the artwork, not a darker artwork. Every piece of type on this
+   band is white, and the illustration runs from bright sky to dark road — the
+   lockup and the strapline were sitting on the pale half and disappearing. The
+   gradient is heaviest exactly where type lands and clears in the middle so
+   the city still reads. */
+.ctake::after {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0;
+  height: 74%;
+  z-index: 0; pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 22, 62, 0.62) 0%,
+    rgba(8, 22, 62, 0.28) 26%,
+    rgba(8, 22, 62, 0.34) 52%,
+    rgba(8, 22, 62, 0.72) 82%,
+    rgba(8, 22, 62, 0) 100%
+  );
+}
+
+.ctake__bg {
+  position: absolute; left: 0; right: 0; top: 0;
+  width: 100%; height: 74%;
+  object-fit: cover; object-position: 50% 42%;
   z-index: 0;
+  -webkit-mask-image: linear-gradient(180deg, #000 58%, transparent 99%);
+  mask-image: linear-gradient(180deg, #000 58%, transparent 99%);
 }
-.ctake__streaks {
-  left: -10%; right: -10%; top: 16%;
-  width: 120%; height: auto;
-  opacity: 0.16;
-  mix-blend-mode: screen;
-}
+
+
 /* Positioned decor paints above static siblings whatever the DOM order, so
    the content has to be positioned too. The toggle and the track set their
    own position, so they are excluded — including them here silently reset the
    toggle to `relative` and dropped it into the flow on the left. */
-.ctake > *:not(.ctake__streaks):not(.ctake__trackwrap):not(.ctake__edge) {
+.ctake > *:not(.ctake__bg):not(.ctake__trackwrap):not(.ctake__edge) {
   position: relative; z-index: 1;
 }
 
@@ -587,6 +609,57 @@ input, select, textarea { font: inherit; color: inherit; }
   padding-bottom: 24px;
 }
 .dpicks .prail { padding-bottom: 4px; }
+
+/* The strapline under the lockup. Letterspaced and small against artwork that
+   is already loud — it is a caption for the name above it, not a headline of
+   its own. */
+.ctake__tag {
+  text-align: center; margin-top: 8px;
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.22em;
+  text-transform: uppercase; color: #fff;
+  text-shadow: 0 2px 10px rgba(6, 20, 60, 0.65);
+}
+
+/* ---- the three ways in, on the band's own ground ---- */
+.cshelf {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  padding: 22px 0 4px;
+}
+.ctile {
+  position: relative; overflow: hidden;
+  border-radius: 14px; border: 0;
+  aspect-ratio: 1 / 1.16;
+  padding: 10px 9px 0;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
+  text-align: left;
+}
+/* One tinted ground each, taken off the artwork that sits on it rather than
+   picked at random: warm for the cars, sky for the loop, cream for the truck. */
+.ctile--diecast { background: linear-gradient(165deg, #FFD24A, #F7B12B); }
+.ctile--track { background: linear-gradient(165deg, #7FC4FF, #2C8BE8); }
+.ctile--trucks { background: linear-gradient(165deg, #FFF3DE, #F4DCB6); }
+.ctile__flag {
+  flex: none;
+  background: var(--hw-r); color: #fff;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.02em;
+  border-radius: 999px; padding: 3px 7px;
+  white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+}
+.ctile__t {
+  font-size: var(--f-md); font-weight: 800; line-height: 1.15;
+  letter-spacing: -0.2px; color: var(--ink);
+}
+/* The art sits in the bottom of the tile and is allowed to bleed off it, which
+   is what keeps these reading as posters rather than as list rows with a
+   thumbnail. */
+.ctile__im {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  width: 100%; height: 58%;
+  object-fit: contain; object-position: 50% 100%;
+}
+.ctile--track .ctile__im { object-fit: cover; height: 52%; }
+.ctile:active { transform: scale(0.985); }
 
 .ctake__edge {
   position: absolute; left: 0; right: 0; bottom: 0;

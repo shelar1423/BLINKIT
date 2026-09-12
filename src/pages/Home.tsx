@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
-import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
+import { CARS, CATEGORIES, HERO_CARS, SHOP_CARS, rupees } from '../data/catalog';
 import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
-import { IconChevronRight, IconFlag, IconHeart } from '../design/elements/Icons';
+import { IconFlag, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 /**
@@ -20,6 +20,38 @@ import { useToast } from '../App';
  * is a one-word change to bring back.
  */
 const SHOW_TRACK_DIVIDER = false;
+
+/**
+ * The three ways into the catalogue that sit on the campaign band.
+ *
+ * The price claims are read off the catalogue rather than written by hand, so
+ * the tile cannot promise a number the listing then contradicts — the mockup
+ * said "from ₹99" and the cheapest car we actually sell is ₹179.
+ */
+const SHOP_TILES = [
+  {
+    id: 'diecast',
+    title: 'Die-Cast Cars',
+    flag: `Starting at ${rupees(Math.min(...CARS.filter((c) => !c.mystery).map((c) => c.price)))}`,
+    image: '/cars/09-02-muscle-car-orange.webp',
+    to: '/hot-wheels',
+  },
+  {
+    id: 'track',
+    title: 'Track Sets',
+    flag: 'Coming this drop',
+    image: '/campaign/tile-tracksets.webp',
+    to: '/hot-wheels',
+  },
+  {
+    id: 'trucks',
+    title: 'Trucks & Playsets',
+    flag: 'Coming this drop',
+    image: '/cars/09-09-performance-pickup-blue.webp',
+    to: '/hot-wheels',
+  },
+];
+
 
 export default function Home() {
   const nav = useNavigate();
@@ -44,15 +76,11 @@ export default function Home() {
             </span>
           )}
 
-          {/* Texture. These storefronts hang string lights, stars, diyas and
-              gift boxes off the band — decoration is most of what makes them
-              read as an occasion. Ours is a racing one, sitting behind
-              everything at low opacity: texture, not content.
-              The chequered-flag element that used to sit beside it is gone —
-              it is a glossy 3D render, it was only ever tolerable because the
-              tile grid covered it, and against the open band it read as a
-              smudge rather than as decoration. */}
-          <img className="ctake__streaks" src="/decor/26-03-speed-line-streaks-element.webp" alt="" aria-hidden="true" />
+          {/* The band's ground is the campaign artwork itself — the Hot Wheels
+              city with the track running through it — rather than an abstract
+              streak at low opacity. It is masked away towards the bottom so
+              the blue it fades into is the same blue the tiles sit on. */}
+          <img className="ctake__bg" src="/campaign/hero-bg.webp" alt="" aria-hidden="true" />
 
           {/* Lockup left, drop window right — the shape the festive storefronts
               use for their title row. It also gets the dates out from under the
@@ -73,6 +101,7 @@ export default function Home() {
           <h2 className="ctake__t">
             <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
           </h2>
+          <p className="ctake__tag">Collect &middot; Play &middot; Delivered</p>
 
           {/* The countdown is the headline. A row of numbers that merely
               changes is a readout; a split-flap is a mechanism, and the
@@ -84,41 +113,36 @@ export default function Home() {
             lead={drop.phase === 'ended' ? 'Drop ended' : drop.lead}
           />
 
-          {/* The four tiles are replaced by the thing the campaign is actually
-              selling: the car nobody has seen yet. The plate is feathered to
-              transparent on every edge so it melts into the band's gradient
-              rather than sitting on it as a rectangle.
-              Everything the tiles linked to still has a home — the sheet this
-              opens carries The Drop, Rewards, Leaderboard and the race, so
-              nothing was orphaned by taking the grid away. */}
+          {/* The concealed car is gone: the band now shows the campaign's own
+              artwork instead of a cloth over something withheld, so there is
+              nothing left for a reveal plate to conceal. */}
           <div className="mystery">
-            {/* The plate itself opens the detail. It is a separate control from
-                the CTA below because a button cannot contain a button. */}
-            <button className="mystery__plate" type="button" onClick={() => nav('/hot-wheels')} aria-label="Shop the Hot Wheels drop">
-              <img className="mystery__im" src="/campaign/mystery-banner.webp" alt="" />
-            </button>
-
-            {/* No card. On the reference storefront the CTA is a bare pill
-                sitting straight on the campaign ground — boxing it put a
-                second surface between the artwork and the one thing to do. */}
-            <Button variant="hwBlue" className="mystery__go" onClick={() => nav('/race')}>
+            <Button variant="light" className="mystery__go" onClick={() => nav('/race')}>
               <IconFlag size={17} />
               Race now
             </Button>
-
-            {/* What the cloth is hiding and when it comes off. This was a
-                points counter against the unlock threshold, which made the
-                reveal sound like a personal score to grind rather than a
-                campaign moment everyone shares on the last day. */}
             <p className="mystery__prog">Revealed on the final day of the drop</p>
           </div>
 
-          {/* The way back into the catalogue, closing the band the way the
-              reference storefronts do. */}
-          <button className="cshop" type="button" onClick={() => nav('/hot-wheels')}>
-            <span>Shop all Hot Wheels cars &amp; track sets</span>
-            <IconChevronRight size={16} />
-          </button>
+          {/* Three ways into the catalogue, on the band's own ground. This
+              replaced the full-bleed strip that used to close the band, which
+              read as a stray nav bar rather than as a way in. Title and art
+              only: a one-line description under each was three more lines of
+              grey type competing with the campaign above them. */}
+          <div className="cshelf">
+            {SHOP_TILES.map((t) => (
+              <button
+                key={t.id}
+                className={'ctile ctile--' + t.id}
+                type="button"
+                onClick={() => nav(t.to)}
+              >
+                <span className="ctile__flag">{t.flag}</span>
+                <span className="ctile__t">{t.title}</span>
+                <img className="ctile__im" src={t.image} alt="" loading="lazy" />
+              </button>
+            ))}
+          </div>
 
         </section>
 
