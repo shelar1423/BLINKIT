@@ -1,9 +1,10 @@
-import { createContext, lazy, Suspense, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 const Diag = lazy(() => import('./pages/Diag'));
 import { BottomNav } from './design/components/BottomNav';
 import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
+import { primeAudio } from './lib/horn';
 
 import Home from './pages/Home';
 import HotWheels from './pages/HotWheels';
@@ -38,6 +39,26 @@ export default function App() {
     setMsg(m);
     window.clearTimeout((toast as unknown as { t?: number }).t);
     (toast as unknown as { t?: number }).t = window.setTimeout(() => setMsg(null), 2200);
+  }, []);
+
+  /* Unlock audio on the first touch anywhere, once.
+
+     iOS only lets a page make sound from an AudioContext that was created or
+     resumed inside a user gesture, and it was previously only primed by the
+     horn button. The race engine starts on a countdown two seconds after the
+     last tap, and a player steering by tilt may never touch the screen at all
+     — so the sound that is supposed to run for the whole race could never
+     start. Priming here means the tap that opened the app covers everything
+     after it. */
+  useEffect(() => {
+    const unlock = () => primeAudio();
+    const opts = { once: true, passive: true } as const;
+    window.addEventListener('pointerdown', unlock, opts);
+    window.addEventListener('keydown', unlock, opts);
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
   }, []);
 
   const value = useMemo(() => ({ toast }), [toast]);

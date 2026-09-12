@@ -23,6 +23,16 @@ export function primeAudio() {
   audio();
 }
 
+/* The same context, shared with the sample player in raceAudio.
+
+   One AudioContext per page, not one per module: iOS caps how many a document
+   may hold, and only the context that was created or resumed inside a user
+   gesture is allowed to make sound. Handing this one out means the unlock
+   primeAudio() already performs covers the race samples too. */
+export function raceAudioContext() {
+  return audio();
+}
+
 type ToneOpts = { freq: number; type?: OscillatorType; gain?: number; start?: number; dur: number; slideTo?: number };
 
 function tone({ freq, type = 'sawtooth', gain = 0.2, start = 0, dur, slideTo }: ToneOpts) {

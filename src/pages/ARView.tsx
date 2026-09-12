@@ -22,6 +22,14 @@ import {
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
+import {
+  engineStart,
+  engineStop,
+  loadRaceAudio,
+  makePowerUpWatcher,
+  playHit,
+  stopRaceAudio,
+} from '../lib/raceAudio';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
@@ -58,6 +66,9 @@ export default function ARView() {
   const triedAuto = useRef(false);
   const [phase, setPhase] = useState<ARPhase | null>(null);
   const [busy, setBusy] = useState(false);
+  /* Announces each 500-point boundary once; a ref so it outlives the renders
+     the score causes. */
+  const powerUp = useRef(makePowerUpWatcher(500));
   const [stats, setStats] = useState<RaceStats | null>(null);
   /* Laying the circuit out can take a beat on a slow phone. Without a signal
      the button just went quiet and people pressed it again. Only shown if the
@@ -87,8 +98,19 @@ export default function ARView() {
 
   useEffect(() => () => handle.current?.end(), []);
 
+  /* Fetched and decoded while the gate is still on screen, so the first frame
+     of a race is not also the first network request for its sound. */
+  useEffect(() => {
+    void loadRaceAudio();
+    return () => stopRaceAudio();
+  }, []);
+
   const onFinish = useCallback(
     (o: RaceOutcome) => {
+      /* Explicitly, because this sets the phase directly rather than through
+         onPhase — so the handler that would otherwise cut the engine never
+         sees the race end. */
+      engineStop();
       setIsBest(o.score > useStore.getState().bestScore);
       finishRace({ score: o.score, groceries: o.groceries, seconds: o.seconds });
       setOutcome(o);
@@ -115,8 +137,18 @@ export default function ARView() {
         overlayRoot: overlay.current,
         trackSize: 2.4,
         mode: inspect ? 'inspect' : 'race',
-        onPhase: setPhase,
-        onTick: setStats,
+        /* The engine runs while the car is driving and not before: in AR the
+           gap between opening the camera and actually racing is the whole
+           placement step, which can be many seconds of pointing at the floor. */
+        onPhase: (p) => {
+          setPhase(p);
+          if (p === 'racing') engineStart();
+          else engineStop();
+        },
+        onTick: (st) => {
+          setStats(st);
+          powerUp.current(st.score);
+        },
         /* AR was throwing pickups away entirely — the score moved and nothing
            on screen said why. */
         onPickup: (points) => pushPop(points, 'up'),
@@ -124,6 +156,7 @@ export default function ARView() {
         onFinish,
         onError: (m) => toast(m),
         onObstacleHit: (hit) => {
+          playHit();
           const msg =
             hit.type === 'room'
               ? 'Hit something real (-100)'
@@ -135,6 +168,7 @@ export default function ARView() {
           setTimeout(() => setLastHitMessage(null), 2200);
         },
         onEnd: () => {
+          engineStop();
           setPhase(null);
           setStats(null);
           setPlacing(false);

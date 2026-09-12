@@ -10,6 +10,14 @@ import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, Icon
 import { RaceResult } from '../design/components/RaceResult';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { horn as playHorn, primeAudio } from '../lib/horn';
+import {
+  engineStart,
+  engineStop,
+  loadRaceAudio,
+  makePowerUpWatcher,
+  playHit,
+  stopRaceAudio,
+} from '../lib/raceAudio';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 import { useToast } from '../App';
 
@@ -54,10 +62,23 @@ export default function RacePlay() {
   }, [racesLeft, nav, toast]);
 
   const onPickup = useCallback((points: number) => pushPop(points, 'up'), [pushPop]);
-  const onPenalty = useCallback((points: number) => pushPop(points, 'down'), [pushPop]);
+  /* The only thing that deducts in this engine is hitting something, so a
+     penalty and an asteroid strike are the same event. */
+  const onPenalty = useCallback(
+    (points: number) => {
+      pushPop(points, 'down');
+      playHit();
+    },
+    [pushPop],
+  );
+
+  /* Announces each 500-point boundary once. Held in a ref so it survives the
+     re-renders the score itself causes. */
+  const powerUp = useRef(makePowerUpWatcher(500));
 
   const onFinish = useCallback(
     (o: RaceOutcome) => {
+      engineStop();
       setIsBest(o.score > useStore.getState().bestScore);
       finishRace({ score: o.score, groceries: o.groceries, seconds: o.seconds });
       setOutcome(o);
@@ -82,15 +103,24 @@ export default function RacePlay() {
         else window.setTimeout(() => setLoaded(true), LOADER_MS - elapsed);
       },
       onError: (m) => setErr(m),
-      onTick: setStats,
+      onTick: (st) => {
+        setStats(st);
+        powerUp.current(st.score);
+      },
       onPickup,
       onPenalty,
       onFinish,
     });
     handle.current = h;
+    /* Fetched and decoded while the track builds, so GO is not the first time
+       anything touches the network. */
+    void loadRaceAudio();
     return () => {
       h.dispose();
       handle.current = null;
+      /* However this screen was left — finished, quit, or navigated away from
+         mid-race — the engine does not keep running behind it. */
+      stopRaceAudio();
     };
   }, [car.glb, onPickup, onPenalty, onFinish]);
 
@@ -107,6 +137,7 @@ export default function RacePlay() {
         window.clearInterval(t);
         setCount(null);
         handle.current?.start();
+        engineStart();
       }
     }, 700);
     return () => window.clearInterval(t);
