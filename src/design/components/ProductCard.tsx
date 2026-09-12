@@ -128,7 +128,6 @@ export function ProductCard({ product }: { product: Product }) {
     );
   }
 
-  const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
   /* Two genuine views (model + photo) only where a GLB exists, so the pager
      never promises images the product does not have. */
   const views = product.glb ? 2 : 1;
@@ -163,15 +162,15 @@ export function ProductCard({ product }: { product: Product }) {
               <IconCube size={11} /> 3D
             </span>
           )}
+          {views > 1 && (
+            <span className="pcard__dots" aria-hidden="true">
+              {Array.from({ length: views }, (_, i) => (
+                <i key={i} className={i === 0 ? 'is-on' : undefined} />
+              ))}
+            </span>
+          )}
         </div>
         <SaveButton product={product} />
-        {views > 1 && (
-          <span className="pcard__dots" aria-hidden="true">
-            {Array.from({ length: views }, (_, i) => (
-              <i key={i} className={i === 0 ? 'is-on' : undefined} />
-            ))}
-          </span>
-        )}
         {/* Pack size only: the card has one line for it, and the material
             ("die-cast") belongs on the detail page where there is room. It sits
             INSIDE the panel — only the button is allowed to break out. */}
@@ -185,9 +184,13 @@ export function ProductCard({ product }: { product: Product }) {
         <b className="pcard__price">{rupees(product.price)}</b>
         {product.mrp && <s className="pcard__mrp">{rupees(product.mrp)}</s>}
       </div>
-      {off > 0 && <p className="pcard__off">{off}% OFF on MRP</p>}
       <p className="pcard__nm">{product.name}</p>
-      <span className="pcard__age">{product.age ?? AGE_RATING}</span>
+      {/* Two attributes, the way the real card carries a size and a material.
+          One chip on its own read as a rating badge rather than a spec. */}
+      <span className="pcard__specs">
+        <span className="pcard__spec">{product.age ?? AGE_RATING}</span>
+        <span className="pcard__spec">Die-cast</span>
+      </span>
       {product.rating && (
         <p className="pcard__rt">
           <Stars value={product.rating} />

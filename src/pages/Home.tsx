@@ -131,8 +131,6 @@ export default function Home() {
           <SectionHeader
             title="Drop Picks"
             subtitle="Delivered in 8 minutes, like everything else"
-            action="See all"
-            onAction={() => nav('/hot-wheels')}
           />
           <div className="prail">
             {HERO_CARS.map((p) => (
@@ -157,7 +155,7 @@ export default function Home() {
           ))}
         </div>
 
-        <SectionHeader title="More from the drop" action="See all" onAction={() => nav('/hot-wheels')} />
+        <SectionHeader title="More from the drop" />
         <div className="prail">
           {SHOP_CARS.slice(0, 6).map((p) => (
             <ProductCard key={p.id} product={p} />
