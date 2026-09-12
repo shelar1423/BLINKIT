@@ -17,8 +17,14 @@
 }
 .driftload__mast b em { font-style: normal; color: var(--yellow); }
 
+/* Wider than tall, because the subject is. The burnout is a circle seen from
+   27° above, so it projects as an ellipse about two-fifths as tall as it is
+   wide; in a square stage the top and bottom thirds were empty and pushed the
+   lockup and the label far apart. The camera fits itself to whatever box it is
+   given, so shaping the box to the ellipse both closes those gaps and lets the
+   car come up larger. */
 .driftload__stage {
-  width: min(84vw, 330px); aspect-ratio: 1;
+  width: min(92vw, 380px); aspect-ratio: 1.55;
 }
 .driftload__stage canvas { width: 100%; height: 100%; display: block; }
 .driftload__t {

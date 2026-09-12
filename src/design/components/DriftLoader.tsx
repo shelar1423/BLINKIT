@@ -25,6 +25,20 @@ import './driftloader.css';
  */
 export const LOADER_MS = 3000;
 
+/* Measured off public/decor/tire-mark.webp rather than eyeballed: on a 512px
+   texture the ink peaks at 0.707 of the half-width and falls to half that
+   density between 0.656 and 0.941. On a 5.9 plane that puts the band's centre
+   line at 2.09 and its outer edge at 2.78 — the car belongs on the first, and
+   the camera has to contain the second. At 1.62 the car was riding well inside
+   the band, on clean ground. */
+const RING_PLANE = 5.9;
+const INK_MID = (RING_PLANE / 2) * 0.707;
+const INK_OUTER = (RING_PLANE / 2) * 0.941;
+/** How much of the frame the burnout may fill, in NDC. The rest is breathing room. */
+const FIT = 0.95;
+/** Long enough to read as a car at phone size, short enough to sit in the band. */
+const CAR_LEN = 1.55;
+
 export function DriftLoader({
   glbUrl,
   label = 'Getting your car ready',
@@ -40,16 +54,11 @@ export function DriftLoader({
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
-    renderer.setSize(el.clientWidth, el.clientHeight, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     el.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 60);
-    /* Pulled back far enough that the car clears the frame at every point on
-       its orbit — at 6.4 it was cropped against the left edge each lap. */
-    camera.position.set(0, 3.8, 7.4);
-    camera.lookAt(0, 0.25, 0);
 
     scene.add(new THREE.AmbientLight(0xffffff, 1.5));
     const key = new THREE.DirectionalLight(0xffffff, 2.2);
@@ -61,10 +70,44 @@ export function DriftLoader({
     const tex = new THREE.TextureLoader().load('/decor/tire-mark.webp');
     tex.colorSpace = THREE.SRGBColorSpace;
     const ring = new THREE.Mesh(
-      new THREE.PlaneGeometry(5.9, 5.9).rotateX(-Math.PI / 2),
+      new THREE.PlaneGeometry(RING_PLANE, RING_PLANE).rotateX(-Math.PI / 2),
       new THREE.MeshBasicMaterial({ map: tex, transparent: true, opacity: 0.9, depthWrite: false }),
     );
     scene.add(ring);
+
+    /* Frame the mark rather than guess a camera distance.
+       The previous camera sat at a hand-picked 7.4 with the aspect left at the
+       constructor's 1, so it was only ever correct for one canvas shape, and not
+       even for that one: at 8.3m from a 5.9m plane through a 34° lens the near
+       corners of the mark fall outside the frustum, which is the clipping you
+       see at the left and right edges. This walks the camera back along a fixed
+       look direction until the whole outer edge of the burnout projects inside
+       the frame, so it is right at any width the stage is given. */
+    const look = new THREE.Vector3(0, 0.25, 0);
+    const dir = new THREE.Vector3(0, 3.8, 7.4).normalize();
+    const probe = new THREE.Vector3();
+    const frame = () => {
+      const w = el.clientWidth || 1;
+      const h = el.clientHeight || 1;
+      camera.aspect = w / h;
+      let d = 8;
+      for (let i = 0; i < 32; i++) {
+        camera.position.copy(look).addScaledVector(dir, d);
+        camera.lookAt(look);
+        camera.updateProjectionMatrix();
+        camera.updateMatrixWorld();
+        let worst = 0;
+        for (let a = 0; a < 64; a++) {
+          const th = (a / 64) * Math.PI * 2;
+          probe.set(Math.cos(th) * INK_OUTER, 0, Math.sin(th) * INK_OUTER).project(camera);
+          worst = Math.max(worst, Math.abs(probe.x), Math.abs(probe.y));
+        }
+        if (Math.abs(worst - FIT) < 0.004) break;
+        d *= worst / FIT;
+      }
+      renderer.setSize(w, h, false);
+    };
+    frame();
 
     const pivot = new THREE.Group();
     scene.add(pivot);
@@ -72,7 +115,7 @@ export function DriftLoader({
     let car: THREE.Group | null = null;
     let disposed = false;
     if (glbUrl) {
-      void loadCar(glbUrl, 1.25).then((c) => {
+      void loadCar(glbUrl, CAR_LEN).then((c) => {
         if (disposed) return;
         car = c;
         /* Inside the burnout band, not straddling its outer edge.
@@ -82,7 +125,7 @@ export function DriftLoader({
            doing donuts is small inside its own burnout — 1.25 long, riding the
            band rather than straddling it. Lifted clear of the plane too, so it
            sits ON the mark rather than half sunk through it. */
-        c.position.set(1.62, 0.03, 0);
+        c.position.set(INK_MID, 0.03, 0);
         c.rotation.y = -Math.PI / 2 - 0.55;
         pivot.add(c);
       });
@@ -106,7 +149,7 @@ export function DriftLoader({
 
     const onResize = () => {
       if (!el.clientWidth) return;
-      renderer.setSize(el.clientWidth, el.clientHeight, false);
+      frame();
     };
     window.addEventListener('resize', onResize);
 
@@ -115,13 +158,17 @@ export function DriftLoader({
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', onResize);
       renderer.setAnimationLoop(null);
-      scene.traverse((o) => {
-        const m = o as THREE.Mesh;
-        if (m.geometry) m.geometry.dispose();
-        const mat = m.material as THREE.Material | THREE.Material[] | undefined;
-        if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
-        else mat?.dispose();
-      });
+      /* Only tear down what this component made.
+         loadCar hands back a SkeletonUtils clone that SHARES geometry and
+         materials with a prototype held in the module-level cache, so walking
+         the scene and disposing everything reachable frees the car for every
+         future consumer — the race and the AR session included. In StrictMode
+         the first mount unmounts straight away, which disposed the car before
+         the second mount could draw it, and the ring came up empty. The car is
+         detached; the ring is ours and is disposed properly. */
+      if (car) pivot.remove(car);
+      ring.geometry.dispose();
+      (ring.material as THREE.Material).dispose();
       tex.dispose();
       renderer.dispose();
       renderer.domElement.remove();

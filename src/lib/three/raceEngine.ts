@@ -154,65 +154,86 @@ function roadTexture() {
 /**
  * Trackside banners.
  *
- * Every real Hot Wheels set hangs pennants down the side of the circuit, and
+ * Every real Hot Wheels set hangs boards down the side of the circuit, and
  * without them the track reads as a plain orange road in a void — there is
  * nothing at eye level to give the car scale or the corners a sense of speed.
- * They alternate between the Hot Wheels flame and Blinkit's own wordmark, so
- * the co-brand is present in the world of the game rather than only in its
- * chrome.
+ *
+ * Landscape, not the tall pennants this replaces: a pennant can only carry
+ * text turned on its side, which nobody reads at speed. These are hoardings, so
+ * the Hot Wheels mark and Blinkit's wordmark sit the right way up and can
+ * actually be read from the car.
  *
  * Drawn once to a canvas and shared as one texture per brand, so the whole run
- * of them costs two materials however many posts there are.
+ * costs two materials however many boards there are.
  */
-function bannerTexture(kind: 'hw' | 'bk'): THREE.CanvasTexture {
-  const W = 128;
+function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasTexture {
+  const W = 512;
   const H = 320;
   const c = document.createElement('canvas');
   c.width = W;
   c.height = H;
   const ctx = c.getContext('2d')!;
 
-  if (kind === 'hw') {
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, '#ED1C24');
-    g.addColorStop(1, '#FF6A00');
-    ctx.fillStyle = g;
-  } else {
-    ctx.fillStyle = '#F8CB46';
-  }
-  ctx.fillRect(0, 0, W, H);
+  const paint = (logo?: HTMLImageElement) => {
+    ctx.clearRect(0, 0, W, H);
 
-  // the swallowtail every pennant has, cut out of the bottom
-  ctx.globalCompositeOperation = 'destination-out';
-  ctx.beginPath();
-  ctx.moveTo(0, H);
-  ctx.lineTo(W / 2, H - 42);
-  ctx.lineTo(W, H);
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalCompositeOperation = 'source-over';
+    if (kind === 'hw') {
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, '#ED1C24');
+      g.addColorStop(1, '#C2121A');
+      ctx.fillStyle = g;
+    } else {
+      ctx.fillStyle = '#F8CB46';
+    }
+    ctx.fillRect(0, 0, W, H);
 
-  ctx.save();
-  ctx.translate(W / 2, H / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
+    // a lit top edge, so the board reads as a physical panel and not a decal
+    ctx.fillStyle = kind === 'hw' ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.42)';
+    ctx.fillRect(0, 0, W, 10);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    if (kind === 'hw') {
+      if (logo) {
+        /* The real mark, knocked to white. The shipped SVG is a flat #ED1C24,
+           which is the same red as the board behind it. */
+        const lw = W * 0.74;
+        const lh = (logo.height / logo.width) * lw;
+        const t = document.createElement('canvas');
+        t.width = Math.ceil(lw);
+        t.height = Math.ceil(lh);
+        const tc = t.getContext('2d')!;
+        tc.drawImage(logo, 0, 0, lw, lh);
+        tc.globalCompositeOperation = 'source-in';
+        tc.fillStyle = '#fff';
+        tc.fillRect(0, 0, lw, lh);
+        ctx.drawImage(t, (W - lw) / 2, H / 2 - lh / 2);
+      } else {
+        ctx.fillStyle = '#fff';
+        ctx.font = 'italic 900 78px system-ui, -apple-system, sans-serif';
+        ctx.fillText('HOT WHEELS', W / 2, H / 2);
+      }
+    } else {
+      ctx.fillStyle = '#1F1F1F';
+      ctx.font = '800 96px system-ui, -apple-system, sans-serif';
+      ctx.fillText('blinkit', W / 2, H / 2 - 26);
+      ctx.fillStyle = '#4A4028';
+      ctx.font = '700 38px system-ui, -apple-system, sans-serif';
+      ctx.fillText("India's last minute app", W / 2, H / 2 + 62);
+    }
+    onReady();
+  };
+
   if (kind === 'hw') {
-    ctx.fillStyle = '#fff';
-    ctx.font = '800 46px system-ui, -apple-system, sans-serif';
-    ctx.fillText('HOT WHEELS', 0, -14);
-    ctx.fillStyle = '#FFE08A';
-    ctx.font = '700 26px system-ui, -apple-system, sans-serif';
-    ctx.fillText('RACE IT HOME', 0, 30);
+    const img = new Image();
+    img.onload = () => paint(img);
+    img.onerror = () => paint();
+    img.src = '/brand/hot-wheels.svg';
+    paint();
   } else {
-    ctx.fillStyle = '#1F1F1F';
-    ctx.font = '800 52px system-ui, -apple-system, sans-serif';
-    ctx.fillText('blinkit', 0, -16);
-    ctx.fillStyle = '#3B3B3B';
-    ctx.font = '700 22px system-ui, -apple-system, sans-serif';
-    ctx.fillText("India's last minute app", 0, 28);
+    paint();
   }
-  ctx.restore();
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -416,13 +437,25 @@ export class RaceEngine {
        two different textures, so two shared materials is the cheaper shape. */
     const BANNERS = 14;
     const bannerMats = (['hw', 'bk'] as const).map((k) => {
-      const tex = bannerTexture(k);
-      const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide });
+      const m = new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide });
+      // the Hot Wheels mark arrives a frame or two late; repaint when it does
+      const tex = bannerTexture(k, () => {
+        m.map = tex;
+        m.needsUpdate = true;
+        tex.needsUpdate = true;
+      });
+      m.map = tex;
       this.disposables.push(m, tex);
       return m;
     });
-    const bannerGeo = new THREE.PlaneGeometry(1.5, 3.8);
-    const postGeo = new THREE.CylinderGeometry(0.09, 0.09, 5.4, 6);
+    /* Landscape boards on a single post BEHIND them.
+       The posts used to sit at the board's own centre, so a cylinder ran down
+       the middle of every flag and split the artwork in half — and from the
+       car, which only ever sees the front, that read as the flag being cut.
+       Offsetting the post outwards puts it where a real hoarding's post is:
+       behind the panel, hidden by it from the road. */
+    const bannerGeo = new THREE.PlaneGeometry(3.2, 2.0);
+    const postGeo = new THREE.CylinderGeometry(0.08, 0.08, 4.6, 6);
     const postMat = new THREE.MeshStandardMaterial({ color: 0x2b323c, roughness: 0.7 });
     this.disposables.push(bannerGeo, postGeo, postMat);
     const bUp = new THREE.Vector3(0, 1, 0);
@@ -432,15 +465,18 @@ export class RaceEngine {
       const tan = this.curve.getTangentAt(t);
       const right = new THREE.Vector3().crossVectors(tan, bUp).normalize();
       for (const side of [1, -1] as const) {
-        const at = p.clone().addScaledVector(right, (ROAD_W / 2 + 1.5) * side);
+        const face = p.clone().addScaledVector(right, (ROAD_W / 2 + 1.9) * side);
+        const behind = p.clone().addScaledVector(right, (ROAD_W / 2 + 2.15) * side);
+
         const post = new THREE.Mesh(postGeo, postMat);
-        post.position.set(at.x, at.y + 2.7, at.z);
+        post.position.set(behind.x, behind.y + 2.3, behind.z);
         this.root.add(post);
-        const flag = new THREE.Mesh(bannerGeo, bannerMats[(i + (side === 1 ? 0 : 1)) % 2]);
-        flag.position.set(at.x, at.y + 3.4, at.z);
-        // face across the road, so the driver reads it side-on at speed
-        flag.lookAt(p.x, at.y + 3.4, p.z);
-        this.root.add(flag);
+
+        const board = new THREE.Mesh(bannerGeo, bannerMats[(i + (side === 1 ? 0 : 1)) % 2]);
+        board.position.set(face.x, face.y + 3.1, face.z);
+        // square on to the road, so the mark reads head-on from the car
+        board.lookAt(p.x, face.y + 3.1, p.z);
+        this.root.add(board);
       }
     }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
@@ -10,6 +10,7 @@ import { Button } from '../design/elements';
 import { IconChevronRight, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
+import { preloadCar } from '../lib/three/modelLoader';
 
 /**
  * The length of Hot Wheels track across the top of the campaign band, with the
@@ -75,6 +76,15 @@ export default function Home() {
      the first press of the campaign, so it is the one that most wants to feel
      like the start of something rather than a page change. */
   const [launching, setLaunching] = useState(false);
+
+  /* Warm the car the loader will show. Cold, the GLB takes about two seconds to
+     arrive — most of the three-second hold — so the drift only started as the
+     hold was ending and the ring span empty. Fetching it while the user is
+     still reading the home screen means the car is there from the first frame. */
+  useEffect(() => {
+    const url = HERO_CARS[0]?.glb;
+    if (url) preloadCar(url);
+  }, []);
 
   return (
     <>
