@@ -1026,9 +1026,14 @@ input, select, textarea { font: inherit; color: inherit; }
   touch-action: pan-y;
 }
 .pdpdeck.is-gliding, .pdpstack__track.is-gliding { transition: transform 260ms cubic-bezier(0.25, 0.8, 0.3, 1); }
-/* Promote both sliding nodes: without a layer of their own the browser repaints
-   the whole sheet — 3D canvas, images, shadows — on every frame of the drag. */
-.pdpdeck, .pdpstack__track { will-change: transform; }
+/* Both read the same offset. One writer, two readers — the sheet and the layer
+   of neighbours behind it cannot end up at different positions on a frame.
+   Promoted too: without a layer of their own the browser repaints the whole
+   sheet — 3D canvas, images, shadows — on every frame of the drag. */
+.pdpdeck, .pdpstack__track {
+  transform: translate3d(var(--pdp-dx, 0px), 0, 0);
+  will-change: transform;
+}
 
 /* The neighbours ride in a fixed layer pinned to the app column, so the sliver
    stays on the right edge while the current sheet scrolls under it. */

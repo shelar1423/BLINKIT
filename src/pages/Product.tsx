@@ -120,12 +120,16 @@ export default function Product() {
   const next = deck[at < 0 ? 0 : (at + 1) % deck.length];
   const prev = deck[at < 0 ? deck.length - 1 : (at - 1 + deck.length) % deck.length];
 
-  /* The drag is driven straight onto the two nodes rather than through state.
-     A setState per pointermove is a React render per frame of a gesture that is
+  /* The drag is driven straight onto the DOM rather than through state. A
+     setState per pointermove is a React render per frame of a gesture that is
      only ever moving one transform, and it showed: the sheet stepped across
-     instead of sliding. State is only used for the resting/gliding flags. */
-  const deckEl = useRef<HTMLDivElement>(null);
-  const trackEl = useRef<HTMLDivElement>(null);
+     instead of sliding. State is only used for the resting/gliding flags.
+
+     The offset is written ONCE, as a custom property on the root, and both the
+     sheet and the peek layer read it. They were being written as two separate
+     inline transforms, which is two chances to disagree — and they did: a frame
+     where the peek layer had moved and the sheet had not slid the neighbouring
+     car across the current one. One writer and two readers cannot desync. */
   const dx = useRef(0);
   const raf = useRef(0);
   const [gliding, setGliding] = useState(false);
@@ -133,9 +137,7 @@ export default function Product() {
 
   const paint = useCallback(() => {
     raf.current = 0;
-    const t = dx.current ? `translate3d(${dx.current}px,0,0)` : '';
-    if (deckEl.current) deckEl.current.style.transform = t;
-    if (trackEl.current) trackEl.current.style.transform = t;
+    document.documentElement.style.setProperty('--pdp-dx', `${dx.current}px`);
   }, []);
 
   const setDx = useCallback(
@@ -163,11 +165,21 @@ export default function Product() {
   useEffect(() => {
     setGliding(false);
     dx.current = 0;
+    /* Written directly, not scheduled: a queued frame may never arrive (a
+       backgrounded tab does not run rAF) and the sheet would stay parked
+       off-screen. */
     paint();
     setView(0);
     setDetailsOpen(false);
     window.scrollTo(0, 0);
   }, [id, paint]);
+
+  useEffect(
+    () => () => {
+      document.documentElement.style.removeProperty('--pdp-dx');
+    },
+    [],
+  );
 
   /* Places inside the sheet that own a horizontal gesture of their own. The 3D
      viewer binds its own pointer handlers to rotate the model, and the chip row
@@ -270,7 +282,7 @@ export default function Product() {
         {/* The window stays put; only the track inside it moves. Translating
             the window itself dragged its own clip rect along, so the arriving
             sheet was cut off at exactly the edge it was travelling towards. */}
-        <div className={'pdpstack__track' + (gliding ? ' is-gliding' : '')} ref={trackEl}>
+        <div className={'pdpstack__track' + (gliding ? ' is-gliding' : '')}>
           <PeekSheet product={prev} side="prev" />
           <PeekSheet product={next} side="next" />
         </div>
@@ -284,7 +296,6 @@ export default function Product() {
 
       <div
         className={'pdpdeck' + (gliding ? ' is-gliding' : '')}
-        ref={deckEl}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
