@@ -139,7 +139,7 @@ input, select, textarea { font: inherit; color: inherit; }
      card the filled green state is what you get AFTER you press it. */
   background: #fff;
   color: var(--green);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.02em;
   box-shadow: 0 1px 2px rgba(16, 20, 24, 0.06);
@@ -244,10 +244,10 @@ input, select, textarea { font: inherit; color: inherit; }
    band and the button the same size on every card width. */
 .pcard__unit {
   display: flex; align-items: center;
-  aspect-ratio: 100 / 33;
+  aspect-ratio: 100 / 36;
   padding: 0 50% 0 10px;
   border-top: 1px solid var(--line);
-  font-size: 15px; font-weight: 700; color: var(--ink);
+  font-size: 14px; font-weight: 700; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 /* ADD is flush with the panel's right edge — not hanging past it — and a
@@ -259,7 +259,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .pcard__act .add, .pcard__act .stepper {
   width: 100%; min-width: 0;
-  height: auto; aspect-ratio: 160 / 112;
+  height: auto; aspect-ratio: 142 / 105;
   border-radius: 10px;
   padding: 0 6px;
 }
@@ -269,7 +269,7 @@ input, select, textarea { font: inherit; color: inherit; }
    the card's width, the name 12.9%, the pack size 11.9%. On a 126px card that
    is 18 / 15 / 15px — larger than it looks right in isolation, which is why I
    had it three steps too small. */
-.pcard__price { font-size: 18px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+.pcard__price { font-size: 17px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
 .pcard__mrp { font-size: var(--f-md); color: var(--mut-2); }
 /* Blinkit sets the saving in blue, not in the brand green — green is the
    action colour on this card and the discount is information, not a control. */
@@ -280,9 +280,9 @@ input, select, textarea { font: inherit; color: inherit; }
    Semibold, not regular — on the real card the name carries nearly as much
    weight as the price, and at 500 ours read as a caption under it. */
 .pcard__nm {
-  font-size: 16px; line-height: 1.28; font-weight: 600; color: var(--ink);
+  font-size: 15px; line-height: 1.3; font-weight: 600; color: var(--ink);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  min-height: calc(16px * 1.28 * 2);
+  min-height: calc(15px * 1.3 * 2);
   margin-top: 2px;
 }
 .pcard__un { font-size: var(--f-xs); color: var(--mut); }
@@ -947,7 +947,9 @@ input, select, textarea { font: inherit; color: inherit; }
   overflow: hidden; padding: 10px;
 }
 .cat__im img { width: 100%; height: 100%; object-fit: contain; }
-.cat__l { font-size: 14px; line-height: 1.28; text-align: center; font-weight: 500; color: var(--ink); }
+/* Semibold. The strokes on the real labels are about 12% of their cap height,
+   which is a 600 — at 500 ours were a shade light against the same art. */
+.cat__l { font-size: 14px; line-height: 1.28; text-align: center; font-weight: 600; color: var(--ink); }
 
 /* ---------- end-of-feed footer ----------
    Blinkit's own sign-off: the line set very large and ghosted back into the
