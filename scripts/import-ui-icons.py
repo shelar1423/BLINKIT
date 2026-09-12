@@ -55,14 +55,38 @@ def key_white(im, thresh=244):
         q.extend(((x+1, y), (x-1, y), (x, y+1), (x, y-1)))
     return im
 
+"""Normalising on OPTICAL size, not on the bounding box.
+
+Scaling each icon to fill the box by its longest side is what made them look
+mismatched: a wide illustration (the car and flag, 1.62:1) fills the width and
+leaves the height empty, so it reads small, while a square dense one (the gift
+box, 1.02:1 at 78% ink) fills everything and reads big. Measured across the
+set that was a 41% spread, 160 to 226.
+
+sqrt(ink pixels) is the fair comparison — it is the side of the square the
+artwork would occupy if you poured it into one — so every icon is scaled to the
+same value of it. The target is the smallest in the set, which means the heavy
+ones come down rather than the wide ones being blown up past the canvas.
+"""
+import math
+
+BOX = 256
+TARGET_OPTICAL = 162.0
+
+trimmed = {}
 for stem, out in NAMES.items():
     im = key_white(Image.open(f'{SRC}/{stem}.png'))
     im = im.crop(im.getchannel('A').getbbox())
-    # square again after the trim, so every icon centres the same way in its box
-    side = max(im.size)
-    pad = Image.new('RGBA', (side, side), (0, 0, 0, 0))
-    pad.paste(im, ((side - im.width) // 2, (side - im.height) // 2), im)
-    pad = pad.resize((256, 256), Image.LANCZOS)
+    ink = sum(1 for v in im.getchannel('A').tobytes() if v > 8)
+    trimmed[out] = (im, math.sqrt(ink))
+
+for out, (im, optical) in trimmed.items():
+    scale = TARGET_OPTICAL / optical
+    # never let an upscale push the artwork past the canvas
+    scale = min(scale, (BOX * 0.98) / im.width, (BOX * 0.98) / im.height)
+    art = im.resize((max(1, round(im.width * scale)), max(1, round(im.height * scale))), Image.LANCZOS)
+    pad = Image.new('RGBA', (BOX, BOX), (0, 0, 0, 0))
+    pad.paste(art, ((BOX - art.width) // 2, (BOX - art.height) // 2), art)
     path = f'{DST}/{out}.webp'
     pad.save(path, 'WEBP', quality=90, method=6)
-    print(f'{out:16s} {os.path.getsize(path)//1024}K')
+    print(f'{out:16s} {art.width:>3}x{art.height:<3} scale {scale:.2f}  {os.path.getsize(path)//1024}K')
