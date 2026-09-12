@@ -337,12 +337,18 @@
   from { transform: translateY(-20px) scale(0.4); opacity: 0; }
   to   { transform: none; opacity: 1; }
 }
-/* The fourth item pushes the oldest off the left. */
-.cartpill__th.is-out {
-  animation: thumbOut 260ms ease forwards;
-  pointer-events: none;
+/* A thumbnail leaves in one of two ways, and in the recording they are not
+   the same move. Deleting the item lifts it up out of the bar and dissolves
+   it — it is going back to the shelf, which is above. A fourth item arriving
+   pushes the oldest off the left instead: nothing was removed, the strip just
+   ran out of room. */
+.cartpill__th.is-out { pointer-events: none; }
+.cartpill__th.is-out--removed { animation: thumbLift 260ms ease-out forwards; }
+@keyframes thumbLift {
+  to { transform: translateY(-30px) scale(0.55); opacity: 0; margin-left: -44px; }
 }
-@keyframes thumbOut {
+.cartpill__th.is-out--pushed { animation: thumbPush 260ms ease forwards; }
+@keyframes thumbPush {
   to { transform: translateX(-14px) scale(0.5); opacity: 0; margin-left: -44px; }
 }
 /* Both lines stay on one line at every width. While the pill is unfurling it
@@ -365,30 +371,14 @@
 }
 .cartpill:active { transform: scale(0.985); }
 
-/* ---------- the first item ----------
-   It arrives as a circle from below the screen and the bar unfurls out of it.
-   max-width is what unfurls: at 60px the stadium IS a circle around the first
-   thumbnail, and the rest of the row is simply not revealed yet. */
-.cartpill.is-opening {
-  animation: pillRise 360ms cubic-bezier(0.32, 0.72, 0, 1) both,
-             pillOpen 380ms cubic-bezier(0.32, 0.72, 0, 1) 300ms both;
-}
-@keyframes pillRise {
-  from { transform: translateY(160px) scale(0.8); opacity: 0; }
-  to   { transform: none; opacity: 1; }
-}
-@keyframes pillOpen {
-  from { max-width: 60px; }
-  to   { max-width: 420px; }
-}
-/* The thumbnail rides up inside the circle rather than dropping in from above,
-   which is the move for every LATER item. */
-.cartpill.is-opening .cartpill__th { animation: none; }
+/* The open and close are driven from BottomNav.tsx, not from here: they
+   animate width past the bar's resting size, which a CSS keyframe cannot
+   express without being told that size in advance. */
 
 @media (prefers-reduced-motion: reduce) {
-  .cartpill.is-opening,
   .cartpill__th,
-  .cartpill__th.is-out { animation: none; }
+  .cartpill__th.is-out--removed,
+  .cartpill__th.is-out--pushed { animation: none; }
 }
 
 /* The address line is 16-19px of type, and it is the control that changes where
