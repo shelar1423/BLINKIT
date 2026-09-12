@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { productById } from '../../data/catalog';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useCartCount, useStore } from '../../store/useStore';
@@ -17,8 +17,8 @@ import { DistrictMark } from './Chrome';
  */
 /** Thumbnails the pill shows at once. The fourth add drops the oldest. */
 const MAX_THUMBS = 3;
-/** Must match .cartpill__th's leave animations. */
-const LEAVE_MS = 260;
+/** Must outlast .cartpill__th's leave animations and the cloud that follows. */
+const LEAVE_MS = 540;
 
 /* Timings traced off a screen recording of the real app, frame by frame at
    60fps, by tracking the green pill's bounding box.
@@ -41,6 +41,23 @@ const SEED_PX = 60;
 const DROP_PX = 150;
 /** Reflow of the bar when a thumbnail joins or leaves an open pill. */
 const RESIZE_MS = 220;
+
+/* The cloud a removed item bursts into: angle in degrees, distance as a share
+   of the throw, and the lump's own diameter. Irregular on purpose — evenly
+   spaced identical dots read as a loading spinner, not a puff. */
+const PUFF_BITS = [
+  [-92, 1.0, 26],
+  [-40, 0.92, 20],
+  [14, 1.06, 24],
+  [66, 0.88, 17],
+  [128, 1.0, 23],
+  [176, 0.94, 19],
+  [230, 1.04, 25],
+].map(([deg, dist, size]) => ({
+  '--tx': `${(Math.cos((deg * Math.PI) / 180) * dist * 34).toFixed(1)}px`,
+  '--ty': `${(Math.sin((deg * Math.PI) / 180) * dist * 34).toFixed(1)}px`,
+  '--s': `${size}px`,
+}));
 
 const EASE_OUT = 'cubic-bezier(0.32, 0.72, 0, 1)';
 const EASE_IN = 'cubic-bezier(0.4, 0, 1, 1)';
@@ -149,6 +166,7 @@ export function BottomNav() {
       restW.current = el.getBoundingClientRect().width;
       if (reduceMotion()) return;
       const w = restW.current;
+      el.classList.add('is-morphing');
       openAnim.current = el.animate(
         [
           { width: `${SEED_PX}px`, transform: `translateY(${DROP_PX}px)`, opacity: 0, easing: EASE_OUT, offset: 0 },
@@ -158,6 +176,7 @@ export function BottomNav() {
         ],
         { duration: OPEN_MS, fill: 'backwards' },
       );
+      openAnim.current.onfinish = () => el.classList.remove('is-morphing');
       return;
     }
 
@@ -168,6 +187,7 @@ export function BottomNav() {
         return;
       }
       const w = el.getBoundingClientRect().width;
+      el.classList.add('is-morphing');
       const out = el.animate(
         [
           { width: `${Math.round(w)}px`, transform: 'translateY(0)', opacity: 1, easing: EASE_IN, offset: 0 },
@@ -205,12 +225,20 @@ export function BottomNav() {
           <button className="cartpill" ref={pill} type="button" onClick={() => nav('/cart')}>
             <span className="cartpill__thumbs">
               {leaving.map((t) => (
-                <img
-                  key={t.id}
-                  className={`cartpill__th is-out is-out--${t.how}`}
-                  src={productById(t.id)?.image}
-                  alt=""
-                />
+                <Fragment key={t.id}>
+                  <img
+                    className={`cartpill__th is-out is-out--${t.how}`}
+                    src={productById(t.id)?.image}
+                    alt=""
+                  />
+                  {t.how === 'removed' && (
+                    <i className="cartpill__puff" aria-hidden="true">
+                      {PUFF_BITS.map((bit, k) => (
+                        <i key={k} style={bit as React.CSSProperties} />
+                      ))}
+                    </i>
+                  )}
+                </Fragment>
               ))}
               {view.thumbs.map((id) => (
                 <img key={id} className="cartpill__th" src={productById(id)?.image} alt="" />
