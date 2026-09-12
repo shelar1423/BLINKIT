@@ -323,28 +323,59 @@ function makeEngine(opts: Opts, onDone: () => void) {
  * dragging spins it and tips it — placing it and never being able to see the
  * other side was the whole complaint about inspect mode.
  */
+
 /**
- * Which way the placement ring faces.
+ * Where the ring goes: on the floor, and inside the frame.
  *
- * The ring is a flat disc. Left lying horizontal it is edge-on to a level
- * camera — and a disc seen exactly edge-on draws as a one-pixel LINE, which is
- * what appeared instead of a target whenever the phone was held level or the
- * gyro had not reported yet.
+ * Two things were wrong in turn. First it was cast onto the floor with no
+ * regard for what the camera can see — held level, that put the point 1.6m out
+ * and 1.2m down, which is 37 degrees below centre when the edge of the frame is
+ * 25 to 35. It was not "at the bottom of the screen", it was off it. Then I
+ * moved it onto the view ray, which is always centred but floats in mid-air and
+ * does not lie on anything.
  *
- * So it leans with you: its face is turned to the camera at every angle. Point
- * straight down and that lands it flat on the floor, which is what it should
- * look like when you are aiming at the floor; hold the phone level and it
- * stands up to face you; in between it tips smoothly.
- *
- * The sign here matters more than it looks. Getting it backwards still reads
- * correctly at 0 and 90 degrees — and collapses to a line at exactly 45, which
- * is how a phone is held when you point it at the floor a metre ahead.
+ * This does both. The ray is cast at the floor, so the ring lies flat and moves
+ * where you point it — tilt down and it comes towards you. The distance is then
+ * clamped so the point can never fall outside the frame: when the phone is
+ * level the nearest floor you can actually SEE is about three metres out, so
+ * that is where it sits, still on the floor and still in view.
  */
-function reticleTilt(fwd: THREE.Vector3): THREE.Euler {
-  const yaw = Math.atan2(fwd.x, fwd.z);
-  // 0 when looking level, PI/2 when looking straight down
-  const down = Math.asin(Math.max(-1, Math.min(1, -fwd.y)));
-  return new THREE.Euler(Math.PI / 2 - down, yaw, 0, 'YXZ');
+function floorAim(
+  cam: THREE.Camera,
+  eye: THREE.Vector3,
+  fwd: THREE.Vector3,
+  drop: number,
+  out: THREE.Vector3,
+): { dist: number; depression: number } {
+  // vertical half-FOV straight from the projection, so this is right for a
+  // phone camera and for an XR view without assuming either
+  const p11 = cam.projectionMatrix.elements[5];
+  const halfFovY = p11 > 0 ? Math.atan(1 / p11) : 0.52;
+
+  /* How far below the centre of the frame the ring may sit. The upper bound
+     keeps it clear of the bottom edge; the lower bound keeps it off the
+     horizon, where a flat disc thins towards a line. */
+  const near = drop / Math.tan(halfFovY * 0.70);
+  const far = drop / Math.tan(halfFovY * 0.32);
+
+  /* When the ray does reach the floor, that intersection is BY DEFINITION on
+     the view ray and so at the centre of the frame — it needs no minimum
+     distance, and forcing one is what pinned the ring at 3.1m however far down
+     you pointed. Only the two degenerate cases are clamped: a ray that never
+     meets the floor (phone level or tilted up) falls back to the nearest floor
+     the frame can see, and a nearly-level ray whose intersection is tens of
+     metres out is pulled in to somewhere you could plausibly race. */
+  const t = fwd.y < -0.02 ? drop / -fwd.y : Number.POSITIVE_INFINITY;
+  const dist = Number.isFinite(t) ? Math.min(t, far) : near;
+
+  const flat = out.set(fwd.x, 0, fwd.z);
+  if (flat.lengthSq() < 1e-6) flat.set(0, 0, -1);
+  flat.normalize();
+  // horizontal run to the point, given it is `drop` below the eye
+  const run = Math.sqrt(Math.max(0, dist * dist - drop * drop));
+  out.copy(flat).multiplyScalar(run).add(eye);
+  out.y = eye.y - drop;
+  return { dist, depression: Math.atan(drop / Math.max(0.01, run)) };
 }
 
 function adjustGestures(
@@ -673,21 +704,26 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
      view ray means it lands at the centre of the screen by construction, at
      every phone angle, from the first frame. You aim by pointing, which is
      what people were trying to do anyway. */
-  const REACH = 1.45;
+  /** How far the floor is below a held phone. */
+  const DROP = inspect ? 0.5 : 1.2;
   const _p = new THREE.Vector3();
   const _q = new THREE.Quaternion();
   const _fwd = new THREE.Vector3();
+  const _target = new THREE.Vector3();
 
   function aimReticle() {
     const cam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
     cam.getWorldPosition(_p);
     cam.getWorldQuaternion(_q);
     _fwd.set(0, 0, -1).applyQuaternion(_q);
-    const target = _p.clone().addScaledVector(_fwd, REACH);
+    const { dist } = floorAim(cam, _p, _fwd, DROP, _target);
+    const yaw = Math.atan2(_fwd.x, _fwd.z);
+    // constant apparent size, so a close placement does not fill the view
+    const k = Math.max(0.4, Math.min(2.4, dist / 1.6));
     reticle.matrix.compose(
-      target,
-      new THREE.Quaternion().setFromEuler(reticleTilt(_fwd)),
-      new THREE.Vector3(1, 1, 1),
+      _target,
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)),
+      new THREE.Vector3(k, k, k),
     );
     reticle.visible = true;
   }
@@ -1001,16 +1037,21 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
    *  gyro, so on a first run where motion permission had not been granted it
    *  fell back to a guessed tilt and could still miss. Pointing is now the
    *  whole interaction, and it cannot miss. */
-  const REACH = inspect ? 0.5 : 1.45;
+  /** How far the surface is below the phone: a floor for a circuit, a table for
+   *  a car you are standing in front of you. */
+  const DROP = inspect ? 0.5 : 1.2;
 
   function aim(): { point: THREE.Vector3; dist: number; provisional: boolean } {
     if (haveOrientation) {
       fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
     } else {
+      /* No gyro yet. An identity camera looks dead level, and floorAim clamps
+         that to the nearest floor the frame can actually see — so there is
+         something aimable from the first frame without guessing a tilt. */
       fwd.set(0, 0, -1);
     }
-    const eye = camera.position;
-    return { point: hit.copy(fwd).multiplyScalar(REACH).add(eye), dist: REACH, provisional: false };
+    const { dist } = floorAim(camera, camera.position, fwd, DROP, hit);
+    return { point: hit, dist, provisional: false };
   }
 
   /** Placement here can NEVER fail. If the phone is not pointed at the
@@ -1086,11 +1127,11 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       const a = aim();
       reticle.visible = true;
       reticle.position.copy(a.point);
-      /* Leans with the camera, so it is never seen exactly edge-on. A flat disc
-         viewed edge-on draws as a line, and with no gyro the camera is dead
-         level — which is how a rotating yellow LINE ended up on screen where
-         the target ring should have been. */
-      reticle.setRotationFromEuler(reticleTilt(fwd));
+      /* Flat on the floor, turned to face the way you are looking. It cannot
+         be seen edge-on any more because floorAim will not let the point rise
+         above a minimum depression below the centre of the frame — which is
+         what the line on screen was: a horizontal disc at eye level. */
+      reticle.rotation.set(0, Math.atan2(fwd.x, fwd.z), 0);
       // constant apparent size: scale with distance
       reticle.scale.setScalar(a.dist / RETICLE_REF);
       const bo0 = reticle.getObjectByName('burnout') as THREE.Mesh | undefined;
