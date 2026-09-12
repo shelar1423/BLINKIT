@@ -167,8 +167,16 @@ function roadTexture() {
  * costs two materials however many boards there are.
  */
 function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasTexture {
-  const W = 512;
-  const H = 320;
+  /* Portrait, because these are hanging pennants and not hoardings — long
+     drops of fabric slung from an overhead arm, the way a Hot Wheels set
+     dresses the gantries above its track. The mark runs UP the banner, so the
+     canvas is painted on its side and the whole thing is read rotated. */
+  const W = 256;
+  const H = 800;
+  /* Height of the swallowtail cut out of the bottom. Transparent, so the
+     material's alpha gives the flag its shape — a rectangle reads as a sign,
+     a forked tail reads as cloth. */
+  const TAIL = 120;
   const c = document.createElement('canvas');
   c.width = W;
   c.height = H;
@@ -177,29 +185,50 @@ function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasText
   const paint = (logo?: HTMLImageElement) => {
     ctx.clearRect(0, 0, W, H);
 
+    // the cloth: full width at the top, forked at the hem
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(W, 0);
+    ctx.lineTo(W, H - TAIL);
+    ctx.lineTo(W / 2, H - TAIL * 0.35);
+    ctx.lineTo(0, H - TAIL);
+    ctx.closePath();
     if (kind === 'hw') {
-      const g = ctx.createLinearGradient(0, 0, 0, H);
-      g.addColorStop(0, '#ED1C24');
+      const g = ctx.createLinearGradient(0, 0, W, 0);
+      g.addColorStop(0, '#C2121A');
+      g.addColorStop(0.5, '#ED1C24');
       g.addColorStop(1, '#C2121A');
       ctx.fillStyle = g;
     } else {
-      ctx.fillStyle = '#F8CB46';
+      const g = ctx.createLinearGradient(0, 0, W, 0);
+      g.addColorStop(0, '#E0B02E');
+      g.addColorStop(0.5, '#F8CB46');
+      g.addColorStop(1, '#E0B02E');
+      ctx.fillStyle = g;
     }
-    ctx.fillRect(0, 0, W, H);
+    ctx.fill();
 
-    // a lit top edge, so the board reads as a physical panel and not a decal
-    ctx.fillStyle = kind === 'hw' ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.42)';
-    ctx.fillRect(0, 0, W, 10);
+    // a sewn header where it takes the arm
+    ctx.fillStyle = 'rgba(255,255,255,0.28)';
+    ctx.fillRect(0, 0, W, 14);
 
+    /* Everything below is drawn rotated a quarter turn, so it reads bottom-to-
+       top when the flag is hung. The banner's LENGTH becomes the type's width,
+       which is the only way a wordmark fits on something this narrow. */
+    ctx.save();
+    ctx.translate(W / 2, (H - TAIL) / 2);
+    ctx.rotate(-Math.PI / 2);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
+    const runLen = H - TAIL;
+
     if (kind === 'hw') {
       if (logo) {
-        /* The real mark, knocked to white. The shipped SVG is a flat #ED1C24,
-           which is the same red as the board behind it. */
-        const lw = W * 0.74;
-        const lh = (logo.height / logo.width) * lw;
+        /* The real mark, knocked to white — the shipped SVG is a flat #ED1C24,
+           the same red as the cloth behind it. */
+        const lw = runLen * 0.78;
+        const lh = lw * (logo.height / logo.width);
         const t = document.createElement('canvas');
         t.width = Math.ceil(lw);
         t.height = Math.ceil(lh);
@@ -208,20 +237,21 @@ function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasText
         tc.globalCompositeOperation = 'source-in';
         tc.fillStyle = '#fff';
         tc.fillRect(0, 0, lw, lh);
-        ctx.drawImage(t, (W - lw) / 2, H / 2 - lh / 2);
+        ctx.drawImage(t, -lw / 2, -lh / 2);
       } else {
         ctx.fillStyle = '#fff';
-        ctx.font = 'italic 900 78px system-ui, -apple-system, sans-serif';
-        ctx.fillText('HOT WHEELS', W / 2, H / 2);
+        ctx.font = 'italic 900 132px system-ui, -apple-system, sans-serif';
+        ctx.fillText('HOT WHEELS', 0, 0);
       }
     } else {
       ctx.fillStyle = '#1F1F1F';
-      ctx.font = '800 96px system-ui, -apple-system, sans-serif';
-      ctx.fillText('blinkit', W / 2, H / 2 - 26);
+      ctx.font = '800 150px system-ui, -apple-system, sans-serif';
+      ctx.fillText('blinkit', 0, -40);
       ctx.fillStyle = '#4A4028';
-      ctx.font = '700 38px system-ui, -apple-system, sans-serif';
-      ctx.fillText("India's last minute app", W / 2, H / 2 + 62);
+      ctx.font = '700 56px system-ui, -apple-system, sans-serif';
+      ctx.fillText("India's last minute app", 0, 58);
     }
+    ctx.restore();
   };
 
   /* onReady fires only from the image's own callbacks, never from the first
@@ -465,16 +495,26 @@ export class RaceEngine {
       this.disposables.push(m, tex);
       return m;
     });
-    /* Landscape boards on a single post BEHIND them.
-       The posts used to sit at the board's own centre, so a cylinder ran down
-       the middle of every flag and split the artwork in half — and from the
-       car, which only ever sees the front, that read as the flag being cut.
-       Offsetting the post outwards puts it where a real hoarding's post is:
-       behind the panel, hidden by it from the road. */
-    const bannerGeo = new THREE.PlaneGeometry(3.2, 2.0);
-    const postGeo = new THREE.CylinderGeometry(0.08, 0.08, 4.6, 6);
+    /* Long hanging pennants, slung from an overhead arm.
+
+       These were landscape boards on a post, and before that pennants with the
+       post running down their middle — which split the artwork, because from
+       the car you only ever see the front. Hanging them solves both: the arm
+       carries the flag's top edge and the mast stands off to ONE SIDE of it,
+       along the track rather than across it, so nothing crosses the cloth.
+
+       Built in a group whose -Z is turned to face the road. That makes local X
+       run along the track, which is the direction the flag's width and its arm
+       both need to lie in — so the mast ends up beside the flag from the
+       driver's view, never in front of it. */
+    const FLAG_W = 1.2;
+    const FLAG_H = 3.6;
+    const ARM_Y = 5.25;
+    const flagGeo = new THREE.PlaneGeometry(FLAG_W, FLAG_H);
+    const mastGeo = new THREE.CylinderGeometry(0.07, 0.09, ARM_Y + 0.3, 6);
+    const armGeo = new THREE.CylinderGeometry(0.05, 0.05, FLAG_W + 0.55, 6);
     const postMat = new THREE.MeshStandardMaterial({ color: 0x2b323c, roughness: 0.7 });
-    this.disposables.push(bannerGeo, postGeo, postMat);
+    this.disposables.push(flagGeo, mastGeo, armGeo, postMat);
     const bUp = new THREE.Vector3(0, 1, 0);
     for (let i = 0; i < BANNERS; i++) {
       const t = i / BANNERS;
@@ -482,18 +522,28 @@ export class RaceEngine {
       const tan = this.curve.getTangentAt(t);
       const right = new THREE.Vector3().crossVectors(tan, bUp).normalize();
       for (const side of [1, -1] as const) {
-        const face = p.clone().addScaledVector(right, (ROAD_W / 2 + 1.9) * side);
-        const behind = p.clone().addScaledVector(right, (ROAD_W / 2 + 2.15) * side);
+        const at = p.clone().addScaledVector(right, (ROAD_W / 2 + 1.9) * side);
 
-        const post = new THREE.Mesh(postGeo, postMat);
-        post.position.set(behind.x, behind.y + 2.3, behind.z);
-        this.root.add(post);
+        const rig = new THREE.Group();
+        rig.position.copy(at);
+        // -Z toward the road, which puts local X along it
+        rig.lookAt(p.x, at.y, p.z);
 
-        const board = new THREE.Mesh(bannerGeo, bannerMats[(i + (side === 1 ? 0 : 1)) % 2]);
-        board.position.set(face.x, face.y + 3.1, face.z);
-        // square on to the road, so the mark reads head-on from the car
-        board.lookAt(p.x, face.y + 3.1, p.z);
-        this.root.add(board);
+        const mast = new THREE.Mesh(mastGeo, postMat);
+        mast.position.set((FLAG_W / 2 + 0.28) * side, (ARM_Y + 0.3) / 2, 0);
+        rig.add(mast);
+
+        const arm = new THREE.Mesh(armGeo, postMat);
+        arm.position.set(0, ARM_Y, 0);
+        arm.rotation.z = Math.PI / 2;
+        rig.add(arm);
+
+        const flag = new THREE.Mesh(flagGeo, bannerMats[(i + (side === 1 ? 0 : 1)) % 2]);
+        // hung from the arm: its top edge sits just under it
+        flag.position.set(0, ARM_Y - FLAG_H / 2 - 0.08, 0);
+        rig.add(flag);
+
+        this.root.add(rig);
       }
     }
 
