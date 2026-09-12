@@ -27,7 +27,7 @@ export default function Campaign() {
       <PageHeader title="Race It Home" subtitle={`Hot Wheels × Blinkit · ${DROP_DATES}`} onBack={() => nav('/')} />
       <main className="page">
         <div className="hub">
-          <img className="hub__im" src="/campaign/06-campaign-hub-hero.webp" alt="" />
+          <img className="hub__im" src="/campaign/banner-hub.webp" alt="" />
           <div className="hub__c">
             <span className="hub__k">LIMITED DROP</span>
             <span className="hub__t">Race It Home</span>

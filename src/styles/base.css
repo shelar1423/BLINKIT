@@ -2893,15 +2893,17 @@ input, select, textarea { font: inherit; color: inherit; }
    illustration nearly 400px tall — it filled the first screen and pushed the
    thing the page is actually for below the fold. Capped and centred, with air
    around it, so it introduces the page instead of being the page. */
+/* ---- campaign banner ----
+   The supplied set is drawn at 2.4:1 as full-width bands, so this is no longer
+   a small centred illustration with air around it. The leaderboard's podium
+   used to sit here at 161px after the audit asked it down 30%; the banner that
+   replaces it is the artwork for the whole screen, not a spot illustration. */
 .heroart {
-  display: grid; place-items: center;
-  padding: 14px var(--gut) 6px;
+  padding: 12px var(--gut) 4px;
 }
 .heroart img {
   display: block;
-  /* Down another 30%, per the audit. It is a decoration at the top of a table
-     of numbers; at 230px it was taking the space the player's own standing
-     should have. */
-  width: min(43%, 161px);
-  height: auto;
+  width: 100%; aspect-ratio: 2.4 / 1;
+  object-fit: cover;
+  border-radius: var(--r-lg);
 }

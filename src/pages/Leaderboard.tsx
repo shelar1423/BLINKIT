@@ -29,7 +29,7 @@ export default function Leaderboard() {
       <PageHeader title="Leaderboard" subtitle="Resets when the drop ends on 14 Nov" onBack={() => nav('/campaign')} />
       <main className="page">
         <div className="heroart">
-          <img src="/campaign/18-leaderboard-hero.webp" alt="" />
+          <img src="/campaign/banner-leaderboard.webp" alt="" />
         </div>
 
         {/* Where you stand, first.
