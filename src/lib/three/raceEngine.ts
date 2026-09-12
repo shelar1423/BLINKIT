@@ -152,6 +152,75 @@ function roadTexture() {
 }
 
 /**
+ * Trackside banners.
+ *
+ * Every real Hot Wheels set hangs pennants down the side of the circuit, and
+ * without them the track reads as a plain orange road in a void — there is
+ * nothing at eye level to give the car scale or the corners a sense of speed.
+ * They alternate between the Hot Wheels flame and Blinkit's own wordmark, so
+ * the co-brand is present in the world of the game rather than only in its
+ * chrome.
+ *
+ * Drawn once to a canvas and shared as one texture per brand, so the whole run
+ * of them costs two materials however many posts there are.
+ */
+function bannerTexture(kind: 'hw' | 'bk'): THREE.CanvasTexture {
+  const W = 128;
+  const H = 320;
+  const c = document.createElement('canvas');
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext('2d')!;
+
+  if (kind === 'hw') {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#ED1C24');
+    g.addColorStop(1, '#FF6A00');
+    ctx.fillStyle = g;
+  } else {
+    ctx.fillStyle = '#F8CB46';
+  }
+  ctx.fillRect(0, 0, W, H);
+
+  // the swallowtail every pennant has, cut out of the bottom
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.moveTo(0, H);
+  ctx.lineTo(W / 2, H - 42);
+  ctx.lineTo(W, H);
+  ctx.closePath();
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+
+  ctx.save();
+  ctx.translate(W / 2, H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  if (kind === 'hw') {
+    ctx.fillStyle = '#fff';
+    ctx.font = '800 46px system-ui, -apple-system, sans-serif';
+    ctx.fillText('HOT WHEELS', 0, -14);
+    ctx.fillStyle = '#FFE08A';
+    ctx.font = '700 26px system-ui, -apple-system, sans-serif';
+    ctx.fillText('RACE IT HOME', 0, 30);
+  } else {
+    ctx.fillStyle = '#1F1F1F';
+    ctx.font = '800 52px system-ui, -apple-system, sans-serif';
+    ctx.fillText('blinkit', 0, -16);
+    ctx.fillStyle = '#3B3B3B';
+    ctx.font = '700 22px system-ui, -apple-system, sans-serif';
+    ctx.fillText("India's last minute app", 0, 28);
+  }
+  ctx.restore();
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/**
  * The raised orange side rails. Built as two vertical ribbons along the road
  * edges — the single detail that makes the circuit read as Hot Wheels track
  * rather than a road, and it costs two draw calls.
@@ -338,6 +407,41 @@ export class RaceEngine {
       const rail = new THREE.Mesh(rg, railMat);
       rail.position.y = 0.01;
       this.root.add(rail);
+    }
+
+    /* Trackside banners, alternating the two brands down both sides.
+       Posted just outside the rail and turned to face the road, so they read
+       from the driving camera rather than only from above. Instanced by hand
+       rather than by InstancedMesh: there are 2 x BANNERS of them and they need
+       two different textures, so two shared materials is the cheaper shape. */
+    const BANNERS = 14;
+    const bannerMats = (['hw', 'bk'] as const).map((k) => {
+      const tex = bannerTexture(k);
+      const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide });
+      this.disposables.push(m, tex);
+      return m;
+    });
+    const bannerGeo = new THREE.PlaneGeometry(1.5, 3.8);
+    const postGeo = new THREE.CylinderGeometry(0.09, 0.09, 5.4, 6);
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x2b323c, roughness: 0.7 });
+    this.disposables.push(bannerGeo, postGeo, postMat);
+    const bUp = new THREE.Vector3(0, 1, 0);
+    for (let i = 0; i < BANNERS; i++) {
+      const t = i / BANNERS;
+      const p = this.curve.getPointAt(t);
+      const tan = this.curve.getTangentAt(t);
+      const right = new THREE.Vector3().crossVectors(tan, bUp).normalize();
+      for (const side of [1, -1] as const) {
+        const at = p.clone().addScaledVector(right, (ROAD_W / 2 + 1.5) * side);
+        const post = new THREE.Mesh(postGeo, postMat);
+        post.position.set(at.x, at.y + 2.7, at.z);
+        this.root.add(post);
+        const flag = new THREE.Mesh(bannerGeo, bannerMats[(i + (side === 1 ? 0 : 1)) % 2]);
+        flag.position.set(at.x, at.y + 3.4, at.z);
+        // face across the road, so the driver reads it side-on at speed
+        flag.lookAt(p.x, at.y + 3.4, p.z);
+        this.root.add(flag);
+      }
     }
 
     // Deep space under the circuit. Near-black so the track reads as floating,
