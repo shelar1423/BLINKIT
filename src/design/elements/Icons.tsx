@@ -235,11 +235,16 @@ export const IconScooter = (p: P) => (
 
 /* --- race controls --- */
 
+/* A klaxon — bell and squeeze bulb — not a loudspeaker.
+   It used to be a speaker with two arcs, which was fine alone but sits beside
+   the race's mute toggle now: a speaker with one arc. Two speakers side by
+   side, one meaning "parp" and one meaning "silence", are not a control pair
+   anyone can read at 21px. */
 export const IconHorn = (p: P) => (
   <S {...p}>
-    <path d="M3 10v4a1 1 0 0 0 1 1h2l5 4V5L6 9H4a1 1 0 0 0-1 1Z" />
-    <path d="M16 8.5a4.5 4.5 0 0 1 0 7" />
-    <path d="M19 5.5a8.5 8.5 0 0 1 0 13" />
+    <path d="M8 9.4 19 5.2v13.6L8 14.6Z" />
+    <path d="M8 9.4H6.6a2.6 2.6 0 0 0 0 5.2H8" />
+    <circle cx="4" cy="12" r="1.6" />
   </S>
 );
 

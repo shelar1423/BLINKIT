@@ -30,15 +30,56 @@ let loading: Promise<void> | null = null;
 /** Master gain, so the whole race can be ducked or silenced in one place. */
 let master: GainNode | null = null;
 
+/* Remembered across races and across visits. Somebody who turned the engine
+   off once did not mean "off for this race". */
+const MUTE_KEY = 'hw-race-muted';
+let muted = (() => {
+  try {
+    return localStorage.getItem(MUTE_KEY) === '1';
+  } catch {
+    return false;
+  }
+})();
+
 function bus(): GainNode | null {
   const ac = raceAudioContext();
   if (!ac) return null;
   if (!master || master.context !== ac) {
     master = ac.createGain();
-    master.gain.value = 1;
+    master.gain.value = muted ? 0 : 1;
     master.connect(ac.destination);
   }
   return master;
+}
+
+export function isMuted() {
+  return muted;
+}
+
+/**
+ * Silence everything, or bring it back.
+ *
+ * Done on the master gain rather than by stopping the sources: the engine is a
+ * loop with a fade at both ends, and tearing it down and rebuilding it on a
+ * toggle would restart the sample from its opening rev every time. Muting the
+ * bus leaves the race running underneath and simply stops it reaching the
+ * speaker, so unmuting drops you back into the engine where it actually is.
+ */
+export function setMuted(next: boolean) {
+  muted = next;
+  try {
+    localStorage.setItem(MUTE_KEY, next ? '1' : '0');
+  } catch {
+    /* a private window can refuse to remember; the toggle still works */
+  }
+  const ac = raceAudioContext();
+  const out = bus();
+  if (!ac || !out) return;
+  const t = ac.currentTime;
+  out.gain.cancelScheduledValues(t);
+  out.gain.setValueAtTime(out.gain.value, t);
+  // a short ramp, because cutting a running loop to zero in one sample clicks
+  out.gain.linearRampToValueAtTime(next ? 0 : 1, t + 0.08);
 }
 
 /**

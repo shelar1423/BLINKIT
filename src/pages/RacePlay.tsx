@@ -6,16 +6,18 @@ import { tierFor, useStore } from '../store/useStore';
 import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
-import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconRotate } from '../design/elements/Icons';
+import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconMute, IconRotate, IconSound } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import {
   engineStart,
   engineStop,
+  isMuted,
   loadRaceAudio,
   makePowerUpWatcher,
   playHit,
+  setMuted,
   stopRaceAudio,
 } from '../lib/raceAudio';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
@@ -231,6 +233,9 @@ export default function RacePlay() {
 
   /* ---------- handbrake + horn ---------- */
   const [drift, setDrift] = useState(false);
+  /* Seeded from the stored preference so the button matches what you will
+     actually hear the moment the screen appears. */
+  const [mute, setMute] = useState(isMuted);
   const slide = useCallback((on: boolean) => {
     setDrift(on);
     handle.current?.engine.setDrift(on);
@@ -361,6 +366,20 @@ export default function RacePlay() {
             )}
             <button type="button" className="arov__pad arov__pad--sm" aria-label="Horn" onClick={hornNow}>
               <IconHorn size={22} />
+            </button>
+            <button
+              type="button"
+              className={'arov__pad arov__pad--sm' + (mute ? ' is-on' : '')}
+              aria-label={mute ? 'Unmute race audio' : 'Mute race audio'}
+              aria-pressed={mute}
+              onClick={() => {
+                primeAudio();
+                const next = !mute;
+                setMuted(next);
+                setMute(next);
+              }}
+            >
+              {mute ? <IconMute size={21} /> : <IconSound size={21} />}
             </button>
             <button
               type="button"
