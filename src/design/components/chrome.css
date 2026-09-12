@@ -73,8 +73,12 @@
 .bhdr__addr svg { flex: 0 0 auto; }
 
 .bhdr__acts { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; padding-top: 4px; }
+/* The badge hangs OFF the circle rather than sitting under it. In flow it made
+   this stack 49px tall against the avatar's 38, and the row centres its items —
+   so the wallet floated 5.5px higher than the avatar beside it. */
 .bhdr__wallet {
-  display: grid; justify-items: center; gap: 3px; color: inherit;
+  position: relative;
+  display: grid; justify-items: center; color: inherit;
 }
 .bhdr__wallet-ic {
   width: 38px; height: 38px; border-radius: 50%;
@@ -83,10 +87,12 @@
 }
 .bhdr:not(.bhdr--campaign) .bhdr__wallet-ic { background: rgba(31, 31, 31, 0.08); color: var(--ink); }
 .bhdr__wallet-v {
+  position: absolute; left: 50%; bottom: -7px;
+  transform: translateX(-50%);
   background: #1F2933; color: #fff;
   border-radius: 999px; padding: 1px 7px;
   font-size: var(--f-2xs); font-weight: 700; line-height: 1.5;
-  margin-top: -9px;
+  white-space: nowrap;
 }
 .bhdr__avatar {
   width: 38px; height: 38px; border-radius: 50%;

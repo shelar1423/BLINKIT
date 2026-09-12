@@ -563,12 +563,17 @@ input, select, textarea { font: inherit; color: inherit; }
      it needs to be block-level first, and sized to its content so it does not
      stretch edge to edge. */
   display: flex; width: fit-content;
-  margin: -42px auto 0;
+  /* Was -42px, which hauled the button up over the mystery plate that used to
+     sit above it. The plate is gone, so the pull was just jamming the CTA into
+     the countdown's labels. 16px of air, as the reference has. */
+  margin: 16px auto 0;
   position: relative; z-index: 2;
-  /* Sitting on the campaign art, this one is lifted: rounded, roomy, and given
-     a shadow deep enough to separate it from the blue behind it. */
-  border-radius: 16px;
-  padding: 0 26px;
+  /* A full pill here, not the 16px the light button uses elsewhere: on the
+     campaign art the reference CTA is a lozenge, wider and flatter than a
+     standard button. */
+  min-width: 152px; height: 38px;
+  border-radius: 999px;
+  padding: 0 24px;
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
 .mystery__go:active { transform: scale(0.97); }
@@ -1156,6 +1161,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .pdpdeck {
   flex: 1; display: flex; flex-direction: column; min-height: 0;
   margin-right: var(--peek-w);
+  margin-left: var(--peek-w);
   background: var(--appbase);
   touch-action: pan-y;
   /* The sheet paints OVER its neighbours, not under them. Both layers read the
@@ -1215,9 +1221,13 @@ input, select, textarea { font: inherit; color: inherit; }
   background: var(--appbase);
 }
 .pdppeek--prev {
-  left: -100%;
+  /* The sheet gives up 12px on the left too, so the product BEHIND you shows
+     as well as the one ahead. One sliver only said the deck ran in a single
+     direction. */
+  left: calc(-100% + var(--peek-w));
   border-radius: 0 var(--r-lg) var(--r-lg) 0;
-  box-shadow: 10px 0 30px rgba(16, 20, 24, 0.16);
+  border-right: 1px solid var(--line);
+  background: var(--appbase);
 }
 .pdppeek__stage {
   aspect-ratio: 1 / 0.86; flex: none;
