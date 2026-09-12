@@ -434,3 +434,66 @@ export const IconCollapse = (p: P) => (
     <path d="M3.6 9.4h5.8V3.6M20.4 14.6h-5.8v5.8M14.6 9.4h5.8V3.6M9.4 14.6H3.6v5.8" />
   </S>
 );
+
+/**
+ * Storefront — the glyph beside the distance in Blinkit's header. It marks the
+ * number as "how far the STORE is", which a scooter does not: a scooter reads
+ * as the rider, and the rider is not what 1.9 km measures.
+ */
+export const IconStore = (p: P) => (
+  <F {...p}>
+    <path d="M4.1 3.6h15.8l1.5 4.1a2.6 2.6 0 0 1-4.9 1.5 2.6 2.6 0 0 1-4.5 0 2.6 2.6 0 0 1-4.5 0 2.6 2.6 0 0 1-4.9-1.5z" />
+    <path d="M5.2 10.9v8.3c0 .7.5 1.2 1.2 1.2h11.2c.7 0 1.2-.5 1.2-1.2v-8.3a3.9 3.9 0 0 1-3.4-.8 3.9 3.9 0 0 1-4.5 0 3.9 3.9 0 0 1-4.5 0 3.9 3.9 0 0 1-1.2.8zm4.3 3.2h5v5h-5z" />
+  </F>
+);
+
+/**
+ * Blinkit Cash, drawn the way the header draws it: a filled wallet in the
+ * brand yellow with the rupee on the flap, not a thin outline. The colours are
+ * baked in rather than inherited — this one glyph is the only spot of warm
+ * colour in the header, and that is what makes it findable.
+ */
+export const IconRupeeWallet = ({ size = 20, className }: P) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true" focusable="false">
+    {/* the note, standing proud of the wallet's mouth */}
+    <rect x="6.6" y="2.6" width="11" height="8.4" rx="1.5" fill="#2E7D4F" />
+    <path
+      d="M10 5.2h4.2M10 6.9h4.2M11.6 5.2c1.3 0 2 .5 2 1.4s-.8 1.4-2.1 1.4L13.8 10"
+      stroke="#fff"
+      strokeWidth="0.95"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    {/* the wallet body over it, so the note reads as tucked inside */}
+    <rect x="3" y="7.4" width="18" height="12.8" rx="2.6" fill="#F5C63C" />
+    <path d="M3 11.2h18v1.9H3z" fill="#DCA92C" />
+    <rect x="13.8" y="12.2" width="7.2" height="4.2" rx="2.1" fill="#C9901F" />
+    <circle cx="17.4" cy="14.3" r="1.05" fill="#FFF3D0" />
+  </svg>
+);
+
+/**
+ * Solid caret for the address line. The header uses a filled triangle, not a
+ * stroked chevron — at 13px a 1.8px stroke reads as a different weight from
+ * the heavy type it sits against.
+ */
+export const IconCaretDown = (p: P) => (
+  <F {...p}>
+    <path d="M6.4 9.2h11.2a.7.7 0 0 1 .53 1.16l-5.6 6.5a.7.7 0 0 1-1.06 0l-5.6-6.5A.7.7 0 0 1 6.4 9.2z" />
+  </F>
+);
+
+/**
+ * Voice search — the waveform that replaced the mic in Blinkit's header, in
+ * its own button beside the field rather than inside it. Bars, not a capsule:
+ * it marks the assistant, and the sparkle is part of that mark.
+ */
+export const IconVoiceBars = (p: P) => (
+  <F {...p}>
+    <rect x="3.4" y="9.4" width="2.1" height="5.2" rx="1.05" />
+    <rect x="7.4" y="6.2" width="2.1" height="11.6" rx="1.05" />
+    <rect x="11.4" y="3.6" width="2.1" height="16.8" rx="1.05" />
+    <rect x="15.4" y="6.2" width="2.1" height="11.6" rx="1.05" />
+    <rect x="19.4" y="9.4" width="2.1" height="5.2" rx="1.05" />
+  </F>
+);

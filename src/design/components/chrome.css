@@ -41,10 +41,11 @@
 
 .bhdr__top { display: flex; align-items: flex-start; gap: 10px; padding: 0 var(--gut); }
 .bhdr__eta { flex: 1; min-width: 0; }
+/* Full white and heavy, as in the real header. At 0.86 opacity it read as a
+   caption over the ETA rather than the first half of one sentence. */
 .bhdr__kicker {
   font-size: var(--f-md);
-  font-weight: 600;
-  opacity: 0.86;
+  font-weight: 700;
   line-height: 1.1;
 }
 .bhdr__minsrow { display: flex; align-items: center; gap: 8px; margin-top: 1px; }
@@ -63,10 +64,13 @@
 }
 .bhdr:not(.bhdr--campaign) .bhdr__dist { background: rgba(31, 31, 31, 0.1); }
 .bhdr__addr {
-  display: flex; align-items: center; gap: 4px;
+  display: flex; align-items: center; gap: 5px;
   font-size: var(--f-base); font-weight: 500;
   margin-top: 3px; max-width: 100%; color: inherit;
 }
+.bhdr__addr b { font-weight: 800; letter-spacing: 0.01em; flex: 0 0 auto; }
+.bhdr__addr-d { opacity: 0.7; flex: 0 0 auto; }
+.bhdr__addr svg { flex: 0 0 auto; }
 
 .bhdr__acts { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; padding-top: 4px; }
 .bhdr__wallet {
@@ -74,35 +78,50 @@
 }
 .bhdr__wallet-ic {
   width: 38px; height: 38px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
-  display: grid; place-items: center; color: var(--yellow);
+  background: rgba(0, 0, 0, 0.18);
+  display: grid; place-items: center;
 }
 .bhdr:not(.bhdr--campaign) .bhdr__wallet-ic { background: rgba(31, 31, 31, 0.08); color: var(--ink); }
 .bhdr__wallet-v {
-  background: rgba(0, 0, 0, 0.42); color: #fff;
+  background: #1F2933; color: #fff;
   border-radius: 999px; padding: 1px 7px;
   font-size: var(--f-2xs); font-weight: 700; line-height: 1.5;
   margin-top: -9px;
 }
 .bhdr__avatar {
   width: 38px; height: 38px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.18);
   display: grid; place-items: center; color: inherit;
 }
 .bhdr:not(.bhdr--campaign) .bhdr__avatar { background: rgba(31, 31, 31, 0.08); }
 
-/* the search field is a full pill in the real app, with a mic on the right */
-.bsearch {
+/* the search field is a full pill in the real app, with voice beside it */
+.bsearchrow {
+  display: flex; align-items: center; gap: 10px;
   margin: 12px var(--gut) 0;
-  width: calc(100% - var(--gut) * 2);
+}
+.bsearch {
+  flex: 1; min-width: 0;
   height: 46px;
   display: flex; align-items: center; gap: 10px; padding: 0 16px;
   border: 0; border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
-  color: var(--mut); font-size: var(--f-base); text-align: left;
+  color: var(--ink); font-size: var(--f-base); text-align: left;
 }
+/* "Search" is the instruction and the quoted term is the example — the real
+   field sets them apart so the rotating suggestion never reads as typed text. */
+.bsearch__q { color: var(--mut); }
+.bsearch svg { flex: 0 0 auto; color: var(--ink-2); }
 .bhdr:not(.bhdr--campaign) .bsearch { background: #fff; box-shadow: 0 1px 3px rgba(31, 31, 31, 0.1); }
-.bsearch__div { width: 1px; height: 20px; background: var(--line-2); flex: 0 0 1px; }
+.bvoice {
+  flex: 0 0 46px; width: 46px; height: 46px;
+  border-radius: 50%; border: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: #1F3D2B;
+  display: grid; place-items: center;
+}
+.bhdr:not(.bhdr--campaign) .bvoice { background: #fff; box-shadow: 0 1px 3px rgba(31, 31, 31, 0.1); }
+.bvoice:active { background: #fff; }
 
 /* ---------- category rail ---------- */
 .crail {
@@ -115,14 +134,20 @@
   position: relative;
   flex: 1 0 auto; min-width: 74px;
   display: grid; justify-items: center; gap: 3px;
-  padding: 4px 6px 9px;
+  padding: 4px 6px 12px;
   color: inherit; opacity: 0.74;
   font-size: var(--f-sm); font-weight: 600;
-  border-bottom: 3px solid transparent;
 }
 .crail__ic { position: relative; display: grid; place-items: center; height: 25px; }
-.crail__l { white-space: nowrap; }
-.crail__i.is-on { opacity: 1; font-weight: 800; border-bottom-color: currentColor; }
+.crail__l { white-space: nowrap; position: relative; }
+/* The underline belongs to the WORD. On the item it spanned the whole column,
+   so "All" wore a bar three times the width of the label it was marking. */
+.crail__i.is-on .crail__l::after {
+  content: ''; position: absolute;
+  left: 0; right: 0; bottom: -9px; height: 3px;
+  background: currentColor; border-radius: 3px 3px 0 0;
+}
+.crail__i.is-on { opacity: 1; font-weight: 800; }
 .crail__i.is-inert { opacity: 0.55; pointer-events: none; }
 .crail__badge {
   position: absolute; top: -6px; left: 56%;

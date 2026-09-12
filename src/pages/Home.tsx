@@ -120,21 +120,27 @@ export default function Home() {
             <IconChevronRight size={16} />
           </button>
 
-          <span className="ctake__edge" aria-hidden="true" />
         </section>
 
-
-        <SectionHeader
-          title="Drop Picks"
-          subtitle="Delivered in 8 minutes, like everything else"
-          action="See all"
-          onAction={() => nav('/hot-wheels')}
-        />
-        <div className="prail">
-          {HERO_CARS.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        {/* Drop Picks are the campaign's own shelf, so they stay inside the
+            campaign's ground and the chequered edge closes AFTER them. Sitting
+            on plain white below the band, the strip above them read as a stray
+            nav bar and the shelf read as an unrelated section that happened to
+            contain cars. */}
+        <section className="dpicks">
+          <SectionHeader
+            title="Drop Picks"
+            subtitle="Delivered in 8 minutes, like everything else"
+            action="See all"
+            onAction={() => nav('/hot-wheels')}
+          />
+          <div className="prail">
+            {HERO_CARS.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+          <span className="ctake__edge" aria-hidden="true" />
+        </section>
 
         {/* No action on this one: the grid already IS every category, so a
             "See all" leads nowhere. The real app titles the block by what is in

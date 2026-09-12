@@ -4,17 +4,18 @@ import { useStore } from '../../store/useStore';
 import { DELIVERY_ADDRESS } from '../../data/catalog';
 import {
   IconBasket,
+  IconCaretDown,
   IconChevronDown,
   IconChevronLeft,
   IconFlag,
   IconGift,
   IconHeadphones,
   IconLipstick,
-  IconMic,
-  IconScooter,
+  IconVoiceBars,
+  IconRupeeWallet,
+  IconStore,
   IconSearch,
   IconUser,
-  IconWallet,
 } from '../elements/Icons';
 import './chrome.css';
 
@@ -73,19 +74,24 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
           <div className="bhdr__minsrow">
             <span className="bhdr__mins">8 minutes</span>
             <span className="bhdr__dist">
-              <IconScooter size={13} /> 1.4 km away
+              <IconStore size={13} /> 1.9 km away
             </span>
           </div>
+          {/* The real header leads the line with the saved label in heavy caps
+              and hangs the street after it — you scan for WHICH address before
+              you read the address. */}
           <button className="bhdr__addr" type="button">
+            <b>{DELIVERY_ADDRESS.label.toUpperCase()}</b>
+            <span className="bhdr__addr-d" aria-hidden="true">-</span>
             <span className="trunc">{DELIVERY_ADDRESS.line}</span>
-            <IconChevronDown size={15} />
+            <IconCaretDown size={13} />
           </button>
         </div>
 
         <div className="bhdr__acts">
           <button className="bhdr__wallet" type="button" onClick={() => nav('/rewards')} aria-label={`Blinkit Cash, ${points} points`}>
             <span className="bhdr__wallet-ic">
-              <IconWallet size={19} />
+              <IconRupeeWallet size={28} />
             </span>
             <span className="bhdr__wallet-v">₹{Math.floor(points / 100)}</span>
           </button>
@@ -95,12 +101,20 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
         </div>
       </div>
 
-      <button className="bsearch" type="button" onClick={onSearch}>
-        <IconSearch size={19} />
-        <span className="grow">Search &ldquo;hot wheels&rdquo;</span>
-        <i className="bsearch__div" aria-hidden="true" />
-        <IconMic size={19} />
-      </button>
+      {/* Voice is its own round button beside the field, not a mic tucked inside
+          it behind a divider. It is a different destination — the assistant,
+          not the search results — and the real header separates the two. */}
+      <div className="bsearchrow">
+        <button className="bsearch" type="button" onClick={onSearch}>
+          <IconSearch size={19} />
+          <span className="grow">
+            Search <span className="bsearch__q">&ldquo;hot wheels&rdquo;</span>
+          </span>
+        </button>
+        <button className="bvoice" type="button" aria-label="Search by voice" onClick={onSearch}>
+          <IconVoiceBars size={19} />
+        </button>
+      </div>
 
       <nav className="crail" aria-label="Categories">
         {RAIL.map((r) =>
