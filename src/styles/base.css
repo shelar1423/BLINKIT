@@ -838,21 +838,31 @@ input, select, textarea { font: inherit; color: inherit; }
 /* ---------- category grid ---------- */
 /* Four across, and the row gap is wider than the column gap so the two-line
    labels have somewhere to sit without crowding the next row of tiles. */
-.cats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 9px; padding: 4px var(--gut) 6px; }
-.cat { display: grid; gap: 6px; justify-items: center; }
+/* Read off the real grid at a 393pt width: 84pt tiles, an 11pt column gap and
+   a 13pt row gap. The row gap is the smaller of the two vertical spaces on
+   purpose — see .cat below. */
+.cats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px 11px; padding: 9px var(--gut) 10px; }
+/* 12px between a tile and its own label, against 13px to the next row. The
+   label has to sit closer to the tile it names than to the tile under it; at
+   6px over 16px it did the opposite, and every label read as a caption for the
+   row below. */
+.cat { display: grid; gap: 12px; justify-items: center; }
 /* `contain` with a little inset, not `cover`: the art is a centred grouping on
    a transparent ground, so cropping it to fill the tile clips the edges of the
    composition for nothing. */
 /* Slightly wider than tall, on the pale blue-grey the real app uses for these
    — not the app base, which is a warmer grey and let the tiles disappear into
    the page. */
+/* Square. The real tile is 252x257 at 3x — a hair taller than wide, which
+   reads as square; ours was 252x217, and squashing it is what made the art
+   look cramped inside its own box. */
 .cat__im {
-  width: 100%; aspect-ratio: 1 / 0.89;
-  border-radius: 14px; background: #E7EFF1;
-  overflow: hidden; padding: 7px;
+  width: 100%; aspect-ratio: 1 / 1.02;
+  border-radius: 16px; background: #E7EFF1;
+  overflow: hidden; padding: 10px;
 }
 .cat__im img { width: 100%; height: 100%; object-fit: contain; }
-.cat__l { font-size: 13px; line-height: 1.2; text-align: center; font-weight: 500; color: var(--ink); }
+.cat__l { font-size: 14px; line-height: 1.28; text-align: center; font-weight: 500; color: var(--ink); }
 
 /* ---------- end-of-feed footer ----------
    Blinkit's own sign-off: the line set very large and ghosted back into the
