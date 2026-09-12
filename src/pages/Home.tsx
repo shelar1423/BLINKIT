@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
-import { CARS, CATEGORIES, HERO_CARS, SHOP_CARS, rupees } from '../data/catalog';
+import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
@@ -21,32 +21,23 @@ import { useToast } from '../App';
  */
 const SHOW_TRACK_DIVIDER = false;
 
-/**
- * The three ways into the catalogue that sit on the campaign band.
- *
- * The price claims are read off the catalogue rather than written by hand, so
- * the tile cannot promise a number the listing then contradicts — the mockup
- * said "from ₹99" and the cheapest car we actually sell is ₹179.
- */
+/** The three ways into the catalogue that sit on the campaign band. */
 const SHOP_TILES = [
   {
     id: 'diecast',
     title: 'Die-Cast Cars',
-    flag: `Starting at ${rupees(Math.min(...CARS.filter((c) => !c.mystery).map((c) => c.price)))}`,
     image: '/cars/09-02-muscle-car-orange.webp',
     to: '/hot-wheels',
   },
   {
     id: 'track',
     title: 'Track Sets',
-    flag: 'Coming this drop',
     image: '/campaign/tile-tracksets.webp',
     to: '/hot-wheels',
   },
   {
     id: 'trucks',
     title: 'Trucks & Playsets',
-    flag: 'Coming this drop',
     image: '/cars/09-09-performance-pickup-blue.webp',
     to: '/hot-wheels',
   },
@@ -101,7 +92,6 @@ export default function Home() {
           <h2 className="ctake__t">
             <img src="/campaign/race-it-home-wordmark.webp" alt="Race It Home" />
           </h2>
-          <p className="ctake__tag">Collect &middot; Play &middot; Delivered</p>
 
           {/* The countdown is the headline. A row of numbers that merely
               changes is a readout; a split-flap is a mechanism, and the
@@ -121,7 +111,6 @@ export default function Home() {
               <IconFlag size={17} />
               Race now
             </Button>
-            <p className="mystery__prog">Revealed on the final day of the drop</p>
           </div>
 
           {/* Three ways into the catalogue, on the band's own ground. This
@@ -137,7 +126,6 @@ export default function Home() {
                 type="button"
                 onClick={() => nav(t.to)}
               >
-                <span className="ctile__flag">{t.flag}</span>
                 <span className="ctile__t">{t.title}</span>
                 <img className="ctile__im" src={t.image} alt="" loading="lazy" />
               </button>

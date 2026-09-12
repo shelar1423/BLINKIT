@@ -93,6 +93,7 @@ export const HERO_CARS: Product[] = [
     series: 'Unleashed 2 Series',
     unit: '1 pc · die-cast',
     price: 279,
+    mrp: 359,
     rating: 4.7,
     ratings: 98,
     image: CAR('jackhammer-diecast'),
@@ -130,10 +131,10 @@ export const HERO_CARS: Product[] = [
 
 /** Ordinary catalogue products — flat photo, no 3D. Buyable without racing. */
 export const SHOP_CARS: Product[] = [
-  { id: 'muscle', name: 'Hot Wheels Muscle Bound', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, rating: 4.7, ratings: 35, image: CAR('09-02-muscle-car-orange') },
-  { id: 'retro', name: 'Hot Wheels Retro Racer', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, rating: 4.8, ratings: 43, image: CAR('09-05-retro-racing-car-yellow') },
-  { id: 'supercar', name: 'Hot Wheels Night Shifter', series: 'Worldwide Basic Series', unit: '1 pc', price: 199, rating: 4.6, ratings: 61, image: CAR('09-07-supercar-purple') },
-  { id: 'pickup', name: 'Hot Wheels Performance Pickup', series: 'Worldwide Basic Series', unit: '1 pc', price: 189, image: CAR('09-09-performance-pickup-blue') },
+  { id: 'muscle', name: 'Hot Wheels Muscle Bound', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, mrp: 229, rating: 4.7, ratings: 35, image: CAR('09-02-muscle-car-orange') },
+  { id: 'retro', name: 'Hot Wheels Retro Racer', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, mrp: 239, rating: 4.8, ratings: 43, image: CAR('09-05-retro-racing-car-yellow') },
+  { id: 'supercar', name: 'Hot Wheels Night Shifter', series: 'Worldwide Basic Series', unit: '1 pc', price: 199, mrp: 259, rating: 4.6, ratings: 61, image: CAR('09-07-supercar-purple') },
+  { id: 'pickup', name: 'Hot Wheels Performance Pickup', series: 'Worldwide Basic Series', unit: '1 pc', price: 189, mrp: 249, rating: 4.6, ratings: 51, image: CAR('09-09-performance-pickup-blue') },
   { id: 'proto', name: 'Hot Wheels Race Prototype', series: 'Track Stars', unit: '1 pc', price: 219, mrp: 259, rating: 4.5, ratings: 22, image: CAR('09-10-race-prototype-red') },
   { id: 'metallic', stock: 2, name: 'Hot Wheels Metallic Edition', series: 'Collector Series', unit: '1 pc', price: 329, mrp: 399, rating: 4.9, ratings: 88, image: CAR('09-11-rare-metallic-edition'), badge: 'LIMITED' },
   { id: 'premium', stock: 1, name: 'Hot Wheels Premium Limited Racer', series: 'Premium Collection', unit: '1 pc', price: 449, mrp: 549, rating: 4.9, ratings: 46, image: CAR('09-12-premium-limited-racer'), badge: 'LIMITED' },

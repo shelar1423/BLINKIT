@@ -110,6 +110,11 @@ export function ProductCard({ product }: { product: Product }) {
     const need = product.revealAt ?? 5000;
     const short = Math.max(0, need - points);
     return (
+      /* Same skeleton as every other card, because it IS the same component —
+         it just has nothing to say in most of the rows yet. Given its own
+         shorter shape it sat in a full-height grid slot with a 157px hole
+         under it, which is exactly the raggedness the rest of this card is
+         built to avoid. The rows it cannot fill are reserved, not dropped. */
       <div className="pcard">
         {/* The concealed treatment has to fill the whole panel; on the inner
             image box alone it left a lit ring of panel around a dark square. */}
@@ -121,17 +126,28 @@ export function ProductCard({ product }: { product: Product }) {
               <span>{short > 0 ? `${short.toLocaleString('en-IN')} pts to reveal` : 'Reveal ready'}</span>
             </span>
           </div>
+          <span className="pcard__unit">Locked</span>
         </div>
+
+        <div className="pcard__prow">
+          <b className="pcard__price">&mdash;</b>
+        </div>
+        <p className="pcard__off" />
         <p className="pcard__nm">{product.name}</p>
-        <p className="pcard__un">{product.series}</p>
+        <span className="pcard__specs">
+          <span className="pcard__spec">{product.age ?? AGE_RATING}</span>
+        </span>
+        <p className="pcard__rt" />
+        <p className="pcard__meta">
+          <span>
+            <IconLock size={12} /> {short > 0 ? 'Race to unlock' : 'Reveal ready'}
+          </span>
+        </p>
       </div>
     );
   }
 
   const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
-  /* Two genuine views (model + photo) only where a GLB exists, so the pager
-     never promises images the product does not have. */
-  const views = product.glb ? 2 : 1;
 
   return (
     <div
@@ -163,13 +179,7 @@ export function ProductCard({ product }: { product: Product }) {
               <IconCube size={11} /> 3D
             </span>
           )}
-          {views > 1 && (
-            <span className="pcard__dots" aria-hidden="true">
-              {Array.from({ length: views }, (_, i) => (
-                <i key={i} className={i === 0 ? 'is-on' : undefined} />
-              ))}
-            </span>
-          )}
+
         </div>
         <SaveButton product={product} />
         {/* Pack size only: the card has one line for it, and the material
