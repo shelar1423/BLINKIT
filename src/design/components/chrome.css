@@ -211,6 +211,21 @@
 }
 .phdr__acts button:active { background: var(--surface-2); }
 
+/* An explainer link, not an action: outlined rather than filled, so it sits
+   beside the title without competing with the campaign's one real button down
+   in the hero. */
+.howbtn {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 5px;
+  height: 30px; padding: 0 11px 0 9px;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface);
+  font-size: var(--f-xs); font-weight: 600; color: var(--ink);
+  white-space: nowrap;
+}
+.howbtn svg { color: var(--mut); }
+.howbtn:active { background: var(--surface-2); }
+
 /* ============================================================
    Bottom navigation — a floating pill, not a docked bar.
    ============================================================ */
