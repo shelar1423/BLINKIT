@@ -1857,6 +1857,51 @@ input, select, textarea { font: inherit; color: inherit; }
   text-decoration: underline; text-underline-offset: 3px;
 }
 
+/* ---------- the claimable reward, as a ticket ----------
+   RESTORED. These were deleted with the old race-result block when that screen
+   was rebuilt — .coupon is shared with the rewards page, which had been
+   rendering an unstyled div ever since: no ground, no radius, no padding, the
+   art and the copy running together at the left edge. Nothing but this page
+   uses them now, so they live next to it. */
+.coupon {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--green-line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.coupon__top { display: flex; align-items: center; gap: 12px; padding: 14px; }
+.coupon__art {
+  width: 54px; height: 54px; flex: 0 0 54px;
+  border-radius: 50%; background: var(--green-tint);
+  display: grid; place-items: center;
+}
+.coupon__art img { width: 68%; height: 68%; object-fit: contain; }
+.coupon__k {
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--green);
+}
+.coupon__v { display: block; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; margin-top: 1px; }
+.coupon__s { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 2px; }
+/* The perforation: a dashed rule with a notch bitten out of each side, which
+   is what makes it read as a ticket you tear rather than a card you scroll. */
+.coupon__tear {
+  display: block; position: relative;
+  border-top: 1px dashed var(--green-line);
+  margin: 0 14px;
+}
+.coupon__tear::before,
+.coupon__tear::after {
+  content: '';
+  position: absolute; top: -9px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--appbase);
+  border: 1px solid var(--green-line);
+}
+.coupon__tear::before { left: -23px; }
+.coupon__tear::after { right: -23px; }
+.coupon__foot { padding: 14px; }
+
 /* ============================================================
    Racing rewards.
 
@@ -2584,12 +2629,15 @@ input, select, textarea { font: inherit; color: inherit; }
    illustration nearly 400px tall — it filled the first screen and pushed the
    thing the page is actually for below the fold. Capped and centred, with air
    around it, so it introduces the page instead of being the page. */
+/* ---- campaign banner ----
+   The supplied set is drawn at 2.4:1 as full-width bands, so this is no longer
+   a small centred illustration with air around it. */
 .heroart {
-  display: grid; place-items: center;
-  padding: 14px var(--gut) 6px;
+  padding: 12px var(--gut) 4px;
 }
 .heroart img {
   display: block;
-  width: min(62%, 230px);
-  height: auto;
+  width: 100%; aspect-ratio: 2.4 / 1;
+  object-fit: cover;
+  border-radius: var(--r-lg);
 }

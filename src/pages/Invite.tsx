@@ -52,7 +52,7 @@ export default function Invite() {
       <PageHeader title="Race your friends" subtitle={`${racesLeft} races left today`} onBack={() => nav('/campaign')} />
       <main className="page">
         <div className="heroart">
-          <img src="/campaign/20-refer-a-friend-hero.webp" alt="" />
+          <img src="/campaign/banner-invite.webp" alt="" />
         </div>
 
         <div className="shell" style={{ paddingTop: 14, display: 'grid', gap: 12 }}>
