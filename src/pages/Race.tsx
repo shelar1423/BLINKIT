@@ -5,7 +5,7 @@ import { PageHeader } from '../design/components/Chrome';
 import { HERO_CARS } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, useStore } from '../store/useStore';
 import { preloadCar } from '../lib/three/modelLoader';
-import { IconAR, IconCheck, IconFlag } from '../design/elements/Icons';
+import { IconAR, IconBulb, IconCheck, IconFlag } from '../design/elements/Icons';
 import { useARSupport } from '../lib/useARSupport';
 
 /** Race preparation: pick the car, then choose 3D or AR. */
@@ -34,6 +34,16 @@ export default function Race() {
             <p className="howcard__hd">How it works</p>
             <div className="howcard__art">
               <img src="/campaign/how-ar-placement.webp" alt="A Hot Wheels car placed on a real table through the camera" />
+              {/* The placement ring, alive. It is the one thing in this picture
+                  that the player has to recognise later — the same burnout
+                  they will be aiming at through the camera — and as a still it
+                  read as part of the photograph rather than as the thing the
+                  app draws. Two rings on the same beat, offset, so it pulses
+                  outward the way the real reticle does. */}
+              <span className="howring" aria-hidden="true">
+                <i />
+                <i />
+              </span>
             </div>
             {/* The copy is wrapped rather than sitting loose beside the
                 number: the row is a flex container, so bare text nodes and a
@@ -59,7 +69,6 @@ export default function Race() {
             </ol>
             <p className="howcard__foot">
               <span className="howcard__line">Two laps &middot; 45 seconds</span>
-              <span className="howcard__tip"><b>Pro tip:</b> a clear table works best</span>
             </p>
             {bestScore > 0 && (
               <p className="howcard__best">
@@ -98,6 +107,22 @@ export default function Race() {
               <span className="carpick__n">{c.name.replace('Hot Wheels ', '').replace(' Die Cast Car', '')}</span>
             </button>
           ))}
+        </div>
+
+        {/* The pro tip, moved down out of the explainer card.
+
+            It used to sit inside the card on the same line as "Two laps · 45
+            seconds", where it read as a second stat rather than as advice —
+            and it is advice about the surface you are ABOUT to pick a car and
+            point a camera at, so it belongs next to that decision, not three
+            blocks above it. */}
+        <div className="shell" style={{ paddingTop: 12 }}>
+          <p className="protip">
+            <span className="protip__ic" aria-hidden="true">
+              <IconBulb size={15} />
+            </span>
+            <span><b>Pro tip:</b> a clear, flat table works best for the smoothest race.</span>
+          </p>
         </div>
 
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 8 }}>

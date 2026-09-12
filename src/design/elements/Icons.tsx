@@ -248,6 +248,14 @@ export const IconHorn = (p: P) => (
   </S>
 );
 
+/** A bulb, for the pro tip. Filament as two strokes so it reads as lit. */
+export const IconBulb = (p: P) => (
+  <S {...p}>
+    <path d="M9 17.5h6M10 20.5h4" />
+    <path d="M12 3.5a6 6 0 0 0-3.6 10.8c.5.4.8 1 .8 1.6v.6h5.6v-.6c0-.6.3-1.2.8-1.6A6 6 0 0 0 12 3.5Z" />
+  </S>
+);
+
 export const IconBrake = (p: P) => (
   <S {...p}>
     <circle cx="12" cy="12" r="8.5" />
