@@ -1139,7 +1139,23 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: calc(var(--safe-t) + 8px) var(--gut) 8px;
   display: flex; align-items: center; gap: 8px;
   pointer-events: none;
+  transition: background-color 130ms ease, box-shadow 130ms ease;
 }
+/* Scrolled, the header stops floating over the photo and becomes a bar. Left
+   transparent it was a row of discs sitting on top of live text — legible on
+   the image at the top of the sheet, unreadable anywhere else. */
+.shdr.is-solid {
+  background: #fff;
+  box-shadow: 0 1px 0 var(--line);
+}
+.shdr.is-solid .shdr__ic { background: none; box-shadow: none; }
+.shdr__t {
+  flex: 0 1 auto; min-width: 0;
+  font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  opacity: 0; transition: opacity 130ms ease;
+}
+.shdr.is-solid .shdr__t { opacity: 1; }
 .shdr__ic {
   pointer-events: auto;
   width: 38px; height: 38px; border-radius: 50%;
@@ -1389,7 +1405,21 @@ input, select, textarea { font: inherit; color: inherit; }
      repaints the whole sheet, 3D canvas and all, on every frame of the drag. */
   transform: translate3d(var(--pdp-dx, 0px), 0, 0);
   will-change: transform;
+  /* Expanding is the slower half on purpose — the recording spends ~120ms
+     letting the gutters go and ~70ms taking them back. */
+  transition: margin 130ms ease, border-radius 130ms ease;
 }
+/* Scrolled away from the top, the sheet IS the screen: it takes the gutters,
+   the rounded corners and the strip above it, and the neighbours go with it.
+   Nothing about the deck changes — the sheet is still one page of a carousel,
+   it is simply a full-width one until you come back up. */
+.pdpdeck.is-wide {
+  margin: 0;
+  border-radius: 0;
+  transition: margin 80ms ease, border-radius 80ms ease;
+}
+.pdppeek { transition: opacity 110ms ease; }
+.pdpstack.is-wide .pdppeek { opacity: 0; }
 /* The sheet keeps both gutters at every position in the deck. Letting the ends
    reclaim their edge made the first and last products measurably wider than
    the ones between them and ran the sheet flush into the side of the screen —
@@ -1454,9 +1484,20 @@ input, select, textarea { font: inherit; color: inherit; }
 @media (min-width: 521px) { .pdpstack__tap { right: calc(50% - 260px); } }
 @media (min-width: 1024px) { .pdpstack__tap { right: calc(50% - 280px); } }
 
+/* ---------- the sheet's footer ----------
+   The price bar and the cart shortcut stack in one sticky block, and the block
+   belongs to the SHEET — it stops at the sheet's edges rather than running the
+   width of the screen, which is what makes it read as part of this product's
+   frame. Stacked rather than two separately-pinned layers, for the same reason
+   the nav and its cart bar are: an offset kept in two places drifts. */
+.pdpfoot {
+  position: sticky; bottom: 0; z-index: 20;
+  display: flex; flex-direction: column;
+}
+.pdpfoot .cartbar { padding: 0 var(--gut) 8px; }
 /* ---------- sticky action bar ---------- */
 .actionbar {
-  position: sticky; bottom: 0; z-index: 20;
+  position: relative; z-index: 20;
   background: #fff; border-top: 1px solid var(--line);
   padding: 10px var(--gut) calc(10px + var(--safe-b));
   display: flex; gap: 10px; align-items: center;

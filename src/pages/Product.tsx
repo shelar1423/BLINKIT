@@ -21,6 +21,7 @@ import {
   IconStock,
 } from '../design/elements/Icons';
 import { ProductCard, Stars } from '../design/components/ProductCard';
+import { CartPill } from '../design/components/CartPill';
 import { SectionHeader } from '../design/components/Chrome';
 import { useToast } from '../App';
 import { useARSupport } from '../lib/useARSupport';
@@ -31,17 +32,26 @@ function SheetHeader({
   onShare,
   saved,
   onSave,
+  title,
+  solid,
 }: {
   onClose: () => void;
   onShare: () => void;
   saved?: boolean;
   onSave?: () => void;
+  title?: string;
+  /** Scrolled: the header takes a ground of its own and names the product. */
+  solid?: boolean;
 }) {
   return (
-    <header className="shdr">
+    <header className={'shdr' + (solid ? ' is-solid' : '')}>
       <button className="shdr__ic" type="button" aria-label="Close" onClick={onClose}>
         <IconChevronDown size={22} />
       </button>
+      {/* At the top the photo carries the page and the name is in the card
+          below; once that has scrolled away the header has to say what you are
+          looking at, which is what the real sheet does. */}
+      <span className="shdr__t">{title}</span>
       <span className="grow" />
       <button
         className={'shdr__ic' + (saved ? ' is-on' : '')}
@@ -260,6 +270,23 @@ export default function Product() {
      under a page short and the neighbour arrived already slightly off its
      mark. Measured rather than computed from tokens so it stays right at any
      column width. */
+  /* The sheet gives up its inset once you leave the top.
+     Traced off a screen recording: the gutters walk outward and are gone by
+     120ms, the sheet's top edge goes from 62.7pt to the very top of the
+     screen, and the neighbours go with them — scrolled, a product page is the
+     whole screen. Coming back up it re-insets in about 70ms. A little
+     hysteresis so a one-pixel jitter at the top cannot flap it. */
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    const read = () => {
+      const y = window.scrollY;
+      setWide((w) => (w ? y > 4 : y > 14));
+    };
+    read();
+    window.addEventListener('scroll', read, { passive: true });
+    return () => window.removeEventListener('scroll', read);
+  }, [id]);
+
   const deckEl = useRef<HTMLDivElement>(null);
   const step = useCallback(() => {
     const el = deckEl.current;
@@ -414,7 +441,7 @@ export default function Product() {
     <>
       {/* The neighbours ride in a fixed layer pinned to the app column, so the
           right-hand sliver stays put while the current sheet scrolls. */}
-      <div className="pdpstack">
+      <div className={'pdpstack' + (wide ? ' is-wide' : '')}>
         {/* The window stays put; only the track inside it moves. Translating
             the window itself dragged its own clip rect along, so the arriving
             sheet was cut off at exactly the edge it was travelling towards. */}
@@ -434,13 +461,20 @@ export default function Product() {
 
       <div
         ref={deckEl}
-        className={'pdpdeck' + (gliding ? ' is-gliding' : '') + (prev ? '' : ' pdpdeck--first') + (next ? '' : ' pdpdeck--last')}
+        className={'pdpdeck' + (wide ? ' is-wide' : '') + (gliding ? ' is-gliding' : '') + (prev ? '' : ' pdpdeck--first') + (next ? '' : ' pdpdeck--last')}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
       >
-        <SheetHeader onClose={() => nav(-1)} onShare={share} saved={saved} onSave={() => toggleSaved(product.id)} />
+        <SheetHeader
+          onClose={() => nav(-1)}
+          onShare={share}
+          saved={saved}
+          onSave={() => toggleSaved(product.id)}
+          title={product.name}
+          solid={wide}
+        />
 
         <main className="page page--flush pdp">
           {/* White, with the car standing on its own soft shadow — the same
@@ -699,7 +733,13 @@ export default function Product() {
           </section>
         </main>
 
-        <div className="actionbar">
+        {/* The bar and the cart shortcut are ONE sticky block inside the sheet,
+            stacked. Both belong to this product's frame, not to the screen —
+            on the real PDP they stop at the sheet's edges, and the shortcut
+            arrives here exactly as it does on the storefront. */}
+        <div className="pdpfoot">
+          <CartPill />
+          <div className="actionbar">
           {/* The price block reads the same as the card's, plus the tax line
               the real PDP keeps down here rather than in the card. */}
           <div className="ab__price">
@@ -717,10 +757,9 @@ export default function Product() {
           {qty === 0 ? (
             <Button variant="primary" size="lg" className="grow"
               type="button"
-              onClick={() => {
-                add(product.id);
-                toast('Added to cart');
-              }}
+              /* No toast. The cart bar rising into the sheet says the same
+                 thing in the same place, and the two used to overlap. */
+              onClick={() => add(product.id)}
             >
               Add to Cart
             </Button>
@@ -740,6 +779,7 @@ export default function Product() {
               </Button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </>
