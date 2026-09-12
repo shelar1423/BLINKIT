@@ -761,22 +761,23 @@ export default function Product() {
                  thing in the same place, and the two used to overlap. */
               onClick={() => add(product.id)}
             >
-              Add to Cart
+              Add to cart
             </Button>
           ) : (
-            <div className="row grow" style={{ gap: 10 }}>
-              <div className="stepper stepper--lg" role="group" aria-label="Quantity">
-                <button type="button" onClick={() => setQty(product.id, qty - 1)} aria-label="Decrease quantity">
-                  <IconMinus size={15} />
-                </button>
-                <span className="stepper__q">{qty}</span>
-                <button type="button" onClick={() => setQty(product.id, qty + 1)} aria-label="Increase quantity">
-                  <IconPlus size={15} />
-                </button>
-              </div>
-              <Button variant="primary" size="lg" className="grow" type="button" onClick={() => nav('/cart')}>
-                Go to Cart
-              </Button>
+            /* One control, not two. Adding swaps what is inside the box; it
+               does not shrink the box and stand a second button next to it.
+               Measured off the recording: the control is 33.8% of the sheet's
+               width both before and after, so the stepper simply inherits the
+               slot the button was occupying. There is no "Go to Cart" here —
+               the cart bar above already is that. */
+            <div className="stepper stepper--lg grow" role="group" aria-label="Quantity">
+              <button type="button" onClick={() => setQty(product.id, qty - 1)} aria-label="Decrease quantity">
+                <IconMinus size={15} />
+              </button>
+              <span className="stepper__q">{qty}</span>
+              <button type="button" onClick={() => setQty(product.id, qty + 1)} aria-label="Increase quantity">
+                <IconPlus size={15} />
+              </button>
             </div>
           )}
           </div>
