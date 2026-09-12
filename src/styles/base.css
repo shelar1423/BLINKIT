@@ -615,15 +615,22 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Widths are set so the lockup keeps the same HEIGHT on the band. The new
      artwork is 2.18:1 against the old 1.46:1, so holding the old 100px width
      would have quietly shrunk the campaign name by a third. */
-  /* Up 20% from 150px — the lockup is the campaign's name and was reading
-     smaller than the countdown sitting under it. */
+  /* Another 20%, to 216px, now that the co-brand lockup and the date pill
+     above it are gone and the band belongs to this alone. */
   margin: 14px auto 0;
-  max-width: 180px;
+  max-width: 216px;
   line-height: 0;
+  /* It arrives rather than being present — the one piece of motion the band
+     gets, the way Blinkit's festive mastheads animate their lettering in. */
+  animation: ctakeIn 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
-@media (min-width: 768px) { .ctake__t { max-width: 396px; } }
+@media (min-width: 768px) { .ctake__t { max-width: 476px; } }
+@keyframes ctakeIn {
+  from { transform: scale(0.86) translateY(10px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
 
 
 
@@ -663,6 +670,35 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
 .mystery__go:active { transform: scale(0.97); }
+/* A reflective sweep travelling across the face, so the button reads as the
+   same chrome-and-flame material the lockup above it is made of rather than a
+   flat orange rectangle sitting under it. Clipped to the button, skewed so the
+   highlight rakes rather than wipes, and paused for anyone who has asked for
+   less motion. */
+.mystery__go { position: relative; overflow: hidden; }
+.mystery__go::after {
+  content: '';
+  position: absolute; top: -60%; bottom: -60%; left: -40%;
+  width: 32%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.62) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-18deg);
+  animation: goSheen 3.4s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+@keyframes goSheen {
+  0% { left: -40%; }
+  /* the sweep is a moment, not a loop — most of the cycle is the wait */
+  22%, 100% { left: 118%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ctake__t { animation: none; }
+  .mystery__go::after { display: none; }
+}
 
 .dropfacts > div { padding: 10px 8px; text-align: center; border-left: 1px solid var(--line); }
 .dropfacts > div:first-child { border-left: 0; }
@@ -741,9 +777,17 @@ input, select, textarea { font: inherit; color: inherit; }
 /* All three are cut-outs on a common canvas, already sitting on its floor and
    already balanced against each other, so the tile just needs to place that
    canvas: full width, anchored to the bottom, contained. */
+/* Inset, so every product sits on the same optical centre.
+
+   These ran the full width of the tile with `object-fit: contain`, which
+   centres the IMAGE FILE and not the thing inside it — and the three files
+   carry different amounts of empty margin, so a wide car filled its tile edge
+   to edge while a narrower one floated. Padding the box equally on both sides
+   gives them a common frame to be centred in, which is what makes them read as
+   a set rather than three unrelated crops. */
 .ctile__im {
   position: absolute; left: 0; right: 0; bottom: 0;
-  width: 100%; height: 56%;
+  width: calc(100% - 24px); margin: 0 12px; height: 56%;
   object-fit: contain; object-position: 50% 100%;
 }
 .ctile:active { transform: scale(0.985); }
