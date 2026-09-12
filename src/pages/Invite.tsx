@@ -3,7 +3,7 @@ import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
 import { useStore } from '../store/useStore';
-import { IconCheck, IconCopy, IconShare } from '../design/elements/Icons';
+import { IconCheck, IconCopy, IconShare, IconWhatsapp } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 export default function Invite() {
@@ -16,12 +16,15 @@ export default function Invite() {
 
   const link = `${window.location.origin}/?ref=${referralCode}`;
 
+  /* One message, two ways out — so the WhatsApp text and the share-sheet text
+     cannot drift apart. */
+  const data = {
+    title: 'Race It Home · Blinkit × Hot Wheels',
+    text: `I scored ${bestScore.toLocaleString('en-IN')} pts. Beat it?`,
+    url: link,
+  };
+
   async function share() {
-    const data = {
-      title: 'Race It Home · Blinkit × Hot Wheels',
-      text: `I scored ${bestScore.toLocaleString('en-IN')} pts. Beat it?`,
-      url: link,
-    };
     try {
       if (navigator.share) {
         await navigator.share(data);
@@ -80,8 +83,25 @@ export default function Invite() {
                 {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <Button variant="hwBlue" block type="button" onClick={share}>
-              <IconShare size={16} /> Invite a friend
+            {/* WhatsApp first, and named.
+
+                Every invite in India starts in WhatsApp, and "Invite a friend"
+                behind the system share sheet buried that behind a menu — one
+                extra decision before the thing almost everyone was going to
+                pick anyway. wa.me opens the app with the message already
+                written; the recipient and the send are still theirs. */}
+            <a
+              className="btn btn--wa"
+              href={`https://wa.me/?text=${encodeURIComponent(`${data.text} ${link}`)}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <IconWhatsapp size={18} /> Invite via WhatsApp
+            </a>
+            {/* Everything else — AirDrop, Messages, a copied link — behind one
+                quieter control, because it is the minority path. */}
+            <Button variant="outline" block type="button" onClick={share}>
+              <IconShare size={16} /> More ways to invite
             </Button>
           </div>
         </div>

@@ -142,6 +142,15 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn--primary { background: var(--green); color: #fff; }
 .btn--primary:not(:disabled):active { background: var(--green-dk); }
 .btn--dark { background: var(--ink); color: #fff; }
+/* WhatsApp's own green, because a button that says "Invite via WhatsApp" in
+   the campaign's blue is asking to be read as something else. Rendered as an
+   <a>, so it needs the block layout .btn--block would otherwise give it. */
+.btn--wa {
+  display: flex; width: 100%;
+  background: #25D366; color: #0A2E17;
+  font-weight: 800;
+}
+.btn--wa:active { background: #1EB955; }
 .btn--dark:not(:disabled):active { background: #000; }
 /* the button you press on a campaign ground — see ButtonVariant for why this
    is white rather than green, red or yellow */
