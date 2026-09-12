@@ -222,7 +222,7 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 5px 3px;
+  padding: 5px 7px;
   box-shadow: 0 6px 22px rgba(31, 31, 31, 0.14);
 }
 /* The lozenge sits behind the whole tab — icon and label together — not just
@@ -241,14 +241,14 @@
 .bnav__ic { display: grid; place-items: center; height: 24px; }
 .bnav__l { line-height: 1.2; text-align: center; white-space: nowrap; }
 
-/* A stadium narrows fastest at top and bottom, which is exactly where the
-   label sits — so a lozenge only as wide as its tab clips the widest labels on
-   the curve. Blinkit's runs about a quarter wider than the text it holds, so
-   this one breaks out of its grid cell rather than being bound by it. Only one
-   tab is ever current, so the overhang cannot collide with a neighbour. */
+/* The lozenge is the width of its own tab and no wider. It used to overhang
+   8px each side, which on the first tab pushed it past the bar's rounded edge
+   and towards its neighbour — measured on the real bar, the pill sits inside
+   the stadium with clear air before the next label. The bar's side padding
+   carries that air rather than the pill borrowing it. */
 .bnav__i.is-on::before {
   content: '';
-  position: absolute; inset: 0 -8px;
+  position: absolute; inset: 0 3px;
   border-radius: 999px;
   background: rgba(31, 31, 31, 0.05);
 }

@@ -21,6 +21,12 @@
 
 html, body, #root { height: 100%; }
 
+/* The rubber band at the top of an iOS scroll shows the ROOT element, not the
+   body — so the campaign blue goes here. The body stays the app's own surface,
+   which keeps the gutters white on a desktop window. The status bar itself is
+   coloured by the theme-color meta in index.html, which is the only lever
+   Safari actually reads. */
+html { background: var(--status-bg); }
 body {
   margin: 0;
   background: var(--surface);
@@ -1052,16 +1058,34 @@ input, select, textarea { font: inherit; color: inherit; }
   -webkit-overflow-scrolling: touch;
 }
 .pdp__chips::-webkit-scrollbar { display: none; }
+/* Two halves in one container, as the real spec chip is built: the label on a
+   tinted ground, the value on white under it. Ours was a single flat grey box
+   with both lines in it, which read as one label wrapped onto two lines rather
+   than as a field and its answer. */
 .chipbox {
   flex: none;
-  background: var(--surface-2); border-radius: var(--r-md);
-  padding: 7px 9px; min-width: 0; text-align: left;
+  border-radius: var(--r-md);
+  min-width: 0; text-align: left;
   white-space: nowrap;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--line);
+  display: grid;
 }
-.chipbox span { display: block; font-size: var(--f-2xs); color: var(--mut); line-height: 1.3; }
-.chipbox b { display: block; font-size: var(--f-sm); font-weight: 700; margin-top: 2px; }
+.chipbox span {
+  display: block;
+  background: var(--surface-2);
+  font-size: var(--f-sm); color: var(--mut); line-height: 1.3;
+  padding: 7px 11px 6px;
+}
+.chipbox b {
+  display: block;
+  font-size: var(--f-sm); font-weight: 700; color: var(--ink);
+  padding: 6px 11px 7px;
+}
 .chipbox--cta {
   display: grid; place-items: center;
+  border-color: var(--green-line);
   white-space: normal; text-align: center; max-width: 68px; line-height: 1.2;
   background: var(--green-tint); border: 1px solid var(--green-line);
   color: var(--green); font-size: var(--f-sm); font-weight: 700;
@@ -1196,6 +1220,10 @@ input, select, textarea { font: inherit; color: inherit; }
   transform: translate3d(var(--pdp-dx, 0px), 0, 0);
   will-change: transform;
 }
+/* At either end of the deck there is no neighbour to show, so the sheet takes
+   that edge back rather than leaving a 12px strip of nothing. */
+.pdpdeck--first { margin-left: 0; }
+.pdpdeck--last { margin-right: 0; }
 .pdpdeck.is-gliding, .pdpstack__track.is-gliding { transition: transform 260ms cubic-bezier(0.25, 0.8, 0.3, 1); }
 /* The frame a new product lands on: whatever glide was in flight is cancelled
    so the arriving sheet is simply in place, not sliding in from where the last

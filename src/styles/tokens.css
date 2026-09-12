@@ -60,6 +60,9 @@
   --line: #E8E8E8;          /* --colors-grey-200: hairline / header border */
   --line-2: #DDDDDD;        /* --color__grc5: ADD button border */
   --surface: #FFFFFF;
+  /* What shows behind the notch and at an overscroll bounce. Matches the
+     campaign band so the status bar belongs to the app. */
+  --status-bg: #1B4FD1;
   --surface-2: #F7F7F7;     /* --color__grc10 */
   --appbase: #F5F8FA;       /* --colors-base-appbase: page ground behind cards */
 

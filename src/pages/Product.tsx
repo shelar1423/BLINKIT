@@ -211,9 +211,13 @@ export default function Product() {
 
   /* ---- the deck ---------------------------------------------------- */
   const deck = useMemo(() => CARS.filter((c) => !c.mystery), []);
-  const at = deck.findIndex((c) => c.id === id);
-  const next = deck[at < 0 ? 0 : (at + 1) % deck.length];
-  const prev = deck[at < 0 ? deck.length - 1 : (at - 1 + deck.length) % deck.length];
+  /* The deck has ends. Wrapping it meant the first car showed a sliver of the
+     last one on its left, which says there is something behind you when there
+     is not — and the real deck simply has no sliver on that side. A car at
+     either end gives its edge back to the sheet. */
+  const at = Math.max(0, deck.findIndex((c) => c.id === id));
+  const next = at < deck.length - 1 ? deck[at + 1] : null;
+  const prev = at > 0 ? deck[at - 1] : null;
 
   /* The drag is driven straight onto the DOM rather than through state. A
      setState per pointermove is a React render per frame of a gesture that is
@@ -333,8 +337,8 @@ export default function Product() {
     if (!g || g.axis !== 'x') return;
     const far = window.innerWidth * COMMIT;
     const at = dx.current;
-    if (at < -far) go(next.id, 1);
-    else if (at > far) go(prev.id, -1);
+    if (at < -far && next) go(next.id, 1);
+    else if (at > far && prev) go(prev.id, -1);
     else {
       setGliding(true);
       setDx(0);
@@ -400,19 +404,21 @@ export default function Product() {
             the window itself dragged its own clip rect along, so the arriving
             sheet was cut off at exactly the edge it was travelling towards. */}
         <div className={'pdpstack__track' + (gliding ? ' is-gliding' : '')}>
-          <PeekSheet product={prev} side="prev" />
-          <PeekSheet product={next} side="next" />
+          {prev && <PeekSheet product={prev} side="prev" />}
+          {next && <PeekSheet product={next} side="next" />}
         </div>
       </div>
-      <button
-        className="pdpstack__tap"
-        type="button"
-        aria-label={`Next product: ${next.name}`}
-        onClick={() => go(next.id, 1)}
-      />
+      {next && (
+        <button
+          className="pdpstack__tap"
+          type="button"
+          aria-label={`Next product: ${next.name}`}
+          onClick={() => go(next.id, 1)}
+        />
+      )}
 
       <div
-        className={'pdpdeck' + (gliding ? ' is-gliding' : '')}
+        className={'pdpdeck' + (gliding ? ' is-gliding' : '') + (prev ? '' : ' pdpdeck--first') + (next ? '' : ' pdpdeck--last')}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
