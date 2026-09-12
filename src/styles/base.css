@@ -702,6 +702,31 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctile--track .ctile__im { object-fit: cover; height: 48%; }
 .ctile:active { transform: scale(0.985); }
 
+/* The tap target over the artwork. Covers the part of the band the hero fills
+   and stops short of the tiles, so it never sits under them. */
+.ctake__tap {
+  position: absolute; left: 0; right: 0; top: 0;
+  height: 74%;
+  border: 0; background: none; padding: 0;
+  cursor: pointer;
+}
+
+/* ---- the way into the whole catalogue ----
+   A quiet full-width row closing the band, under the three tiles. They are
+   three ways into three parts of it; this is the way into all of it. */
+.cshop {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: calc(100% + var(--gut) * 2);
+  margin: 14px calc(var(--gut) * -1) 0;
+  padding: 14px var(--gut);
+  background: rgba(255, 255, 255, 0.1);
+  border: 0; border-top: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: var(--f-md); font-weight: 800; letter-spacing: -0.1px;
+}
+.cshop svg { flex: 0 0 auto; opacity: 0.85; }
+.cshop:active { background: rgba(255, 255, 255, 0.16); }
+
 .ctake__edge {
   position: absolute; left: 0; right: 0; bottom: 0;
   height: 12px;

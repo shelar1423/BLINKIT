@@ -6,7 +6,7 @@ import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
-import { IconFlag, IconHeart } from '../design/elements/Icons';
+import { IconChevronRight, IconFlag, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 /**
@@ -94,6 +94,19 @@ export default function Home() {
               the blue it fades into is the same blue the tiles sit on. */}
           <img className="ctake__bg" src="/campaign/hero-bg.webp" alt="" aria-hidden="true" />
 
+          {/* The artwork itself opens the listing. It sits first among the
+              lifted children, so everything after it — the countdown, Race now,
+              the tiles — paints over it and keeps its own taps; this only
+              catches the parts of the band nothing else is using. A button
+              cannot contain a button, which is why it is a sibling rather than
+              a wrapper. */}
+          <button
+            className="ctake__tap"
+            type="button"
+            aria-label="Shop all Hot Wheels"
+            onClick={() => nav('/hot-wheels')}
+          />
+
           {/* Lockup left, drop window right — the shape the festive storefronts
               use for their title row. It also gets the dates out from under the
               flaps, where they were reading as a third unit of the countdown,
@@ -156,6 +169,15 @@ export default function Home() {
               </button>
             ))}
           </div>
+
+          {/* Back under the tiles, where it was before they replaced it. The
+              tiles are three ways into three parts of the catalogue; this is
+              the way into all of it, and removing it left no route to the full
+              listing from the band at all. */}
+          <button className="cshop" type="button" onClick={() => nav('/hot-wheels')}>
+            <span>View all Hot Wheels</span>
+            <IconChevronRight size={16} />
+          </button>
 
         </section>
 
