@@ -454,25 +454,6 @@ export default function Product() {
                     <IconRotate size={17} />
                   </button>
                 </div>
-                {/* One button, two truths. On a device with no AR this used to
-                    say "View in your space" and then land on a screen whose
-                    only button was disabled. */}
-                <button
-                  className="pdp__ar"
-                  type="button"
-                  onClick={() => {
-                    if (!arOk) {
-                      toast('This device does not support AR. Showing the 3D view.');
-                      viewer.current?.reset();
-                      return;
-                    }
-                    selectCar(product.id);
-                    nav(`/ar/${product.id}?mode=inspect&go=1`);
-                  }}
-                >
-                  {arOk ? <IconAR size={16} /> : <IconCube size={16} />}
-                  {arOk ? 'View in your space' : 'View in 3D'}
-                </button>
                 {ready && <p className="pdp__hint">DRAG TO ROTATE · PINCH TO ZOOM</p>}
               </>
             ) : (
@@ -502,6 +483,34 @@ export default function Product() {
               die-cast we sell, and carrying it pushed the row 30px wider than
               the sheet — which put View details 18px PAST the corner with no
               gutter at all. The real PDP shows two facts and the link. */}
+          {/* Its own row under the image rather than a pill floating over the
+              corner of the photograph. It is the one thing this product does
+              that no other listing does, and parked on the artwork it read as
+              a watermark — half on the car, competing with the reset control
+              opposite it, and clipped by the stage on a short screen. */}
+          {has3D && (
+            <button
+              className="pdp__arrow"
+              type="button"
+              onClick={() => {
+                if (!arOk) {
+                  toast('This device does not support AR. Showing the 3D view.');
+                  viewer.current?.reset();
+                  return;
+                }
+                selectCar(product.id);
+                nav(`/ar/${product.id}?mode=inspect&go=1`);
+              }}
+            >
+              <span className="pdp__arrow-ic">{arOk ? <IconAR size={17} /> : <IconCube size={17} />}</span>
+              <span className="grow">
+                <b>{arOk ? 'View in your space' : 'View in 3D'}</b>
+                <small>{arOk ? 'Stand it on your desk at true scale' : 'Spin it and zoom in'}</small>
+              </span>
+              <IconChevronRight size={17} />
+            </button>
+          )}
+
           <div className="pdp__chips">
             <div className="chipbox">
               <span>Age Group</span>

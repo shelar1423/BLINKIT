@@ -233,8 +233,10 @@ input, select, textarea { font: inherit; color: inherit; }
   color: #fff;
   font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.02em;
   padding: 4px 8px;
-  /* follows the panel's corner on the outside, turns in on the other */
-  border-radius: var(--r-lg) 0 var(--r-md) 0;
+  /* Follows the panel's corner exactly. It was --r-lg from when the panel was
+     16px; the panel went to 12px in the card rebuild and this did not, so the
+     badge bulged outside the card's curve. Minus the 1px border it sits on. */
+  border-radius: calc(var(--r-md) - 1px) 0 var(--r-md) 0;
 }
 .pcard__badge--new { background: var(--ink); }
 .pcard__badge--limited { background: var(--hw-r-label); }
@@ -350,7 +352,11 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* Part-filled star row. The filled copy is clipped to the decimal over a grey
    copy, so 4.7 looks like 4.7 rather than rounding to five. */
-.stars { display: inline-flex; gap: 1px; }
+/* The glyph fills about 73% of its own box — the path runs x 3.2 to 20.8 in a
+   24 viewBox — so at any positive gap there are two lots of dead space between
+   every pair and the row reads as spread out. The overlap takes that back. */
+.stars { display: inline-flex; gap: 0; }
+.stars__s + .stars__s { margin-left: -2px; }
 .stars__s { position: relative; display: inline-block; color: #D9D9D9; }
 .stars__s svg { display: block; }
 .stars__fg {
@@ -1331,7 +1337,7 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--r-lg) var(--r-lg) 0 0;
   /* Cast to the sides only. An even glow washed over the 12px sliver and took
      the one cue that says another product is behind this one. */
-  box-shadow: 7px 0 18px rgba(16, 20, 24, 0.2), -7px 0 18px rgba(16, 20, 24, 0.2);
+  box-shadow: 3px 0 12px rgba(16, 20, 24, 0.09), -3px 0 12px rgba(16, 20, 24, 0.09);
   /* One writer, two readers: the JS sets --pdp-dx once and this and the layer
      of neighbours behind it both read it, so they cannot end up at different
      offsets on a frame. Promoted too — without a layer of its own the browser
@@ -1904,15 +1910,25 @@ input, select, textarea { font: inherit; color: inherit; }
 .lrow.is-me .lrow__p { color: var(--green); }
 
 /* AR entry sits on the 3D stage itself, not as a separate row */
-.pdp__ar {
-  position: absolute; left: 10px; bottom: 10px; z-index: 3;
-  display: inline-flex; align-items: center; gap: 7px;
-  height: 36px; padding: 0 13px; border-radius: var(--r);
-  background: rgba(255, 255, 255, 0.96); border: 1px solid var(--line);
-  color: var(--hw-b); font-size: var(--f-sm); font-weight: 700;
-  box-shadow: var(--sh-1);
+/* The AR route, as a row rather than a pill on the photograph.
+   Blue and bordered so it reads as the one special thing this product does,
+   without taking the weight of a primary button — Add to Cart is still the
+   action, this is a way to look closer. */
+.pdp__arrow {
+  display: flex; align-items: center; gap: 11px; width: calc(100% - var(--gut) * 2);
+  margin: 10px var(--gut) 0; padding: 10px 12px;
+  background: #F2F7FF; border: 1px solid #D7E5FB; border-radius: var(--r-md);
+  text-align: left; color: var(--hw-b);
 }
-.pdp__ar:active { background: #EAF0FF; }
+.pdp__arrow-ic {
+  width: 34px; height: 34px; flex: 0 0 34px; border-radius: var(--r-sm);
+  display: grid; place-items: center;
+  background: #fff; border: 1px solid #D7E5FB; color: var(--hw-b);
+}
+.pdp__arrow b { display: block; font-size: var(--f-base); font-weight: 700; color: var(--hw-b); }
+.pdp__arrow small { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 1px; }
+.pdp__arrow svg { flex: 0 0 auto; }
+.pdp__arrow:active { background: #E7F0FF; }
 
 /* AR: size adjuster and driving pads */
 .arov__size {
