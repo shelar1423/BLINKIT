@@ -7,6 +7,14 @@ import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, rupees } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
 import { IconChevronRight } from '../design/elements/Icons';
 
+/** Reward art, keyed by tier — the same set the race result uses. */
+const REWARD_ART: Record<string, string> = {
+  start: '/icons/free-delivery.webp',
+  check: '/icons/cash-25.webp',
+  pit: '/icons/cash-50.webp',
+  podium: '/rewards/25-06-premium-membership-icon.webp',
+};
+
 export default function Campaign() {
   const nav = useNavigate();
   const { racesLeft, totalPoints, bestScore, unlockedRewards, mysteryUnlocked } = useStore();
@@ -24,6 +32,19 @@ export default function Campaign() {
             <span className="hub__k">LIMITED DROP</span>
             <span className="hub__t">Race It Home</span>
             <span className="hub__s">Race. Collect. Win.</span>
+            {/* The audit's "CTA missing". The band was three lines of type on a
+                photograph with nothing to press — the action lived in a card
+                two scrolls down, so the hero introduced the campaign and then
+                handed you nowhere to go. */}
+            <button
+              className="hub__go"
+              type="button"
+              disabled={racesLeft <= 0}
+              onClick={() => nav('/race')}
+            >
+              {racesLeft > 0 ? 'Race Now' : 'No races left'}
+              <IconChevronRight size={16} />
+            </button>
           </div>
         </div>
 
@@ -51,7 +72,9 @@ export default function Campaign() {
           <div className="card" style={{ padding: 12, display: 'grid', gap: 10 }}>
             <div className="row">
               <div className="grow">
-                <p style={{ fontSize: 'var(--f-md)', fontWeight: 700 }}>
+                {/* "text big" — this is the number that tells you whether you
+                    can play at all, and it was set at the size of a caption. */}
+                <p className="hub__races">
                   {racesLeft} of {MAX_RACE_ATTEMPTS} races left today
                 </p>
                 <p className="t-xs">Resets at midnight. Invite a friend to unlock one more.</p>
@@ -62,16 +85,9 @@ export default function Campaign() {
                 <i key={i} className={i < racesLeft ? 'on' : ''} />
               ))}
             </div>
-            {/* The same control as the storefront's Race now — track orange, no
-                flag. Two different-looking buttons for the one action, two taps
-                apart, read as two different actions. */}
-            <Button variant="hwTrack" block
-              type="button"
-              disabled={racesLeft <= 0}
-              onClick={() => nav('/race')}
-            >
-              {racesLeft > 0 ? 'Race Now' : 'No races left'}
-            </Button>
+            {/* Race Now moved up into the hero band, where the audit asked for
+                it. Repeating it here would be the same action twice on one
+                screen, so what stays is the way to get another go. */}
             {racesLeft <= 0 && (
               <Button variant="outline" block type="button" onClick={() => nav('/invite')}>
                 Unlock another race
@@ -82,21 +98,32 @@ export default function Campaign() {
 
         {next && (
           <div className="shell" style={{ paddingTop: 12 }}>
-            <div className="card" style={{ padding: 12, display: 'grid', gap: 8 }}>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 'var(--f-md)', fontWeight: 700 }}>Next reward · {next.label}</span>
-                <span className="t-xs t-num">
+            {/* "add delivery icon in full focus". The reward was a line of
+                12px type with a bar under it; the thing you are working
+                towards now has a picture of itself, at the size the reference
+                gives it. */}
+            <div className="card nextrw">
+              <img className="nextrw__art" src={REWARD_ART[next.id] ?? '/icons/free-delivery.webp'} alt="" />
+              <div className="grow">
+                <p className="nextrw__k">Next reward</p>
+                <p className="nextrw__t">{next.label}</p>
+                <div className="bar">
+                  <i style={{ width: `${Math.min(100, (totalPoints / next.min) * 100)}%` }} />
+                </div>
+                <p className="nextrw__n t-num">
                   {totalPoints.toLocaleString('en-IN')} / {next.min.toLocaleString('en-IN')}
-                </span>
-              </div>
-              <div className="bar">
-                <i style={{ width: `${Math.min(100, (totalPoints / next.min) * 100)}%` }} />
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 8 }}>
+        {/* "title missing" — three tappable rows arriving with no heading read
+            as leftovers under the card above them rather than as a group. */}
+        <div className="sec">
+          <h2 className="sec__t">More ways to play</h2>
+        </div>
+        <div className="shell" style={{ paddingTop: 0, display: 'grid', gap: 8 }}>
           <button className="card rowcard" type="button" onClick={() => nav('/rewards')}>
             <img className="rowcard__art" src="/icons/rewards.webp" alt="" />
             <span className="grow">
