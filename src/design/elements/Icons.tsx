@@ -376,16 +376,19 @@ export const IconClock = (p: P) => (
  * The delivery promise, as the real listing draws it: a solid disc with a pie
  * WEDGE cut out of it, not an outline and not thin hands.
  *
- * The wedge runs 12 o'clock to 4 o'clock and is knocked through to whatever is
- * behind, so the icon picks up the card it sits on. Two subpaths under
+ * The wedge is a quarter, 12 o'clock to 3, and is knocked through to whatever
+ * is behind so the icon picks up the card it sits on. Two subpaths under
  * evenodd — the disc, then the wedge, which the fill rule removes.
+ *
+ * A quarter and not a third: at 13px the wider wedge took enough off the disc
+ * that it stopped reading as a clock and started reading as a crescent moon.
  */
 export const IconClockFill = (p: P) => (
   <F {...p}>
     <path
       fillRule="evenodd"
       clipRule="evenodd"
-      d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 12V3a9 9 0 0 1 7.79 13.5z"
+      d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 12V3a9 9 0 0 1 9 9z"
     />
   </F>
 );
