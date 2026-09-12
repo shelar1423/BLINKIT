@@ -5,7 +5,7 @@ import { DROP_DATES } from '../data/drop';
 import { ProductCard } from '../design/components/ProductCard';
 import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, rupees } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
-import { IconChevronRight, IconFlag, IconTrophy, IconUsers } from '../design/elements/Icons';
+import { IconChevronRight, IconFlag } from '../design/elements/Icons';
 
 export default function Campaign() {
   const nav = useNavigate();
@@ -30,14 +30,17 @@ export default function Campaign() {
         <div className="shell" style={{ paddingTop: 12 }}>
           <div className="stats">
             <div>
+              <img className="stats__ic" src="/icons/total-points.webp" alt="" />
               <b className="t-num">{totalPoints.toLocaleString('en-IN')}</b>
               <span>TOTAL POINTS</span>
             </div>
             <div>
+              <img className="stats__ic" src="/icons/blinkit-cash.webp" alt="" />
               <b className="t-num">{rupees(cashEarned)}</b>
               <span>BLINKIT CASH</span>
             </div>
             <div>
+              <img className="stats__ic" src="/icons/best-race.webp" alt="" />
               <b className="t-num">{bestScore.toLocaleString('en-IN')}</b>
               <span>BEST RACE</span>
             </div>
@@ -93,9 +96,7 @@ export default function Campaign() {
 
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 8 }}>
           <button className="card rowcard" type="button" onClick={() => nav('/rewards')}>
-            <span className="rowcard__ic" style={{ background: '#FFF6D6', color: '#8A6800' }}>
-              <IconTrophy size={19} />
-            </span>
+            <img className="rowcard__art" src="/icons/rewards.webp" alt="" />
             <span className="grow">
               <b>Rewards</b>
               <small>{unlockedRewards.length} of {REWARD_TIERS.length} tiers unlocked</small>
@@ -103,9 +104,7 @@ export default function Campaign() {
             <IconChevronRight size={17} />
           </button>
           <button className="card rowcard" type="button" onClick={() => nav('/leaderboard')}>
-            <span className="rowcard__ic" style={{ background: '#EAF0FF', color: 'var(--hw-b)' }}>
-              <IconTrophy size={19} />
-            </span>
+            <img className="rowcard__art" src="/icons/leaderboard.webp" alt="" />
             <span className="grow">
               <b>Leaderboard</b>
               <small>See where you sit in the city</small>
@@ -113,9 +112,7 @@ export default function Campaign() {
             <IconChevronRight size={17} />
           </button>
           <button className="card rowcard" type="button" onClick={() => nav('/invite')}>
-            <span className="rowcard__ic" style={{ background: '#FFEDDD', color: '#B34A00' }}>
-              <IconUsers size={19} />
-            </span>
+            <img className="rowcard__art" src="/icons/race-a-friend.webp" alt="" />
             <span className="grow">
               <b>Race a friend</b>
               <small>Invite someone to unlock +1 race</small>

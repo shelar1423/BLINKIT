@@ -24,10 +24,14 @@ import { IconCheck, IconFlag, IconLock, IconTrophy } from '../design/elements/Ic
      points have carried you. A locked tier is quiet and says what it costs.
    ============================================================ */
 
+/* Three of the four now have artwork drawn for the exact reward they name —
+   the scooter for free delivery, the notes for each cash tier — rather than a
+   generic coin or wallet standing in. Zomato Gold keeps the membership icon,
+   because nothing in the set depicts it. */
 const ART: Record<string, string> = {
-  start: '/rewards/25-02-free-delivery-badge.webp',
-  check: '/rewards/25-01-gold-coin.webp',
-  pit: '/rewards/25-03-wallet-reward-token.webp',
+  start: '/icons/free-delivery.webp',
+  check: '/icons/cash-25.webp',
+  pit: '/icons/cash-50.webp',
   podium: '/rewards/25-06-premium-membership-icon.webp',
 };
 
