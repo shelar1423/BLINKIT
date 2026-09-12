@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
+import { DriftLoader } from '../design/components/DriftLoader';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconRotate } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
@@ -29,6 +30,7 @@ export default function RacePlay() {
 
   const [pct, setPct] = useState(0);
   const [loaded, setLoaded] = useState(false);
+  const mountedAt = useRef(performance.now());
   const [err, setErr] = useState<string | null>(null);
   const [count, setCount] = useState<number | null>(null);
   const [stats, setStats] = useState<RaceStats>({
@@ -70,7 +72,15 @@ export default function RacePlay() {
       duration: 45,
       laps: 2,
       onProgress: (p) => setPct(p < 0 ? 0 : p),
-      onReady: () => setLoaded(true),
+      /* Held to a floor of 1.8s. A cached model is ready inside a frame, and a
+         loader that appears and vanishes in one reads as a flicker — the point
+         of it is to make the entry into a race feel like a moment, not to
+         measure how long the file took. */
+      onReady: () => {
+        const elapsed = performance.now() - mountedAt.current;
+        if (elapsed >= 1800) setLoaded(true);
+        else window.setTimeout(() => setLoaded(true), 1800 - elapsed);
+      },
       onError: (m) => setErr(m),
       onTick: setStats,
       onPickup,
@@ -233,11 +243,11 @@ export default function RacePlay() {
         </div>
       )}
 
+      {/* Same hold as the AR launch, so the two routes into a race wait the
+          same way — your car sliding round the burnout ring rather than a
+          spinner and a percentage. */}
       {!loaded && !err && (
-        <div className="loadbox loadbox--dark" style={{ position: 'absolute', inset: 0 }}>
-          <span className="spin spin--dark" />
-          <p>Getting your car ready… {pct > 0 ? `${pct}%` : ''}</p>
-        </div>
+        <DriftLoader glbUrl={car.glb} label={pct > 0 && pct < 100 ? `Getting your car ready · ${pct}%` : 'Getting your car ready'} />
       )}
 
       {loaded && !outcome && (

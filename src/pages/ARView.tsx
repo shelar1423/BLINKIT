@@ -23,6 +23,7 @@ import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
+import { DriftLoader } from '../design/components/DriftLoader';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 /** Coverage at which the surface is considered read well enough to brief on. */
@@ -105,6 +106,7 @@ export default function ARView() {
 
   const launch = useCallback(async (silent = false) => {
     if (!car.glb || !overlay.current) return;
+    const startedAt = performance.now();
     setBusy(true);
     try {
       const start = support?.kind === 'webxr' ? startARSession : startCameraSession;
@@ -150,6 +152,11 @@ export default function ARView() {
       toast(msg.includes('denied') || msg.includes('NotAllowed') ? 'Camera permission was denied' : msg);
       setPhase(null);
     } finally {
+      /* Held to a floor of 1.8s. A session that opens in 200ms would otherwise
+         flash the loader for four frames, which reads as a glitch — and the
+         point of it is to cover the wait, not to measure it. */
+      const elapsed = performance.now() - startedAt;
+      if (elapsed < 1800) await new Promise((r) => setTimeout(r, 1800 - elapsed));
       setBusy(false);
     }
   }, [car.glb, onFinish, toast, support, inspect]);
@@ -300,6 +307,10 @@ export default function ARView() {
 
   return (
     <>
+      {/* The wait, with something in it. Sits above everything, including the
+          AR overlay, because it is covering the moment that overlay appears. */}
+      {busy && <DriftLoader glbUrl={car.glb} label={inspect ? 'Getting your car ready' : 'Building your track'} />}
+
       {/* the DOM overlay lives outside the page so WebXR & Camera mode can adopt it */}
       {/* `outcome` forces idle as well as `phase`. Relying on phase alone left
           the driving overlay stacked over the result when teardown and render
