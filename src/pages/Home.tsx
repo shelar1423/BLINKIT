@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
@@ -8,6 +9,7 @@ import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
 import { IconChevronRight, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
+import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 
 /**
  * The length of Hot Wheels track across the top of the campaign band, with the
@@ -69,9 +71,15 @@ export default function Home() {
   const nav = useNavigate();
   const { toast } = useToast();
   const { status: drop, parts } = useDrop();
+  /* The storefront's Race now gets the same hold as the ones deeper in. It is
+     the first press of the campaign, so it is the one that most wants to feel
+     like the start of something rather than a page change. */
+  const [launching, setLaunching] = useState(false);
 
   return (
     <>
+      {launching && <DriftLoader glbUrl={HERO_CARS[0]?.glb} label="Starting Race It Home" />}
+
       <AppHeader onSearch={() => nav('/hot-wheels')} />
       <main className="page">
         {/* --- campaign takeover: the header's flame red runs straight into this
@@ -146,7 +154,15 @@ export default function Home() {
                 your best run — and the race itself is one press further in.
                 Jumping straight to the grid skipped everything the campaign is
                 keeping score of. */}
-            <Button variant="hwTrack" className="mystery__go" onClick={() => nav('/campaign')}>
+            <Button
+              variant="hwTrack"
+              className="mystery__go"
+              disabled={launching}
+              onClick={() => {
+                setLaunching(true);
+                window.setTimeout(() => nav('/campaign'), LOADER_MS);
+              }}
+            >
               Race now
             </Button>
           </div>

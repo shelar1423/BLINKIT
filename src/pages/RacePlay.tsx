@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
-import { DriftLoader } from '../design/components/DriftLoader';
+import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconRotate } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
@@ -78,8 +78,8 @@ export default function RacePlay() {
          measure how long the file took. */
       onReady: () => {
         const elapsed = performance.now() - mountedAt.current;
-        if (elapsed >= 1800) setLoaded(true);
-        else window.setTimeout(() => setLoaded(true), 1800 - elapsed);
+        if (elapsed >= LOADER_MS) setLoaded(true);
+        else window.setTimeout(() => setLoaded(true), LOADER_MS - elapsed);
       },
       onError: (m) => setErr(m),
       onTick: setStats,

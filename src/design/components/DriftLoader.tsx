@@ -16,6 +16,15 @@ import './driftloader.css';
  * canvas. It runs at the exact moment the device is busiest, so it must not be
  * competing for the GPU with the session it is waiting on.
  */
+/**
+ * How long the loader is held for, at minimum.
+ *
+ * Three seconds is longer than most of these waits actually are, which is the
+ * point: the drift is the moment, not a progress report. One constant so the
+ * three routes into a race cannot drift apart.
+ */
+export const LOADER_MS = 3000;
+
 export function DriftLoader({
   glbUrl,
   label = 'Getting your car ready',
@@ -39,7 +48,7 @@ export function DriftLoader({
     const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 60);
     /* Pulled back far enough that the car clears the frame at every point on
        its orbit — at 6.4 it was cropped against the left edge each lap. */
-    camera.position.set(0, 4.1, 8.2);
+    camera.position.set(0, 3.8, 7.4);
     camera.lookAt(0, 0.25, 0);
 
     scene.add(new THREE.AmbientLight(0xffffff, 1.5));
@@ -63,11 +72,17 @@ export function DriftLoader({
     let car: THREE.Group | null = null;
     let disposed = false;
     if (glbUrl) {
-      void loadCar(glbUrl, 1.7).then((c) => {
+      void loadCar(glbUrl, 1.25).then((c) => {
         if (disposed) return;
         car = c;
-        // out on the ring, nose tangent to it, tail kicked out
-        c.position.set(2.05, 0, 0);
+        /* Inside the burnout band, not straddling its outer edge.
+           The car was also simply too big for the circle: at 1.7 long against a
+           ring 2.95 in radius it spanned more than half the radius, so wherever
+           it sat it overhung one edge of the mark and read as cut off. A car
+           doing donuts is small inside its own burnout — 1.25 long, riding the
+           band rather than straddling it. Lifted clear of the plane too, so it
+           sits ON the mark rather than half sunk through it. */
+        c.position.set(1.62, 0.03, 0);
         c.rotation.y = -Math.PI / 2 - 0.55;
         pivot.add(c);
       });
@@ -82,7 +97,7 @@ export function DriftLoader({
       if (car) {
         // the tail swings a little through the slide rather than tracking rigidly
         car.rotation.y = -Math.PI / 2 - 0.55 + Math.sin(t * 4.2) * 0.07;
-        car.position.y = Math.abs(Math.sin(t * 6)) * 0.02;
+        car.position.y = 0.03 + Math.abs(Math.sin(t * 6)) * 0.02;
       }
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
@@ -115,6 +130,13 @@ export function DriftLoader({
 
   return (
     <div className="driftload" role="status" aria-live="polite">
+      {/* The lockup, because the ground above the ring was a large empty
+          gradient and this is the one moment the campaign has the whole screen. */}
+      <span className="driftload__mast">
+        <img src="/brand/hot-wheels.svg" alt="Hot Wheels" />
+        <i aria-hidden="true">&times;</i>
+        <b>blink<em>it</em></b>
+      </span>
       <div className="driftload__stage" ref={host} />
       <p className="driftload__t">{label}</p>
       <span className="driftload__bar" aria-hidden="true">

@@ -23,7 +23,7 @@ import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
-import { DriftLoader } from '../design/components/DriftLoader';
+import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 /** Coverage at which the surface is considered read well enough to brief on. */
@@ -156,7 +156,7 @@ export default function ARView() {
          flash the loader for four frames, which reads as a glitch — and the
          point of it is to cover the wait, not to measure it. */
       const elapsed = performance.now() - startedAt;
-      if (elapsed < 1800) await new Promise((r) => setTimeout(r, 1800 - elapsed));
+      if (elapsed < LOADER_MS) await new Promise((r) => setTimeout(r, LOADER_MS - elapsed));
       setBusy(false);
     }
   }, [car.glb, onFinish, toast, support, inspect]);
