@@ -21,6 +21,15 @@ export function BottomNav() {
   const nav = useNavigate();
   const loc = useLocation();
 
+  /* Tapping the tab you are already on takes you back to the top, the way every
+     tab bar on the phone behaves. NavLink alone would re-navigate to the same
+     route, React Router would treat it as a no-op, and nothing would move. */
+  const toTopIfHere = (path: string) => (e: React.MouseEvent) => {
+    if (loc.pathname !== path) return;
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const firstId = Object.keys(lines)[0];
   const freeDelivery = totals.items > 0 && totals.delivery === 0;
   const onCart = loc.pathname === '/cart' || loc.pathname === '/checkout';
@@ -62,7 +71,7 @@ export function BottomNav() {
 
       <div className="bnav-wrap">
         <nav className="bnav" aria-label="Primary">
-          <NavLink to="/" end className={({ isActive }) => 'bnav__i' + (isActive ? ' is-on' : '')}>
+          <NavLink to="/" end onClick={toTopIfHere('/')} className={({ isActive }) => 'bnav__i' + (isActive ? ' is-on' : '')}>
             {({ isActive }) => (
               <>
                 <span className="bnav__ic">
@@ -83,7 +92,7 @@ export function BottomNav() {
             <span className="bnav__l">Order Again</span>
           </span>
 
-          <NavLink to="/hot-wheels" className={({ isActive }) => 'bnav__i' + (isActive ? ' is-on' : '')}>
+          <NavLink to="/hot-wheels" onClick={toTopIfHere('/hot-wheels')} className={({ isActive }) => 'bnav__i' + (isActive ? ' is-on' : '')}>
             {({ isActive }) => (
               <>
                 <span className="bnav__ic">
