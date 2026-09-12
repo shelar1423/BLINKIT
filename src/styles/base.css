@@ -694,12 +694,14 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The art sits in the bottom of the tile and is allowed to bleed off it, which
    is what keeps these reading as posters rather than as list rows with a
    thumbnail. */
+/* All three are cut-outs on a common canvas, already sitting on its floor and
+   already balanced against each other, so the tile just needs to place that
+   canvas: full width, anchored to the bottom, contained. */
 .ctile__im {
   position: absolute; left: 0; right: 0; bottom: 0;
-  width: 100%; height: 52%;
+  width: 100%; height: 56%;
   object-fit: contain; object-position: 50% 100%;
 }
-.ctile--track .ctile__im { object-fit: cover; height: 48%; }
 .ctile:active { transform: scale(0.985); }
 
 /* The tap target over the artwork. Covers the part of the band the hero fills

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { AGE_RATING, BADGE_TONE, ETA_MINS, rupees, type Product } from '../../data/catalog';
-import { IconClockFill, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
+import { IconClock, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
 
 export function AddControl({ product, size = 'sm' }: { product: Product; size?: 'sm' | 'lg' }) {
   const qty = useStore((s) => s.cart[product.id] ?? 0);
@@ -250,7 +250,7 @@ export function ProductCard({ product }: { product: Product }) {
           carries no stock counter — that lives on the product page. */}
       <p className="pcard__meta">
         <span>
-          <IconClockFill size={13} /> {ETA_MINS} mins
+          <IconClock size={13} /> {ETA_MINS} mins
         </span>
       </p>
     </div>

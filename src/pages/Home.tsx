@@ -43,7 +43,7 @@ const SHOP_TILES = (() => {
       title: 'Die-Cast Cars',
       lead: 'Starting at',
       value: rupees(cheapest),
-      image: '/cars/09-02-muscle-car-orange.webp',
+      image: '/campaign/tile-diecast.webp',
       to: '/hot-wheels',
     },
     {
@@ -59,7 +59,7 @@ const SHOP_TILES = (() => {
       title: 'Toy Trucks',
       lead: 'Starting at',
       value: rupees(truck?.price ?? cheapest),
-      image: '/cars/09-09-performance-pickup-blue.webp',
+      image: '/campaign/tile-trucks.webp',
       to: '/hot-wheels',
     },
   ];
