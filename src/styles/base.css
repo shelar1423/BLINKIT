@@ -948,6 +948,33 @@ input, select, textarea { font: inherit; color: inherit; }
 .nextrw__t { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; margin: 1px 0 7px; }
 .nextrw__n { font-size: var(--f-xs); color: var(--mut); margin-top: 5px; }
 
+/* ---- your own standing, above the board ----
+   The one line on this screen that belongs to the player. It used to be row
+   nine of a list of strangers, which on a longer board would have put it off
+   the bottom of the screen entirely. */
+.myrank {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--yellow-tint);
+  border: 1px solid #F0E3BC;
+  border-radius: var(--r-lg);
+  padding: 12px 14px;
+}
+.myrank__a {
+  flex: 0 0 40px; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--green-tint); color: var(--green);
+  display: grid; place-items: center;
+  font-size: var(--f-lg); font-weight: 800;
+}
+.myrank__k {
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--mut);
+}
+.myrank__r { font-size: var(--f-2xl); font-weight: 900; letter-spacing: -0.6px; line-height: 1.05; }
+.myrank__s { font-size: var(--f-xs); color: var(--ink-2); margin-top: 1px; }
+.myrank__pts { text-align: right; flex: 0 0 auto; }
+.myrank__pts b { display: block; font-size: var(--f-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
+.myrank__pts span { font-size: var(--f-2xs); color: var(--mut); font-weight: 600; }
+
 /* ---- the claim card's punched edge ----
    A ticket, not a panel. The audit asks for the pin hole: a claimable reward
    is a stub you tear off and hand over, and the notch is the whole of what
@@ -2863,6 +2890,9 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .heroart img {
   display: block;
-  width: min(62%, 230px);
+  /* Down another 30%, per the audit. It is a decoration at the top of a table
+     of numbers; at 230px it was taking the space the player's own standing
+     should have. */
+  width: min(43%, 161px);
   height: auto;
 }
