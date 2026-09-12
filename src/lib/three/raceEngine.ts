@@ -222,13 +222,30 @@ function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasText
       ctx.font = '700 38px system-ui, -apple-system, sans-serif';
       ctx.fillText("India's last minute app", W / 2, H / 2 + 62);
     }
-    onReady();
   };
 
+  /* onReady fires only from the image's own callbacks, never from the first
+     paint.
+
+     The first paint runs synchronously, before this function has returned —
+     so the caller's `const tex = bannerTexture(...)` is still in its temporal
+     dead zone, and a callback that touches `tex` threw
+     "Cannot access 'tex' before initialization" right there. That exception
+     escaped track construction, so the scene was never built: in AR the camera
+     opened onto an empty overlay with no reticle and no place button, and the
+     3D race came up blank the same way. The synchronous paint needs no
+     notification anyway — it happens before the texture is created, so the
+     canvas already carries it. */
   if (kind === 'hw') {
     const img = new Image();
-    img.onload = () => paint(img);
-    img.onerror = () => paint();
+    img.onload = () => {
+      paint(img);
+      onReady();
+    };
+    img.onerror = () => {
+      paint();
+      onReady();
+    };
     img.src = '/brand/hot-wheels.svg';
     paint();
   } else {
