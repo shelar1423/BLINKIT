@@ -1084,6 +1084,118 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex; gap: 10px; align-items: center;
 }
 
+/* ============================================================
+   Order tracking.
+
+   A green bar carrying the ETA, the map under it, then a stack of cards led by
+   the person bringing the order. The page ground is the app base so the cards
+   read as cards; the bar and the map sit flush to the edges above them.
+   ============================================================ */
+.trk { background: var(--appbase); padding-bottom: 0; }
+
+.trk__top {
+  background: var(--green);
+  color: #fff;
+  padding: calc(var(--safe-t) + 10px) var(--gut) 16px 48px;
+  position: relative;
+}
+.trk__back {
+  position: absolute; left: 8px; top: calc(var(--safe-t) + 8px);
+  width: 36px; height: 36px; display: grid; place-items: center;
+  color: #fff; border-radius: 50%;
+}
+.trk__back:active { background: rgba(255, 255, 255, 0.16); }
+.trk__k { font-size: var(--f-sm); font-weight: 600; color: rgba(255, 255, 255, 0.85); }
+.trk__eta { font-size: var(--f-2xl); font-weight: 800; letter-spacing: -0.4px; margin-top: 2px; }
+
+/* ---------- map ---------- */
+.trk__mapwrap {
+  position: relative;
+  margin: 10px var(--gut) 0;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: #E9ECF0;
+  box-shadow: var(--sh-1);
+}
+.trk__map { display: block; width: 100%; height: auto; }
+/* Expanded is taller, not wider: on a phone the useful extra is more of the
+   route, and the card's width is already the screen. */
+.trk__mapwrap.is-big .trk__map { height: 52vh; object-fit: cover; }
+.trk__zoom {
+  position: absolute; top: 10px; right: 10px;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: #fff; color: var(--ink);
+  box-shadow: 0 2px 8px rgba(16, 20, 24, 0.18);
+}
+
+.trk__body { padding: 12px var(--gut) 20px; display: grid; gap: 12px; }
+.trk__cardh { font-size: var(--f-md); font-weight: 800; margin-bottom: 8px; }
+/* The item card has no padding of its own — its rows bring theirs — so the
+   heading has to match them or it hangs off the card's left edge. */
+.trk__items .trk__cardh { padding: 14px var(--gut) 0; margin-bottom: 2px; }
+
+/* ---------- the delivery partner ---------- */
+.trk__partner { padding: 14px; display: grid; gap: 12px; }
+.trk__who { display: flex; align-items: center; gap: 12px; }
+.trk__face { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%; overflow: hidden; }
+.trk__name { flex: 1; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; }
+.trk__call {
+  flex: none; width: 42px; height: 42px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1px solid var(--line); background: #fff; color: var(--green);
+}
+.trk__call:active { background: var(--green-tint); }
+
+/* What they said, quoted on their own tint so it reads as a message rather
+   than as another line of the page's copy. */
+.trk__said {
+  background: var(--green-tint);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  font-size: var(--f-md); color: var(--green-dk); line-height: 1.45;
+}
+
+.trk__tip { display: flex; align-items: center; gap: 10px; }
+.trk__tipt { display: block; font-size: var(--f-base); font-weight: 800; line-height: 1.3; }
+.trk__tips { display: block; font-size: var(--f-sm); color: var(--mut); margin-top: 2px; }
+.trk__tipart { width: 84px; height: auto; flex: none; }
+
+/* Tip amounts. A scroller, because "Other" has to stay reachable without the
+   row shrinking the amounts to fit. */
+.trk__chips {
+  display: flex; gap: 8px;
+  overflow-x: auto; scrollbar-width: none;
+  margin: 0 -14px; padding: 2px 14px;
+}
+.trk__chips::-webkit-scrollbar { display: none; }
+.tipchip {
+  flex: none; min-width: 78px;
+  display: grid; justify-items: center; gap: 1px;
+  border: 1px solid var(--line-2); border-radius: var(--r-md);
+  background: #fff; padding: 9px 12px;
+}
+.tipchip b { font-size: var(--f-base); font-weight: 800; font-variant-numeric: tabular-nums; }
+.tipchip small { font-size: 9px; font-weight: 800; letter-spacing: 0.04em; color: #8A6D08; }
+.tipchip.is-on { border-color: var(--green); background: var(--green-tint); }
+.tipchip.is-on b { color: var(--green-dk); }
+
+.trk__safety {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; text-align: left;
+  border-top: 1px solid var(--line); padding-top: 12px;
+}
+.trk__shield {
+  flex: none; width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--green-tint); color: var(--green);
+}
+.trk__safety b { display: block; font-size: var(--f-md); font-weight: 700; }
+.trk__safety small { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 1px; }
+
+.trk__addr { padding: 14px; }
+.rowcard__ic--pts { background: var(--green-tint); color: var(--green); font-weight: 800; font-size: var(--f-sm); }
+
 /* ---------- cart ---------- */
 .cline { display: flex; gap: 12px; align-items: center; padding: 12px var(--gut); border-bottom: 1px solid var(--line); }
 .cline__im { width: 56px; height: 56px; flex: 0 0 56px; border: 1px solid var(--line); border-radius: var(--r); padding: 4px; }

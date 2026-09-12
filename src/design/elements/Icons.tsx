@@ -402,3 +402,35 @@ export const IconCopy = (p: P) => (
     <path d="M15.6 6.6V6a2.4 2.4 0 0 0-2.4-2.4H6A2.4 2.4 0 0 0 3.6 6v7.2a2.4 2.4 0 0 0 2.4 2.4h.6" />
   </S>
 );
+
+
+/* ---------- order tracking ---------- */
+
+/** Call the delivery partner. */
+export const IconPhone = (p: P) => (
+  <S {...p}>
+    <path d="M20.4 16.9v2.7a1.8 1.8 0 0 1-2 1.8 17.8 17.8 0 0 1-7.7-2.8 17.5 17.5 0 0 1-5.4-5.4A17.8 17.8 0 0 1 2.6 5.5a1.8 1.8 0 0 1 1.8-2h2.7a1.8 1.8 0 0 1 1.8 1.55c.11.86.32 1.7.62 2.5a1.8 1.8 0 0 1-.4 1.9l-1.15 1.15a14.4 14.4 0 0 0 5.4 5.4l1.15-1.15a1.8 1.8 0 0 1 1.9-.4c.8.3 1.64.51 2.5.62a1.8 1.8 0 0 1 1.55 1.83z" />
+  </S>
+);
+
+/** Safety / verified, on the store-distance row. */
+export const IconShield = (p: P) => (
+  <S {...p}>
+    <path d="M12 2.9 4.6 6v5.4c0 4.55 3.15 8.8 7.4 9.9 4.25-1.1 7.4-5.35 7.4-9.9V6z" />
+    <path d="m8.9 11.9 2.2 2.2 4-4.3" />
+  </S>
+);
+
+/** Expand the map. */
+export const IconExpand = (p: P) => (
+  <S {...p}>
+    <path d="M9.4 3.6H3.6v5.8M14.6 20.4h5.8v-5.8M20.4 9.4V3.6h-5.8M3.6 14.6v5.8h5.8" />
+  </S>
+);
+
+/** Collapse the map — the arrows point inward. */
+export const IconCollapse = (p: P) => (
+  <S {...p}>
+    <path d="M3.6 9.4h5.8V3.6M20.4 14.6h-5.8v5.8M14.6 9.4h5.8V3.6M9.4 14.6H3.6v5.8" />
+  </S>
+);
