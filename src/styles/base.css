@@ -138,10 +138,13 @@ input, select, textarea { font: inherit; color: inherit; }
    own geometry, and a block button in a page has to look like a block button
    in a page. */
 .btn--hwBlue { background: var(--hw-b); color: #fff; font-weight: 800; }
-/* Track orange, with an ink label. White on this orange is 2.6:1 — a fail — and
-   near-black is 6.9:1, which is also how the brand sets it on a pack. */
-.btn--hwTrack { background: var(--hw-o); color: var(--ink); font-weight: 800; }
-.btn--hwTrack:not(:disabled):active { background: #E35D00; color: #fff; }
+/* Track orange with a white label, as asked for.
+   Worth recording: white on this orange measures 2.61:1, against the 4.5:1 a
+   14px bold label needs. No orange bright enough to read as track orange
+   clears it — #C94800 is the first that does at 4.76:1, and by then it is a
+   brick. Near-black on the same orange is 6.9:1 if this ever needs to pass. */
+.btn--hwTrack { background: var(--hw-o); color: #fff; font-weight: 800; }
+.btn--hwTrack:not(:disabled):active { background: #E35D00; }
 .btn--hwBlue:not(:disabled):active { background: #094FAD; }
 .btn--hwBlue:disabled { background: #A7BEDC; }
 .btn--outline { border: 1px solid var(--line); background: #fff; color: var(--ink); font-weight: 600; }

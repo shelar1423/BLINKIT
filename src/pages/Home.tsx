@@ -6,7 +6,7 @@ import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
-import { IconChevronRight, IconFlag, IconHeart } from '../design/elements/Icons';
+import { IconChevronRight, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 /**
@@ -147,7 +147,6 @@ export default function Home() {
                 Jumping straight to the grid skipped everything the campaign is
                 keeping score of. */}
             <Button variant="hwTrack" className="mystery__go" onClick={() => nav('/campaign')}>
-              <IconFlag size={17} />
               Race now
             </Button>
           </div>
