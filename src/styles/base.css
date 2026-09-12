@@ -309,14 +309,20 @@ input, select, textarea { font: inherit; color: inherit; }
   position: absolute; right: 0; bottom: -3px; z-index: 3;
   width: 50%;
 }
-/* The card's control is the same control as everywhere else, only stretched to
-   the card's half-width. It used to carry `aspect-ratio: 142/105`, which threw
-   away the 32px height and re-derived one from the width — 45.8px on a 126px
-   card, nearly square, and quietly different from the same button on every
-   other surface. */
+/* Sized off the real listing and left alone. The button is HALF the card wide
+   and derives its height from that width, which is what makes it overhang the
+   pack-size band — breaking the divider above it and the panel's bottom edge
+   below. That overhang is the whole shape of Blinkit's card.
+
+   Do not swap this for a fixed control height. It was briefly set to --ctl-h
+   for consistency with the same button elsewhere, which took 10px off it; the
+   button stopped breaking the divider and sat down inside the band instead,
+   and the card read as though the button had moved. Inside the card, ADD and
+   the stepper it becomes both derive the same height from the same width, so
+   there is no jump on press either way. */
 .pcard__act .add, .pcard__act .stepper {
   width: 100%; min-width: 0;
-  height: var(--ctl-h);
+  height: auto; aspect-ratio: 142 / 105;
   border-radius: var(--r-ctl);
   padding: 0 6px;
 }
