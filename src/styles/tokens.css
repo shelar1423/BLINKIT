@@ -63,6 +63,8 @@
   /* What shows behind the notch and at an overscroll bounce. Matches the
      campaign band so the status bar belongs to the app. */
   --status-bg: #1B4FD1;
+  /* Air above the PDP sheet, so it reads as a card over the page. */
+  --pdp-top: 24px;
   --surface-2: #F7F7F7;     /* --color__grc10 */
   --appbase: #F5F8FA;       /* --colors-base-appbase: page ground behind cards */
 

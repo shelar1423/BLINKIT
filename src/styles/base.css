@@ -811,6 +811,11 @@ input, select, textarea { font: inherit; color: inherit; }
   position: fixed; top: 0; left: 0; right: 0;
   height: 100vh; height: 100dvh;
   z-index: 200; pointer-events: none;
+  /* Nothing in here pans or zooms the page. The overlay itself is
+     pointer-events:none, but its buttons are not, and a drag that began on one
+     was being handed to the browser as a scroll. */
+  touch-action: none;
+  overscroll-behavior: none;
 }
 /* Never display:none — WebXR adopts this element as the dom-overlay root at
    session start and a hidden root presents nothing inside the headset view. */
@@ -1273,6 +1278,10 @@ input, select, textarea { font: inherit; color: inherit; }
      visible at rest because the sheet gives up its right 12px by margin, not
      by stacking. */
   position: relative; z-index: 1;
+  /* The sheet starts below the top of the frame rather than at it, so the
+     rounded corners have somewhere to read against and the card does not sit
+     directly under the status bar. */
+  margin-top: var(--pdp-top);
   border-radius: var(--r-lg) var(--r-lg) 0 0;
   /* Cast to the sides only. An even glow washed over the 12px sliver and took
      the one cue that says another product is behind this one. */
@@ -1310,8 +1319,10 @@ input, select, textarea { font: inherit; color: inherit; }
   will-change: transform;
 }
 
+/* The neighbours start at the same line the sheet does, or they ride 24px
+   higher than the thing they are standing in for. */
 .pdppeek {
-  position: absolute; top: 0; bottom: 0; width: 100%;
+  position: absolute; top: var(--pdp-top); bottom: 0; width: 100%;
   background: var(--appbase);
   display: flex; flex-direction: column;
   overflow: hidden;

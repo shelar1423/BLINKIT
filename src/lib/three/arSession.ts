@@ -499,7 +499,10 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   // the reticle a whole floor-height away from the surface being pointed at,
   // so the track was placed somewhere the camera was not looking.
   renderer.xr.setReferenceSpaceType('local');
-  renderer.domElement.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:60';
+  /* touch-action is the whole reason pinch and drag did nothing: without it the
+     browser claims a two-finger gesture as a page zoom and a one-finger drag as
+     a scroll, and our pointer handlers never see a clean stream. */
+  renderer.domElement.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -527,7 +530,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   /* In inspect mode the car is shown at true 1:64 scale — a real Hot Wheels
      car is about 7.4 cm long — so what lands on the table is the size of the
      thing in the box. The circuit's 2.4 m footprint is meaningless here. */
-  let sizeM = inspect ? 0.074 : (opts.trackSize ?? 2.4);
+  /* See the note in the camera session: 1:64 is 7.4cm and reads as a thumbnail
+     at arm's length. Opens larger; pinch still rules. */
+  let sizeM = inspect ? 0.19 : (opts.trackSize ?? 2.4);
   const inspectRoot = new THREE.Group();
 
   const applySize = () =>
@@ -901,7 +906,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   video.playsInline = true;
   video.muted = true;
   video.srcObject = stream;
-  video.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:55';
+  video.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:55;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
   document.body.appendChild(video);
   await video.play().catch(() => {});
 
@@ -917,7 +922,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      which is where the placement reticle kept appearing. Nothing was wrong
      with the aim maths; half the frame was simply off-screen. Scrolling made
      it snap back only because that fired resize, which called setSize again. */
-  renderer.domElement.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:56';
+  // see the note on the XR canvas above: without touch-action the browser
+  // takes the pinch as a page zoom and the drag as a scroll
+  renderer.domElement.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:56;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   document.body.appendChild(renderer.domElement);
@@ -942,8 +949,11 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const inspect = opts.mode === 'inspect';
   const ground = inspect ? GROUND_INSPECT : GROUND;
   const engine = makeEngine(opts, () => setPhase('placed'));
-  // true 1:64 in inspect mode — a real Hot Wheels car is ~7.4 cm
-  let sizeM = inspect ? 0.074 : (opts.trackSize ?? 2.4);
+  /* True 1:64 is 7.4cm, and at the half-metre this places at that is a
+     thumbnail you cannot see the details of — which is the whole point of
+     standing it in front of you. It opens at about 2.5x life size instead;
+     pinch still takes it anywhere from 3cm to 1.2m. */
+  let sizeM = inspect ? 0.19 : (opts.trackSize ?? 2.4);
   const inspectRoot = new THREE.Group();
   const applySize = () =>
     inspect
