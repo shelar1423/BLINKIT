@@ -620,6 +620,11 @@ input, select, textarea { font: inherit; color: inherit; }
   margin: 14px auto 0;
   max-width: 180px;
   line-height: 0;
+  /* It arrives rather than simply being present — one scale-and-rise as the
+     screen opens, then still. Deliberately not a loop: the countdown beside it
+     is already moving, and two things ticking at once means neither is the
+     thing you look at. Size is unchanged; it was brought up 20% earlier. */
+  animation: ctakeIn 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
@@ -663,6 +668,34 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
 .mystery__go:active { transform: scale(0.97); }
+/* "Sparkle like the logo (shiny reflective surface)". A highlight travelling
+   across the face, so the button reads as the same chrome-and-flame material
+   as the lettering above it rather than a flat orange rectangle sitting under
+   it. Clipped to the button, skewed so it rakes rather than wipes, and most of
+   the cycle is the wait — the sweep is a moment, not a loop. */
+.mystery__go { position: relative; overflow: hidden; }
+.mystery__go::after {
+  content: '';
+  position: absolute; top: -60%; bottom: -60%; left: -40%;
+  width: 32%;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.62) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-18deg);
+  animation: goSheen 3.4s ease-in-out 1.2s infinite;
+  pointer-events: none;
+}
+@keyframes goSheen {
+  0% { left: -40%; }
+  22%, 100% { left: 118%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ctake__t { animation: none; }
+  .mystery__go::after { display: none; }
+}
 
 .dropfacts > div { padding: 10px 8px; text-align: center; border-left: 1px solid var(--line); }
 .dropfacts > div:first-child { border-left: 0; }
@@ -741,9 +774,17 @@ input, select, textarea { font: inherit; color: inherit; }
 /* All three are cut-outs on a common canvas, already sitting on its floor and
    already balanced against each other, so the tile just needs to place that
    canvas: full width, anchored to the bottom, contained. */
+/* Inset, so every product sits on the same optical centre.
+
+   These ran the full width of the tile with object-fit: contain, which centres
+   the image FILE and not the thing inside it — and the three files carry
+   different amounts of empty margin, so the wide car filled its tile edge to
+   edge while the narrower ones floated. Measured before: all three at
+   leftGap 0, rightGap 0. Padding the box equally gives them a common frame to
+   be centred in, which is what makes them read as a set. */
 .ctile__im {
   position: absolute; left: 0; right: 0; bottom: 0;
-  width: 100%; height: 56%;
+  width: calc(100% - 24px); margin: 0 12px; height: 56%;
   object-fit: contain; object-position: 50% 100%;
 }
 .ctile:active { transform: scale(0.985); }

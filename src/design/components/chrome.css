@@ -139,7 +139,14 @@
 .crail::-webkit-scrollbar { display: none; }
 .crail__i {
   position: relative;
-  flex: 1 0 auto; min-width: 74px;
+  /* Packed from the left, not stretched to fill.
+
+     flex-grow: 1 made every tab share out the spare width, so five tabs spread
+     evenly across the screen and the rail read as a segmented control with a
+     fixed set of options. Blinkit's is a scrolling rail: the tabs sit at their
+     natural width from the left edge, and the fact that one is half cut off at
+     the right is what tells you there are more. */
+  flex: 0 0 auto; min-width: 74px;
   display: grid; justify-items: center; gap: 3px;
   padding: 4px 6px 12px;
   color: inherit; opacity: 0.74;

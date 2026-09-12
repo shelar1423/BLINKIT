@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppHeader, BlinkitMark, SectionHeader } from '../design/components/Chrome';
+import { AppHeader, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
 import { CARS, CATEGORIES, HERO_CARS, SHOP_CARS, rupees } from '../data/catalog';
-import { DROP_DATES } from '../data/drop';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
@@ -129,14 +128,12 @@ export default function Home() {
               use for their title row. It also gets the dates out from under the
               flaps, where they were reading as a third unit of the countdown,
               and buys back the height the wordmark now spends. */}
-          <div className="ctake__top">
-            <span className="ctake__mast">
-              <img className="ctake__hw" src="/brand/hot-wheels.svg" alt="Hot Wheels" />
-              <span className="ctake__x">&times;</span>
-              <BlinkitMark className="ctake__bm bmark--on-dark" />
-            </span>
-            <span className="ctake__when">{DROP_DATES}</span>
-          </div>
+          {/* The co-brand lockup and the drop dates used to sit here. Both are
+              gone: Blinkit's own festive takeovers give this band to ONE piece
+              of lettering and nothing else — Ganesh Chaturthi carries no
+              partner mark and no date — and the two of them were splitting the
+              attention the campaign name is supposed to have all of. The dates
+              still run in the countdown directly below. */}
 
           {/* Every one of these storefronts sets the campaign name as its own
               piece of lettering — script for Hug Day and Karwa Chauth, a
