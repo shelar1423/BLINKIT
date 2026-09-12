@@ -124,7 +124,16 @@
   /* height of the PDP's floating sheet header, and the sliver of the next
      product showing down its right edge */
   --shdr-h: 54px;
+  /* The PDP deck, measured off a screen recording of the real app on a 393pt
+     screen: the sheet is 354pt wide with 7.3pt of backdrop showing between it
+     and its neighbour, and 12pt of that neighbour visible at each edge. So the
+     sheet gives up 19pt a side, and one swipe steps sheet + gap. */
   --peek-w: 12px;
+  --pdp-gap: 7px;
+  --pdp-side: 19px;
+  /* The PDP is a sheet over a dimmed page, not a page of its own. What reads
+     as a gutter between two sheets is this showing through. */
+  --pdp-scrim: #2F2F2F;
 
   --r: 8px;
   /* Controls: the ADD button, the copy button, the chips that are not pills.

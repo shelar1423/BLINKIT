@@ -178,7 +178,9 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
 const COMMIT = 0.26;
 /** Movement before the gesture decides whether it is a scroll or a flick. */
 const SLOP = 10;
-const GLIDE_MS = 260;
+/* Matches .pdpdeck.is-gliding. ~180ms of deceleration is what the recording
+   shows once the finger leaves. */
+const GLIDE_MS = 190;
 
 export default function Product() {
   const { id = '' } = useParams();
@@ -252,16 +254,30 @@ export default function Product() {
     [paint],
   );
 
+  /* One page of travel: the sheet's own width plus the backdrop showing beside
+     it. It used to be the viewport width, which is neither — the sheet is
+     narrower than the screen and the gap is real, so the deck landed a little
+     under a page short and the neighbour arrived already slightly off its
+     mark. Measured rather than computed from tokens so it stays right at any
+     column width. */
+  const deckEl = useRef<HTMLDivElement>(null);
+  const step = useCallback(() => {
+    const el = deckEl.current;
+    const gap =
+      parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pdp-gap')) || 0;
+    return (el ? el.getBoundingClientRect().width : window.innerWidth) + gap;
+  }, []);
+
   /** Slide the deck out and land on `to`. */
   const go = useCallback(
     (to: string, dir: -1 | 1) => {
       setGliding(true);
-      setDx(dir * -window.innerWidth);
+      setDx(dir * -step());
       window.setTimeout(() => {
         nav(`/hot-wheels/${to}`, { replace: true });
       }, GLIDE_MS);
     },
-    [nav, setDx],
+    [nav, setDx, step],
   );
 
   /* A new product means a new sheet: drop the drag, stop gliding, and start at
@@ -334,7 +350,7 @@ export default function Product() {
     const g = grab.current;
     grab.current = null;
     if (!g || g.axis !== 'x') return;
-    const far = window.innerWidth * COMMIT;
+    const far = step() * COMMIT;
     const at = dx.current;
     if (at < -far && next) go(next.id, 1);
     else if (at > far && prev) go(prev.id, -1);
@@ -417,6 +433,7 @@ export default function Product() {
       )}
 
       <div
+        ref={deckEl}
         className={'pdpdeck' + (gliding ? ' is-gliding' : '') + (prev ? '' : ' pdpdeck--first') + (next ? '' : ' pdpdeck--last')}
         onPointerDown={onDown}
         onPointerMove={onMove}
