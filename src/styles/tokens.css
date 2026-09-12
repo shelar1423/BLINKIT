@@ -53,7 +53,10 @@
   --ink: #1F1F1F;           /* --colors-base-black: primary / product name */
   --ink-2: #363636;         /* --colors-grey-900: secondary */
   --mut: #666666;           /* --color__grc2: tertiary — the dominant text tone */
-  --mut-2: #828282;         /* --colors-grey-600: quaternary / struck prices */
+  /* Was #828282, which scored 3.84:1 on white — under the 4.5:1 that 13px text
+     needs, on every struck price in the app. #6F6F6F clears it at 5.02:1 and
+     still reads as clearly secondary next to --mut. */
+  --mut-2: #6F6F6F;         /* --colors-grey-600: quaternary / struck prices */
   --line: #E8E8E8;          /* --colors-grey-200: hairline / header border */
   --line-2: #DDDDDD;        /* --color__grc5: ADD button border */
   --surface: #FFFFFF;
@@ -66,7 +69,18 @@
      is both unmistakably Hot Wheels and maximally legible on yellow. */
   --hw-r: #ED1C24;          /* flame red — primary campaign accent */
   --hw-r-dk: #C2121A;       /* pressed */
+  /* Values that were repeating as literals across the stylesheet. Promoted so
+     the palette can be changed from here — which is the whole point of a token
+     file. The one-offs inside campaign artwork stay literal on purpose: they
+     belong to a specific illustration, not to the system. */
+  --green-line: #BEE3C4;    /* the ADD / View-details hairline */
+  --gold-ink: #8A6D08;      /* type on the yellow tints */
+  --line-3: #D6D6D9;        /* dividers on tinted grounds */
   --hw-r-tint: #FFF0F0;
+  /* The flame red is a brand colour and stays exactly as Mattel sets it. This is
+     the same red taken far enough down to carry 10px white type: #ED1C24 scores
+     4.38:1, this scores 5.20:1. Only labels use it, never a fill you look at. */
+  --hw-r-label: #D81420;
   --hw-o: #FF6A00;          /* flame orange — gradient partner only */
   --hw-b: #0B5FD0;          /* Hot Wheels blue — rare, for 3D/AR affordances */
 
@@ -91,6 +105,9 @@
   --f-lg: 15px;
   --f-xl: 17px;
   --f-2xl: 20px;
+  /* The PDP and cart price. Above the body scale but still type you read, not
+     game display, so it belongs on the scale and steps with it. */
+  --f-3xl: 24px;
 
   /* --- radius: Blinkit is rounder than most Indian q-commerce --- */
   --r-xs: 4px;
@@ -105,6 +122,10 @@
   --peek-w: 12px;
 
   --r: 8px;
+  /* Controls: the ADD button, the copy button, the chips that are not pills.
+     Sits between --r-sm and --r-md because that is where the reference puts a
+     button corner, and a loose 8/9/10 was being guessed per component. */
+  --r-ctl: 10px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-xl: 20px;
@@ -119,7 +140,7 @@
   --sh-up: 0 -1px 0 var(--line);
 
   /* --- chrome heights --- */
-  --hdr-h: 68px;            /* --header__height--mobile */
+  --hdr-h: 59px;            /* --header__height--mobile */
   --nav-h: 56px;
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
@@ -135,6 +156,7 @@
     --f-lg: 16px;
     --f-xl: 19px;
     --f-2xl: 24px;
+    --f-3xl: 28px;
     --gut: 20px;
     --hdr-h: 76px;
   }

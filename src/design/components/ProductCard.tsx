@@ -130,7 +130,7 @@ export function ProductCard({ product }: { product: Product }) {
         </div>
 
         <div className="pcard__prow">
-          <b className="pcard__price">&mdash;</b>
+          <b className="pcard__price pcard__price--locked">Locked</b>
         </div>
         <p className="pcard__off" />
         <p className="pcard__nm">{product.name}</p>

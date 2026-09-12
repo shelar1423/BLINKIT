@@ -129,9 +129,6 @@ export default function Campaign() {
             <h2 className="sec__t">Cars you can race</h2>
             <p className="sec__s">Each one has full 3D and AR</p>
           </div>
-          <button className="sec__a" type="button" onClick={() => nav('/hot-wheels')}>
-            See all
-          </button>
         </div>
         <div className="prail">
           {HERO_CARS.map((p) => (

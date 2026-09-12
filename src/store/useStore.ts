@@ -107,6 +107,9 @@ type State = {
   /** Wishlisted product ids. The heart on a card has to keep its state, or it
    *  is a control that lies every time the list re-renders. */
   saved: string[];
+  /** Product ids in the order they were last opened, newest first. Caps at 12 —
+      it drives a chip, not a history page. */
+  viewed: string[];
 
   add: (id: string, qty?: number) => void;
   setQty: (id: string, qty: number) => void;
@@ -124,6 +127,7 @@ type State = {
   placeOrder: () => Order | null;
   toggleSound: () => void;
   toggleSaved: (id: string) => void;
+  markViewed: (id: string) => void;
   resetCampaign: () => void;
 };
 
@@ -148,6 +152,7 @@ export const useStore = create<State>()(
       order: null,
       soundOn: true,
       saved: [],
+      viewed: [],
 
       add: (id, qty = 1) => set((s) => ({ cart: { ...s.cart, [id]: (s.cart[id] ?? 0) + qty } })),
       setQty: (id, qty) =>
@@ -222,6 +227,8 @@ export const useStore = create<State>()(
       toggleSound: () => set((s) => ({ soundOn: !s.soundOn })),
       toggleSaved: (id) =>
         set((s) => ({ saved: s.saved.includes(id) ? s.saved.filter((x) => x !== id) : [...s.saved, id] })),
+      markViewed: (id) =>
+        set((s) => (s.viewed[0] === id ? s : { viewed: [id, ...s.viewed.filter((x) => x !== id)].slice(0, 12) })),
       resetCampaign: () =>
         set({
           cart: {},
@@ -235,6 +242,7 @@ export const useStore = create<State>()(
           invitedCount: 0,
           order: null,
           saved: [],
+          viewed: [],
         }),
     }),
     {

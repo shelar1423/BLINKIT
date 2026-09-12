@@ -48,7 +48,7 @@ export const color = {
   ink: t('ink', '#1F1F1F'),
   ink2: t('ink-2', '#363636'),
   mut: t('mut', '#666666'),
-  mut2: t('mut-2', '#828282'),
+  mut2: t('mut-2', '#6F6F6F'),
   line: t('line', '#E8E8E8'),
   line2: t('line-2', '#DDDDDD'),
   surface: t('surface', '#FFFFFF'),
@@ -61,6 +61,7 @@ export const color = {
   hwR: t('hw-r', '#ED1C24'),
   hwRDk: t('hw-r-dk', '#C2121A'),
   hwRTint: t('hw-r-tint', '#FFF0F0'),
+  hwRLabel: t('hw-r-label', '#D81420'),
   hwO: t('hw-o', '#FF6A00'),
   hwB: t('hw-b', '#0B5FD0'),
 

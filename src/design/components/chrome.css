@@ -64,6 +64,7 @@
 }
 .bhdr:not(.bhdr--campaign) .bhdr__dist { background: rgba(31, 31, 31, 0.1); }
 .bhdr__addr {
+  position: relative;
   display: flex; align-items: center; gap: 5px;
   font-size: var(--f-base); font-weight: 500;
   margin-top: 3px; max-width: 100%; color: inherit;
@@ -159,7 +160,7 @@
   position: absolute; top: -6px; left: 56%;
   background: var(--green); color: #fff;
   border-radius: 999px; padding: 1px 5px;
-  font-size: 8px; font-weight: 800; font-style: normal;
+  font-size: var(--f-2xs); font-weight: 800; font-style: normal;
   letter-spacing: 0.02em; line-height: 1.5;
 }
 
@@ -171,8 +172,13 @@
   display: flex; align-items: center; gap: 8px;
 }
 .phdr__back {
+  position: relative;
   width: 34px; height: 34px; margin-left: -6px;
   display: grid; place-items: center; border-radius: 50%; color: var(--ink);
+}
+.phdr__back::after {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  width: 44px; height: 44px; transform: translate(-50%, -50%);
 }
 .phdr__back:active { background: var(--surface-2); }
 .phdr__t { font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.3px; }
@@ -181,6 +187,7 @@
    fixed width by its own text so the address always starts in the same place
    down a stack of screens. */
 .phdr__addr {
+  position: relative;
   display: flex; align-items: center; gap: 4px;
   max-width: 100%; margin-top: 2px; padding: 0;
   background: none; border: 0;
@@ -324,3 +331,10 @@
   background: rgba(255, 255, 255, 0.22); overflow: hidden;
 }
 .freepill__bar i { display: block; height: 100%; border-radius: 3px; background: var(--yellow); transition: width 0.35s ease; }
+
+/* The address line is 16-19px of type, and it is the control that changes where
+   the order goes. Its hit area is padded to 44px without moving the type. */
+.bhdr__addr::after, .phdr__addr::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 44px; transform: translateY(-50%);
+}

@@ -195,6 +195,8 @@ export default function Product() {
   const qty = useStore((s) => s.cart[id] ?? 0);
   const saved = useStore((s) => s.saved.includes(id));
   const toggleSaved = useStore((s) => s.toggleSaved);
+  const markViewed = useStore((s) => s.markViewed);
+  const seenBefore = useStore((s) => s.viewed.includes(id) );
   const product = productById(id, mysteryUnlocked);
 
   const host = useRef<HTMLDivElement>(null);
@@ -261,6 +263,13 @@ export default function Product() {
 
   /* A new product means a new sheet: drop the drag, stop gliding, and start at
      the top rather than wherever the previous product was scrolled to. */
+  /* Recorded on arrival, and read BEFORE this effect runs, so the chip reflects
+     whether you had opened this car on an earlier visit rather than lighting up
+     the instant you land on it. */
+  useEffect(() => {
+    markViewed(id);
+  }, [id, markViewed]);
+
   useEffect(() => {
     setGliding(false);
     dx.current = 0;
@@ -525,6 +534,7 @@ export default function Product() {
               {/* The campaign's own flags. The real PDP leaves the right of this
                   row empty, so they cost no extra line. */}
               <span className="pdp__tags">
+                {seenBefore && <span className="tag tag--seen">Recently Viewed</span>}
                 <span className="tag tag--blue">Limited Drop</span>
                 {product.badge && <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>}
               </span>
