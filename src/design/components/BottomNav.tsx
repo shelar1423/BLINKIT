@@ -45,6 +45,9 @@ const RESIZE_MS = 220;
 /* The cloud a removed item bursts into: angle in degrees, distance as a share
    of the throw, and the lump's own diameter. Irregular on purpose — evenly
    spaced identical dots read as a loading spinner, not a puff. */
+/** Left edge of slot i: 44px wide with 24px of overlap, so each is 20px on. */
+const SLOT_PX = 20;
+
 const PUFF_BITS = [
   [-92, 1.0, 26],
   [-40, 0.92, 20],
@@ -91,17 +94,24 @@ function useThumbStrip(ids: string[]) {
      wrong width and then snapped the last 44px. Only the departing set has to
      be state, because it has to outlive the render that dropped it. */
   const shown = keep;
-  const [leaving, setLeaving] = useState<{ id: string; how: 'removed' | 'pushed' }[]>([]);
+  const [leaving, setLeaving] = useState<{ id: string; how: 'removed' | 'pushed'; slot: number }[]>(
+    [],
+  );
   const was = useRef(keep);
   const wasTotal = useRef(ids.length);
 
   useEffect(() => {
-    const gone = was.current.filter((id) => !keep.includes(id));
+    const prev = was.current;
+    const gone = prev.filter((id) => !keep.includes(id));
     const how: 'removed' | 'pushed' = ids.length < wasTotal.current ? 'removed' : 'pushed';
     was.current = keep;
     wasTotal.current = ids.length;
     if (!gone.length) return;
-    setLeaving(gone.map((id) => ({ id, how })));
+    /* Which slot it was sitting in, so it can leave from there instead of from
+       the front of the row. Deleting the newest item has to lift the thumbnail
+       on TOP of the stack; rendering every departure first made it always the
+       one at the back. */
+    setLeaving(gone.map((id) => ({ id, how, slot: Math.max(0, prev.indexOf(id)) })));
     const t = window.setTimeout(() => setLeaving([]), LEAVE_MS);
     return () => window.clearTimeout(t);
     // keep is rebuilt every render; sig is the value that actually changes
@@ -224,24 +234,31 @@ export function BottomNav() {
         <div className="cartbar">
           <button className="cartpill" ref={pill} type="button" onClick={() => nav('/cart')}>
             <span className="cartpill__thumbs">
+              {view.thumbs.map((id) => (
+                <img key={id} className="cartpill__th" src={productById(id)?.image} alt="" />
+              ))}
+              {/* After the survivors, not before. These are out of flow, so
+                  where they sit is set by `left` and not by document order —
+                  but :first-child is not, and with a departure rendered first
+                  the leading survivor lost its `margin-left: 0` and the whole
+                  stack jumped 16px sideways. Last also means they lift over
+                  their neighbours rather than under them. */}
               {leaving.map((t) => (
                 <Fragment key={t.id}>
                   <img
                     className={`cartpill__th is-out is-out--${t.how}`}
+                    style={{ left: t.slot * SLOT_PX }}
                     src={productById(t.id)?.image}
                     alt=""
                   />
                   {t.how === 'removed' && (
-                    <i className="cartpill__puff" aria-hidden="true">
+                    <i className="cartpill__puff" aria-hidden="true" style={{ left: t.slot * SLOT_PX }}>
                       {PUFF_BITS.map((bit, k) => (
                         <i key={k} style={bit as React.CSSProperties} />
                       ))}
                     </i>
                   )}
                 </Fragment>
-              ))}
-              {view.thumbs.map((id) => (
-                <img key={id} className="cartpill__th" src={productById(id)?.image} alt="" />
               ))}
             </span>
             <span className="cartpill__txt">

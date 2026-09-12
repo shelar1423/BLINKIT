@@ -328,9 +328,12 @@
   object-fit: contain; background: #fff; border-radius: 50%;
   border: 2px solid #fff; padding: 3px;
   box-shadow: 0 1px 3px rgba(16, 20, 24, 0.18);
-  /* Overlapped like a stack of cards, and the newest — last in the DOM — sits
-     on top of the one before it. */
-  margin-left: -16px;
+  /* Overlapped like a stack of cards, and the newest sits on top of the one
+     before it. Measured off the recording: their stack loses 19.3pt of width
+     per thumbnail against a 42pt thumbnail, so a little over half of each one
+     is covered. At -16px only a third was, and the row read as three separate
+     badges rather than a shingled stack. */
+  margin-left: -24px;
   animation: thumbIn 300ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
 .cartpill__th:first-child { margin-left: 0; }
@@ -345,17 +348,27 @@
    it — it is going back to the shelf, which is above. A fourth item arriving
    pushes the oldest off the left instead: nothing was removed, the strip just
    ran out of room. */
-.cartpill__th.is-out { pointer-events: none; }
-/* Removing an item does not fade the thumbnail out where it sits. In the
-   recording it lifts clear of the bar at very nearly full size, holds for a
-   beat, and then bursts into a pale cloud that expands and breaks up as it
-   dissipates — about 70ms of lift and 400ms of cloud. Shrinking it to half
-   size on the way up, as this did, turns a pop into an evaporation. */
-.cartpill__th.is-out--removed { animation: thumbLift 220ms cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+/* Out of the layout the instant it starts leaving, and anchored by an inline
+   `left` to the slot it was actually in. It used to stay in flow and collapse
+   its own margin over the animation, which dragged every surviving thumbnail
+   44px sideways — and because departures were all rendered ahead of the
+   survivors, it collapsed from the front of the row whichever item you had
+   removed. In the recording the thumbnail on TOP of the stack lifts straight
+   up and the ones under it stay put; the only thing that shifts them is the
+   bar narrowing by one slot and re-centring, about half a slot each. */
+.cartpill__th.is-out {
+  position: absolute; top: 0; margin: 0;
+  pointer-events: none;
+}
+/* Removing an item does not fade the thumbnail out where it sits. It lifts
+   clear of the bar at very nearly full size and then bursts into a pale cloud.
+   ~150ms of lift in the recording — it is clear of the stack by then — and
+   about 400ms of cloud after it. */
+.cartpill__th.is-out--removed { animation: thumbLift 170ms cubic-bezier(0.32, 0.72, 0, 1) forwards; }
 @keyframes thumbLift {
   0%   { transform: none; opacity: 1; }
-  40%  { transform: translateY(-30px) scale(0.98); opacity: 0.6; }
-  100% { transform: translateY(-38px) scale(0.92); opacity: 0; margin-left: -44px; }
+  45%  { transform: translateY(-28px) scale(0.98); opacity: 0.55; }
+  100% { transform: translateY(-38px) scale(0.92); opacity: 0; }
 }
 
 /* The cloud. Seven soft lumps thrown outward from the centre, not one disc
@@ -375,7 +388,7 @@
   margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
   border-radius: 50%;
   background: #E4EFF9;
-  animation: puffbit 420ms ease-out 110ms both;
+  animation: puffbit 420ms ease-out 90ms both;
 }
 @keyframes puffbit {
   0%   { transform: translate(0, 0) scale(0.34); opacity: 0; }
@@ -387,7 +400,7 @@
 }
 .cartpill__th.is-out--pushed { animation: thumbPush 260ms ease forwards; }
 @keyframes thumbPush {
-  to { transform: translateX(-14px) scale(0.5); opacity: 0; margin-left: -44px; }
+  to { transform: translateX(-14px) scale(0.5); opacity: 0; }
 }
 /* Both lines stay on one line at every width. While the pill is unfurling it
    is only 60px wide, and text allowed to wrap there makes the bar a line
