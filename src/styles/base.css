@@ -812,6 +812,13 @@ input, select, textarea { font: inherit; color: inherit; }
    bottom, which held only while the action stack was one button tall — a phase
    with two ran up through the hint. Stacked in a column they cannot collide
    however many buttons a phase carries. */
+/* The recovery note. Deliberately not styled as an error — nothing has failed,
+   the camera just needs a clean start — so it reads as advice, in the same
+   place the other hints appear. */
+.arov__hint--help {
+  color: #FFC400;
+}
+.arov__hint--help small { color: rgba(255, 255, 255, 0.82); }
 .arov__bottom {
   position: absolute; left: 12px; right: 12px; bottom: calc(var(--safe-b) + 16px);
   display: flex; flex-direction: column; align-items: stretch; gap: 14px;

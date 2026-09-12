@@ -1,10 +1,8 @@
 import * as THREE from 'three';
-import { RoomHazards, RoomScan } from './roomScan';
 import { color } from '../../design/constants';
 import { RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
 import { primeAudio, skid } from '../horn';
-import { VisionObstacleSystem } from './visionObstacles';
 
 /* ============================================================
    Two ways to get the circuit onto your desk.
@@ -260,14 +258,13 @@ function create3DStartBanner() {
       ctx.drawImage(logo, (W - lw) / 2, 70, lw, lh);
     }
 
-    ctx.fillStyle = '#FFFFFF';
-    const size = fitText(ctx, 'TAP SCREEN TO RACE', inner, 74);
-    ctx.font = `800 ${size}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText('TAP SCREEN TO RACE', W / 2, 222);
-
+    /* "TAP SCREEN TO RACE" is gone. It told you to do something the Start race
+       button already does, and it was the tallest thing on the banner — which
+       is why placing a track close to you pushed the lap count off the top of
+       the frame. What is left is the one thing you cannot read anywhere else. */
     ctx.fillStyle = '#FFC400';
-    ctx.font = `700 ${fitText(ctx, 'TWO LAPS · 45 SECONDS', inner, 30, 700)}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText('TWO LAPS · 45 SECONDS', W / 2, 272);
+    ctx.font = `800 ${fitText(ctx, 'TWO LAPS · 45 SECONDS', inner, 46, 800)}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText('TWO LAPS · 45 SECONDS', W / 2, 232);
 
     tex.needsUpdate = true;
   };
@@ -282,8 +279,12 @@ function create3DStartBanner() {
 
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
   const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(1.5, 1.5 * (H / W), 1);
-  sprite.position.set(0, 1.2, 0);
+  sprite.scale.set(1.3, 1.3 * (H / W), 1);
+  /* Lower than it was. At 1.2m above the track it sat above the top of the
+     frame whenever the circuit was dropped close to you — which is exactly
+     when you most want to read it. 0.62m keeps it clear of the car and inside
+     the picture at every placement distance. */
+  sprite.position.set(0, 0.62, 0);
   sprite.name = 'startBanner';
   sprite.visible = false;
   return sprite;
@@ -313,12 +314,22 @@ function makeEngine(opts: Opts, onDone: () => void) {
 }
 
 /** Wire drag-to-move / pinch-to-size / twist-to-turn onto the DOM overlay. */
+/**
+ * Touch handling for a placed object.
+ *
+ * Two fingers always mean the same thing: pinch to resize, twist to turn.
+ * One finger depends on what is placed. A circuit is a thing you position, so
+ * dragging slides it across the floor. A car is a thing you LOOK at, so
+ * dragging spins it and tips it — placing it and never being able to see the
+ * other side was the whole complaint about inspect mode.
+ */
 function adjustGestures(
   _ov: HTMLElement,
   anchor: THREE.Object3D,
   camera: THREE.Camera,
   get: () => { phase: ARPhase; size: number },
   setSize: (m: number) => void,
+  orbit = false,
 ) {
   let pts: Record<number, { x: number; y: number }> = {};
   let base = { dist: 0, ang: 0, size: 0, rot: 0 };
@@ -348,12 +359,20 @@ function adjustGestures(
       const a = Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x);
       anchor.rotation.y = base.rot - (a - base.ang);
     } else if (p.length === 1) {
-      // slide the circuit across its own plane, relative to where you look
       const dx = (e.clientX - prev.x) / window.innerWidth;
       const dy = (e.clientY - prev.y) / window.innerHeight;
-      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0).normalize();
-      const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize().negate();
-      anchor.position.addScaledVector(right, dx * 1.6).addScaledVector(fwd, -dy * 1.6);
+      if (orbit) {
+        /* Spin on the spot, and tip far enough to see the roof and the
+           chassis — clamped short of the point where a die-cast car would be
+           standing on its nose. */
+        anchor.rotation.y -= dx * 6.2;
+        anchor.rotation.x = Math.max(-0.62, Math.min(0.62, anchor.rotation.x + dy * 3.4));
+      } else {
+        // slide the circuit across its own plane, relative to where you look
+        const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0).normalize();
+        const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize().negate();
+        anchor.position.addScaledVector(right, dx * 1.6).addScaledVector(fwd, -dy * 1.6);
+      }
     }
   };
   const onUp = (e: PointerEvent) => {
@@ -485,11 +504,6 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     .catch(() => opts.onError('The car model failed to load for AR.'));
 
   // Vision & Real-World Obstacle Collision System
-  const vision = new VisionObstacleSystem(scene, camera);
-  vision.onHit = (hit) => {
-    engine.applyObstacleBounce(100);
-    opts.onObstacleHit?.({ type: hit.type, pointsLost: 100 });
-  };
 
   function pinObstacleAtTap(clientX: number, clientY: number) {
     const xrCam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
@@ -502,15 +516,12 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -anchor.position.y);
     const intersection = new THREE.Vector3();
     if (ray.ray.intersectPlane(groundPlane, intersection)) {
-      vision.pinObstacleAt(intersection);
-      opts.onObstacleCountChange?.(vision.getPinnedCount());
     }
   }
 
   let session: XRSession | null = null;
   let hitSource: XRHitTestSource | null = null;
   let transientHitSource: XRTransientInputHitTestSource | null = null;
-  let localSpace: XRReferenceSpace | null = null;
   let last = performance.now();
   let detachGestures: (() => void) | null = null;
 
@@ -556,7 +567,6 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     renderer.setAnimationLoop(null);
     detachGestures?.();
     detachTapPlace?.();
-    vision.dispose();
     opts.overlayRoot.removeEventListener('beforexrselect', blockSelect);
     try {
       hitSource?.cancel?.();
@@ -583,14 +593,18 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   // dom-overlay carries the whole in-session UI. Ask for it up front, and only
   // fall back to a session without it if the device refuses outright.
+  /* No required features at all.
+     'hit-test' used to be required, and that is what made Android refuse the
+     session outright — a device that cannot do surface detection could not
+     start AR at any quality. The track no longer needs a detected surface: it
+     goes where you are pointing, so there is nothing to require. */
   const base: XRSessionInit = {
-    requiredFeatures: ['hit-test'],
     optionalFeatures: ['local-floor', 'light-estimation'],
   };
   try {
     session = await xr.requestSession('immersive-ar', {
       ...base,
-      requiredFeatures: [...base.requiredFeatures!, 'dom-overlay'],
+      requiredFeatures: ['dom-overlay'],
       domOverlay: { root: opts.overlayRoot },
     });
   } catch {
@@ -605,26 +619,14 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   await renderer.xr.setSession(session);
 
-  const viewerSpace = await session.requestReferenceSpace('viewer');
-  localSpace = await session.requestReferenceSpace('local');
-  try {
-    hitSource = (await session.requestHitTestSource?.({ space: viewerSpace })) ?? null;
-  } catch {
-    hitSource = null;
-  }
-  // Announce the phase as soon as the session is live. Without this the UI
-  // stayed hidden until the first hit-test resolved, so on a surface the
-  // device could not read there was no visible way to place anything.
-  setPhase(hitSource ? 'searching' : 'ready');
-
-  if (!hitSource) {
-    // Without hit-test there is no reticle, but the fallback placement still
-    // gives the player a working circuit rather than a dead screen.
-    opts.onError('Surface detection is unavailable. You can still place the track in front of you.');
-  }
+  await session.requestReferenceSpace('local');
+  hitSource = null;
+  /* Ready from the first frame. There is nothing to search for any more, so
+     there is no 'searching' phase to sit in and no way to be stuck in it. */
+  setPhase('ready');
 
   session.addEventListener('select', () => {
-    if (phase === 'ready' || phase === 'searching') place();
+    if (phase === 'ready') place();
     else if (phase === 'placed') startRace();
   });
   session.addEventListener('end', cleanup);
@@ -634,90 +636,46 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   let detachTapPlace: (() => void) | null = () => {
   };
 
-  // Request transient input hit-test for tap-position placement
-  try {
-    transientHitSource = (await session.requestHitTestSourceForTransientInput?.({
-      profile: 'generic-touchscreen',
-      offsetRay: new XRRay(),
-    })) ?? null;
-  } catch {
-    transientHitSource = null;
-  }
+  detachGestures = adjustGestures(opts.overlayRoot, anchor, renderer.xr.getCamera(), () => ({ phase, size: sizeM }), setSize, inspect);
 
-  detachGestures = adjustGestures(opts.overlayRoot, anchor, renderer.xr.getCamera(), () => ({ phase, size: sizeM }), setSize);
+  /* ---- where the track goes ----
+     Straight down the middle of the view, at a fixed distance. That is the
+     whole placement model now.
 
-  /* ---- provisional placement ----
-     Assumed floor height below the headset/phone when no plane is tracked yet.
-     1.2 m is about table height from a held phone and reads sensibly either way. */
-  const ASSUMED_DROP = 1.2;
+     It used to project the camera ray onto an assumed floor 1.2m below the
+     phone, which is why the ring kept appearing at the bottom of the screen:
+     hold the phone level and that intersection is far away and far down, so
+     the ring sat near the bottom edge — or off it. Putting the target ON the
+     view ray means it lands at the centre of the screen by construction, at
+     every phone angle, from the first frame. You aim by pointing, which is
+     what people were trying to do anyway. */
+  const REACH = 1.45;
   const _p = new THREE.Vector3();
   const _q = new THREE.Quaternion();
   const _fwd = new THREE.Vector3();
-  let reticleProvisional = false;
 
-  function setReticleProvisional(on: boolean) {
-    if (on === reticleProvisional) return;
-    reticleProvisional = on;
-    reticle.traverse((o) => {
-      const m = (o as THREE.Mesh).material as THREE.Material | undefined;
-      if (m && 'opacity' in m) {
-        (m as THREE.Material & { opacity: number }).transparent = true;
-        (m as THREE.Material & { opacity: number }).opacity *= on ? 0.55 : 1 / 0.55;
-      }
-    });
-  }
-
-  /** Put the reticle where the camera is looking, on the assumed floor. */
-  function provisionalReticle() {
+  function aimReticle() {
     const cam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
     cam.getWorldPosition(_p);
     cam.getWorldQuaternion(_q);
     _fwd.set(0, 0, -1).applyQuaternion(_q);
-    // how far along the view ray the assumed floor sits; clamp so a level or
-    // upward gaze still puts the reticle a sensible distance ahead
-    const t = _fwd.y < -0.05 ? Math.min(ASSUMED_DROP / -_fwd.y, 3.2) : 1.6;
-    const target = _p.clone().addScaledVector(_fwd, t);
-    target.y = _p.y - ASSUMED_DROP;
+    const target = _p.clone().addScaledVector(_fwd, REACH);
+    // flat on the ground plane, turned to face the way you are looking
     const yaw = Math.atan2(_fwd.x, _fwd.z);
-    const k = Math.max(0.3, Math.min(2.6, _p.distanceTo(target) / 1.2));
     reticle.matrix.compose(
       target,
       new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)),
-      new THREE.Vector3(k, k, k),
+      new THREE.Vector3(1, 1, 1),
     );
     reticle.visible = true;
-    setReticleProvisional(true);
   }
 
-  renderer.setAnimationLoop((now, frame) => {
+  renderer.setAnimationLoop((now) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
-    if (frame && hitSource && localSpace && (phase === 'searching' || phase === 'ready')) {
-      const hits = frame.getHitTestResults(hitSource);
-      const pose = hits.length ? hits[0].getPose(localSpace) : null;
-      if (pose) {
-        reticle.visible = true;
-        reticle.matrix.fromArray(pose.transform.matrix);
-        /* Same guard as the camera path: keep the reticle a constant size on
-           screen. A hit-test surface can be half a metre away, where a fixed
-           world-size reticle swallows the whole view. */
-        _p.setFromMatrixPosition(reticle.matrix);
-        const xrCam = renderer.xr.isPresenting ? renderer.xr.getCamera() : camera;
-        const k = Math.max(0.3, Math.min(2.6, xrCam.getWorldPosition(_fwd).distanceTo(_p) / 1.2));
-        reticle.matrix.scale(new THREE.Vector3(k, k, k));
-        setReticleProvisional(false);
-        if (phase !== 'ready') setPhase('ready');
-      } else {
-        /* No surface found yet. Rather than hide the reticle — which forced you
-           to tilt the phone down and hunt for it before anything appeared —
-           show a provisional one where the camera is already looking, on an
-           assumed floor plane. It is dimmed to say "not locked yet", and the
-           moment real tracking arrives the branch above snaps it to the true
-           surface. Something is always aimable from the first frame. */
-        provisionalReticle();
-        if (phase !== 'searching') setPhase('searching');
-      }
+    if (phase === 'ready') {
+      aimReticle();
 
       const pulse = reticle.getObjectByName('pulseRing') as THREE.Mesh;
       if (pulse) {
@@ -732,21 +690,6 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       const bo = reticle.getObjectByName('burnout');
       if (bo) bo.rotation.y = -now * 0.00035;
 
-      // Also check transient (tap-position) hit-test results to update
-      // reticle to where the user last tapped
-      if (frame && transientHitSource && localSpace) {
-        const transientResults = frame.getHitTestResultsForTransientInput(transientHitSource);
-        for (const tr of transientResults) {
-          if (tr.results.length > 0) {
-            const tPose = tr.results[0].getPose(localSpace);
-            if (tPose) {
-              reticle.visible = true;
-              reticle.matrix.fromArray(tPose.transform.matrix);
-              if (phase !== 'ready') setPhase('ready');
-            }
-          }
-        }
-      }
     }
 
     if (phase === 'racing') {
@@ -759,14 +702,6 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       engine.getCarWorldDirection(localCarFwd);
 
       const scale = engine.root.scale.x || (sizeM / engine.trackExtent);
-      const worldCarPos = localCarPos.clone().multiplyScalar(scale).add(anchor.position);
-      const worldCarFwd = localCarFwd.clone().normalize();
-
-      const collided = vision.update(dt, worldCarPos, worldCarFwd, engine.getSpeed() / 20);
-      if (collided) {
-        engine.applyObstacleBounce(100);
-      }
-      opts.onProximityAlert?.(vision.proximityAlert);
 
       // FPP chase camera: compute where the camera SHOULD be (in track-local
       // coords) then shift the whole anchor so that point aligns with the
@@ -802,15 +737,12 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     ...driveApi(engine),
     placeNow: place,
     pinObstacleAtTap,
-    clearObstacles() {
-      vision.clearPinnedObstacles();
-      opts.onObstacleCountChange?.(0);
-    },
-    getPinnedCount: () => vision.getPinnedCount(),
-    isProximityAlert: () => vision.proximityAlert,
+    clearObstacles() {},
+    getPinnedCount: () => 0,
+    isProximityAlert: () => false,
     reset() {
       anchor.visible = false;
-      setPhase(hitSource ? 'searching' : 'ready');
+      setPhase('ready');
     },
     startRace,
     nudgeScale: (f) => setSize(sizeM * f),
@@ -869,7 +801,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
    *  phone, so assuming a 95 cm floor drop threw the aim well past the table. */
   const GROUND_INSPECT = -0.42;
   /** Where the reticle sits when the phone is level or pointing up. */
-  const PROVISIONAL_DIST = 1.5;
   /** Reticle is scaled by distance so its on-screen size stays constant. */
   const RETICLE_REF = 1.2;
   primeAudio();
@@ -952,11 +883,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
   const inspect = opts.mode === 'inspect';
   const ground = inspect ? GROUND_INSPECT : GROUND;
-  /* Reach, matched to the surface. A 2.4 m circuit is dropped on a floor a
-     couple of metres out; a 7.4 cm car is stood on the desk in front of you. */
-  const provDist = inspect ? 0.55 : PROVISIONAL_DIST;
-  const nearest = inspect ? 0.2 : 0.35;
-  const farthest = inspect ? 1.6 : 3.5;
   const engine = makeEngine(opts, () => setPhase('placed'));
   // true 1:64 in inspect mode — a real Hot Wheels car is ~7.4 cm
   let sizeM = inspect ? 0.074 : (opts.trackSize ?? 2.4);
@@ -972,8 +898,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
        describes it. Re-centre and start again rather than leaving hazards
        standing where the track no longer is. */
     if (!inspect && phase === 'placed') {
-      scan.setArea(anchor.position, sizeM * 1.15);
-      hazards.refresh();
     }
   };
   applySize();
@@ -990,23 +914,11 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      that table are what the car has to get around. Sampling runs while the
      circuit is sitting there being sized, which is exactly when the player is
      already moving the phone over the surface. */
-  const scan = new RoomScan();
-  const hazards = new RoomHazards(scan, color.ink.int, color.hwO.int);
-  hazards.visible = false;
-  scene.add(hazards.root);
   const scanCanvas = document.createElement('canvas');
   scanCanvas.width = 160;
   scanCanvas.height = 120;
-  const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true });
-  let lastScan = 0;
 
   // Vision Obstacle Collision System (real-time camera video frame edge sampling)
-  const vision = new VisionObstacleSystem(scene, camera);
-  vision.setVideoSource(video);
-  vision.onHit = (hit) => {
-    engine.applyObstacleBounce(100);
-    opts.onObstacleHit?.({ type: hit.type, pointsLost: 100 });
-  };
 
   function pinObstacleAtTap(clientX: number, clientY: number) {
     const ndc = new THREE.Vector2(
@@ -1018,8 +930,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -ground);
     const intersection = new THREE.Vector3();
     if (ray.ray.intersectPlane(groundPlane, intersection)) {
-      vision.pinObstacleAt(intersection);
-      opts.onObstacleCountChange?.(vision.getPinnedCount());
     }
   }
 
@@ -1059,48 +969,26 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   // phone is level or pointing up — used for the reticle only.
   const fwd = new THREE.Vector3();
   const hit = new THREE.Vector3();
-  /**
-   * Where the circuit would land. Always returns a point: when the phone is
-   * level or tilted up there is no floor along the view ray, so it falls back
-   * to a fixed distance straight ahead and reports that it is provisional.
-   * Returning null there meant nothing appeared at all until you tilted down
-   * and hunted for the reticle.
-   */
-  /** Assumed downward tilt before the gyro has said anything: 32 degrees, which
-   *  is roughly how a phone is held when pointed at a table in front of you. */
-  const ASSUMED_TILT = 0.56;
+  /** How far down the view ray the track lands. Same model as the WebXR path:
+   *  the target sits ON the ray, so it is always at the centre of the picture
+   *  whatever angle the phone is held at.
+   *
+   *  What this replaces cast the ray onto an assumed ground plane, which is why
+   *  the ring kept arriving at the bottom of the screen — hold the phone level
+   *  and that intersection is far away and far down. It also depended on the
+   *  gyro, so on a first run where motion permission had not been granted it
+   *  fell back to a guessed tilt and could still miss. Pointing is now the
+   *  whole interaction, and it cannot miss. */
+  const REACH = inspect ? 0.5 : 1.45;
 
   function aim(): { point: THREE.Vector3; dist: number; provisional: boolean } {
     if (haveOrientation) {
       fwd.set(0, 0, -1).applyQuaternion(camera.quaternion);
     } else {
-      /* No orientation yet — either it has not arrived or it was never granted.
-         An identity camera looks dead level, and a horizontal disc on the floor
-         then projects to the very bottom edge of the frame, right where it
-         cannot be aimed or tapped. Assume the tilt instead, so something
-         aimable is always in the middle of the picture. */
-      fwd.set(0, -Math.sin(ASSUMED_TILT), -Math.cos(ASSUMED_TILT));
+      fwd.set(0, 0, -1);
     }
-    /* Cast from where the camera actually is. This is the origin on a fresh
-       session, but the chase cam moves the camera during a race and reset()
-       leaves it there — so casting from (0,0,0) aimed at a point the camera
-       was no longer looking at once a race had been run. */
     const eye = camera.position;
-    const drop = ground - eye.y;
-    if (fwd.y > -0.08 || drop >= 0) {
-      /* Phone level or tilted up: there is no floor along the view ray. Put the
-         reticle on the ground plane a fixed distance ahead rather than straight
-         out at eye level — it is a flat horizontal disc, so at eye level it is
-         edge-on and invisible, which is why it only appeared once you tilted
-         down and hunted for it. */
-      hit.copy(fwd).setY(0);
-      if (hit.lengthSq() < 1e-6) hit.set(0, 0, -1);
-      hit.normalize().multiplyScalar(provDist).add(eye).setY(ground);
-      return { point: hit, dist: provDist, provisional: true };
-    }
-    const t = drop / fwd.y;
-    const clamped = Math.max(nearest, Math.min(farthest, t));
-    return { point: hit.copy(fwd).multiplyScalar(clamped).add(eye), dist: clamped, provisional: clamped !== t };
+    return { point: hit.copy(fwd).multiplyScalar(REACH).add(eye), dist: REACH, provisional: false };
   }
 
   /** Placement here can NEVER fail. If the phone is not pointed at the
@@ -1116,8 +1004,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     reticle.visible = false;
     startBanner.visible = true;
     if (!inspect) {
-      scan.setArea(anchor.position, sizeM * 1.15);
-      hazards.visible = true;
     }
     setPhase('placed');
   }
@@ -1137,11 +1023,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      stray tap during the race pinned an obstacle you did not ask for. Placement
      is now only ever the explicit button. */
 
-  const detachGestures = adjustGestures(opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize);
+  const detachGestures = adjustGestures(opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize, inspect);
 
   // FPP chase-cam state for camera mode
-  const probe = new THREE.Vector3();
-  let mapHitCooldown = 0;
   const fpTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   const fpCamPos = new THREE.Vector3();
   const fpCamLook = new THREE.Vector3();
@@ -1152,8 +1036,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     window.removeEventListener('deviceorientation', onOrient, true);
     window.removeEventListener('resize', onResize);
     detachGestures();
-    hazards.dispose();
-    vision.dispose();
     stream.getTracks().forEach((t) => t.stop());
     video.pause();
     video.srcObject = null;
@@ -1210,49 +1092,11 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       const bo = reticle.getObjectByName('burnout');
       if (bo) bo.rotation.y = -now * 0.00035;
     }
-    if (phase === 'placed' && !inspect && scanCtx) {
-      /* 10 Hz. The map wants many looks from slightly different angles more
-         than it wants every frame, and the race has to keep its budget. */
-      if (now - lastScan > 100) {
-        lastScan = now;
-        scan.sample(video, scanCtx, camera);
-        hazards.refresh();
-        opts.onScan?.({ coverage: scan.coverage, hazards: scan.blockedCount });
-      }
-    }
     if (phase === 'racing') {
       engine.update(dt);
 
-      // Vision Obstacle Check (real-time camera video edge/contrast bumper sensor + pinned obstacles)
-      const localCarPos = new THREE.Vector3();
-      const localCarFwd = new THREE.Vector3();
-      engine.getCarWorldPosition(localCarPos);
-      engine.getCarWorldDirection(localCarFwd);
 
       const scale = engine.root.scale.x || (sizeM / engine.trackExtent);
-      const worldCarPos = localCarPos.clone().multiplyScalar(scale).add(anchor.position);
-      const worldCarFwd = localCarFwd.clone().normalize();
-
-      const collided = vision.update(dt, worldCarPos, worldCarFwd, engine.getSpeed() / 20);
-      if (collided) {
-        engine.applyObstacleBounce(100);
-      }
-
-      /* The surface map is the real obstacle now. Look a little ahead of the
-         nose rather than at the car itself, so the car stops against the thing
-         it hit instead of inside it, and only while actually moving — a car
-         sitting still on a cell would otherwise bounce forever. */
-      if (engine.getSpeed() > 0.5 && mapHitCooldown <= 0) {
-        probe.copy(worldCarFwd).multiplyScalar(0.06).add(worldCarPos);
-        if (scan.isBlockedWorld(probe.x, probe.z)) {
-          mapHitCooldown = 0.7;
-          engine.applyObstacleBounce(100);
-          opts.onObstacleHit?.({ type: 'room', pointsLost: 100 });
-        }
-      }
-      if (mapHitCooldown > 0) mapHitCooldown -= dt;
-
-      opts.onProximityAlert?.(vision.proximityAlert);
 
       // FPP chase camera: override gyro and set camera directly behind the car
       engine.cameraTarget(fpTarget);
@@ -1281,23 +1125,14 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     ...driveApi(engine),
     placeNow: place,
     pinObstacleAtTap,
-    clearObstacles() {
-      vision.clearPinnedObstacles();
-      opts.onObstacleCountChange?.(0);
-    },
-    getPinnedCount: () => vision.getPinnedCount(),
-    isProximityAlert: () => vision.proximityAlert,
+    clearObstacles() {},
+    getPinnedCount: () => 0,
+    isProximityAlert: () => false,
     reset() {
       anchor.visible = false;
       // undo the chase cam: orientation alone drives the camera outside a race
       camera.position.set(0, 0, 0);
       fpInited = false;
-      /* The map described the old spot. Clear it rather than leave hazards
-         floating where the circuit no longer is. */
-      hazards.visible = false;
-      scan.reset();
-      hazards.refresh();
-      opts.onScan?.({ coverage: 0, hazards: 0 });
       setPhase('ready');
     },
     startRace,

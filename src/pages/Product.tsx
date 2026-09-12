@@ -23,6 +23,7 @@ import {
 import { ProductCard, Stars } from '../design/components/ProductCard';
 import { SectionHeader } from '../design/components/Chrome';
 import { useToast } from '../App';
+import { useARSupport } from '../lib/useARSupport';
 
 /** Blinkit's PDP opens as a sheet: dismiss chevron left, utilities right, no title. */
 function SheetHeader({
@@ -187,6 +188,9 @@ export default function Product() {
   const { id = '' } = useParams();
   const nav = useNavigate();
   const { toast } = useToast();
+  /* null while the check is in flight — treated as yes, so the AR route never
+     flickers in after a frame of saying 3D. */
+  const arOk = useARSupport() !== false;
   const mysteryUnlocked = useStore((s) => s.mysteryUnlocked);
   const selectCar = useStore((s) => s.selectCar);
   const racesLeft = useStore((s) => s.racesLeft);
@@ -454,16 +458,24 @@ export default function Product() {
                     <IconRotate size={17} />
                   </button>
                 </div>
+                {/* One button, two truths. On a device with no AR this used to
+                    say "View in your space" and then land on a screen whose
+                    only button was disabled. */}
                 <button
                   className="pdp__ar"
                   type="button"
                   onClick={() => {
+                    if (!arOk) {
+                      toast('This device does not support AR. Showing the 3D view.');
+                      viewer.current?.reset();
+                      return;
+                    }
                     selectCar(product.id);
                     nav(`/ar/${product.id}?mode=inspect&go=1`);
                   }}
                 >
-                  <IconAR size={16} />
-                  View in your space
+                  {arOk ? <IconAR size={16} /> : <IconCube size={16} />}
+                  {arOk ? 'View in your space' : 'View in 3D'}
                 </button>
                 {ready && <p className="pdp__hint">DRAG TO ROTATE · PINCH TO ZOOM</p>}
               </>

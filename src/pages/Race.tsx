@@ -6,12 +6,16 @@ import { HERO_CARS, rupees } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, useStore } from '../store/useStore';
 import { preloadCar } from '../lib/three/modelLoader';
 import { IconAR, IconCheck, IconFlag } from '../design/elements/Icons';
+import { useARSupport } from '../lib/useARSupport';
 
 /** Race preparation: pick the car, then choose 3D or AR. */
 export default function Race() {
   const nav = useNavigate();
   const { selectedCarId, selectCar, racesLeft, bestScore } = useStore();
   const car = HERO_CARS.find((c) => c.id === selectedCarId) ?? HERO_CARS[0];
+  /* null while the check runs — treated as yes, so the AR button does not
+     appear a frame late on a device that has it. */
+  const arOk = useARSupport() !== false;
 
   // warm the chosen model so the countdown isn't spent downloading
   useEffect(() => {
@@ -96,14 +100,18 @@ export default function Race() {
         </div>
 
         <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 8 }}>
-          <Button variant="hwBlue" size="lg" block
-            type="button"
-            disabled={racesLeft <= 0}
-            onClick={() => nav(`/ar/${car.id}?go=1`)}
-          >
-            <IconAR size={17} />
-            {racesLeft > 0 ? 'Race in your space' : 'No races left today'}
-          </Button>
+          {/* Only offered where it works. On a device with no AR this used to
+              be the primary button and it led to a dead screen. */}
+          {arOk && (
+            <Button variant="hwBlue" size="lg" block
+              type="button"
+              disabled={racesLeft <= 0}
+              onClick={() => nav(`/ar/${car.id}?go=1`)}
+            >
+              <IconAR size={17} />
+              {racesLeft > 0 ? 'Race in your space' : 'No races left today'}
+            </Button>
+          )}
           <Button variant="outline" block
             type="button"
             disabled={racesLeft <= 0}

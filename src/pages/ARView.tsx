@@ -26,7 +26,6 @@ import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 /** Coverage at which the surface is considered read well enough to brief on. */
-const SCAN_READY = 0.75;
 
 export default function ARView() {
   const { id } = useParams();
@@ -44,6 +43,10 @@ export default function ARView() {
   const handle = useRef<ARHandle | null>(null);
 
   const [support, setSupport] = useState<ARSupport | null>(null);
+  /* One question, asked once: can this device do AR at all? Everything that
+     used to branch on the three support kinds branches on this instead. */
+  const arWorks = support?.kind === 'webxr' || support?.kind === 'camera';
+  const arKnown = support !== null;
   const [search] = useSearchParams();
   /* "View in your space" on the product page means look at the car, not race
      it. The race entry point passes no mode and still gets the circuit. */
@@ -55,20 +58,26 @@ export default function ARView() {
   const [phase, setPhase] = useState<ARPhase | null>(null);
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<RaceStats | null>(null);
-  const [scanInfo, setScanInfo] = useState({ coverage: 0, hazards: 0 });
+  /* Laying the circuit out can take a beat on a slow phone. Without a signal
+     the button just went quiet and people pressed it again. Only shown if the
+     drop actually takes longer than a frame or two — a fast placement never
+     flashes a spinner. */
+  const [placing, setPlacing] = useState(false);
+  /* Twelve seconds pointing at the floor without placing anything means it is
+     not going where they want. Rather than leave them guessing, say the thing
+     that actually works — leaving and re-entering gives the camera a clean
+     start, which is why the second attempt always behaved. */
+  const [stuck, setStuck] = useState(false);
   /* What the briefing line says. The scan keeps refining every frame, so the
      live count ticks 126, 124, 131… while you are trying to read the sentence
      it sits in — which reads as broken rather than as live. The number is
      latched the moment the surface is read: the line is a briefing, given
      once, not a meter. Collision detection goes on using the live map. */
-  const [hazardsAtReady, setHazardsAtReady] = useState<number | null>(null);
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
   const [isBest, setIsBest] = useState(false);
   const { pops, push: pushPop } = useScorePops();
-  const [proximityAlert, setProximityAlert] = useState(false);
-  const [pinnedCount, setPinnedCount] = useState(0);
   const [lastHitMessage, setLastHitMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -123,19 +132,10 @@ export default function ARView() {
           toast(msg);
           setTimeout(() => setLastHitMessage(null), 2200);
         },
-        onObstacleCountChange: setPinnedCount,
-        onScan: (info) => {
-          setScanInfo(info);
-          setHazardsAtReady((held) => (held === null && info.coverage >= SCAN_READY ? info.hazards : held));
-        },
-        onProximityAlert: setProximityAlert,
         onEnd: () => {
           setPhase(null);
           setStats(null);
-          setPinnedCount(0);
-          setProximityAlert(false);
-          setScanInfo({ coverage: 0, hazards: 0 });
-          setHazardsAtReady(null);
+          setPlacing(false);
           handle.current = null;
         },
       });
@@ -166,14 +166,34 @@ export default function ARView() {
      time" symptom: by then the permission has been granted through a real tap
      and is remembered. So when the grant is not already in hand, the button
      stays and its tap carries both permissions. */
+  /* No AR on this device: do not sit on a screen whose only button is
+     disabled. Say so once and hand the player the 3D race, which is the same
+     race. Only on the racing route — the product page's inspect view has its
+     own way back. */
+  useEffect(() => {
+    if (!arKnown || arWorks || inspect) return;
+    toast('This device does not support AR. Playing in 3D instead.');
+    selectCar(car.id);
+    nav('/race', { replace: true });
+  }, [arKnown, arWorks, inspect, toast, selectCar, car.id, nav]);
+
   useEffect(() => {
     if (!autoStart || triedAuto.current) return;
-    if (!(support?.kind === 'webxr' || support?.kind === 'camera')) return;
+    if (!arWorks) return;
     if (!car.glb || !overlay.current || handle.current) return;
     if (!canAutoStart()) return;
     triedAuto.current = true;
     void launch(true);
-  }, [autoStart, support, car.glb, launch]);
+  }, [autoStart, arWorks, car.glb, launch]);
+
+  useEffect(() => {
+    if (phase !== 'ready') {
+      setStuck(false);
+      return;
+    }
+    const t = window.setTimeout(() => setStuck(true), 12000);
+    return () => window.clearTimeout(t);
+  }, [phase]);
 
   /* ---------- driving while racing in AR ---------- */
   const [drift, setDrift] = useState(false);
@@ -259,33 +279,21 @@ export default function ARView() {
   const tier = outcome ? tierFor(outcome.score) : null;
 
   const statusCard = () => {
-    if (!support) return { cls: '', title: 'Checking device…', body: 'Detecting camera and AR support.' };
-    if (support.kind === 'webxr')
+    if (!support) return { cls: '', title: 'Checking device…', body: 'Seeing whether this phone can do AR.' };
+    if (arWorks)
       return {
         cls: 'is-ok',
-        title: 'Full AR Available',
+        title: 'AR ready',
         body: inspect
-          ? 'Detects your floor or table and stands the car on it, anchored in place.'
-          : 'Detects your floor or table and anchors the Hot Wheels track in your space.',
-      };
-    if (support.kind === 'camera')
-      return {
-        cls: 'is-ok',
-        title: inspect ? 'Camera AR (iOS Safari & Chrome)' : 'Camera AR + Computer Vision (iOS Safari & Chrome)',
-        body: inspect
-          ? 'Opens your camera so you can stand the car on a real surface and walk around it at true 1:64 scale.'
-          : 'Real-time camera edge sensor detects physical objects (bottles, laptops, walls). Tap screen while racing to drop 3D hazard boxes on real obstacles!',
+          ? 'Opens your camera and stands the car in front of you at true 1:64 scale.'
+          : 'Opens your camera and drops the Hot Wheels circuit where you point.',
       };
     if (support.kind === 'insecure')
-      return {
-        cls: 'is-bad',
-        title: 'Needs HTTPS',
-        body: 'Browsers require HTTPS for camera and AR.',
-      };
+      return { cls: 'is-bad', title: 'Needs HTTPS', body: 'Browsers require HTTPS for camera and AR.' };
     return {
       cls: 'is-bad',
-      title: 'Not supported on this browser',
-      body: support.reason + (inspect ? ' Use the 3D viewer on the product page instead.' : ' You can play the 3D race directly.'),
+      title: 'This device does not support AR',
+      body: inspect ? 'Use the 3D viewer on the product page instead.' : 'Taking you to the 3D race — it is the same race.',
     };
   };
   const s = statusCard();
@@ -303,24 +311,6 @@ export default function ARView() {
               <span className="arov__chip arov__chip--name">
                 <IconAR size={14} /> {car.name.replace('Hot Wheels ', '')}
               </span>
-              {/* Only warn when there is something to warn about. This chip used
-                  to sit there permanently reading "CV BUMPER" — internal jargon
-                  for the collision sensor — eating a fifth of a crowded HUD to
-                  say nothing. It now appears only on an actual proximity hit. */}
-              {phase === 'racing' && proximityAlert && (
-                <span className="arov__chip arov__chip--warn">Close!</span>
-              )}
-              {pinnedCount > 0 && (
-                <button
-                  className="arov__chip"
-                  type="button"
-                  style={{ color: '#ffca28' }}
-                  onClick={() => handle.current?.clearObstacles?.()}
-                  aria-label="Clear pinned obstacles"
-                >
-                  Clear {pinnedCount} 📦
-                </button>
-              )}
               {phase === 'racing' && stats && (
                 <>
                   <span className="arov__chip t-num">
@@ -365,45 +355,34 @@ export default function ARView() {
               </div>
             )}
 
-            {/* Scanning / Placement guidance */}
-            {phase === 'searching' && (
+            {/* Placement guidance. There is no surface to scan any more — the
+                track goes where you point, so the only instruction is where to
+                point. */}
+            {phase === 'ready' && (
               <p className="arov__hint">
-                {inspect ? 'Scanning for a surface…' : 'Point at your floor or table'}
+                {placing ? 'Building your track…' : inspect ? 'Point at a table or floor' : 'Point at the floor'}
                 <small>
-                  {inspect
-                    ? 'Point at a table or floor. A dotted grid appears once it is found'
-                    : "Or just tap 'Place in front of me'"}
+                  {placing
+                    ? 'A moment — laying the circuit down'
+                    : inspect
+                      ? `Then press Place ${car.name.replace('Hot Wheels ', '')} here`
+                      : 'Then press Place track here'}
                 </small>
               </p>
             )}
-            {phase === 'ready' && (
-              <p className="arov__hint">
-                Surface locked! 🎯
-                <small>Point at the floor, then press Place track here</small>
+            {phase === 'ready' && stuck && (
+              <p className="arov__hint arov__hint--help">
+                Not dropping where you want it?
+                <small>Close this, press Race in your space again, and it will pick up your camera cleanly.</small>
               </p>
             )}
             {phase === 'placed' && (
               <p className="arov__hint">
-                {inspect
-                  ? `${car.name.replace('Hot Wheels ', '')} in your space`
-                  : scanInfo.coverage < SCAN_READY
-                    ? `Reading your surface… ${Math.round(scanInfo.coverage * 100)}%`
-                    : scanInfo.hazards > 0
-                      ? 'Your track is ready'
-                      : 'Clear run, nothing in the way'}
+                {inspect ? `${car.name.replace('Hot Wheels ', '')} in your space` : 'Your track is ready'}
                 <small>
-                  {inspect ? (
-                    'Pinch to resize · Drag to move · Walk around it'
-                  ) : scanInfo.coverage < SCAN_READY ? (
-                    'Pan slowly across the surface so we can find what is on it'
-                  ) : (hazardsAtReady ?? scanInfo.hazards) > 0 ? (
-                    <>
-                      <strong>{hazardsAtReady ?? scanInfo.hazards} real obstacles</strong> marked. Drive around them or
-                      lose 100 each
-                    </>
-                  ) : (
-                    'Put something on the surface to race around it'
-                  )}
+                  {inspect
+                    ? 'Drag to turn it · Pinch to zoom · Twist to spin'
+                    : 'Pinch to resize · Drag to move · Then start the race'}
                 </small>
               </p>
             )}
@@ -413,7 +392,7 @@ export default function ARView() {
                   <span style={{ color: '#ff5252', fontWeight: 700 }}>{lastHitMessage}</span>
                 ) : (
                   <small>
-                    Hold GO · Arrows steer · <strong>Tap screen to drop hazard on real object</strong> ({pinnedCount} active)
+                    Hold GO · Arrows steer · <strong>Groceries add points, debris takes them</strong>
                   </small>
                 )}
               </p>
@@ -480,11 +459,25 @@ export default function ARView() {
 
             {/* Action buttons */}
             <div className="arov__acts">
-              {(phase === 'ready' || phase === 'searching') && (
-                <Button variant="hwBlue" block type="button" onClick={() => handle.current?.placeNow()}>
-                  {phase === 'ready'
-                    ? inspect ? 'Place car here' : 'Place track here'
-                    : 'Place in front of me'}
+              {phase === 'ready' && (
+                <Button
+                  variant="hwBlue"
+                  block
+                  type="button"
+                  disabled={placing}
+                  onClick={() => {
+                    /* The spinner only appears if the drop is still going after
+                       250ms. Anything faster than that reads as instant and a
+                       flash of "loading" would be noise. */
+                    const slow = window.setTimeout(() => setPlacing(true), 250);
+                    handle.current?.placeNow();
+                    window.setTimeout(() => {
+                      window.clearTimeout(slow);
+                      setPlacing(false);
+                    }, 60);
+                  }}
+                >
+                  {placing ? 'Placing…' : inspect ? 'Place car here' : 'Place track here'}
                 </Button>
               )}
               {phase === 'placed' && (
@@ -525,7 +518,7 @@ export default function ARView() {
 
           <Button variant="hwBlue" size="lg" block
             type="button"
-            disabled={!(support?.kind === 'webxr' || support?.kind === 'camera') || busy}
+            disabled={!arWorks || busy}
             onClick={() => launch()}
           >
             <IconAR size={17} />
@@ -573,9 +566,10 @@ export default function ARView() {
               ) : (
                 <>
                   <li><b>Open Camera</b>: Works directly in Safari on iPhone (or Chrome on Android).</li>
-                  <li><b>Scan Surface</b>: Point at your floor or a flat desk. An animated radar ring locks onto the surface.</li>
-                  <li><b>Drop Track</b>: Keep the ring on the surface and press &apos;Place track here&apos;.</li>
+                  <li><b>Drop Track</b>: Point at the floor and press &apos;Place track here&apos;. The ring is always in the middle of the screen.</li>
+                  <li><b>Inspect</b>: Once a car is placed, drag to turn it and pinch to zoom in on it.</li>
                   <li><b>Adjust</b>: Pinch to resize the circuit, drag to reposition.</li>
+                  <li><b>Score</b>: Groceries on the track add points, debris takes them away.</li>
                   <li><b>Drive</b>: Hold GO and tilt the phone to steer. No thumbs on the screen.</li>
                 </>
               )}
