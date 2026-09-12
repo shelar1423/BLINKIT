@@ -1207,8 +1207,9 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .pdppeek {
   position: absolute; top: 0; bottom: 0; width: 100%;
-  background: #fff;
+  background: var(--appbase);
   display: flex; flex-direction: column;
+  overflow: hidden;
 }
 .pdppeek--next {
   /* 12px of it showing at rest: enough to read as another product waiting
@@ -1229,14 +1230,11 @@ input, select, textarea { font: inherit; color: inherit; }
   border-right: 1px solid var(--line);
   background: var(--appbase);
 }
-.pdppeek__stage {
-  aspect-ratio: 1 / 0.86; flex: none;
-  display: grid; place-items: center; padding: 26px;
-}
-.pdppeek__stage img { width: 100%; height: 100%; object-fit: contain; }
-.pdppeek__body { padding: 4px var(--gut) 0; }
-.pdppeek__nm { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; }
-.pdppeek__pr { font-size: 24px; font-weight: 800; margin-top: 8px; font-variant-numeric: tabular-nums; }
+/* The peek scrolls nothing — it is a still of the page, held at the top. */
+.pdppeek__scroll { flex: 1; min-height: 0; overflow: hidden; background: var(--appbase); }
+.pdppeek .pdp__stage { background: #fff; }
+.pdppeek .shdr { position: static; flex: none; }
+.pdppeek .actionbar { position: static; flex: none; }
 
 /* The sliver is also a target. A gesture that has no button behind it is not
    reachable by keyboard, and not discoverable by anyone who does not flick. */

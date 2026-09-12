@@ -71,15 +71,108 @@ function SheetHeader({
  * rather than an empty white card that fills in after you let go.
  */
 function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev' }) {
+  const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
   return (
     <div className={`pdppeek pdppeek--${side}`} aria-hidden="true">
-      <div className="pdppeek__stage">
-        <img src={product.image} alt="" />
+      {/* Deliberately the real sheet's markup, not a summary of it. This panel
+          was a car photo over a name and a price, which meant the moment a
+          swipe started you were looking at a stripped-down placeholder that
+          snapped into the full page on landing — the "glitch". Blinkit shows
+          the actual next page travelling in, so this mirrors the sheet: same
+          header, same stage, same chips, same card, same bar. */}
+      <header className="shdr">
+        <span className="shdr__ic"><IconChevronDown size={22} /></span>
+        <span className="grow" />
+        <span className="shdr__ic"><IconHeart size={20} /></span>
+        <span className="shdr__ic"><IconSearch size={20} /></span>
+        <span className="shdr__ic"><IconShare size={20} /></span>
+      </header>
+
+      <div className="pdppeek__scroll">
+        <div className="pdp__stage">
+          <img src={product.image} alt="" />
+        </div>
+
+        <div className="pdp__pager">
+          <span className="pdp__dot is-on" />
+          {product.glb && <span className="pdp__dot" />}
+        </div>
+
+        <div className="pdp__chips">
+          <div className="chipbox">
+            <span>Age Group</span>
+            <b>{product.age ?? AGE_RATING}</b>
+          </div>
+          <div className="chipbox">
+            <span>Assembly Required</span>
+            <b>No</b>
+          </div>
+          <div className="chipbox">
+            <span>Material</span>
+            <b>Diecast</b>
+          </div>
+          <span className="chipbox chipbox--cta">View details</span>
+        </div>
+
+        <section className="card pdp__info">
+          <div className="pdp__meta">
+            <span className="pdp__eta">
+              <IconClock size={13} />
+              {ETA_MINS} mins
+            </span>
+            {product.rating && (
+              <>
+                <i className="pdp__sep" />
+                <span className="pdp__rate">
+                  <Stars value={product.rating} size={13} />
+                  <span>{product.ratings?.toLocaleString('en-IN')}</span>
+                </span>
+              </>
+            )}
+            <span className="pdp__tags">
+              <span className="tag tag--blue">Limited Drop</span>
+            </span>
+          </div>
+          <h2 className="pdp__name">{product.name}</h2>
+          <p className="pdp__unit">{product.unit}</p>
+          <div className="pdp__price">
+            <b>{rupees(product.price)}</b>
+            {product.mrp && (
+              <span className="pdp__mrp">
+                MRP <s>{rupees(product.mrp)}</s>
+              </span>
+            )}
+          </div>
+        </section>
+
+        <div className="card rowcard rowcard--static">
+          <span className="rowcard__brand">
+            <img src="/brand/hot-wheels.svg" alt="" />
+          </span>
+          <span className="grow">
+            <b>Hot Wheels</b>
+            <small>Explore all products</small>
+          </span>
+          <IconChevronRight size={18} />
+        </div>
       </div>
-      <div className="pdppeek__body">
-        <p className="pdppeek__nm">{product.name}</p>
-        <p className="pdppeek__pr">{rupees(product.price)}</p>
+
+      <div className="actionbar">
+        <div className="ab__price">
+          <p className="ab__unit">{product.unit}</p>
+          <p className="ab__amt">
+            <b className="t-num">{rupees(product.price)}</b>
+            {product.mrp && (
+              <span className="pdp__mrp">
+                MRP <s>{rupees(product.mrp)}</s>
+              </span>
+            )}
+          </p>
+          <p className="ab__tax">Inclusive of all taxes</p>
+        </div>
+        <span className="btn btn--primary btn--lg grow">Add to Cart</span>
       </div>
+      {off > 0 ? null : null}
     </div>
   );
 }
