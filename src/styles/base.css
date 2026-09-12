@@ -620,16 +620,16 @@ input, select, textarea { font: inherit; color: inherit; }
   margin: 14px auto 0;
   max-width: 180px;
   line-height: 0;
-  /* This element is the rig's `shake` frame: the wrapper the hit lands on, so
-     the lockup and everything hanging off it move as one object rather than
-     the letters jittering inside a still box. The delay is set to the moment
-     the lockup stops travelling — 600ms — so the shake reads as the stop
-     rather than as a wobble of its own.
+  /* The rig's `shake` frame, but the lockup holds its place: a shake moves the
+     name off its own centre, and on a band this small that reads as the layout
+     wobbling rather than as an impact. So the hit is taken as a scale punch
+     from the centre instead — same beat, same weight behind the flash, and the
+     name never leaves the spot it landed on.
 
      (The previous `ctakeIn` named a keyframes block that no longer existed:
      it went out with the reverted audit work and only the animation line came
      back, so the entrance has been silently doing nothing since.) */
-  animation: hwShake 320ms cubic-bezier(0.36, 0.07, 0.19, 0.97) 600ms both;
+  animation: hwPunch 360ms cubic-bezier(0.36, 0.07, 0.19, 0.97) 570ms both;
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
 @media (min-width: 768px) { .ctake__t { max-width: 396px; } }
@@ -692,13 +692,16 @@ input, select, textarea { font: inherit; color: inherit; }
     rgba(255, 120, 20, 0) 76%
   );
   opacity: 0; pointer-events: none; z-index: 0;
-  animation: hwFlash 520ms cubic-bezier(0.16, 1, 0.3, 1) 590ms both;
+  animation: hwFlash 520ms cubic-bezier(0.16, 1, 0.3, 1) 550ms both;
 }
 
-/* The rig's `logo rig` frame: the thing that actually travels. */
+/* The rig's `logo rig` frame. It does NOT travel: the lockup sits on the band's
+   centre line and arrives by coming up to size and opacity on that spot, with
+   the speed lines supplying the movement behind it. Flying it in from the right
+   meant the one fixed thing on the band was the thing sliding around. */
 .ctake__rig {
   display: block; position: relative; z-index: 1;
-  animation: hwLand 540ms cubic-bezier(0.6, 0.04, 0.28, 1) 120ms both;
+  animation: hwLand 480ms cubic-bezier(0.22, 1, 0.36, 1) 100ms both;
 }
 .ctake__rig img { filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45)); }
 
@@ -710,7 +713,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake__glow {
   position: absolute; border-radius: 50%;
   pointer-events: none; z-index: 0; opacity: 0;
-  animation: hwGlow 900ms cubic-bezier(0.22, 1, 0.36, 1) 620ms both;
+  animation: hwGlow 900ms cubic-bezier(0.22, 1, 0.36, 1) 580ms both;
 }
 .ctake__glow--l {
   width: 26%; aspect-ratio: 1; margin: -13% 0 0 -13%;
@@ -759,7 +762,7 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Raked rather than wiped, and at the same angle as the sheen on Race now
      below it, so the two read as the same material catching the same light. */
   transform: skewX(-18deg);
-  animation: hwShine 880ms cubic-bezier(0.4, 0, 0.2, 1) 1120ms both;
+  animation: hwShine 880ms cubic-bezier(0.4, 0, 0.2, 1) 1060ms both;
 }
 
 @keyframes hwStreak {
@@ -768,19 +771,21 @@ input, select, textarea { font: inherit; color: inherit; }
   70%  { opacity: 1; }
   100% { transform: translate3d(calc(-100vw - 100%), 0, 0); opacity: 0; }
 }
+/* Scale only, from the centre — the lockup grows into place on the spot it
+   occupies at rest, so nothing about its position changes at any point. */
 @keyframes hwLand {
-  0%   { opacity: 0; transform: translate3d(46%, 0, 0) scale(1.12); }
-  30%  { opacity: 1; }
-  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+  0%   { opacity: 0; transform: scale(1.09); }
+  36%  { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
 }
-@keyframes hwShake {
-  0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
-  14%  { transform: translate3d(-3px, 2px, 0) rotate(-0.5deg); }
-  30%  { transform: translate3d(3px, -2px, 0) rotate(0.45deg); }
-  46%  { transform: translate3d(-2px, 1px, 0) rotate(-0.3deg); }
-  62%  { transform: translate3d(2px, -1px, 0) rotate(0.2deg); }
-  80%  { transform: translate3d(-1px, 0, 0) rotate(-0.1deg); }
-  100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+/* The impact, taken in place: a quick swell and a settle back through slightly
+   under size, which is the shake's beat without the shake's displacement. */
+@keyframes hwPunch {
+  0%   { transform: scale(1); }
+  22%  { transform: scale(1.045); }
+  55%  { transform: scale(0.988); }
+  78%  { transform: scale(1.008); }
+  100% { transform: scale(1); }
 }
 @keyframes hwFlash {
   0%   { opacity: 0; transform: scale(0.35); }
