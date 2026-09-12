@@ -138,6 +138,10 @@ input, select, textarea { font: inherit; color: inherit; }
    own geometry, and a block button in a page has to look like a block button
    in a page. */
 .btn--hwBlue { background: var(--hw-b); color: #fff; font-weight: 800; }
+/* Track orange, with an ink label. White on this orange is 2.6:1 — a fail — and
+   near-black is 6.9:1, which is also how the brand sets it on a pack. */
+.btn--hwTrack { background: var(--hw-o); color: var(--ink); font-weight: 800; }
+.btn--hwTrack:not(:disabled):active { background: #E35D00; color: #fff; }
 .btn--hwBlue:not(:disabled):active { background: #094FAD; }
 .btn--hwBlue:disabled { background: #A7BEDC; }
 .btn--outline { border: 1px solid var(--line); background: #fff; color: var(--ink); font-weight: 600; }
@@ -632,11 +636,9 @@ input, select, textarea { font: inherit; color: inherit; }
      the countdown's labels. 16px of air, as the reference has. */
   margin: 16px auto 0;
   position: relative; z-index: 2;
-  /* A full pill here, not the 16px the light button uses elsewhere: on the
-     campaign art the reference CTA is a lozenge, wider and flatter than a
-     standard button. */
-  min-width: 152px; height: 38px;
-  border-radius: 999px;
+  /* A curved rectangle, not a pill. */
+  min-width: 158px; height: 40px;
+  border-radius: var(--r-md);
   padding: 0 24px;
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
@@ -676,34 +678,42 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative; overflow: hidden;
   border-radius: var(--r-lg); border: 0;
   aspect-ratio: 1 / 1.16;
-  padding: 9px 8px 0;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  text-align: left;
+  /* top padding clears the badge, which now hangs off the card's own edge */
+  padding: 30px 8px 0;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
   background: linear-gradient(180deg, #fff 0%, #fff 34%, #E4EEFB 100%);
 }
 /* The badge is one pill in two halves: the qualifier on near-black, the number
    on the campaign yellow. Two segments rather than two pills, so it reads as a
    single object and the number is the loud half. */
+/* Part of the card, not a pill sitting on it.
+   It hangs from the card's own top edge — square where it meets that edge,
+   rounded only where it leaves the card — so it reads as the top of the
+   component rather than as a separate object floating inside it. */
 .ctile__flag {
-  flex: none; display: inline-flex; align-items: stretch;
-  border-radius: 999px; overflow: hidden;
-  max-width: 100%;
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  z-index: 2;
+  display: inline-flex; align-items: stretch;
+  border-radius: 0 0 var(--r-md) var(--r-md); overflow: hidden;
+  max-width: calc(100% - 12px);
   font-size: 9px; font-weight: 800; letter-spacing: 0.01em;
   line-height: 1.5;
 }
 .ctile__flag b {
   background: #17181A; color: #fff;
-  padding: 3px 6px 3px 8px;
+  padding: 4px 6px 5px 9px;
   white-space: nowrap;
 }
 .ctile__flag i {
   background: var(--yellow); color: var(--ink);
-  padding: 3px 8px 3px 6px;
+  padding: 4px 9px 5px 6px;
   font-style: normal; white-space: nowrap;
 }
 .ctile__t {
-  font-size: var(--f-md); font-weight: 800; line-height: 1.15;
+  font-size: var(--f-md); font-weight: 800; line-height: 1.18;
   letter-spacing: -0.2px; color: var(--ink);
+  text-wrap: balance;
 }
 /* The art sits in the bottom of the tile and is allowed to bleed off it, which
    is what keeps these reading as posters rather than as list rows with a

@@ -146,7 +146,7 @@ export default function Home() {
                 your best run — and the race itself is one press further in.
                 Jumping straight to the grid skipped everything the campaign is
                 keeping score of. */}
-            <Button variant="light" className="mystery__go" onClick={() => nav('/campaign')}>
+            <Button variant="hwTrack" className="mystery__go" onClick={() => nav('/campaign')}>
               <IconFlag size={17} />
               Race now
             </Button>
