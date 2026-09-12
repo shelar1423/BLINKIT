@@ -20,7 +20,9 @@ export default function Leaderboard() {
     <>
       <PageHeader title="Leaderboard" subtitle="Resets when the drop ends on 14 Nov" onBack={() => nav('/campaign')} />
       <main className="page">
-        <img src="/campaign/18-leaderboard-hero.webp" alt="" style={{ width: '100%', display: 'block' }} />
+        <div className="heroart">
+          <img src="/campaign/18-leaderboard-hero.webp" alt="" />
+        </div>
 
         <div className="tabs">
           {TABS.map((t, i) => (

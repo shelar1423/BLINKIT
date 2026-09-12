@@ -51,7 +51,9 @@ export default function Invite() {
     <>
       <PageHeader title="Race your friends" subtitle={`${racesLeft} races left today`} onBack={() => nav('/campaign')} />
       <main className="page">
-        <img src="/campaign/20-refer-a-friend-hero.webp" alt="" style={{ width: '100%', display: 'block' }} />
+        <div className="heroart">
+          <img src="/campaign/20-refer-a-friend-hero.webp" alt="" />
+        </div>
 
         <div className="shell" style={{ paddingTop: 14, display: 'grid', gap: 12 }}>
           <div>
@@ -78,7 +80,7 @@ export default function Invite() {
                 {copied ? 'Copied' : 'Copy'}
               </button>
             </div>
-            <Button variant="flame" block type="button" onClick={share}>
+            <Button variant="hwBlue" block type="button" onClick={share}>
               <IconShare size={16} /> Invite a friend
             </Button>
           </div>

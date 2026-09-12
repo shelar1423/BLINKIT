@@ -1,7 +1,8 @@
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { AGE_RATING, BADGE_TONE, ETA_MINS, rupees, type Product } from '../../data/catalog';
-import { IconClock, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
+import { IconClockFill, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
 
 export function AddControl({ product, size = 'sm' }: { product: Product; size?: 'sm' | 'lg' }) {
   const qty = useStore((s) => s.cart[product.id] ?? 0);
@@ -148,6 +149,12 @@ export function ProductCard({ product }: { product: Product }) {
   }
 
   const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
+  /* Every genuine picture of this product, in order. One entry is the common
+     case today — the catalogue carries a single studio shot per car — and the
+     pager only appears when there is actually something to swipe to. */
+  const views = product.views?.length ? product.views : [product.image];
+  const [view, setView] = useState(0);
+  const grab = useRef<{ x: number; at: number } | null>(null);
 
   return (
     <div
@@ -172,11 +179,41 @@ export function ProductCard({ product }: { product: Product }) {
         {product.badge && (
           <span className={`pcard__badge pcard__badge--${BADGE_TONE[product.badge]}`}>{product.badge}</span>
         )}
-        <div className="pcard__im">
-          <img src={product.image} alt={product.name} loading="lazy" />
+        <div
+          className="pcard__im"
+          onPointerDown={(e) => {
+            if (views.length < 2) return;
+            grab.current = { x: e.clientX, at: view };
+          }}
+          onPointerMove={(e) => {
+            const g = grab.current;
+            if (!g) return;
+            const dx = e.clientX - g.x;
+            /* A third of the tile is a deliberate commit: the card is also a
+               link, so a small horizontal wobble on the way to a tap must not
+               change the picture under your finger. */
+            const step = Math.round(-dx / (e.currentTarget.clientWidth / 3));
+            const next = Math.max(0, Math.min(views.length - 1, g.at + step));
+            if (next !== view) setView(next);
+          }}
+          onPointerUp={() => {
+            grab.current = null;
+          }}
+          onPointerCancel={() => {
+            grab.current = null;
+          }}
+        >
+          <img src={views[view]} alt={product.name} loading="lazy" />
           {product.glb && (
             <span className="pcard__3d" title="3D and AR available">
               <IconCube size={11} /> 3D
+            </span>
+          )}
+          {views.length > 1 && (
+            <span className="pcard__dots" aria-hidden="true">
+              {views.map((v, i) => (
+                <i key={v} className={i === view ? 'is-on' : undefined} />
+              ))}
             </span>
           )}
 
@@ -213,7 +250,7 @@ export function ProductCard({ product }: { product: Product }) {
           carries no stock counter — that lives on the product page. */}
       <p className="pcard__meta">
         <span>
-          <IconClock size={12} /> {ETA_MINS} mins
+          <IconClockFill size={12} /> {ETA_MINS} mins
         </span>
       </p>
     </div>

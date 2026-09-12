@@ -8,6 +8,10 @@ export type Product = {
   rating?: number;
   ratings?: number;
   image: string;
+  /** Every genuine picture of this product, in order, when there is more than
+   *  one. The card's pager and its swipe are driven by this — so the number of
+   *  dots is always the number of real photographs, never a decoration. */
+  views?: string[];
   /** runtime GLB — only the five supplied models have real 3D/AR */
   glb?: string;
   badge?: 'NEW DROP' | 'LIMITED' | 'RARE';
@@ -64,7 +68,7 @@ export const HERO_CARS: Product[] = [
   {
     id: 'ballistik',
     stock: 4,
-    name: 'Hot Wheels Ballistik',
+    name: 'Hot Wheels Ballistik Die Cast Car',
     series: 'Unleashed 2 Series · Collector #04',
     unit: '1 pc · die-cast',
     price: 249,
@@ -77,7 +81,7 @@ export const HERO_CARS: Product[] = [
   },
   {
     id: 'battlespec',
-    name: 'Hot Wheels Battle Spec',
+    name: 'Hot Wheels Battle Spec Die Cast Car',
     series: 'Unleashed 2 Series',
     unit: '1 pc · die-cast',
     price: 249,
@@ -89,7 +93,7 @@ export const HERO_CARS: Product[] = [
   },
   {
     id: 'jackhammer',
-    name: 'Hot Wheels Jack Hammer',
+    name: 'Hot Wheels Jack Hammer Die Cast Car',
     series: 'Unleashed 2 Series',
     unit: '1 pc · die-cast',
     price: 279,
@@ -102,7 +106,7 @@ export const HERO_CARS: Product[] = [
   {
     id: 'hollowback',
     stock: 2,
-    name: 'Hot Wheels Hollowback',
+    name: 'Hot Wheels Hollowback Die Cast Car',
     series: 'Unleashed Series',
     unit: '1 pc · die-cast',
     price: 299,
@@ -116,7 +120,7 @@ export const HERO_CARS: Product[] = [
   {
     id: 'kitt',
     stock: 3,
-    name: 'Hot Wheels K.I.T.T.',
+    name: 'Hot Wheels K.I.T.T. Die Cast Car',
     series: 'Unleashed Series · Licensed',
     unit: '1 pc · die-cast',
     price: 349,
@@ -131,14 +135,14 @@ export const HERO_CARS: Product[] = [
 
 /** Ordinary catalogue products — flat photo, no 3D. Buyable without racing. */
 export const SHOP_CARS: Product[] = [
-  { id: 'muscle', name: 'Hot Wheels Muscle Bound', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, mrp: 229, rating: 4.7, ratings: 35, image: CAR('09-02-muscle-car-orange') },
-  { id: 'retro', name: 'Hot Wheels Retro Racer', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, mrp: 239, rating: 4.8, ratings: 43, image: CAR('09-05-retro-racing-car-yellow') },
-  { id: 'supercar', name: 'Hot Wheels Night Shifter', series: 'Worldwide Basic Series', unit: '1 pc', price: 199, mrp: 259, rating: 4.6, ratings: 61, image: CAR('09-07-supercar-purple') },
-  { id: 'pickup', name: 'Hot Wheels Performance Pickup', series: 'Worldwide Basic Series', unit: '1 pc', price: 189, mrp: 249, rating: 4.6, ratings: 51, image: CAR('09-09-performance-pickup-blue') },
-  { id: 'proto', name: 'Hot Wheels Race Prototype', series: 'Track Stars', unit: '1 pc', price: 219, mrp: 259, rating: 4.5, ratings: 22, image: CAR('09-10-race-prototype-red') },
-  { id: 'metallic', stock: 2, name: 'Hot Wheels Metallic Edition', series: 'Collector Series', unit: '1 pc', price: 329, mrp: 399, rating: 4.9, ratings: 88, image: CAR('09-11-rare-metallic-edition'), badge: 'LIMITED' },
-  { id: 'premium', stock: 1, name: 'Hot Wheels Premium Limited Racer', series: 'Premium Collection', unit: '1 pc', price: 449, mrp: 549, rating: 4.9, ratings: 46, image: CAR('09-12-premium-limited-racer'), badge: 'LIMITED' },
-  { id: 'featured', stock: 5, name: 'Hot Wheels Featured Drop Car', series: 'Drop #01', unit: '1 pc', price: 299, mrp: 349, rating: 4.8, ratings: 130, image: CAR('featured-drop-diecast'), badge: 'NEW DROP' },
+  { id: 'muscle', name: 'Hot Wheels Muscle Bound Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, mrp: 229, rating: 4.7, ratings: 35, image: CAR('09-02-muscle-car-orange') },
+  { id: 'retro', name: 'Hot Wheels Retro Racer Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, mrp: 239, rating: 4.8, ratings: 43, image: CAR('09-05-retro-racing-car-yellow') },
+  { id: 'supercar', name: 'Hot Wheels Night Shifter Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 199, mrp: 259, rating: 4.6, ratings: 61, image: CAR('09-07-supercar-purple') },
+  { id: 'pickup', name: 'Hot Wheels Performance Pickup Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 189, mrp: 249, rating: 4.6, ratings: 51, image: CAR('09-09-performance-pickup-blue') },
+  { id: 'proto', name: 'Hot Wheels Race Prototype Die Cast Car', series: 'Track Stars', unit: '1 pc', price: 219, mrp: 259, rating: 4.5, ratings: 22, image: CAR('09-10-race-prototype-red') },
+  { id: 'metallic', stock: 2, name: 'Hot Wheels Metallic Edition Die Cast Car', series: 'Collector Series', unit: '1 pc', price: 329, mrp: 399, rating: 4.9, ratings: 88, image: CAR('09-11-rare-metallic-edition'), badge: 'LIMITED' },
+  { id: 'premium', stock: 1, name: 'Hot Wheels Premium Limited Racer Die Cast Car', series: 'Premium Collection', unit: '1 pc', price: 449, mrp: 549, rating: 4.9, ratings: 46, image: CAR('09-12-premium-limited-racer'), badge: 'LIMITED' },
+  { id: 'featured', stock: 5, name: 'Hot Wheels Featured Drop Die Cast Car', series: 'Drop #01', unit: '1 pc', price: 299, mrp: 349, rating: 4.8, ratings: 130, image: CAR('featured-drop-diecast'), badge: 'NEW DROP' },
 ];
 
 /** Rare car gated behind an actual race score. */
@@ -156,7 +160,7 @@ export const MYSTERY_CAR: Product = {
 export const REVEALED_CAR: Product = {
   ...MYSTERY_CAR,
   id: 'mystery',
-  name: 'Hot Wheels Phantom Reveal',
+  name: 'Hot Wheels Phantom Reveal Die Cast Car',
   series: 'Drop #02 · unlocked',
   image: CAR('23-rare-car-reveal'),
   mrp: 499,

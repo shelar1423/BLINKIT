@@ -210,7 +210,10 @@ input, select, textarea { font: inherit; color: inherit; }
   background: #fff;
   margin-bottom: 12px;
 }
+/* touch-action so a horizontal swipe through the pictures is ours, while a
+   vertical drag still scrolls the page under it */
 .pcard__im {
+  touch-action: pan-y;
   position: relative;
   aspect-ratio: 1 / 1.02;
   display: grid; place-items: center;
@@ -296,8 +299,10 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .pcard__mrp { font-size: var(--f-md); color: var(--mut-2); }
 /* Blinkit sets the saving in blue, not in the brand green — green is the
-   action colour on this card and the discount is information, not a control. */
-.pcard__off { font-size: var(--f-md); font-weight: 700; color: var(--hw-b); margin-top: 1px; min-height: calc(var(--f-md) * 1.35); }
+   action colour on this card and the discount is information, not a control.
+   A step down from the name: it is a qualifier on the price above it, and at
+   the same size it competed with the product. */
+.pcard__off { font-size: var(--f-xs); font-weight: 700; color: var(--hw-b); margin-top: 0; min-height: calc(var(--f-xs) * 1.35); }
 /* Exactly two lines of room, always. Clamping alone still let a one-line name
    make a shorter card than a two-line one, which is what left the grid ragged:
    every card has to reserve the same space whether it uses it or not.
@@ -324,8 +329,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .pcard__rtn { color: var(--mut); }
 .pcard__meta {
   display: flex; align-items: center; gap: 10px;
-  font-size: var(--f-xs); color: var(--mut); font-weight: 600;
-  margin-top: 2px;
+  /* The delivery promise is the one thing on this card that is a promise, so
+     it is set in the ink colour at full weight rather than as grey meta. */
+  font-size: var(--f-xs); color: var(--ink-2); font-weight: 800;
+  margin-top: 3px;
 }
 .pcard__meta span { display: inline-flex; align-items: center; gap: 3px; }
 
@@ -680,7 +687,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The icon sits above the figure it belongs to, small enough that the number
    stays the thing you read first. */
 .stats > div { padding: 10px 8px 11px; text-align: center; border-left: 1px solid var(--line); }
-.stats__ic { display: block; width: 34px; height: 34px; margin: 0 auto 5px; object-fit: contain; }
+.stats__ic { display: block; width: 26px; height: 26px; margin: 0 auto 6px; object-fit: contain; }
 .stats > div:first-child { border-left: 0; }
 .stats b { display: block; font-size: var(--f-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
 .stats span { font-size: var(--f-2xs); color: var(--mut); font-weight: 600; letter-spacing: 0.04em; }
@@ -1201,8 +1208,10 @@ input, select, textarea { font: inherit; color: inherit; }
 /* Drawn artwork in place of a glyph on a tinted tile. It carries its own
    colour, so it needs no tile behind it — a tinted square under an already
    illustrated icon reads as two boxes. */
+/* The same 40px box the tiled icons beside them use, so a row of art and a row
+   of glyphs line up down the stack. */
 .rowcard__art {
-  width: 44px; height: 44px; flex: 0 0 44px;
+  width: 40px; height: 40px; flex: 0 0 40px;
   object-fit: contain; display: block;
 }
 /* A policy is a footnote, not a feature: the glyph sits on the card itself.
@@ -2386,3 +2395,18 @@ input, select, textarea { font: inherit; color: inherit; }
 .nf__t { font-size: var(--f-2xl); font-weight: 800; letter-spacing: -0.4px; }
 .nf__s { font-size: var(--f-base); color: var(--mut); max-width: 30ch; line-height: 1.55; }
 .nf__go { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+
+/* ---------- page hero illustration ----------
+   These arrived full-bleed at 100% width, which on a 393pt screen made a spot
+   illustration nearly 400px tall — it filled the first screen and pushed the
+   thing the page is actually for below the fold. Capped and centred, with air
+   around it, so it introduces the page instead of being the page. */
+.heroart {
+  display: grid; place-items: center;
+  padding: 14px var(--gut) 6px;
+}
+.heroart img {
+  display: block;
+  width: min(62%, 230px);
+  height: auto;
+}
