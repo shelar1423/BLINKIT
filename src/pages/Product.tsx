@@ -24,6 +24,7 @@ import {
 import { ProductCard, Stars } from '../design/components/ProductCard';
 import { CartPill } from '../design/components/CartPill';
 import { SectionHeader } from '../design/components/Chrome';
+import { Sheet } from '../design/components/Sheet';
 import { useToast } from '../App';
 import { useARSupport } from '../lib/useARSupport';
 
@@ -185,6 +186,20 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
   );
 }
 
+/* The brands this shelf carries. Hot Wheels is the campaign; the rest are the
+   real Blinkit toy aisle around it, which is what makes "in this category"
+   mean a category rather than one brand's drop. */
+/* Only Hot Wheels carries a mark, because Hot Wheels is the only one we have a
+   mark for. The rest are set as wordmarks rather than as invented logos — a
+   drawn approximation of somebody else's trademark is worse than plain type,
+   and on a pitch deck it is the kind of detail that gets noticed. */
+const BRANDS: { name: string; logo?: string }[] = [
+  { name: 'Hot Wheels', logo: '/brand/hot-wheels.svg' },
+  { name: 'Matchbox' },
+  { name: 'Majorette' },
+  { name: 'Maisto' },
+];
+
 /** Past this fraction of the width, letting go commits to the neighbour. */
 const COMMIT = 0.26;
 /** Movement before the gesture decides whether it is a scroll or a flick. */
@@ -227,7 +242,6 @@ export default function Product() {
   /** 0 = interactive 3D, 1 = studio photo. Only shown when both genuinely exist. */
   const [view, setView] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const specRef = useRef<HTMLDivElement>(null);
 
   /* ---- the deck ---------------------------------------------------- */
   const deck = useMemo(() => CARS.filter((c) => !c.mystery), []);
@@ -553,34 +567,6 @@ export default function Product() {
               die-cast we sell, and carrying it pushed the row 30px wider than
               the sheet — which put View details 18px PAST the corner with no
               gutter at all. The real PDP shows two facts and the link. */}
-          {/* Its own row under the image rather than a pill floating over the
-              corner of the photograph. It is the one thing this product does
-              that no other listing does, and parked on the artwork it read as
-              a watermark — half on the car, competing with the reset control
-              opposite it, and clipped by the stage on a short screen. */}
-          {has3D && (
-            <button
-              className="pdp__arrow"
-              type="button"
-              onClick={() => {
-                if (!arOk) {
-                  toast('This device does not support AR. Showing the 3D view.');
-                  viewer.current?.reset();
-                  return;
-                }
-                selectCar(product.id);
-                nav(`/ar/${product.id}?mode=inspect&go=1`);
-              }}
-            >
-              <span className="pdp__arrow-ic">{arOk ? <IconAR size={17} /> : <IconCube size={17} />}</span>
-              <span className="grow">
-                <b>{arOk ? 'View in your space' : 'View in 3D'}</b>
-                <small>{arOk ? 'Stand it on your desk at true scale' : 'Spin it and zoom in'}</small>
-              </span>
-              <IconChevronRight size={17} />
-            </button>
-          )}
-
           <div className="pdp__chips">
             <div className="chipbox">
               <span>Age Group</span>
@@ -599,13 +585,7 @@ export default function Product() {
             <button
               className="chipbox chipbox--cta"
               type="button"
-              onClick={() => {
-                setDetailsOpen(true);
-                // let the block expand before scrolling to where it now ends up
-                requestAnimationFrame(() =>
-                  specRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-                );
-              }}
+              onClick={() => setDetailsOpen(true)}
             >
               View details
             </button>
@@ -721,53 +701,106 @@ export default function Product() {
             <IconChevronRight size={18} />
           </button>
 
-          <div className="card pdpspec" ref={specRef}>
-            <button
-              className="pdpspec__h"
-              type="button"
-              aria-expanded={detailsOpen}
-              onClick={() => setDetailsOpen((v) => !v)}
-            >
-              <span className="grow">Product details</span>
-              <span className={'pdpspec__chev' + (detailsOpen ? ' is-open' : '')}>
-                <IconChevronDown size={18} />
-              </span>
-            </button>
-            {detailsOpen && (
-              <dl className="pdpspec__list">
-                {[
-                  ['Scale', '1:64 die-cast'],
-                  ['Series', product.series],
-                  ['Unit', product.unit],
-                  ['Age group', product.age ?? AGE_RATING],
-                  ['Assembly required', 'No'],
-                  ['Material', 'Diecast'],
-                  ['Playable in 3D & AR', product.glb ? 'Yes' : 'No'],
-                  ['Seller', 'Mattel Toys India'],
-                  ['Country of origin', 'India'],
-                  ['Marketed by', 'Mattel Toys (India) Pvt. Ltd.'],
-                ].map(([k, v]) => (
-                  <div key={k}>
-                    <dt>{k}</dt>
-                    <dd>{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-          </div>
-
           {/* Inside a white card, like every other block on this page. The card
               panels are tinted, and this page's ground is the same tint — on
               the bare page they had nothing to read against. */}
+          {/* Below the row cards, per the audit's "this below the bottom one".
+
+              It sat directly under the image, between the product and its own
+              specs, where it interrupted the run from picture to price. It is
+              a way to look closer at something you have already read about, so
+              it belongs after the reading — in the same stack as Explore all
+              products and Race this car, which are the page's other detours. */}
+          {has3D && (
+            <button
+              className="pdp__arrow"
+              type="button"
+              onClick={() => {
+                if (!arOk) {
+                  toast('This device does not support AR. Showing the 3D view.');
+                  viewer.current?.reset();
+                  return;
+                }
+                selectCar(product.id);
+                nav(`/ar/${product.id}?mode=inspect&go=1`);
+              }}
+            >
+              <span className="pdp__arrow-ic">{arOk ? <IconAR size={17} /> : <IconCube size={17} />}</span>
+              <span className="grow">
+                <b>{arOk ? 'View in your space' : 'View in 3D'}</b>
+                <small>{arOk ? 'Stand it on your desk at true scale' : 'Spin it and zoom in'}</small>
+              </span>
+              <IconChevronRight size={17} />
+            </button>
+          )}
+
+
+          {/* "Similar Products", and a grid of six rather than a side-scrolling
+              rail. A rail shows three and hides the rest behind a gesture; on
+              the sheet you have already chosen a category, so the six are the
+              point and there is no reason to make you swipe for them. */}
           <section className="card pdptop">
-            <SectionHeader title="Top products in this category" />
-            <div className="prail">
-              {alsoLike.map((p) => (
+            <SectionHeader title="Similar products" />
+            <div className="pgrid pgrid--tight">
+              {alsoLike.slice(0, 6).map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
           </section>
+
+          {/* "add another section — Brands in this category" */}
+          <section className="card pdptop">
+            <SectionHeader title="Brands in this category" />
+            <div className="brandrow">
+              {BRANDS.map((b) => (
+                <button
+                  key={b.name}
+                  className="brandrow__i"
+                  type="button"
+                  onClick={() => nav('/hot-wheels')}
+                >
+                  <span className="brandrow__im">
+                    {b.logo ? (
+                      <img src={b.logo} alt="" loading="lazy" />
+                    ) : (
+                      <i className="brandrow__wm">{b.name}</i>
+                    )}
+                  </span>
+                  <span className="brandrow__n">{b.name}</span>
+                </button>
+              ))}
+            </div>
+          </section>
         </main>
+
+        {/* Product details as a bottom sheet.
+
+            It used to be an accordion in the page: pressing "View details"
+            expanded a block further down and then scrolled you to it, so the
+            answer to "what is this thing" arrived somewhere other than where
+            you asked. A sheet puts it over the product instead, and closing it
+            returns you exactly where you were. */}
+        <Sheet open={detailsOpen} onClose={() => setDetailsOpen(false)} title="Product details">
+          <dl className="pdpspec__list">
+            {[
+              ['Scale', '1:64 die-cast'],
+              ['Series', product.series],
+              ['Unit', product.unit],
+              ['Age group', product.age ?? AGE_RATING],
+              ['Assembly required', 'No'],
+              ['Material', 'Diecast'],
+              ['Playable in 3D & AR', product.glb ? 'Yes' : 'No'],
+              ['Seller', 'Mattel Toys India'],
+              ['Country of origin', 'India'],
+              ['Marketed by', 'Mattel Toys (India) Pvt. Ltd.'],
+            ].map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </Sheet>
 
         {/* The bar and the cart shortcut are ONE sticky block inside the sheet,
             stacked. Both belong to this product's frame, not to the screen —

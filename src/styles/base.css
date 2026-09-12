@@ -2903,6 +2903,42 @@ input, select, textarea { font: inherit; color: inherit; }
    illustration nearly 400px tall — it filled the first screen and pushed the
    thing the page is actually for below the fold. Capped and centred, with air
    around it, so it introduces the page instead of being the page. */
+/* ---- similar products, as a grid ----
+   Six in a grid rather than three in a rail. On the sheet you have already
+   chosen a category, so the six ARE the point; a rail shows three and hides
+   the rest behind a gesture. Tighter gutters than the storefront grid, because
+   this one sits inside a card that already has padding. */
+.pgrid--tight {
+  gap: 14px 9px;
+  justify-content: space-between;
+  padding: 4px 0 2px;
+}
+
+/* ---- brands in this category ---- */
+.brandrow {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 10px; padding: 4px 0 2px;
+}
+.brandrow__i { display: grid; justify-items: center; gap: 6px; background: none; border: 0; }
+.brandrow__im {
+  width: 100%; aspect-ratio: 1;
+  display: grid; place-items: center;
+  background: var(--surface-2); border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: 8px; overflow: hidden;
+}
+.brandrow__im img { max-width: 100%; max-height: 100%; object-fit: contain; }
+/* The wordmark stand-in: set tight and dark so the tile reads as a brand and
+   not as a missing image. */
+.brandrow__wm {
+  font-style: normal; font-weight: 900; font-size: var(--f-xs);
+  letter-spacing: -0.4px; color: var(--ink-2); text-align: center; line-height: 1.05;
+}
+.brandrow__n {
+  font-size: var(--f-2xs); font-weight: 600; color: var(--ink-2);
+  text-align: center; line-height: 1.2;
+}
+
 /* ---- campaign banner ----
    The supplied set is drawn at 2.4:1 as full-width bands, so this is no longer
    a small centred illustration with air around it. The leaderboard's podium
