@@ -349,14 +349,16 @@ export const IconHeart = (p: P) => (
  * it rather than filling the frame.
  */
 export const IconReplace = (p: P) => (
-  <S {...p} strokeWidth={1.7}>
-    {/* The return loop, open at the top where the arrowhead lands. */}
-    <path d="M16.4 4.6a8.8 8.8 0 1 1-8.8 0" />
-    <path d="M13.6 2.1 16.8 4.5l-2.7 2.6" />
-    {/* The parcel, drawn flat rather than isometric: three extra edges of a
-        cube inside an 18px circle is a smudge, not a box. */}
-    <rect x="8.4" y="9.9" width="7.2" height="6.6" rx="1.1" />
-    <path d="M8.4 12.3h7.2M12 9.9v2.4" />
+  <S {...p} strokeWidth={1.6}>
+    {/* The parcel is the subject and takes most of the box: on the real row the
+        glyph reads as a BOX being sent back, not as a refresh circle that
+        happens to contain something. */}
+    <rect x="5.4" y="9.2" width="13.2" height="10.2" rx="1.6" />
+    <path d="M5.4 12.6h13.2M12 9.2v10.2" />
+    {/* The return loop rides over the top, open where the arrowhead lands,
+        rather than enclosing the parcel. */}
+    <path d="M4.6 6.9a8.6 8.6 0 0 1 14.6-.6" />
+    <path d="M19.4 2.9v3.6h-3.6" />
   </S>
 );
 

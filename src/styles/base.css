@@ -254,7 +254,7 @@ input, select, textarea { font: inherit; color: inherit; }
    and two-thirds of that tall, read off the reference — at a fixed 64x32 it
    was a third of the size the real control is. */
 .pcard__act {
-  position: absolute; right: -4px; bottom: -5px; z-index: 3;
+  position: absolute; right: -3px; bottom: -2px; z-index: 3;
   width: 50%;
 }
 .pcard__act .add, .pcard__act .stepper {
@@ -267,14 +267,19 @@ input, select, textarea { font: inherit; color: inherit; }
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
 .pcard__price { font-size: var(--f-base); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
 .pcard__mrp { font-size: var(--f-xs); color: var(--mut-2); }
+/* Exactly two lines of room, always. Clamping alone still let a one-line name
+   make a shorter card than a two-line one, which is what left the grid ragged:
+   every card has to reserve the same space whether it uses it or not. */
 .pcard__nm {
   font-size: var(--f-md); line-height: 1.3; font-weight: 500; color: var(--ink);
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  min-height: calc(var(--f-md) * 1.3 * 2);
   margin-top: 1px;
 }
 .pcard__un { font-size: var(--f-xs); color: var(--mut); }
-.pcard__specs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; margin-top: 4px; }
 .pcard__spec {
+  flex: 0 0 auto; white-space: nowrap;
   background: var(--yellow-tint); border: 1px solid #F0E3BC;
   color: #6B5A1E; font-size: var(--f-2xs); font-weight: 700;
   border-radius: var(--r-xs); padding: 3px 7px;
@@ -301,22 +306,26 @@ input, select, textarea { font: inherit; color: inherit; }
   color: #F5A623;
 }
 
-.pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; padding: 12px var(--gut) 20px; }
-@media (min-width: 560px) { .pgrid { grid-template-columns: repeat(3, 1fr); } }
+.pgrid {
+  display: grid; grid-template-columns: repeat(2, var(--pcard-w));
+  justify-content: space-between;
+  gap: 18px 10px; padding: 12px var(--gut) 20px;
+}
+@media (min-width: 560px) { .pgrid { grid-template-columns: repeat(3, var(--pcard-w)); } }
 /* Horizontal product rail.
    `scroll-padding-inline` is doing real work: the snapport defaults to the
    scrollport, so `scroll-snap-align: start` was snapping the first card to x=0
    and scrolling the rail's own gutter out from under it — the card sat welded
    to the edge of the screen while every heading beside it kept its margin. */
 .prail {
-  display: grid; grid-auto-flow: column; grid-auto-columns: 46%;
-  gap: 16px; overflow-x: auto; padding: 12px var(--gut) 18px;
+  display: grid; grid-auto-flow: column; grid-auto-columns: var(--pcard-w);
+  gap: 14px; overflow-x: auto; padding: 12px var(--gut) 18px;
   scroll-snap-type: x proximity; scroll-padding-inline: var(--gut);
   scrollbar-width: none;
 }
 .prail::-webkit-scrollbar { display: none; }
 .prail > * { scroll-snap-align: start; }
-@media (min-width: 560px) { .prail { grid-auto-columns: 33%; } }
+
 
 /* ---------- hairline rows / list ---------- */
 .rowline { border-bottom: 1px solid var(--line); }
@@ -1097,22 +1106,21 @@ input, select, textarea { font: inherit; color: inherit; }
      visible at rest because the sheet gives up its right 12px by margin, not
      by stacking. */
   position: relative; z-index: 1;
-  box-shadow: 0 0 26px rgba(16, 20, 24, 0.16);
+  /* Cast to the sides only. An even glow washed over the 12px sliver and took
+     the one cue that says another product is behind this one. */
+  box-shadow: 7px 0 18px rgba(16, 20, 24, 0.2), -7px 0 18px rgba(16, 20, 24, 0.2);
+  /* One writer, two readers: the JS sets --pdp-dx once and this and the layer
+     of neighbours behind it both read it, so they cannot end up at different
+     offsets on a frame. Promoted too — without a layer of its own the browser
+     repaints the whole sheet, 3D canvas and all, on every frame of the drag. */
+  transform: translate3d(var(--pdp-dx, 0px), 0, 0);
+  will-change: transform;
 }
 .pdpdeck.is-gliding, .pdpstack__track.is-gliding { transition: transform 260ms cubic-bezier(0.25, 0.8, 0.3, 1); }
 /* The frame a new product lands on: whatever glide was in flight is cancelled
    so the arriving sheet is simply in place, not sliding in from where the last
    one was sent. */
 .pdp-snap .pdpdeck, .pdp-snap .pdpstack__track { transition: none; }
-/* Both read the same offset. One writer, two readers — the sheet and the layer
-   of neighbours behind it cannot end up at different positions on a frame.
-   Promoted too: without a layer of their own the browser repaints the whole
-   sheet — 3D canvas, images, shadows — on every frame of the drag. */
-.pdpdeck, .pdpstack__track {
-  transform: translate3d(var(--pdp-dx, 0px), 0, 0);
-  will-change: transform;
-}
-
 /* The neighbours ride in a fixed layer pinned to the app column, so the sliver
    stays on the right edge while the current sheet scrolls under it. */
 .pdpstack {
@@ -1122,7 +1130,12 @@ input, select, textarea { font: inherit; color: inherit; }
   z-index: 0;
 }
 @media (min-width: 1024px) { .pdpstack { max-width: 560px; } }
-.pdpstack__track { position: absolute; inset: 0; }
+.pdpstack__track {
+  position: absolute; inset: 0;
+  /* the second reader of --pdp-dx; see .pdpdeck */
+  transform: translate3d(var(--pdp-dx, 0px), 0, 0);
+  will-change: transform;
+}
 
 .pdppeek {
   position: absolute; top: 0; bottom: 0; width: 100%;
@@ -1130,11 +1143,14 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex; flex-direction: column;
 }
 .pdppeek--next {
-  /* 12px of it showing at rest: enough to read as another card behind this
-     one, not enough to look like a broken layout. */
+  /* 12px of it showing at rest: enough to read as another product waiting
+     behind this one, not enough to look like a broken layout. Behind the sheet
+     now, so the sliver has to carry itself: a rounded edge and a hairline,
+     rather than the shadow it used to cast forward onto the sheet. */
   left: calc(100% - 12px);
   border-radius: var(--r-lg) 0 0 var(--r-lg);
-  box-shadow: -10px 0 30px rgba(16, 20, 24, 0.16);
+  border-left: 1px solid var(--line);
+  background: var(--appbase);
 }
 .pdppeek--prev {
   left: -100%;
@@ -2140,7 +2156,14 @@ input, select, textarea { font: inherit; color: inherit; }
 .catrace { display: flex; gap: 11px; align-items: center; padding: 12px; margin: 10px 12px 0; }
 /* The side padding and the column gap both have to clear the ADD's 6px
    overhang, or the right-hand column pushes it off the screen. */
-.catgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 16px; padding: 10px 16px 14px; }
+/* Two cards of the SAME width as every other card in the app, with whatever
+   the listing column has spare going between them — not two columns that
+   divide up the leftovers and land at a different width per screen. */
+.catgrid {
+  display: grid; grid-template-columns: repeat(2, var(--pcard-w));
+  justify-content: space-between;
+  gap: 16px 10px; padding: 10px 10px 14px;
+}
 .catempty { padding: 28px 12px; text-align: center; color: var(--mut); }
 .linkbtn {
   background: none; border: 0; padding: 6px 0;

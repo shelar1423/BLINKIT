@@ -77,6 +77,11 @@
   --tk-mut: #9AA6BC;
   --tk-line: rgba(255, 255, 255, 0.12);
 
+  /* One product card, one width. The rails used a percentage of the viewport
+     and the listing grid a share of what the category rail left over, so the
+     same card came out broad on the home page and thin on a listing. */
+  --pcard-w: 126px;
+
   /* --- type scale: mobile first --- */
   --f-2xs: 10px;
   --f-xs: 11px;
