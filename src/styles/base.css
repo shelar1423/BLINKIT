@@ -1692,179 +1692,170 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* ---------- results ---------- */
 /* ============================================================
-   Race result.
+   Race result — Blinkit's reward screen.
 
-   Blinkit's own success screens — order placed, for one — are light, plainly
-   spaced and low-radius: an app-base ground, white cards, hairline borders,
-   ink text and green for the win. An earlier pass had this dark and glowing,
-   which is a games convention, not Blinkit's.
-   ============================================================ */
-/* ============================================================
-   Race result.
+   Modelled on the real thing, because this IS one of those: you played
+   something and won Blinkit credit. Four elements and no more — a sunburst
+   ground, the score at a size nothing competes with, the prize as a
+   perforated ticket, and one dark button. The goods run off both edges so the
+   screen reads fuller than its frame.
 
-   A dark stage carrying the score, then everything else stepping down from it.
-   The old screen set every block at the same width, the same grey and the same
-   volume, so nothing in it was the point.
+   It replaces five blocks of near-identical size and volume, in which the
+   score carried no more weight than the leaderboard link.
    ============================================================ */
-.result {
+.rwd {
   /* above .arov (200): the AR overlay must never stack over the result */
   position: fixed; inset: 0; z-index: 260;
-  display: flex; flex-direction: column; gap: 14px;
-  padding: 0 16px calc(24px + var(--safe-b));
-  background: var(--appbase);
-  color: var(--ink);
-  overflow-y: auto;
-}
-/* Nothing here may be compressed to fit the viewport — it scrolls instead.
-   Flex and grid children both shrink below their content by default, and the
-   stage was losing 79px of its own height to it. */
-.result > * { flex: none; }
-
-/* ---------- the stage ---------- */
-.rstage {
-  position: relative;
-  margin: 0 -16px;
-  padding: calc(var(--safe-t) + 30px) 16px 22px;
-  background: radial-gradient(120% 90% at 50% 0%, #1B3157 0%, #0E1B33 52%, #070E1E 100%);
-  color: #fff;
+  overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; align-items: center;
+  padding: calc(var(--safe-t) + 10px) var(--gut) calc(18px + var(--safe-b));
   text-align: center;
-  border-radius: 0 0 var(--r-lg) var(--r-lg);
-  /* No `overflow: hidden` here: on a flex or grid child it resolves the
-     automatic minimum size to zero, which is what let the stage be squashed
-     shorter than the score standing in it. Nothing needs clipping — the
-     chequer sits inside the square top corners. */
-}
-/* chequered flag along the top edge, drawn rather than shipped as an image */
-.rstage__chequer {
-  position: absolute; left: 0; right: 0; top: 0; height: 10px;
+  /* Blinkit's own reward ground: warm yellow with the rays thrown from behind
+     the number. The campaign's blue belongs to the race; the prize belongs to
+     Blinkit, and this is the screen where you are being paid. */
   background:
-    repeating-linear-gradient(90deg, #fff 0 10px, transparent 10px 20px) 0 0 / 20px 5px,
-    repeating-linear-gradient(90deg, transparent 0 10px, #fff 10px 20px) 0 5px / 20px 5px,
-    #101828;
-  background-repeat: repeat-x;
+    repeating-conic-gradient(from 0deg at 50% 26%,
+      rgba(255, 255, 255, 0.30) 0deg 5deg, rgba(255, 255, 255, 0) 5deg 11deg),
+    radial-gradient(115% 75% at 50% 26%, #FFD95A 0%, #F9C63E 52%, #EFB12A 100%);
+  color: var(--rwd-ink);
 }
-.rstage__kick {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px; padding: 5px 12px;
-  font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.rstage__car {
-  width: min(62%, 220px); margin: 8px auto 2px; display: block;
-  filter: drop-shadow(0 18px 26px rgba(0, 0, 0, 0.55));
-}
-.rstage__score {
-  font-size: clamp(56px, 20vw, 86px); font-weight: 800;
-  letter-spacing: -0.05em; line-height: 1;
-  color: var(--yellow);
-  text-shadow: 0 6px 26px rgba(248, 203, 70, 0.3);
-}
-.rstage__unit {
-  font-size: var(--f-sm); font-weight: 700; letter-spacing: 0.22em;
-  text-transform: uppercase; color: rgba(255, 255, 255, 0.55);
-  margin-top: 4px;
-}
-.rstage__pb {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 12px;
-  background: var(--yellow); color: #1F1F1F;
-  border-radius: 999px; padding: 6px 13px;
-  font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.04em;
-}
-
-/* ---------- one stat strip, not three boxes ---------- */
-.rstrip {
-  display: flex; align-items: stretch;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 12px 4px;
-}
-.rstrip > div { flex: 1; display: grid; justify-items: center; gap: 2px; color: var(--mut); }
-.rstrip > div svg { color: var(--hw-b); }
-.rstrip b {
-  font-size: var(--f-lg); font-weight: 800; color: var(--ink);
-  font-variant-numeric: tabular-nums; margin-top: 2px;
-}
-.rstrip span { font-size: var(--f-2xs); font-weight: 600; }
-.rstrip > i { width: 1px; background: var(--line); margin: 2px 0; }
-
-/* ---------- the reward, as a ticket ---------- */
-.coupon {
-  position: relative;
-  background: var(--surface);
-  border: 1px solid var(--green-line);
-  border-radius: var(--r-md);
-  overflow: hidden;
-}
-.coupon__top { display: flex; align-items: center; gap: 12px; padding: 14px; }
-.coupon__art {
-  width: 54px; height: 54px; flex: 0 0 54px;
-  border-radius: 50%; background: var(--green-tint);
+.rwd__bar { align-self: stretch; display: flex; align-items: center; gap: 8px; }
+.rwd__ic {
+  width: 40px; height: 40px; flex: 0 0 40px;
+  border-radius: 50%; border: 0;
+  background: #fff; color: var(--rwd-ink);
   display: grid; place-items: center;
+  box-shadow: 0 2px 8px rgba(93, 43, 10, 0.16);
 }
-.coupon__art img { width: 68%; height: 68%; object-fit: contain; }
-.coupon__k {
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--green);
-}
-.coupon__v { display: block; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; margin-top: 1px; }
-.coupon__s { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 2px; }
-/* The perforation: a dashed rule with a notch bitten out of each side, which
-   is what makes it read as a ticket you tear rather than a card you scroll. */
-.coupon__tear {
-  display: block; position: relative;
-  border-top: 1px dashed var(--green-line);
-  margin: 0 14px;
-}
-.coupon__tear::before,
-.coupon__tear::after {
-  content: '';
-  position: absolute; top: -9px;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--appbase);
-  border: 1px solid var(--green-line);
-}
-.coupon__tear::before { left: -23px; }
-.coupon__tear::after { right: -23px; }
-.coupon__foot { padding: 14px; }
+.rwd__ic:disabled { opacity: 0.5; }
 
-/* ---------- no reward yet: the track to the next one ---------- */
-.rtrack {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 14px;
+.rwd__kick {
+  margin-top: 18px;
+  font-size: var(--f-md); font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--rwd-ink-2);
 }
-.rtrack__k {
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--mut);
+/* The one thing on the screen allowed to be loud. Clamped rather than fixed so
+   a five-figure score still fits the frame it is set in. */
+.rwd__score {
+  font-size: clamp(76px, 27vw, 128px);
+  font-weight: 900; line-height: 0.92; letter-spacing: -0.04em;
+  color: var(--rwd-ink);
+  margin-top: 2px;
 }
-.rtrack__bar {
+.rwd__stats {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  margin-top: 10px;
+  font-size: var(--f-sm); font-weight: 700; color: var(--rwd-ink-2);
+}
+.rwd__stats span { display: inline-flex; align-items: center; gap: 5px; }
+.rwd__stats > i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.45; }
+.rwd__pb {
+  margin-top: 7px;
+  font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  color: #fff; background: var(--rwd-ink);
+  border-radius: 999px; padding: 4px 11px;
+}
+
+/* ---- the prize, as a ticket ----
+   The scallops are painted ON the ticket's own edges in the ground's colour,
+   rather than masked out of it. A mask would be truer over a gradient, but it
+   is one unsupported property away from hiding the whole coupon; this cannot
+   fail worse than a slightly flat notch. */
+.rwd__ticket {
   position: relative;
-  height: 8px; border-radius: 999px; background: var(--surface-2);
-  margin: 14px 0 16px;
+  width: 100%; max-width: 340px;
+  margin-top: 20px;
+  padding: 20px 26px 18px;
+  background: var(--rwd-card);
+  border-radius: 14px;
+  /* a solid offset shadow, the way a printed voucher is drawn */
+  box-shadow: -6px 9px 0 var(--rwd-ink);
 }
-.rtrack__bar > i {
-  display: block; height: 100%; border-radius: 999px;
-  background: linear-gradient(90deg, var(--hw-b), #3E8BFF);
+.rwd__ticket::before, .rwd__ticket::after {
+  content: ''; position: absolute; top: 6px; bottom: 6px; width: 15px;
+  background-size: 15px 21px; background-repeat: repeat-y;
 }
-.rtrack__pip {
-  position: absolute; top: 50%;
-  width: 12px; height: 12px; margin: -6px 0 0 -6px;
-  border-radius: 50%; background: var(--surface);
-  border: 2px solid var(--line-2);
+.rwd__ticket::before {
+  left: 0;
+  background-image: radial-gradient(circle at 0 50%, var(--rwd-notch) 0 6.5px, transparent 7px);
 }
-.rtrack__pip.is-on { background: var(--hw-b); border-color: var(--hw-b); }
-.rtrack__s { font-size: var(--f-sm); color: var(--mut); }
-.rtrack__s b { color: var(--ink); font-weight: 800; }
+.rwd__ticket::after {
+  right: 0;
+  background-image: radial-gradient(circle at 100% 50%, var(--rwd-notch) 0 6.5px, transparent 7px);
+}
+.rwd__won {
+  font-size: var(--f-md); font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--rwd-ink-2);
+}
+.rwd__amt {
+  font-size: clamp(40px, 13vw, 56px); font-weight: 900;
+  letter-spacing: -0.03em; line-height: 1.02;
+  color: var(--rwd-ink); margin-top: 4px;
+}
+/* A tier name is words, not a figure — it cannot take the figure's size. */
+.rwd__amt--sm { font-size: clamp(24px, 8vw, 34px); letter-spacing: -0.02em; }
+.rwd__upto {
+  font-size: var(--f-lg); font-weight: 800;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--rwd-ink); margin-top: 2px;
+}
+.rwd__perf {
+  display: block; height: 1px; margin: 14px 0 12px;
+  background-image: linear-gradient(90deg, var(--rwd-ink-2) 0 6px, transparent 6px 12px);
+  background-size: 12px 1px;
+  opacity: 0.5;
+}
+.rwd__fine {
+  font-size: var(--f-sm); font-weight: 600; line-height: 1.38;
+  color: var(--rwd-ink-2);
+  text-wrap: balance;
+}
 
-/* ---------- actions ---------- */
-.racts { display: grid; gap: 8px; }
-.racts__row { display: flex; gap: 8px; }
-.racts__row > * { flex: 1; }
+/* ---- the goods the prize is good on ----
+   Tilted and overlapping, running past both edges: the reference lets them
+   break the frame, which is what stops the lower half reading as empty. */
+.rwd__goods {
+  display: flex; align-items: flex-end; justify-content: center;
+  /* Wider than the screen on purpose: the outer two are meant to run off the
+     edges. `auto` above pushes this and the button down together, so the slack
+     on a tall phone falls between the ticket and the goods — which is where
+     the reference puts it too. */
+  width: calc(100% + var(--gut) * 2 + 36px);
+  margin: auto calc(var(--gut) * -1 - 18px) 0;
+  pointer-events: none;
+}
+.rwd__goods img {
+  width: 40%; max-width: 172px; height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 16px rgba(93, 43, 10, 0.28));
+}
+.rwd__goods img:nth-child(1) { transform: rotate(-12deg) translateY(10px); margin-right: -7%; }
+.rwd__goods img:nth-child(2) { transform: scale(1.1); position: relative; z-index: 1; }
+.rwd__goods img:nth-child(3) { transform: rotate(11deg) translateY(10px); margin-left: -7%; }
+
+/* ---- one loud action ---- */
+.rwd__foot { width: 100%; max-width: 340px; padding-top: 16px; }
+.rwd__cta {
+  width: 100%; height: 56px; border: 0;
+  border-radius: 999px;
+  background: var(--rwd-ink); color: #fff;
+  font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.1px;
+  box-shadow: 0 8px 20px rgba(93, 43, 10, 0.3);
+}
+.rwd__cta:disabled { opacity: 0.5; box-shadow: none; }
+.rwd__cta:not(:disabled):active { transform: scale(0.985); }
+.rwd__minor {
+  display: flex; justify-content: center; gap: 18px;
+  margin-top: 14px;
+}
+.rwd__minor button {
+  background: none; border: 0;
+  font-size: var(--f-base); font-weight: 700;
+  color: var(--rwd-ink-2);
+  text-decoration: underline; text-underline-offset: 3px;
+}
 
 /* ============================================================
    Racing rewards.
