@@ -207,14 +207,23 @@
 /* ============================================================
    Bottom navigation — a floating pill, not a docked bar.
    ============================================================ */
+/* The cart bar and the nav are ONE sticky block, stacked, not two sticky
+   siblings each pinned by its own offset. They used to be the latter, and the
+   cart bar's offset was calc(--nav-h + …) where --nav-h claimed 56px for a bar
+   that renders 82.4px — so the bar's bottom edge landed 12px inside the nav's
+   top edge and, being a layer lower, disappeared behind it. Any change to the
+   nav's type or padding would have re-broken it. Laid out in one column there
+   is no offset to keep in sync: the cart bar sits above the nav because it
+   comes first, and it cannot overlap what it is stacked on. */
 .bnav-wrap {
   position: sticky; bottom: 0; z-index: 30;
-  display: flex; align-items: center; gap: 8px;
+  display: flex; flex-direction: column; gap: 8px;
   padding: 6px 8px calc(10px + var(--safe-b));
   pointer-events: none;
   background: linear-gradient(rgba(255, 255, 255, 0) 0%, var(--surface) 46%);
 }
 .bnav-wrap > * { pointer-events: auto; }
+.bnav-row { display: flex; align-items: center; gap: 8px; }
 .bnav {
   flex: 1; min-width: 0;
   display: grid; grid-template-columns: repeat(4, 1fr);
@@ -296,9 +305,8 @@
 
 /* ---------- floating bar above the nav ---------- */
 .floatbar {
-  position: sticky; bottom: calc(var(--nav-h) + var(--safe-b) + 14px);
-  z-index: 29; display: flex; align-items: stretch; gap: 8px;
-  padding: 0 10px; margin-bottom: 8px; pointer-events: none;
+  display: flex; align-items: stretch; gap: 8px;
+  padding: 0 2px; pointer-events: none;
 }
 .floatbar > * { pointer-events: auto; }
 .freepill {

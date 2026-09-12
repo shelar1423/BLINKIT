@@ -131,6 +131,12 @@
      Sits between --r-sm and --r-md because that is where the reference puts a
      button corner, and a loose 8/9/10 was being guessed per component. */
   --r-ctl: 10px;
+  /* One height for every card-scale control, and one for every page-scale one.
+     ADD was 32px and the stepper it turns into was 40px, so the row jumped 8px
+     the moment you pressed it; inside the card an aspect-ratio override forced
+     both to 45.8px, which hid the jump and made the button nearly square. */
+  --ctl-h: 36px;
+  --ctl-h-lg: 48px;
   --r-md: 12px;
   --r-lg: 16px;
   --r-xl: 20px;
@@ -146,7 +152,12 @@
 
   /* --- chrome heights --- */
   --hdr-h: 59px;            /* --header__height--mobile */
-  --nav-h: 56px;
+  /* The nav pill's own height, measured off the rendered bar rather than
+     estimated — it was 56px here against 66px on screen, which put the toast
+     and the cart bar underneath it. --nav-block adds the wrap's 6px/10px
+     padding, and is what anything floating above the bar should clear. */
+  --nav-h: 66px;
+  --nav-block: calc(var(--nav-h) + 16px + var(--safe-b));
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
 }

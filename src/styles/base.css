@@ -151,7 +151,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn--outline:not(:disabled):active { background: var(--surface-2); }
 .btn--ghostDark { border: 1px solid var(--tk-line); background: rgba(255,255,255,0.08); color: #fff; font-weight: 600; }
 .btn--sm { height: 36px; padding: 0 14px; font-size: var(--f-sm); }
-.btn--lg { height: 48px; font-size: var(--f-lg); }
+.btn--lg { height: var(--ctl-h-lg); font-size: var(--f-lg); }
 .btn--block { width: 100%; }
 
 /* ---------- ADD control (Blinkit's real one: green on white) ----------
@@ -163,7 +163,7 @@ input, select, textarea { font: inherit; color: inherit; }
    about a quarter of its own height. A softened square, not a pill — at half
    the height it becomes a lozenge and stops reading as the same control. */
 .add {
-  height: 32px;
+  height: var(--ctl-h);
   min-width: 64px;
   padding: 0 12px;
   border: 1px solid var(--green);
@@ -181,7 +181,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .stepper {
   display: inline-flex;
   align-items: center;
-  height: 40px;
+  height: var(--ctl-h);
   min-width: 62px;
   border-radius: var(--r-ctl);
   background: var(--green);
@@ -191,7 +191,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .stepper button { width: 24px; height: 100%; display: grid; place-items: center; color: #fff; }
 .stepper__q { flex: 1; text-align: center; font-size: var(--f-md); font-weight: 700; font-variant-numeric: tabular-nums; }
-.stepper--lg { height: 44px; min-width: 104px; border-radius: var(--r); }
+.stepper--lg { height: var(--ctl-h-lg); min-width: 104px; border-radius: var(--r); }
 .stepper--lg button { width: 36px; }
 .stepper--outline { background: #fff; color: var(--green); border: 1px solid var(--green); }
 .stepper--outline button { color: var(--green); }
@@ -305,9 +305,14 @@ input, select, textarea { font: inherit; color: inherit; }
   position: absolute; right: 0; bottom: -3px; z-index: 3;
   width: 50%;
 }
+/* The card's control is the same control as everywhere else, only stretched to
+   the card's half-width. It used to carry `aspect-ratio: 142/105`, which threw
+   away the 32px height and re-derived one from the width — 45.8px on a 126px
+   card, nearly square, and quietly different from the same button on every
+   other surface. */
 .pcard__act .add, .pcard__act .stepper {
   width: 100%; min-width: 0;
-  height: auto; aspect-ratio: 142 / 105;
+  height: var(--ctl-h);
   border-radius: var(--r-ctl);
   padding: 0 6px;
 }
@@ -434,7 +439,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* ---------- toast ---------- */
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%);
-  bottom: calc(var(--nav-h) + var(--safe-b) + 14px);
+  bottom: calc(var(--nav-block) + 12px);
   z-index: 400;
   background: rgba(16,20,24,0.95); color: #fff;
   border-radius: var(--r); padding: 11px 16px;
@@ -600,13 +605,15 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Widths are set so the lockup keeps the same HEIGHT on the band. The new
      artwork is 2.18:1 against the old 1.46:1, so holding the old 100px width
      would have quietly shrunk the campaign name by a third. */
+  /* Up 20% from 150px — the lockup is the campaign's name and was reading
+     smaller than the countdown sitting under it. */
   margin: 14px auto 0;
-  max-width: 150px;
+  max-width: 180px;
   line-height: 0;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
-@media (min-width: 768px) { .ctake__t { max-width: 330px; } }
+@media (min-width: 768px) { .ctake__t { max-width: 396px; } }
 
 
 
@@ -1198,9 +1205,12 @@ input, select, textarea { font: inherit; color: inherit; }
 /* spec chips + View details, straight off the real PDP */
 /* Scrolls sideways rather than squeezing: the facts are short labels that go
    unreadable the moment they wrap, and a category can carry four or five. */
+/* On the 8px rhythm every other block on this sheet sits to. It carried a 14px
+   bottom padding and no top margin, so it touched the row above it and left 22
+   below — the only two gaps on the page that were not 8. */
 .pdp__chips {
   display: flex; gap: 8px;
-  background: #fff; padding: 0 var(--gut) 14px;
+  background: #fff; margin-top: 8px; padding: 0 var(--gut);
   overflow-x: auto; scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -1262,7 +1272,6 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag--blue { background: #EDF4FF; color: #1155CB; }
 /* Set apart from the drop flags beside it: those are claims about the product,
    this is a note about you. Same shape, quieter ground. */
-.tag--seen { background: var(--surface-2); color: var(--ink-2); font-weight: 600; }
 .tag--dark { background: var(--surface-2); color: var(--mut); }
 /* Same three-step scale as the card badge, tinted rather than solid — on the
    PDP these sit on white among other tags, not over a photo. */
@@ -1952,7 +1961,7 @@ input, select, textarea { font: inherit; color: inherit; }
    action, this is a way to look closer. */
 .pdp__arrow {
   display: flex; align-items: center; gap: 11px; width: calc(100% - var(--gut) * 2);
-  margin: 10px var(--gut) 0; padding: 10px 12px;
+  margin: 8px var(--gut) 0; padding: 10px 12px;
   background: #F2F7FF; border: 1px solid #D7E5FB; border-radius: var(--r-md);
   text-align: left; color: var(--hw-b);
 }

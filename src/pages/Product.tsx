@@ -196,7 +196,6 @@ export default function Product() {
   const saved = useStore((s) => s.saved.includes(id));
   const toggleSaved = useStore((s) => s.toggleSaved);
   const markViewed = useStore((s) => s.markViewed);
-  const seenBefore = useStore((s) => s.viewed.includes(id) );
   const product = productById(id, mysteryUnlocked);
 
   const host = useRef<HTMLDivElement>(null);
@@ -557,7 +556,6 @@ export default function Product() {
               {/* The campaign's own flags. The real PDP leaves the right of this
                   row empty, so they cost no extra line. */}
               <span className="pdp__tags">
-                {seenBefore && <span className="tag tag--seen">Recently Viewed</span>}
                 <span className="tag tag--blue">Limited Drop</span>
                 {product.badge && <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>}
               </span>

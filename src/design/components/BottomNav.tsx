@@ -35,7 +35,7 @@ export function BottomNav() {
   const onCart = loc.pathname === '/cart' || loc.pathname === '/checkout';
 
   return (
-    <>
+    <div className="bnav-wrap">
       {count > 0 && !onCart && (
         <div className="floatbar">
           <div className="freepill">
@@ -69,7 +69,7 @@ export function BottomNav() {
         </div>
       )}
 
-      <div className="bnav-wrap">
+      <div className="bnav-row">
         <nav className="bnav" aria-label="Primary">
           <NavLink to="/" end onClick={toTopIfHere('/')} className={({ isActive }) => 'bnav__i' + (isActive ? ' is-on' : '')}>
             {({ isActive }) => (
@@ -124,7 +124,7 @@ export function BottomNav() {
           <DistrictMark />
         </span>
       </div>
-    </>
+    </div>
   );
 }
 

@@ -5,7 +5,7 @@ import { DROP_DATES } from '../data/drop';
 import { ProductCard } from '../design/components/ProductCard';
 import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, rupees } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
-import { IconChevronRight, IconFlag } from '../design/elements/Icons';
+import { IconChevronRight } from '../design/elements/Icons';
 
 export default function Campaign() {
   const nav = useNavigate();
@@ -62,12 +62,14 @@ export default function Campaign() {
                 <i key={i} className={i < racesLeft ? 'on' : ''} />
               ))}
             </div>
-            <Button variant="hwBlue" block
+            {/* The same control as the storefront's Race now — track orange, no
+                flag. Two different-looking buttons for the one action, two taps
+                apart, read as two different actions. */}
+            <Button variant="hwTrack" block
               type="button"
               disabled={racesLeft <= 0}
               onClick={() => nav('/race')}
             >
-              <IconFlag size={17} />
               {racesLeft > 0 ? 'Race Now' : 'No races left'}
             </Button>
             {racesLeft <= 0 && (
