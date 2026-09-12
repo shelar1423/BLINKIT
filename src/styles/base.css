@@ -2606,13 +2606,57 @@ input, select, textarea { font: inherit; color: inherit; }
 .tabs__i.is-on { color: var(--ink); border-color: var(--green); }
 
 /* ---------- leaderboard rows ---------- */
+/* ---------- where you stand ----------
+   Your standing, stated before the ladder rather than found inside it. On the
+   campaign's yellow so it reads as yours and not as another row of the table,
+   and the rank is set at the size of the fact it is. */
+.mystand {
+  display: grid; gap: 13px;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--yellow-tint);
+  border: 1px solid var(--yellow-lt);
+}
+/* Even thirds with a rule between, the same shape the hub gives its three
+   figures — so the campaign has one way of setting a row of statistics rather
+   than a different arrangement on every screen that shows some. */
+.mystand__stats { display: grid; grid-template-columns: repeat(3, 1fr); }
+.mystand__stats > div {
+  padding: 0 6px; text-align: center;
+  border-left: 1px solid var(--yellow-lt);
+}
+.mystand__stats > div:first-child { border-left: 0; }
+.mystand__stats b {
+  display: block;
+  font-size: 22px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.mystand__stats span {
+  display: block; margin-top: 2px;
+  font-size: var(--f-2xs); font-weight: 600; color: var(--mut); line-height: 1.3;
+}
+
 .lrow { display: flex; align-items: center; gap: 11px; padding: 11px var(--gut); border-bottom: 1px solid var(--line); }
 .lrow__r { width: 22px; font-size: var(--f-md); font-weight: 800; color: var(--mut); }
 .lrow__a { width: 34px; height: 34px; border-radius: 50%; background: var(--green-tint); color: var(--green);
   display: grid; place-items: center; font-weight: 800; font-size: var(--f-md); flex: 0 0 34px; }
 .lrow b { font-size: var(--f-md); font-weight: 600; display: block; }
-.lrow small { font-size: var(--f-xs); color: var(--mut); }
 .lrow__p { font-size: var(--f-md); font-weight: 800; }
+/* The fold between the top of the board and your place on it: a length of
+   chequered flag across the table, and nothing else. The same two-row chequer
+   the rewards stage wears, inverted for a white table — dark squares over
+   white rather than white over navy. No label, because the rank column already
+   jumps from 5 to 9. */
+.lbreak {
+  display: block; height: 8px;
+  background:
+    repeating-linear-gradient(90deg, #17181A 0 8px, transparent 8px 16px) 0 0 / 16px 4px,
+    repeating-linear-gradient(90deg, transparent 0 8px, #17181A 8px 16px) 0 4px / 16px 4px,
+    #fff;
+  background-repeat: repeat-x;
+  border-bottom: 1px solid var(--line);
+}
+
 .lrow.is-me { background: var(--yellow-tint); }
 .lrow.is-me .lrow__p { color: var(--green); }
 
@@ -2912,33 +2956,85 @@ input, select, textarea { font: inherit; color: inherit; }
    The code and its copy button sit on one line, and the button carries its own
    confirmation. A toast alone leaves the control looking untouched at the exact
    moment you are checking whether it worked. */
+/* ---------- how it works ----------
+   Three steps across, in order, with the run of arrows between them doing the
+   work a numbered list would otherwise need words for. Captions are short
+   enough to hold two lines in a third of the width — the long-form versions
+   wanted four, which is how the paragraph this replaces got written. */
+.hiw {
+  padding: 13px 14px 14px;
+  border-radius: var(--r-lg);
+  background: var(--yellow-tint);
+  border: 1px solid var(--yellow-lt);
+}
+.hiw__t { font-size: var(--f-base); font-weight: 800; letter-spacing: -0.2px; }
+.hiw__steps {
+  margin-top: 11px; padding: 0; list-style: none;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+}
+.hiw__steps li {
+  position: relative;
+  display: grid; justify-items: center; gap: 3px;
+  text-align: center;
+}
+.hiw__steps li + li::before {
+  content: '';
+  position: absolute; left: -6px; top: 13px;
+  width: 5px; height: 5px;
+  border-top: 1.6px solid var(--yellow-dk);
+  border-right: 1.6px solid var(--yellow-dk);
+  transform: rotate(45deg);
+}
+.hiw__n {
+  width: 19px; height: 19px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--yellow); color: var(--ink);
+  font-size: 10px; font-weight: 800;
+}
+.hiw__steps svg { color: var(--ink-2); margin-top: 2px; }
+.hiw__steps b { font-size: var(--f-2xs); font-weight: 800; line-height: 1.25; margin-top: 1px; }
+.hiw__steps small { font-size: var(--f-2xs); color: var(--mut); line-height: 1.25; }
+
 .invcode { padding: 14px; display: grid; gap: 12px; }
 .invcode__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .invcode__k {
   font-size: var(--f-xs); font-weight: 700; color: var(--mut);
   letter-spacing: 0.08em; text-transform: uppercase;
 }
-.invcode__row {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+/* The code and WhatsApp on one line: the code is what you send, WhatsApp is
+   where you send it. The row is no longer a dashed box containing a button —
+   the code IS the button, so the whole ticket is the tap target rather than a
+   14px "Copy" label beside it. */
+.invcode__row { display: flex; align-items: stretch; gap: 8px; }
+.invcode__code {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px;
   background: var(--surface-2);
   border: 1px dashed var(--line-2);
   border-radius: var(--r-md);
-  padding: 10px 10px 10px 14px;
+  color: var(--ink); text-align: left;
 }
+.invcode__code svg { flex: none; color: var(--mut); }
+.invcode__code:active { background: var(--green-tint); }
+.invcode__code.is-done { border-style: solid; border-color: var(--green); color: var(--green); }
+.invcode__code.is-done svg { color: var(--green); }
 .invcode__v {
-  font-size: var(--f-xl); font-weight: 800; letter-spacing: 0.1em;
-  min-width: 0; overflow: hidden; text-overflow: ellipsis;
+  font-size: var(--f-lg); font-weight: 800; letter-spacing: 0.08em;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.invcode__copy {
-  flex: none;
-  display: inline-flex; align-items: center; gap: 6px;
-  height: 38px; padding: 0 14px;
-  border: 1px solid var(--green); border-radius: var(--r-md);
-  background: #fff; color: var(--green);
-  font-size: var(--f-sm); font-weight: 800;
+/* WhatsApp's own green, because the point of the button is that it is
+   recognisably WhatsApp and not one more of our buttons. */
+.invcode__wa {
+  flex: 0 0 auto;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0 13px;
+  border: 0; border-radius: var(--r-md);
+  background: #25D366; color: #08331A;
+  font-size: var(--f-sm); font-weight: 800; letter-spacing: -0.1px;
+  white-space: nowrap;
 }
-.invcode__copy:active { background: var(--green-tint); }
-.invcode__copy.is-done { background: var(--green); border-color: var(--green); color: #fff; }
+.invcode__wa:active { background: #1EBB58; }
 
 /* ---------- how it works ----------
    Blinkit's campaign explainer: a labelled panel with the mechanic shown, a

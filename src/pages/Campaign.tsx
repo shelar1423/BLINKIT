@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { PageHeader, SectionHeader } from '../design/components/Chrome';
-import { DROP_DATES } from '../data/drop';
 import { rupees } from '../data/catalog';
 import { MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
 import { IconChevronRight, IconFlag, IconInfo } from '../design/elements/Icons';
@@ -18,13 +17,12 @@ export default function Campaign() {
     <>
       <PageHeader
         title="Race It Home"
-        subtitle={`Hot Wheels × Blinkit · ${DROP_DATES}`}
         onBack={() => nav('/')}
         /* Annotated on the target but with nowhere to go yet: the step
            illustrations for the explainer are still to come, so the pill is
            built and says so rather than opening an empty sheet. */
         right={
-          <button className="howbtn" type="button" onClick={() => toast('The how-it-works walkthrough is coming')}>
+          <button className="hdrpill" type="button" onClick={() => toast('The how-it-works walkthrough is coming')}>
             <IconInfo size={14} />
             <span>How it works</span>
           </button>

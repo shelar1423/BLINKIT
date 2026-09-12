@@ -23,6 +23,18 @@ export const REWARD_TIERS: RewardTier[] = [
   { id: 'podium', min: 8000, label: 'District Pass, 1 month', value: 0, freeDelivery: true, perk: '1 free movie ticket' },
 ];
 
+/**
+ * Whether a score has reached a tier.
+ *
+ * Shared because Rewards and the Leaderboard both answer it now — the rewards
+ * list, and the link between the two screens that says how many are unlocked.
+ * Two copies of this rule would be two copies free to drift apart, and the
+ * whole point of those links is that they agree with the page they open.
+ */
+export function hasReached(tier: RewardTier, totalPoints: number, unlockedRewards: string[]) {
+  return unlockedRewards.includes(tier.id) || totalPoints >= tier.min;
+}
+
 export function tierFor(score: number): RewardTier | null {
   let best: RewardTier | null = null;
   for (const t of REWARD_TIERS) if (score >= t.min) best = t;

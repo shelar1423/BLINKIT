@@ -211,10 +211,12 @@
 }
 .phdr__acts button:active { background: var(--surface-2); }
 
-/* An explainer link, not an action: outlined rather than filled, so it sits
-   beside the title without competing with the campaign's one real button down
-   in the hero. */
-.howbtn {
+/* A quiet destination in the header bar — the explainer on the hub, and the
+   sideways link between Rewards and Leaderboard, which are two halves of the
+   same score and were otherwise only reachable by going back to the hub.
+   Outlined rather than filled, so it sits beside the title without competing
+   with whatever real button the page has. */
+.hdrpill {
   flex: 0 0 auto;
   display: flex; align-items: center; gap: 5px;
   height: 30px; padding: 0 11px 0 9px;
@@ -223,8 +225,8 @@
   font-size: var(--f-xs); font-weight: 600; color: var(--ink);
   white-space: nowrap;
 }
-.howbtn svg { color: var(--mut); }
-.howbtn:active { background: var(--surface-2); }
+.hdrpill svg { color: var(--mut); }
+.hdrpill:active { background: var(--surface-2); }
 
 /* ============================================================
    Bottom navigation — a floating pill, not a docked bar.

@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { PageHeader } from '../design/components/Chrome';
-import { rupees } from '../data/catalog';
-import { REWARD_TIERS, useStore } from '../store/useStore';
+import { LEADERBOARD, rupees } from '../data/catalog';
+import { hasReached, REWARD_TIERS, useStore, type RewardTier } from '../store/useStore';
 import { useToast } from '../App';
-import { IconCheck, IconLock, IconTrophy } from '../design/elements/Icons';
+import { IconCheck, IconChevronRight, IconLock, IconTrophy } from '../design/elements/Icons';
 
 /** How long the claimed coupon takes to fold away and hand its space back. */
 const CLOSE_MS = 420;
@@ -52,21 +52,29 @@ export default function Rewards() {
 
   const top = REWARD_TIERS[REWARD_TIERS.length - 1].min;
   const next = REWARD_TIERS.find((t) => totalPoints < t.min);
-  const isUnlocked = (id: string, min: number) => unlockedRewards.includes(id) || totalPoints >= min;
+  const isUnlocked = (t: RewardTier) => hasReached(t, totalPoints, unlockedRewards);
   /* The LOWEST tier that is earned and still unspent — the next one to take,
      not the best one available. Reaching for the top tier first meant a player
      who had cleared everything was offered the partner membership before the
      free delivery they earned at 1,000 points, and only one reward can be held
      at a time, so the three underneath it were never the thing on offer. They
      come off in the order they were won. */
-  const claimable = REWARD_TIERS.find((t) => isUnlocked(t.id, t.min) && claimedReward?.id !== t.id);
+  const claimable = REWARD_TIERS.find((t) => isUnlocked(t) && claimedReward?.id !== t.id);
 
   /* What a tier gives you, in a phrase. Money off, a partner's perk, or the
      free delivery that every tier carries. */
   const benefit = (t: (typeof REWARD_TIERS)[number]) =>
     t.value > 0 ? `${rupees(t.value)} off your next order` : t.perk ?? 'Free delivery, applied at checkout';
 
-  const earned = REWARD_TIERS.filter((t) => isUnlocked(t.id, t.min)).length;
+  const earned = REWARD_TIERS.filter((t) => isUnlocked(t)).length;
+
+  /* Where this score puts you in the city — worked out the same way the
+     Leaderboard works it out, so the number on the link matches the number on
+     the page it opens. */
+  const cityRank =
+    [...LEADERBOARD.map((r) => r.points), totalPoints]
+      .sort((a, b) => b - a)
+      .indexOf(totalPoints) + 1;
 
   /* How far along the current leg the car sits, 0 to 1. Measured from the tier
      last cleared rather than from zero: scaled to the whole drop, a race worth
@@ -127,7 +135,10 @@ export default function Rewards() {
 
   return (
     <>
-      <PageHeader title="Racing rewards" subtitle="Points convert to Blinkit Cash at checkout" onBack={() => nav('/campaign')} />
+      <PageHeader
+        title="Racing rewards"
+        onBack={() => nav('/campaign')}
+      />
       <main className="page rwpage">
         <div className="rwhero">
           <span className="rwhero__chequer" aria-hidden="true" />
@@ -214,7 +225,7 @@ export default function Rewards() {
               aria-hidden="true"
             />
             {REWARD_TIERS.map((t) => {
-              const unlocked = isUnlocked(t.id, t.min);
+              const unlocked = isUnlocked(t);
               const claimed = claimedReward?.id === t.id;
               return (
                 <div key={t.id} className={'rwstop' + (unlocked ? ' is-on' : '')}>
@@ -251,6 +262,25 @@ export default function Rewards() {
             })}
           </div>
           </section>
+
+          {/* The way across to the Leaderboard. It was a pill in the header
+              bar, where it read as chrome — a control belonging to the app
+              rather than a place the campaign goes — and it crowded the title
+              enough to truncate the subtitle beside it.
+
+              Here it is a destination: the same row card the hub uses, at the
+              foot of the list, in the space the page was already leaving
+              empty. And it carries the rank, so it is worth pressing rather
+              than merely available — the two screens are the same score read
+              two ways, and this is the sentence that says so. */}
+          <button className="card rowcard" type="button" onClick={() => nav('/leaderboard')}>
+            <img className="rowcard__art" src="/icons/leaderboard.webp" alt="" />
+            <span className="grow">
+              <b>Leaderboard</b>
+              <small>You&rsquo;re #{cityRank} in the city this drop</small>
+            </span>
+            <IconChevronRight size={17} />
+          </button>
 
           <p className="t-xs" style={{ lineHeight: 1.6 }}>
             One reward applies per order. Point values are campaign concepts, not final business rules.
