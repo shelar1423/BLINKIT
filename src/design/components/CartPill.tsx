@@ -19,10 +19,17 @@ import { IconChevronRight } from '../elements/Icons';
 /** Thumbnails the pill shows at once. The fourth add drops the oldest. */
 const MAX_THUMBS = 3;
 /** Must outlast .cartpill__th's leave animations and the cloud that follows. */
-const LEAVE_MS = 540;
+const LEAVE_MS = 940;
 
-/* Timings traced off a screen recording of the real app, frame by frame at
-   60fps, by tracking the green pill's bounding box.
+/* Shapes traced off a screen recording of the real app, frame by frame at
+   60fps, by tracking the green pill's bounding box — then deliberately slowed.
+   The measured original is brisk: it is a grocery app optimising for a shopper
+   who adds twenty things in a row, and at that speed the bar is information
+   rather than an event. This is a campaign piece where the bar arriving is
+   worth watching, so every duration is carried about a third longer and the
+   settle runs on a quintic ease-out, which spends most of its time decelerating
+   instead of arriving and stopping. The proportions between the phases, and
+   the overshoot, are still the measured ones — only the clock is different.
 
    Opening: the circle rises for ~130ms, then the bar unfurls over ~370ms —
    and it overshoots, reaching 608px before settling back to 568, a little
@@ -30,18 +37,18 @@ const LEAVE_MS = 540;
    Closing is not the same move reversed: the furl is ~185ms, half the
    opening, and runs straight to the circle with no overshoot at all before
    the circle drops away. */
-const OPEN_MS = 500;
+const OPEN_MS = 660;
 const OPEN_RISE = 0.26;
 const OPEN_PEAK = 0.63;
 const OPEN_OVERSHOOT = 1.07;
-const CLOSE_MS = 335;
+const CLOSE_MS = 430;
 const CLOSE_FURL = 0.55;
 /** The diameter of the circle the bar unfurls from and furls back into. */
 const SEED_PX = 60;
 /** How far below its resting place the circle starts and ends. */
 const DROP_PX = 150;
 /** Reflow of the bar when a thumbnail joins or leaves an open pill. */
-const RESIZE_MS = 220;
+const RESIZE_MS = 300;
 
 /* The cloud a removed item bursts into: angle in degrees, distance as a share
    of the throw, and the lump's own diameter. Irregular on purpose — evenly
@@ -63,8 +70,8 @@ const PUFF_BITS = [
   '--s': `${size}px`,
 }));
 
-const EASE_OUT = 'cubic-bezier(0.32, 0.72, 0, 1)';
-const EASE_IN = 'cubic-bezier(0.4, 0, 1, 1)';
+const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)';
+const EASE_IN = 'cubic-bezier(0.5, 0, 0.75, 0)';
 
 const reduceMotion = () =>
   typeof window !== 'undefined' &&

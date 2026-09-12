@@ -334,7 +334,7 @@
      is covered. At -16px only a third was, and the row read as three separate
      badges rather than a shingled stack. */
   margin-left: -24px;
-  animation: thumbIn 300ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation: thumbIn 380ms cubic-bezier(0.34, 1.26, 0.64, 1) both;
 }
 .cartpill__th:first-child { margin-left: 0; }
 /* Dropping in from just above the bar, which is where an item added to a cart
@@ -364,7 +364,7 @@
    clear of the bar at very nearly full size and then bursts into a pale cloud.
    ~150ms of lift in the recording — it is clear of the stack by then — and
    about 400ms of cloud after it. */
-.cartpill__th.is-out--removed { animation: thumbLift 170ms cubic-bezier(0.32, 0.72, 0, 1) forwards; }
+.cartpill__th.is-out--removed { animation: thumbLift 250ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 @keyframes thumbLift {
   0%   { transform: none; opacity: 1; }
   45%  { transform: translateY(-28px) scale(0.98); opacity: 0.55; }
@@ -388,7 +388,7 @@
   margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2);
   border-radius: 50%;
   background: #E4EFF9;
-  animation: puffbit 420ms ease-out 90ms both;
+  animation: puffbit 540ms cubic-bezier(0.22, 1, 0.36, 1) 150ms both;
 }
 @keyframes puffbit {
   0%   { transform: translate(0, 0) scale(0.34); opacity: 0; }
@@ -398,7 +398,7 @@
   22%  { opacity: 0.95; }
   100% { transform: scale(2.7) rotate(20deg); opacity: 0; }
 }
-.cartpill__th.is-out--pushed { animation: thumbPush 260ms ease forwards; }
+.cartpill__th.is-out--pushed { animation: thumbPush 340ms cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 @keyframes thumbPush {
   to { transform: translateX(-14px) scale(0.5); opacity: 0; }
 }
