@@ -1273,6 +1273,7 @@ input, select, textarea { font: inherit; color: inherit; }
      visible at rest because the sheet gives up its right 12px by margin, not
      by stacking. */
   position: relative; z-index: 1;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
   /* Cast to the sides only. An even glow washed over the 12px sliver and took
      the one cue that says another product is behind this one. */
   box-shadow: 7px 0 18px rgba(16, 20, 24, 0.2), -7px 0 18px rgba(16, 20, 24, 0.2);
@@ -1283,10 +1284,11 @@ input, select, textarea { font: inherit; color: inherit; }
   transform: translate3d(var(--pdp-dx, 0px), 0, 0);
   will-change: transform;
 }
-/* At either end of the deck there is no neighbour to show, so the sheet takes
-   that edge back rather than leaving a 12px strip of nothing. */
-.pdpdeck--first { margin-left: 0; }
-.pdpdeck--last { margin-right: 0; }
+/* The sheet keeps both gutters at every position in the deck. Letting the ends
+   reclaim their edge made the first and last products measurably wider than
+   the ones between them and ran the sheet flush into the side of the screen —
+   at the top that reads as the page bleeding into the status bar. Where there
+   is no neighbour the strip simply stays empty; the width never changes. */
 .pdpdeck.is-gliding, .pdpstack__track.is-gliding { transition: transform 260ms cubic-bezier(0.25, 0.8, 0.3, 1); }
 /* The frame a new product lands on: whatever glide was in flight is cancelled
    so the arriving sheet is simply in place, not sliding in from where the last

@@ -105,10 +105,6 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
             <b>{product.age ?? AGE_RATING}</b>
           </div>
           <div className="chipbox">
-            <span>Assembly Required</span>
-            <b>No</b>
-          </div>
-          <div className="chipbox">
             <span>Material</span>
             <b>Diecast</b>
           </div>
@@ -502,14 +498,14 @@ export default function Product() {
             </div>
           )}
 
+          {/* Three items, not four. "Assembly Required: No" is true of every
+              die-cast we sell, and carrying it pushed the row 30px wider than
+              the sheet — which put View details 18px PAST the corner with no
+              gutter at all. The real PDP shows two facts and the link. */}
           <div className="pdp__chips">
             <div className="chipbox">
               <span>Age Group</span>
               <b>{product.age ?? AGE_RATING}</b>
-            </div>
-            <div className="chipbox">
-              <span>Assembly Required</span>
-              <b>No</b>
             </div>
             <div className="chipbox">
               <span>Material</span>
