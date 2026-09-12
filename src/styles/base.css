@@ -254,6 +254,18 @@ input, select, textarea { font: inherit; color: inherit; }
    white-on-white heart disappears. The outline is what carries it on both. */
 .pcard__save svg { fill: #fff; filter: drop-shadow(0 1px 2px rgba(16, 20, 24, 0.3)); }
 .pcard__save.is-on svg { fill: var(--hw-r); color: var(--hw-r); }
+/* Pager, bottom-left inside the photo. Only drawn when there is more than one
+   picture, so the count is always the number of real photographs. */
+.pcard__dots {
+  position: absolute; left: 10px; bottom: 9px; z-index: 2;
+  display: flex; gap: 4px;
+}
+.pcard__dots i {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--line-2);
+  transition: background-color 0.15s ease;
+}
+.pcard__dots i.is-on { background: var(--ink); }
 .pcard__save::after {
   content: ''; position: absolute; top: 50%; left: 50%;
   width: 44px; height: 44px; transform: translate(-50%, -50%);
