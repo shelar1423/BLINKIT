@@ -502,13 +502,16 @@ input, select, textarea { font: inherit; color: inherit; }
      glowing ICE CREAM word, the ornamental Diwali masthead. Cutting it to
      132px to save space took the occasion out of it. Back up, but short of the
      218px billboard that pushed the shop off the screen. */
+  /* Widths are set so the lockup keeps the same HEIGHT on the band. The new
+     artwork is 2.18:1 against the old 1.46:1, so holding the old 100px width
+     would have quietly shrunk the campaign name by a third. */
   margin: 14px auto 0;
-  max-width: 100px;
+  max-width: 150px;
   line-height: 0;
   filter: drop-shadow(0 6px 18px rgba(255, 120, 20, 0.45));
 }
 .ctake__t img { width: 100%; height: auto; display: block; }
-@media (min-width: 768px) { .ctake__t { max-width: 260px; } }
+@media (min-width: 768px) { .ctake__t { max-width: 330px; } }
 
 
 
