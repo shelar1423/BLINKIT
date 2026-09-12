@@ -227,6 +227,9 @@ function spriteTexture(url: string) {
   return t;
 }
 
+/** What clipping a chunk of debris costs. */
+const DEBRIS_PENALTY = 100;
+
 export class RaceEngine {
   readonly root = new THREE.Group();
 
@@ -687,7 +690,7 @@ export class RaceEngine {
     return this.speed;
   }
 
-  applyObstacleBounce(penaltyPoints = 100) {
+  applyObstacleBounce(penaltyPoints = DEBRIS_PENALTY) {
     // Rebound backward
     this.speed = -Math.max(6, this.speed * 0.5);
     // Deflect lateral
@@ -869,8 +872,15 @@ export class RaceEngine {
       let dT = Math.abs(c.t - this.t);
       if (dT > 0.5) dT = 1 - dT;
       if (dT * this.curveLen < 1.4 && Math.abs(c.lateral - this.lateral) < 1.2) {
-        this.speed *= 0.94;
+        /* Debris costs you points, not just speed.
+           This used to scrub 6% off the speed and shatter the chunk, and that
+           was all — no deduction, no penalty event, so no red −100 ever
+           appeared. The only thing that ever deducted was the real-world
+           obstacle system, which is gone, so hitting debris had become free.
+           applyObstacleBounce does the rebound AND reports what was actually
+           lost, which is what feeds the score pop. */
         this.shatter(c);
+        this.applyObstacleBounce(DEBRIS_PENALTY);
       }
     }
 

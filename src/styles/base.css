@@ -779,7 +779,17 @@ input, select, textarea { font: inherit; color: inherit; }
 @keyframes cd { from { transform: scale(1.9); opacity: 0; } }
 
 /* AR overlay */
-.arov { position: fixed; inset: 0; z-index: 200; pointer-events: none; }
+/* Height in dvh, not inset:0.
+   A fixed inset:0 element is laid out against the LAYOUT viewport, which in
+   Chrome on Android is taller than what you can actually see while the bottom
+   toolbar is up — so the action bar, pinned to that bottom, sat behind the
+   toolbar and the Place track button was simply not on screen. dvh is the
+   visible height, and it tracks the toolbar as it comes and goes. */
+.arov {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 100vh; height: 100dvh;
+  z-index: 200; pointer-events: none;
+}
 /* Never display:none — WebXR adopts this element as the dom-overlay root at
    session start and a hidden root presents nothing inside the headset view. */
 .arov.is-idle { visibility: hidden; }
@@ -815,13 +825,28 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The recovery note. Deliberately not styled as an error — nothing has failed,
    the camera just needs a clean start — so it reads as advice, in the same
    place the other hints appear. */
-.arov__hint--help {
-  color: #FFC400;
+/* At the top, not the bottom. It is the thing to read when the bottom of the
+   screen is not working for you, so putting it down there with everything else
+   was the one place it could not do its job. */
+.arov__help {
+  position: absolute; top: calc(var(--safe-t) + 62px); left: 12px; right: 12px;
+  z-index: 2; pointer-events: none;
+  background: rgba(18, 22, 30, 0.86);
+  border: 1px solid rgba(255, 196, 0, 0.5);
+  border-radius: var(--r-md);
+  padding: 9px 12px;
+  text-align: center;
+  color: #FFC400; font-size: var(--f-sm); font-weight: 800;
 }
-.arov__hint--help small { color: rgba(255, 255, 255, 0.82); }
+.arov__help small {
+  display: block; margin-top: 3px;
+  color: rgba(255, 255, 255, 0.86); font-size: var(--f-xs); font-weight: 500;
+}
 .arov__bottom {
-  position: absolute; left: 12px; right: 12px; bottom: calc(var(--safe-b) + 16px);
-  display: flex; flex-direction: column; align-items: stretch; gap: 14px;
+  position: absolute; left: 12px; right: 12px; bottom: calc(var(--safe-b) + 18px);
+  display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+  /* never taller than the space above the bar it sits in */
+  max-height: calc(100% - var(--safe-t) - 74px);
   pointer-events: none;
 }
 .arov__hint {

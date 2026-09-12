@@ -334,6 +334,13 @@ export default function ARView() {
               </button>
             </div>
 
+            {phase === 'ready' && stuck && (
+              <p className="arov__help">
+                Not dropping where you want it?
+                <small>Close this, press Race in your space again, and it picks up your camera cleanly.</small>
+              </p>
+            )}
+
             {phase === 'racing' && <ScorePops pops={pops} />}
 
             {/* One column anchored to the bottom, rather than three bands
@@ -368,12 +375,6 @@ export default function ARView() {
                       ? `Then press Place ${car.name.replace('Hot Wheels ', '')} here`
                       : 'Then press Place track here'}
                 </small>
-              </p>
-            )}
-            {phase === 'ready' && stuck && (
-              <p className="arov__hint arov__hint--help">
-                Not dropping where you want it?
-                <small>Close this, press Race in your space again, and it will pick up your camera cleanly.</small>
               </p>
             )}
             {phase === 'placed' && (

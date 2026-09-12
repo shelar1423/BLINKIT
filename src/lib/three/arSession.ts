@@ -323,6 +323,30 @@ function makeEngine(opts: Opts, onDone: () => void) {
  * dragging spins it and tips it — placing it and never being able to see the
  * other side was the whole complaint about inspect mode.
  */
+/**
+ * Which way the placement ring faces.
+ *
+ * The ring is a flat disc. Left lying horizontal it is edge-on to a level
+ * camera — and a disc seen exactly edge-on draws as a one-pixel LINE, which is
+ * what appeared instead of a target whenever the phone was held level or the
+ * gyro had not reported yet.
+ *
+ * So it leans with you: its face is turned to the camera at every angle. Point
+ * straight down and that lands it flat on the floor, which is what it should
+ * look like when you are aiming at the floor; hold the phone level and it
+ * stands up to face you; in between it tips smoothly.
+ *
+ * The sign here matters more than it looks. Getting it backwards still reads
+ * correctly at 0 and 90 degrees — and collapses to a line at exactly 45, which
+ * is how a phone is held when you point it at the floor a metre ahead.
+ */
+function reticleTilt(fwd: THREE.Vector3): THREE.Euler {
+  const yaw = Math.atan2(fwd.x, fwd.z);
+  // 0 when looking level, PI/2 when looking straight down
+  const down = Math.asin(Math.max(-1, Math.min(1, -fwd.y)));
+  return new THREE.Euler(Math.PI / 2 - down, yaw, 0, 'YXZ');
+}
+
 function adjustGestures(
   _ov: HTMLElement,
   anchor: THREE.Object3D,
@@ -660,11 +684,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     cam.getWorldQuaternion(_q);
     _fwd.set(0, 0, -1).applyQuaternion(_q);
     const target = _p.clone().addScaledVector(_fwd, REACH);
-    // flat on the ground plane, turned to face the way you are looking
-    const yaw = Math.atan2(_fwd.x, _fwd.z);
     reticle.matrix.compose(
       target,
-      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)),
+      new THREE.Quaternion().setFromEuler(reticleTilt(_fwd)),
       new THREE.Vector3(1, 1, 1),
     );
     reticle.visible = true;
@@ -1062,23 +1084,21 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
     if (phase === 'ready' || phase === 'searching') {
       const a = aim();
-      /* Always drawn. A provisional aim still shows the marker, faintly and
-         low in frame, which is the cue to tilt down onto the surface. It was
-         previously hidden because it appeared stranded in a corner — that was
-         the canvas sizing bug above, not the aim, so there is nothing left to
-         hide from. */
       reticle.visible = true;
       reticle.position.copy(a.point);
-      // constant apparent size: scale with distance, so it can never fill the
-      // screen when the assumed surface happens to be close
+      /* Leans with the camera, so it is never seen exactly edge-on. A flat disc
+         viewed edge-on draws as a line, and with no gyro the camera is dead
+         level — which is how a rotating yellow LINE ended up on screen where
+         the target ring should have been. */
+      reticle.setRotationFromEuler(reticleTilt(fwd));
+      // constant apparent size: scale with distance
       reticle.scale.setScalar(a.dist / RETICLE_REF);
       const bo0 = reticle.getObjectByName('burnout') as THREE.Mesh | undefined;
       if (bo0) {
         const m = bo0.material as THREE.MeshBasicMaterial;
-        m.opacity = a.provisional ? 0.4 : 0.88;
+        m.opacity = 0.88;
       }
-      if (!a.provisional && phase !== 'ready') setPhase('ready');
-      if (a.provisional && phase !== 'searching') setPhase('searching');
+      if (phase !== 'ready') setPhase('ready');
       const pulse = reticle.getObjectByName('pulseRing') as THREE.Mesh;
       if (pulse) {
         const s = 1 + Math.sin(now * 0.007) * 0.22;
