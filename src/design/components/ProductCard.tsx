@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { AGE_RATING, BADGE_TONE, ETA_MINS, rupees, type Product } from '../../data/catalog';
-import { IconClock, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar, IconStock } from '../elements/Icons';
+import { IconClock, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
 
 export function AddControl({ product, size = 'sm' }: { product: Product; size?: 'sm' | 'lg' }) {
   const qty = useStore((s) => s.cart[product.id] ?? 0);
@@ -128,6 +128,7 @@ export function ProductCard({ product }: { product: Product }) {
     );
   }
 
+  const off = product.mrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
   /* Two genuine views (model + photo) only where a GLB exists, so the pager
      never promises images the product does not have. */
   const views = product.glb ? 2 : 1;
@@ -184,28 +185,26 @@ export function ProductCard({ product }: { product: Product }) {
         <b className="pcard__price">{rupees(product.price)}</b>
         {product.mrp && <s className="pcard__mrp">{rupees(product.mrp)}</s>}
       </div>
+      {/* Always rendered, even with nothing to say. A card with no MRP was
+          coming out a line shorter than its neighbours, which is exactly the
+          raggedness the fixed name height exists to prevent. */}
+      <p className="pcard__off">{off > 0 ? `${off}% OFF on MRP` : ''}</p>
       <p className="pcard__nm">{product.name}</p>
-      {/* Two attributes, the way the real card carries a size and a material.
-          One chip on its own read as a rating badge rather than a spec. */}
       <span className="pcard__specs">
         <span className="pcard__spec">{product.age ?? AGE_RATING}</span>
-        <span className="pcard__spec">Die-cast</span>
       </span>
       {product.rating && (
         <p className="pcard__rt">
           <Stars value={product.rating} />
-          <span className="pcard__rtn">({product.ratings})</span>
+          <span className="pcard__rtn">{product.ratings?.toLocaleString('en-IN')}</span>
         </p>
       )}
+      {/* The delivery promise, and nothing beside it. The real listing card
+          carries no stock counter — that lives on the product page. */}
       <p className="pcard__meta">
         <span>
           <IconClock size={12} /> {ETA_MINS} mins
         </span>
-        {product.stock != null && (
-          <span>
-            <IconStock size={12} /> {product.stock} left
-          </span>
-        )}
       </p>
     </div>
   );

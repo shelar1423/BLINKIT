@@ -139,7 +139,7 @@ input, select, textarea { font: inherit; color: inherit; }
      card the filled green state is what you get AFTER you press it. */
   background: #fff;
   color: var(--green);
-  font-size: var(--f-md);
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.02em;
   box-shadow: 0 1px 2px rgba(16, 20, 24, 0.06);
@@ -176,7 +176,7 @@ input, select, textarea { font: inherit; color: inherit; }
    which sits at 2. Contained here, they order within the card and the card
    orders as one box against the page. */
 .pcard {
-  display: flex; flex-direction: column; gap: 3px; text-align: left;
+  display: flex; flex-direction: column; gap: 2px; text-align: left;
   position: relative; isolation: isolate;
 }
 /* A tinted panel rather than a white box with a hairline: the product shot and
@@ -188,9 +188,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .pcard__imwrap {
   position: relative;
   border: 1px solid var(--line);
-  border-radius: var(--r-lg);
+  border-radius: 12px;
   background: #fff;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 .pcard__im {
   position: relative;
@@ -198,7 +198,7 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center;
   overflow: hidden;
   background: var(--appbase);
-  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  border-radius: 11px 11px 0 0;
 }
 /* Our shots are cut-outs on a flat ground, not the lifestyle photography the
    reference card carries, so they are fitted rather than cropped — a cover on
@@ -237,44 +237,53 @@ input, select, textarea { font: inherit; color: inherit; }
   position: absolute; left: 10px; bottom: 9px; z-index: 2;
   display: flex; gap: 4px;
 }
-.pcard__dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); }
+.pcard__dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--line-2); }
 .pcard__dots i.is-on { background: var(--ink); }
 /* The panel's foot: the white band the ADD stands on. Its height is set off
    the card's WIDTH — about 30% of it — which is how the reference keeps the
    band and the button the same size on every card width. */
 .pcard__unit {
   display: flex; align-items: center;
-  aspect-ratio: 100 / 29;
-  padding: 0 50% 0 11px;
+  aspect-ratio: 100 / 33;
+  padding: 0 50% 0 10px;
   border-top: 1px solid var(--line);
-  font-size: var(--f-md); font-weight: 600; color: var(--ink);
+  font-size: 15px; font-weight: 700; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-/* ADD stands on that band and breaks the panel's corner. Half the card wide
-   and two-thirds of that tall, read off the reference — at a fixed 64x32 it
-   was a third of the size the real control is. */
+/* ADD is flush with the panel's right edge — not hanging past it — and a
+   little taller than the band, so it breaks the divider above and the panel's
+   bottom below. 50% of the card wide, 35% of the card tall. */
 .pcard__act {
-  position: absolute; right: -3px; bottom: -2px; z-index: 3;
+  position: absolute; right: 0; bottom: -3px; z-index: 3;
   width: 50%;
 }
 .pcard__act .add, .pcard__act .stepper {
   width: 100%; min-width: 0;
-  height: auto; aspect-ratio: 162 / 105;
-  border-radius: 12px;
+  height: auto; aspect-ratio: 160 / 112;
+  border-radius: 10px;
   padding: 0 6px;
 }
 
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
-.pcard__price { font-size: var(--f-base); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
-.pcard__mrp { font-size: var(--f-xs); color: var(--mut-2); }
+/* Sized as a share of the card, off the real listing: the price is 14.7% of
+   the card's width, the name 12.9%, the pack size 11.9%. On a 126px card that
+   is 18 / 15 / 15px — larger than it looks right in isolation, which is why I
+   had it three steps too small. */
+.pcard__price { font-size: 18px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+.pcard__mrp { font-size: var(--f-md); color: var(--mut-2); }
+/* Blinkit sets the saving in blue, not in the brand green — green is the
+   action colour on this card and the discount is information, not a control. */
+.pcard__off { font-size: var(--f-md); font-weight: 700; color: var(--hw-b); margin-top: 1px; min-height: calc(var(--f-md) * 1.35); }
 /* Exactly two lines of room, always. Clamping alone still let a one-line name
    make a shorter card than a two-line one, which is what left the grid ragged:
-   every card has to reserve the same space whether it uses it or not. */
+   every card has to reserve the same space whether it uses it or not.
+   Semibold, not regular — on the real card the name carries nearly as much
+   weight as the price, and at 500 ours read as a caption under it. */
 .pcard__nm {
-  font-size: var(--f-md); line-height: 1.3; font-weight: 500; color: var(--ink);
+  font-size: 16px; line-height: 1.28; font-weight: 600; color: var(--ink);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-  min-height: calc(var(--f-md) * 1.3 * 2);
-  margin-top: 1px;
+  min-height: calc(16px * 1.28 * 2);
+  margin-top: 2px;
 }
 .pcard__un { font-size: var(--f-xs); color: var(--mut); }
 .pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; margin-top: 4px; }
@@ -309,7 +318,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .pgrid {
   display: grid; grid-template-columns: repeat(2, var(--pcard-w));
   justify-content: space-between;
-  gap: 18px 10px; padding: 12px var(--gut) 20px;
+  gap: 24px 10px; padding: 12px var(--gut) 20px;
 }
 @media (min-width: 560px) { .pgrid { grid-template-columns: repeat(3, var(--pcard-w)); } }
 /* Horizontal product rail.
@@ -2248,7 +2257,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .catgrid {
   display: grid; grid-template-columns: repeat(2, var(--pcard-w));
   justify-content: space-between;
-  gap: 16px 10px; padding: 10px 10px 14px;
+  gap: 24px 10px; padding: 10px 10px 14px;
 }
 .catempty { padding: 28px 12px; text-align: center; color: var(--mut); }
 .linkbtn {
