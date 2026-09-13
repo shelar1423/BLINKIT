@@ -33,7 +33,6 @@ export default function RacePlay() {
   const selectedCarId = useStore((s) => s.selectedCarId);
   const racesLeft = useStore((s) => s.racesLeft);
   const finishRace = useStore((s) => s.finishRace);
-  const claimReward = useStore((s) => s.claimReward);
   const car = HERO_CARS.find((c) => c.id === selectedCarId) ?? HERO_CARS[0];
 
   const host = useRef<HTMLDivElement>(null);
@@ -347,7 +346,7 @@ export default function RacePlay() {
           same way — your car sliding round the burnout ring rather than a
           spinner and a percentage. */}
       {!loaded && !err && (
-        <DriftLoader glbUrl={car.glb} label={pct > 0 && pct < 100 ? `Getting your car ready · ${pct}%` : 'Getting your car ready'} />
+        <DriftLoader suffix={pct > 0 && pct < 100 ? ` · ${pct}%` : undefined} />
       )}
 
       {loaded && !outcome && (
@@ -499,12 +498,9 @@ export default function RacePlay() {
           inviteUrl={`${window.location.origin}/?ref=${useStore.getState().referralCode}`}
           racesLeft={useStore.getState().racesLeft}
           toast={toast}
-          onClaim={(t) => {
-            claimReward(t.id);
-            toast(`${t.label} applied to your cart`);
-            nav('/cart');
-          }}
           onRaceAgain={() => window.location.reload()}
+          onRewards={() => nav('/rewards')}
+          onViewCar={() => nav(`/hot-wheels/${car.id}`)}
           onLeaderboard={() => nav('/leaderboard')}
           onExit={() => nav('/campaign')}
           exitLabel="Campaign"

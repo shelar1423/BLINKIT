@@ -12,6 +12,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
      primary -> Blinkit green, for commerce (add, checkout, pay)
      flame   -> Hot Wheels red, for the campaign (race, AR, invite)
      light   -> white, for a primary action sitting ON the campaign ground
+     yellow  -> the race result's Redeem, on the blue result ground
    Mixing the first two up is the mistake this enum exists to prevent.
 
    `light` exists because none of the others survive on the saturated
@@ -22,7 +23,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
    button you are meant to press.
    ============================================================ */
 
-export type ButtonVariant = 'primary' | 'flame' | 'hwBlue' | 'hwTrack' | 'light' | 'dark' | 'outline' | 'ghostDark';
+export type ButtonVariant = 'primary' | 'flame' | 'hwBlue' | 'hwTrack' | 'light' | 'dark' | 'outline' | 'ghostDark' | 'yellow';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {

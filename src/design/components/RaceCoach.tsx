@@ -96,25 +96,9 @@ export function RaceCoach({
 }) {
   const ar = mode === 'ar';
   const steps = [
-    {
-      glyph: <GlyphPull />,
-      title: 'Pull the launcher',
-      body: 'Drag the red lever back and let go. The harder the pull, the faster you leave the line.',
-    },
-    {
-      glyph: <GlyphLift mode={mode} />,
-      title: 'Jump the fire rings',
-      body: ar
-        ? 'Rings hang over the track. As the closing ring meets the target, tilt your phone up. The car jumps through the middle and boosts.'
-        : 'Rings hang over the track. As the closing ring meets the target, swipe up. The car jumps through the middle and boosts.',
-    },
-    {
-      glyph: <GlyphSteer mode={mode} />,
-      title: 'Take the corners',
-      body: ar
-        ? 'Tilt the phone left and right. The car does not turn on its own, and a corner nobody takes ends at the barrier.'
-        : 'Hold either side of the screen. The car does not turn on its own, and a corner nobody takes ends at the barrier.',
-    },
+    { glyph: <GlyphPull />, title: 'Pull the launcher', body: 'Drag back, let go' },
+    { glyph: <GlyphLift mode={mode} />, title: 'Jump the fire rings', body: ar ? 'Tilt up on the beat' : 'Swipe up on the beat' },
+    { glyph: <GlyphSteer mode={mode} />, title: 'Take the corners', body: ar ? 'Tilt left and right' : 'Hold left or right' },
   ];
 
   return (
@@ -137,8 +121,6 @@ export function RaceCoach({
             </li>
           ))}
         </ol>
-
-        <p className="coach__note">Groceries add points. Hitting things takes them away.</p>
 
         {tilt?.offer && (
           <button type="button" className="coach__alt" onClick={tilt.onEnable}>

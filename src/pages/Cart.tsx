@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AddControl, ProductCard } from '../design/components/ProductCard';
-import { AddressSheet, Mark, PaymentSheet } from '../design/components/CheckoutSheets';
+import { Mark } from '../design/components/CheckoutSheets';
 import { SHOP_CARS, rupees } from '../data/catalog';
 import { ADDRESSES, findMethod } from '../data/addresses';
-import { useCartLines, useStore, useTotals } from '../store/useStore';
+import { DELIVERY_FEE, useCartLines, useStore, useTotals } from '../store/useStore';
 import {
   IconCaretDown,
+  IconCheck,
   IconChevronLeft,
+  IconChevronRight,
   IconClock,
   IconPin,
   IconSearch,
@@ -33,10 +35,10 @@ import {
 /* The amounts the real checkout offers, and the flag on the one most people
    pick. Data at module scope rather than inline JSX, so the row is a list
    being rendered instead of three buttons that happen to look alike. */
-const TIPS: { amt: number; emo: string }[] = [
-  { amt: 20, emo: '😄' },
-  { amt: 30, emo: '🤗' },
-  { amt: 50, emo: '😍' },
+const TIPS: { amt: number; icon: string }[] = [
+  { amt: 20, icon: '/checkout/tip-20.webp' },
+  { amt: 30, icon: '/checkout/tip-30.webp' },
+  { amt: 50, icon: '/checkout/tip-50.webp' },
 ];
 /* The flag on ₹15 is the real one's, and it is worth more than a "most
    picked" label: it says what the money BUYS. A meal is a unit somebody can
@@ -46,6 +48,35 @@ const DONATIONS: { amt: number; flag?: string }[] = [
   { amt: 10 },
   { amt: 15, flag: '1 MEAL' },
 ];
+
+/** The tick-box instructions, in the real checkout's order. */
+const INSTRUCTIONS: { id: string; icon: string; label: string }[] = [
+  { id: 'call', icon: 'call-disabled-02', label: 'Avoid calling' },
+  { id: 'bell', icon: 'bell-slash', label: "Don't ring the bell" },
+  { id: 'guard', icon: 'security-worker-outline', label: 'Leave with guard' },
+  { id: 'door', icon: 'door-closed', label: 'Leave at door' },
+  { id: 'pet', icon: 'dog-1', label: 'Pet at home' },
+];
+
+/** A one-colour icon from public/checkout/icons, tinted by CSS `color`. */
+function Glyph({ name, className = '' }: { name: string; className?: string }) {
+  return (
+    <i
+      className={'glyph ' + className}
+      aria-hidden="true"
+      style={{ ['--glyph' as string]: `url(/checkout/icons/${name}.png)` }}
+    />
+  );
+}
+
+/** The small filled play-triangle Blinkit puts after a link. */
+const Tri = () => <i className="ckotri" aria-hidden="true" />;
+
+/** "#307, Mi Casa Premium Stay, Rahinj Nagar, Near MIT…" -> the first three parts and an ellipsis. */
+function shortAddress(line: string) {
+  const parts = line.split(',').map((p) => p.trim());
+  return parts.length > 3 ? `${parts.slice(0, 3).join(', ')}…` : line;
+}
 
 export default function Cart() {
   const nav = useNavigate();
@@ -57,9 +88,10 @@ export default function Cart() {
   const donation = useStore((s) => s.donation);
   const setTip = useStore((s) => s.setTip);
   const setDonation = useStore((s) => s.setDonation);
-  const [payOpen, setPayOpen] = useState(false);
-  const [addrOpen, setAddrOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  /* Avoid calling, don't ring the bell and pet at home start ticked, as on the
+     reference account; the rest start clear. */
+  const [instructions, setInstructions] = useState<string[]>(['call', 'bell', 'pet']);
   const placeOrder = useStore((s) => s.placeOrder);
   /* Set before any navigation this page performs itself, so the empty-cart
      effect below cannot fire on the same tick and fight it. */
@@ -155,6 +187,120 @@ export default function Cart() {
               <ProductCard key={p.id} product={p} />
             ))}
           </div>
+          <button type="button" className="ckoall" onClick={() => nav('/hot-wheels')}>
+            <span className="ckoall__stack" aria-hidden="true">
+              {suggestions.slice(0, 3).map((p) => (
+                <img key={p.id} src={p.image} alt="" />
+              ))}
+            </span>
+            See all products <Tri />
+          </button>
+        </section>
+
+        <section className="ckocard ckocoup">
+          <div className="ckocoup__main">
+            <span className="ckocoup__ic" aria-hidden="true"><IconCheck size={20} /></span>
+            <span className="ckocoup__t">
+              {totals.delivery === 0 ? (
+                <>
+                  <b>Yay! You got FREE Delivery</b>
+                  <span>No coupon needed <Tri /></span>
+                </>
+              ) : (
+                <>
+                  <b>Add {rupees(totals.freeDeliveryShortfall)} more for FREE Delivery</b>
+                  <span>No coupon needed <Tri /></span>
+                </>
+              )}
+            </span>
+          </div>
+          <button type="button" className="ckocoup__all">See all coupons <Tri /></button>
+        </section>
+
+        <section className="ckocard ckobill">
+          <h2>Bill details</h2>
+          <div className="ckobill__r">
+            <span className="ckobill__l">
+              <Glyph name="list-square-filled" />
+              Items total
+              {totals.mrp > totals.items && <em className="ckobill__saved">Saved {rupees(totals.mrp - totals.items)}</em>}
+            </span>
+            <b>
+              {totals.mrp > totals.items && <s>{rupees(totals.mrp)}</s>} {rupees(totals.items)}
+            </b>
+          </div>
+          <div className="ckobill__r">
+            <span className="ckobill__l">
+              <Glyph name="scooter-delivery-filled" />
+              <span className="ckobill__dot">Delivery charge</span>
+            </span>
+            <b>{totals.delivery === 0 ? <><s>{rupees(DELIVERY_FEE)}</s> <em className="ckobill__free">FREE</em></> : rupees(totals.delivery)}</b>
+          </div>
+          <div className="ckobill__r">
+            <span className="ckobill__l">
+              <Glyph name="shopping-bag-filled" />
+              <span className="ckobill__dot">Handling charge</span>
+            </span>
+            <b>{rupees(totals.handling)}</b>
+          </div>
+          {totals.tip > 0 && (
+            <div className="ckobill__r"><span className="ckobill__l ckobill__l--plain">Delivery tip</span><b>{rupees(totals.tip)}</b></div>
+          )}
+          {totals.donation > 0 && (
+            <div className="ckobill__r"><span className="ckobill__l ckobill__l--plain">Feeding India donation</span><b>{rupees(totals.donation)}</b></div>
+          )}
+          {totals.rewardValue > 0 && (
+            <div className="ckobill__r">
+              <span className="ckobill__l ckobill__l--plain">Racing reward</span>
+              <b><em className="ckobill__free">− {rupees(totals.rewardValue)}</em></b>
+            </div>
+          )}
+          <div className="ckobill__r ckobill__r--tot"><span className="ckobill__dot">Grand total</span><b>{rupees(totals.toPay)}</b></div>
+          {totals.savings > 0 && (
+            <div className="ckosave">
+              <p className="ckosave__r"><b>Your total savings</b><b>{rupees(totals.savings)}</b></p>
+              {totals.delivery === 0 && <p className="ckosave__s">Includes {rupees(DELIVERY_FEE)} savings through free delivery</p>}
+            </div>
+          )}
+        </section>
+
+        <button type="button" className="ckocard ckogst">
+          <span className="ckogst__ic"><Glyph name="discount-filled" /></span>
+          <span className="ckogst__t">
+            <b>Add GSTIN</b>
+            <span>Claim GST input credit up to 18% on your order</span>
+          </span>
+          <IconChevronRight size={20} />
+        </button>
+
+        <section className="ckocard ckoins">
+          <h2>Delivery instructions</h2>
+          <div className="ckoins__row">
+            <button type="button" className="ckoins__c ckoins__c--rec">
+              <span className="ckoins__rec"><Glyph name="mic" /> Record</span>
+              <span className="ckoins__l">Tap here and hold</span>
+            </button>
+            {INSTRUCTIONS.map((it) => {
+              const on = instructions.includes(it.id);
+              return (
+                <button
+                  key={it.id}
+                  type="button"
+                  className={'ckoins__c' + (on ? ' is-on' : '')}
+                  aria-pressed={on}
+                  onClick={() =>
+                    setInstructions((cur) => (on ? cur.filter((x) => x !== it.id) : [...cur, it.id]))
+                  }
+                >
+                  <span className="ckoins__top">
+                    <Glyph name={it.icon} />
+                    <i className="ckoins__box" aria-hidden="true" />
+                  </span>
+                  <span className="ckoins__l">{it.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         {/* Feeding India first, then the tip, then the three small rows. The
@@ -193,7 +339,7 @@ export default function Cart() {
           </div>
         </section>
 
-        <section className="ckocard ckotip">
+        <section className="ckocard ckotip ckotip--tip">
           <img className="ckotip__art" src="/checkout/tip-partner.png" alt="Tip your delivery partner" />
           <div className="ckochips">
             {TIPS.map((t) => (
@@ -204,7 +350,7 @@ export default function Cart() {
                 onClick={() => setTip(t.amt)}
               >
                 <span className="ckochip__v">
-                  <i className="ckochip__emo" aria-hidden="true">{t.emo}</i>
+                  <img className="ckochip__emo" src={t.icon} alt="" />
                   {rupees(t.amt)}
                 </span>
               </button>
@@ -215,7 +361,7 @@ export default function Cart() {
               onClick={() => setTip(tip === 75 ? 0 : 75)}
             >
               <span className="ckochip__v">
-                <i className="ckochip__emo" aria-hidden="true">👏</i>
+                <img className="ckochip__emo" src="/checkout/tip-custom.webp" alt="" />
                 Custom
               </span>
             </button>
@@ -223,7 +369,7 @@ export default function Cart() {
         </section>
 
         <section className="ckocard ckorow">
-          <span className="ckorow__ic" aria-hidden="true">🎁</span>
+          <img className="ckorow__ic" src="/checkout/gift-bag.webp" alt="" />
           <span className="ckorow__t">
             <b>Gift Packaging</b>
             <p>Apologies, currently unavailable at this location</p>
@@ -243,51 +389,33 @@ export default function Cart() {
           </p>
         </section>
 
-        <section className="ckocard ckobill">
-          <h2>Bill details</h2>
-          <div className="ckobill__r"><span>Item total</span><b>{rupees(totals.items)}</b></div>
-          <div className="ckobill__r">
-            <span>Delivery charge</span>
-            <b>{totals.delivery === 0 ? <em>FREE</em> : rupees(totals.delivery)}</b>
-          </div>
-          <div className="ckobill__r"><span>Handling charge</span><b>{rupees(totals.handling)}</b></div>
-          {totals.tip > 0 && (
-            <div className="ckobill__r"><span>Delivery tip</span><b>{rupees(totals.tip)}</b></div>
-          )}
-          {totals.donation > 0 && (
-            <div className="ckobill__r"><span>Feeding India donation</span><b>{rupees(totals.donation)}</b></div>
-          )}
-          {totals.rewardValue > 0 && (
-            <div className="ckobill__r">
-              <span>Racing reward</span>
-              <b><em>− {rupees(totals.rewardValue)}</em></b>
-            </div>
-          )}
-          <div className="ckobill__r ckobill__r--tot"><span>To pay</span><b>{rupees(totals.toPay)}</b></div>
-        </section>
       </main>
 
       {/* The foot. Three separate statements stacked, which is how the real one
           reads: where it is going, how it is paid for, and the amount sitting
           on the button that spends it. */}
       <div className="ckofoot">
-        <button type="button" className="ckoaddr" onClick={() => setAddrOpen(true)}>
+        {/* Display only: the address and payment pickers are not part of this
+            prototype. */}
+        <div className="ckoaddr">
           <span className="ckoaddr__ic" aria-hidden="true"><IconPin size={17} /></span>
           <span className="ckoaddr__t">
-            <b>Delivering to {address.label}</b>
-            <p>{address.line}</p>
+            <b><span className="ckoaddr__k">Delivering to</span> {address.label}</b>
+            {/* The first three parts only — house, building, area — then the
+                ellipsis. The rest of the address is not read from here. */}
+            <p>{shortAddress(address.line)}</p>
           </span>
           <span className="ckoaddr__ch">Change</span>
-        </button>
+        </div>
 
         <div className="ckopay">
-          <button type="button" className="ckopay__m" onClick={() => setPayOpen(true)}>
+          <div className="ckopay__m">
             <span className="ckopay__k">
               <span className="ckopay__mark"><Mark mark={pay.mark} /></span>
-              PAY USING <IconCaretDown size={11} />
+              PAY USING <IconCaretDown className="ckopay__up" size={11} />
             </span>
             <span className="ckopay__v">{pay.label}</span>
-          </button>
+          </div>
           <button
             type="button"
             className="ckopay__go"
@@ -312,8 +440,6 @@ export default function Cart() {
         </div>
       </div>
 
-      <PaymentSheet open={payOpen} onClose={() => setPayOpen(false)} />
-      <AddressSheet open={addrOpen} onClose={() => setAddrOpen(false)} />
     </div>
   );
 }

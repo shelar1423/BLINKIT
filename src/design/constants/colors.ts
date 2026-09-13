@@ -39,8 +39,8 @@ export const color = {
   yellowLt: t('yellow-lt', '#FCDF82'),
   yellowTint: t('yellow-tint', '#FEFAEC'),
 
-  green: t('green', '#0C831F'),
-  greenDk: t('green-dk', '#0A6B19'),
+  green: t('green', '#328617'),
+  greenDk: t('green-dk', '#296E13'),
   green2: t('green-2', '#318616'),
   greenTint: t('green-tint', '#ECFFEC'),
 

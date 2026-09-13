@@ -9,6 +9,7 @@ import {
   IconChevronDown,
   IconClock,
   IconChevronRight,
+  IconClose,
   IconCube,
   IconFlag,
   IconHeart,
@@ -23,6 +24,8 @@ import {
 import { ProductCard, Stars } from '../design/components/ProductCard';
 import { CartPill } from '../design/components/CartPill';
 import { SectionHeader } from '../design/components/Chrome';
+import { Sheet } from '../design/components/Sheet';
+import { TrackRing } from '../design/components/DriftLoader';
 import { useToast } from '../App';
 import { useARSupport } from '../lib/useARSupport';
 
@@ -104,6 +107,7 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
           <img src={product.image} alt="" />
         </div>
 
+        <div className="pdp__herofoot">
         <div className="pdp__pager">
           <span className="pdp__dot is-on" />
           {product.glb && <span className="pdp__dot" />}
@@ -118,7 +122,12 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
             <span>Material</span>
             <b>Diecast</b>
           </div>
+          <div className="chipbox">
+            <span>Scale</span>
+            <b>1:64</b>
+          </div>
           <span className="chipbox chipbox--cta">View details</span>
+        </div>
         </div>
 
         <section className="card pdp__info">
@@ -154,7 +163,7 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
 
         <div className="card rowcard rowcard--static">
           <span className="rowcard__brand">
-            <img src="/brand/hot-wheels.svg" alt="" />
+            <img src="/brand/hot-wheels-logo.webp" alt="" />
           </span>
           <span className="grow">
             <b>Hot Wheels</b>
@@ -226,7 +235,8 @@ export default function Product() {
   /** 0 = interactive 3D, 1 = studio photo. Only shown when both genuinely exist. */
   const [view, setView] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const specRef = useRef<HTMLDivElement>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [keyOpen, setKeyOpen] = useState(true);
 
   /* ---- the deck ---------------------------------------------------- */
   const deck = useMemo(() => CARS.filter((c) => !c.mystery), []);
@@ -451,6 +461,37 @@ export default function Product() {
     }
   };
 
+  const cartControl = (
+    <>
+      {qty === 0 ? (
+        <Button variant="primary" size="lg" className="grow"
+          type="button"
+          /* No toast. The cart bar rising into the sheet says the same
+             thing in the same place, and the two used to overlap. */
+          onClick={() => add(product.id)}
+        >
+          Add to cart
+        </Button>
+      ) : (
+        /* One control, not two. Adding swaps what is inside the box; it
+           does not shrink the box and stand a second button next to it.
+           Measured off the recording: the control is 33.8% of the sheet's
+           width both before and after, so the stepper simply inherits the
+           slot the button was occupying. There is no "Go to Cart" here —
+           the cart bar above already is that. */
+        <div className="stepper stepper--lg grow" role="group" aria-label="Quantity">
+          <button type="button" onClick={() => setQty(product.id, qty - 1)} aria-label="Decrease quantity">
+            <IconMinus size={15} />
+          </button>
+          <span className="stepper__q">{qty}</span>
+          <button type="button" onClick={() => setQty(product.id, qty + 1)} aria-label="Increase quantity">
+            <IconPlus size={15} />
+          </button>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <>
       {/* The neighbours ride in a fixed layer pinned to the app column, so the
@@ -500,7 +541,7 @@ export default function Product() {
                 <div className="pdp__3d" ref={host} />
                 {!ready && !err && (
                   <div className="loadbox" style={{ position: 'absolute', inset: 0 }}>
-                    <span className="spin" />
+                    <TrackRing className="trackload trackload--sm" />
                     <p>Getting your car ready… {pct > 0 ? `${pct}%` : ''}</p>
                   </div>
                 )}
@@ -525,6 +566,7 @@ export default function Product() {
             )}
           </div>
 
+          <div className="pdp__herofoot">
           {/* Two real views — the interactive model and the studio shot. No filler
               dots: a car without a GLB has one image and gets no pager. */}
           {has3D && (
@@ -584,19 +626,18 @@ export default function Product() {
               <span>Material</span>
               <b>Diecast</b>
             </div>
+            <div className="chipbox">
+              <span>Scale</span>
+              <b>1:64</b>
+            </div>
             <button
               className="chipbox chipbox--cta"
               type="button"
-              onClick={() => {
-                setDetailsOpen(true);
-                // let the block expand before scrolling to where it now ends up
-                requestAnimationFrame(() =>
-                  specRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }),
-                );
-              }}
+              onClick={() => setDetailsOpen(true)}
             >
               View details
             </button>
+          </div>
           </div>
 
           {/* Blinkit leads the card with how fast it lands and how it is rated —
@@ -653,7 +694,7 @@ export default function Product() {
 
           <button className="card rowcard" type="button" onClick={() => nav('/hot-wheels')}>
             <span className="rowcard__brand">
-              <img src="/brand/hot-wheels.svg" alt="" />
+              <img src="/brand/hot-wheels-logo.webp" alt="" />
             </span>
             <span className="grow">
               <b>Hot Wheels</b>
@@ -699,46 +740,11 @@ export default function Product() {
             <IconChevronRight size={18} />
           </button>
 
-          <div className="card pdpspec" ref={specRef}>
-            <button
-              className="pdpspec__h"
-              type="button"
-              aria-expanded={detailsOpen}
-              onClick={() => setDetailsOpen((v) => !v)}
-            >
-              <span className="grow">Product details</span>
-              <span className={'pdpspec__chev' + (detailsOpen ? ' is-open' : '')}>
-                <IconChevronDown size={18} />
-              </span>
-            </button>
-            {detailsOpen && (
-              <dl className="pdpspec__list">
-                {[
-                  ['Scale', '1:64 die-cast'],
-                  ['Series', product.series],
-                  ['Unit', product.unit],
-                  ['Age group', product.age ?? AGE_RATING],
-                  ['Assembly required', 'No'],
-                  ['Material', 'Diecast'],
-                  ['Playable in 3D & AR', product.glb ? 'Yes' : 'No'],
-                  ['Seller', 'Mattel Toys India'],
-                  ['Country of origin', 'India'],
-                  ['Marketed by', 'Mattel Toys (India) Pvt. Ltd.'],
-                ].map(([k, v]) => (
-                  <div key={k}>
-                    <dt>{k}</dt>
-                    <dd>{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-          </div>
-
           {/* Inside a white card, like every other block on this page. The card
               panels are tinted, and this page's ground is the same tint — on
               the bare page they had nothing to read against. */}
           <section className="card pdptop">
-            <SectionHeader title="Top products in this category" />
+            <SectionHeader title="Similar products" />
             <div className="prail">
               {alsoLike.map((p) => (
                 <ProductCard key={p.id} product={p} />
@@ -768,35 +774,103 @@ export default function Product() {
             </p>
             <p className="ab__tax">Inclusive of all taxes</p>
           </div>
-          {qty === 0 ? (
-            <Button variant="primary" size="lg" className="grow"
-              type="button"
-              /* No toast. The cart bar rising into the sheet says the same
-                 thing in the same place, and the two used to overlap. */
-              onClick={() => add(product.id)}
-            >
-              Add to cart
-            </Button>
-          ) : (
-            /* One control, not two. Adding swaps what is inside the box; it
-               does not shrink the box and stand a second button next to it.
-               Measured off the recording: the control is 33.8% of the sheet's
-               width both before and after, so the stepper simply inherits the
-               slot the button was occupying. There is no "Go to Cart" here —
-               the cart bar above already is that. */
-            <div className="stepper stepper--lg grow" role="group" aria-label="Quantity">
-              <button type="button" onClick={() => setQty(product.id, qty - 1)} aria-label="Decrease quantity">
-                <IconMinus size={15} />
-              </button>
-              <span className="stepper__q">{qty}</span>
-              <button type="button" onClick={() => setQty(product.id, qty + 1)} aria-label="Increase quantity">
-                <IconPlus size={15} />
-              </button>
-            </div>
-          )}
+          {cartControl}
           </div>
         </div>
       </div>
+      {/* View details opens the full spec as a sheet over the product, the
+          way the real PDP does, rather than a block further down the page. */}
+      <Sheet
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        title="Product details"
+        panelClass="sheet__panel--pdd"
+        float={
+          <button type="button" className="pdd__x" aria-label="Close" onClick={() => setDetailsOpen(false)}>
+            <IconClose size={19} />
+          </button>
+        }
+        header={
+          <div className="pdd__head">
+            <img className="pdd__thumb" src={product.image} alt="" />
+            <h2>{product.name}</h2>
+          </div>
+        }
+        footer={
+          <div className="actionbar pdd__foot">
+            <div className="ab__price">
+              <p className="ab__unit">{product.unit.split(' · ')[0]}</p>
+              <p className="ab__amt"><b className="t-num">{rupees(product.price)}</b></p>
+              <p className="ab__tax">Inclusive of all taxes</p>
+            </div>
+            {cartControl}
+          </div>
+        }
+      >
+        <div className="pdd">
+          <p className="pdd__k">Highlights</p>
+          <div className="pdd__chips">
+            {[
+              ['Age Group', product.age ?? AGE_RATING],
+              ['BPA Free', 'No'],
+              ['Assembly Required', 'No'],
+              ['Material', 'Diecast'],
+            ].map(([k, v]) => (
+              <div key={k} className="chipbox">
+                <span>{k}</span>
+                <b>{v}</b>
+              </div>
+            ))}
+          </div>
+
+          <p className="pdd__k">All details</p>
+          {[
+            {
+              title: 'Key Information',
+              open: keyOpen,
+              toggle: () => setKeyOpen((v) => !v),
+              rows: [
+                ['BPA Free', 'No'],
+                ['Age Group', product.age ?? AGE_RATING],
+                ['Assembly Required', 'No'],
+                ['Series', product.series],
+                ['Scale', '1:64 die-cast'],
+                ['Mechanism', 'Push & Go'],
+                ['Playable in 3D & AR', product.glb ? 'Yes' : 'No'],
+              ],
+            },
+            {
+              title: 'Info',
+              open: infoOpen,
+              toggle: () => setInfoOpen((v) => !v),
+              rows: [
+                ['Seller', 'Mattel Toys India'],
+                ['Country of Origin', 'India'],
+                ['Marketed by', 'Mattel Toys (India) Pvt. Ltd.'],
+              ],
+            },
+          ].map((g) => (
+            <div key={g.title} className="pdd__acc">
+              <button type="button" className="pdd__acch" aria-expanded={g.open} onClick={g.toggle}>
+                <span className="grow">{g.title}</span>
+                <span className={'pdd__chev' + (g.open ? ' is-open' : '')}>
+                  <IconChevronDown size={18} />
+                </span>
+              </button>
+              {g.open && (
+                <dl className="pdd__list">
+                  {g.rows.map(([k, v]) => (
+                    <div key={k}>
+                      <dt>{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+            </div>
+          ))}
+        </div>
+      </Sheet>
     </>
   );
 }

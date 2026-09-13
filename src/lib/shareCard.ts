@@ -14,13 +14,23 @@ export type ShareCard = {
   score: number;
   groceries: number;
   seconds: number;
+  /** false when the race ended on the clock rather than on lap two */
+  finished?: boolean;
   carName: string;
   carImage: string;
   reward?: string;
 };
 
+/**
+ * The platform the car stands on, as an image. Null draws the placeholder
+ * platform, which matches the one on the result screen. Set this when the
+ * artwork lands and the card picks it up.
+ */
+export const PLATFORM_IMAGE: string | null = null;
+
 const W = 1080;
 const H = 1350; // 4:5, the aspect messaging apps crop least
+const FONT = "'Blinkit Sans', system-ui, sans-serif";
 
 function rounded(c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   c.beginPath();
@@ -43,6 +53,45 @@ function load(src: string): Promise<HTMLImageElement | null> {
   });
 }
 
+/** The same platform the result screen draws in CSS: lit top face, blue drum. */
+function drawPlatform(c: CanvasRenderingContext2D, cx: number, top: number, w: number, h: number) {
+  const faceH = h * 0.6;
+  // drum shadow
+  c.save();
+  c.shadowColor = 'rgba(0,20,60,0.45)';
+  c.shadowBlur = 50;
+  c.shadowOffsetY = 30;
+  const drum = c.createLinearGradient(0, top, 0, top + h);
+  drum.addColorStop(0, '#0A4FA8');
+  drum.addColorStop(1, '#052A5E');
+  c.fillStyle = drum;
+  c.beginPath();
+  c.ellipse(cx, top + faceH / 2, w / 2, faceH / 2, 0, Math.PI, 0);
+  c.lineTo(cx + w / 2, top + h - faceH / 2);
+  c.ellipse(cx, top + h - faceH / 2, w / 2, faceH / 2, 0, 0, Math.PI);
+  c.closePath();
+  c.fill();
+  c.restore();
+  // top face
+  const face = c.createRadialGradient(cx, top + faceH * 0.45, 0, cx, top + faceH * 0.45, w * 0.55);
+  face.addColorStop(0, '#FFFFFF');
+  face.addColorStop(0.55, '#E3EEFF');
+  face.addColorStop(1, '#A9C6F2');
+  c.fillStyle = face;
+  c.beginPath();
+  c.ellipse(cx, top + faceH / 2, w / 2, faceH / 2, 0, 0, Math.PI * 2);
+  c.fill();
+  c.lineWidth = 9;
+  c.strokeStyle = '#FFE01B';
+  c.beginPath();
+  c.ellipse(cx, top + faceH / 2, w / 2 - 4.5, faceH / 2 - 4.5, 0, 0, Math.PI * 2);
+  c.stroke();
+}
+
+/**
+ * The shared image: the result screen as a picture — blue ground, the score,
+ * the car on its platform, the run's stats, and the challenge.
+ */
 export async function renderShareCard(d: ShareCard): Promise<Blob | null> {
   const cv = document.createElement('canvas');
   cv.width = W;
@@ -50,83 +99,98 @@ export async function renderShareCard(d: ShareCard): Promise<Blob | null> {
   const c = cv.getContext('2d');
   if (!c) return null;
 
-  // ground: the campaign's pit-lane navy
+  // Canvas text does not wait for web fonts; without this the first share
+  // after a cold load draws in the fallback face.
+  try {
+    await Promise.all([document.fonts.load(`900 100px ${FONT}`), document.fonts.load(`700 40px ${FONT}`)]);
+  } catch {
+    /* fall back to system-ui */
+  }
+
   const g = c.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#122343');
-  g.addColorStop(0.55, '#0C1730');
-  g.addColorStop(1, '#070E1E');
+  g.addColorStop(0, '#0077D9');
+  g.addColorStop(0.45, '#0062B8');
+  g.addColorStop(1, '#003F7D');
   c.fillStyle = g;
   c.fillRect(0, 0, W, H);
 
-  // chequered flag band across the top
-  const sq = 30;
-  for (let x = 0; x < W / sq; x++) {
-    for (let y = 0; y < 2; y++) {
-      c.fillStyle = (x + y) % 2 ? '#FFFFFF' : '#101828';
-      c.fillRect(x * sq, y * sq, sq, sq);
-    }
-  }
-
   c.textAlign = 'center';
-
-  c.fillStyle = '#FF5A3C';
-  c.font = '800 34px system-ui, sans-serif';
+  c.fillStyle = 'rgba(255,255,255,0.75)';
+  c.font = `800 30px ${FONT}`;
   c.letterSpacing = '6px';
-  c.fillText('HOT WHEELS × BLINKIT', W / 2, 150);
+  c.fillText('HOT WHEELS × BLINKIT', W / 2, 96);
   c.letterSpacing = '0px';
-
-  /* The car is fitted into a fixed band rather than scaled off its width. The
-     catalogue shots are square, so sizing by width alone made a 760px-tall car
-     that ran straight through the score beneath it. */
-  const BAND = { top: 195, h: 520, w: 720 };
-  const car = await load(d.carImage);
-  if (car) {
-    const k = Math.min(BAND.w / car.width, BAND.h / car.height);
-    const cw = car.width * k;
-    const ch = car.height * k;
-    const cx = (W - cw) / 2;
-    const cy = BAND.top + (BAND.h - ch) / 2;
-    const glow = c.createRadialGradient(W / 2, BAND.top + BAND.h / 2, 10, W / 2, BAND.top + BAND.h / 2, BAND.w / 2);
-    glow.addColorStop(0, 'rgba(90,160,255,0.34)');
-    glow.addColorStop(1, 'rgba(90,160,255,0)');
-    c.fillStyle = glow;
-    c.fillRect(0, BAND.top - 30, W, BAND.h + 60);
-    c.drawImage(car, cx, cy, cw, ch);
-  }
-
-  // the score, which is the whole point of the card
-  c.fillStyle = 'rgba(255,255,255,0.6)';
-  c.font = '700 30px system-ui, sans-serif';
-  c.letterSpacing = '8px';
-  c.fillText('FINAL SCORE', W / 2, 790);
-  c.letterSpacing = '0px';
-
-  c.fillStyle = '#FFC400';
-  c.font = '800 190px system-ui, sans-serif';
-  c.fillText(d.score.toLocaleString('en-IN'), W / 2, 950);
 
   c.fillStyle = '#FFFFFF';
-  c.font = '700 40px system-ui, sans-serif';
-  c.fillText(d.carName, W / 2, 1020);
+  c.font = `700 52px ${FONT}`;
+  c.fillText('Your score', W / 2, 196);
+  c.font = `900 230px ${FONT}`;
+  c.letterSpacing = '-8px';
+  c.fillText(d.score.toLocaleString('en-IN'), W / 2, 410);
+  c.letterSpacing = '0px';
 
-  // two stats, side by side on pills
-  const pill = (x: number, label: string, value: string) => {
-    c.fillStyle = 'rgba(255,255,255,0.08)';
-    rounded(c, x, 1075, 420, 110, 26);
-    c.fill();
+  // the car on its platform
+  const PW = 640;
+  const PH = 256;
+  const PTOP = 800;
+  const plat = PLATFORM_IMAGE ? await load(PLATFORM_IMAGE) : null;
+  if (plat) {
+    const ph = (plat.height / plat.width) * PW;
+    c.drawImage(plat, (W - PW) / 2, PTOP, PW, ph);
+  } else {
+    drawPlatform(c, W / 2, PTOP, PW, PH);
+  }
+  const car = await load(d.carImage);
+  if (car) {
+    // the shots carry empty ground above and below the car; crop to 1.6:1,
+    // as the screen does, so the wheels land on the top face
+    const sw = car.width;
+    const sh = sw / 1.6;
+    const sy = (car.height - sh) / 2;
+    const cw = PW * 0.96;
+    const ch = cw / 1.6;
+    c.save();
+    c.shadowColor = 'rgba(0,20,60,0.3)';
+    c.shadowBlur = 16;
+    c.shadowOffsetY = 12;
+    c.drawImage(car, 0, sy, sw, sh, (W - cw) / 2, PTOP + PH * 0.58 - ch, cw, ch);
+    c.restore();
+  }
+
+  // the run: three stats on a band
+  const BY = 1110;
+  c.fillStyle = 'rgba(255,255,255,0.12)';
+  rounded(c, 90, BY, W - 180, 124, 28);
+  c.fill();
+  const stats: [string, string][] = [
+    [String(d.groceries), 'GROCERIES'],
+    [`${d.seconds}s`, 'TIME'],
+    [d.finished === false ? 'DNF' : '2/2', 'LAPS'],
+  ];
+  const colW = (W - 180) / 3;
+  stats.forEach(([v, l], i) => {
+    const x = 90 + colW * i + colW / 2;
+    if (i) {
+      c.fillStyle = 'rgba(255,255,255,0.22)';
+      c.fillRect(90 + colW * i, BY + 26, 2, 72);
+    }
     c.fillStyle = '#FFFFFF';
-    c.font = '800 52px system-ui, sans-serif';
-    c.fillText(value, x + 210, 1132);
-    c.fillStyle = 'rgba(255,255,255,0.55)';
-    c.font = '700 24px system-ui, sans-serif';
-    c.fillText(label, x + 210, 1166);
-  };
-  pill(90, 'GROCERIES', String(d.groceries));
-  pill(570, 'SECONDS', String(d.seconds));
+    c.font = `800 52px ${FONT}`;
+    c.fillText(v, x, BY + 66);
+    c.fillStyle = 'rgba(255,255,255,0.7)';
+    c.font = `700 22px ${FONT}`;
+    c.letterSpacing = '3px';
+    c.fillText(l, x, BY + 100);
+    c.letterSpacing = '0px';
+  });
 
-  c.fillStyle = d.reward ? '#39D353' : 'rgba(255,255,255,0.5)';
-  c.font = '700 30px system-ui, sans-serif';
-  c.fillText(d.reward ? `Unlocked: ${d.reward}` : 'Race It Home · beat this', W / 2, 1265);
+  // the challenge
+  c.fillStyle = '#FFE01B';
+  rounded(c, (W - 520) / 2, 1266, 520, 60, 16);
+  c.fill();
+  c.fillStyle = '#1F1F1F';
+  c.font = `800 32px ${FONT}`;
+  c.fillText('Can you beat this?', W / 2, 1307);
 
   return new Promise((res) => cv.toBlob((b) => res(b), 'image/png'));
 }
@@ -145,8 +209,8 @@ export async function shareScore(d: ShareCard, url: string): Promise<'file' | 'l
      of sending it. Passing `url` as well is still worth it on the link-only
      path, where it previews properly. */
   const text =
-    `I scored ${d.score.toLocaleString('en-IN')} in Race It Home · Hot Wheels × Blinkit. ` +
-    `Beat it. You get a free race for joining: ${url}`;
+    `I scored ${d.score.toLocaleString('en-IN')} in Race It Home on Blinkit. Beat my score! ` +
+    `Race here and we both get a free race: ${url}`;
 
   try {
     const blob = await renderShareCard(d);

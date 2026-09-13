@@ -106,7 +106,7 @@ export default function Checkout() {
               {totals.rewardValue > 0 && (
                 <div className="bill__r"><span>Racing reward</span><b style={{ color: 'var(--green)' }}>− {rupees(totals.rewardValue)}</b></div>
               )}
-              <div className="bill__r bill__t"><span style={{ color: 'var(--ink)' }}>To pay</span><b>{rupees(totals.toPay)}</b></div>
+              <div className="bill__r bill__t"><span className="ckobill__dot" style={{ color: 'var(--ink)' }}>Grand total</span><b>{rupees(totals.toPay)}</b></div>
             </div>
           </div>
 
