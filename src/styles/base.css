@@ -2070,7 +2070,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .trk__back:active { background: #DCE8D6; }
 .trk__k { font-size: var(--f-base); font-weight: 700; color: rgba(255, 255, 255, 0.92); }
-.trk__eta { font-size: var(--f-2xl); font-weight: 800; letter-spacing: -0.4px; margin-top: 3px; }
+.trk__eta { font-size: calc(var(--f-2xl) + 4px); font-weight: 800; letter-spacing: -0.4px; margin-top: 3px; }
 
 /* ---------- the map ----------
    The card is the design file's own frame, 740 x 414 with an 18px radius, and
@@ -2109,6 +2109,28 @@ input, select, textarea { font: inherit; color: inherit; }
   .trkmap__store, .trkmap__flame { animation: none; }
 }
 
+.trkmap__zoom {
+  position: absolute; top: 10px; right: 10px;
+  width: 34px; height: 34px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: #fff; color: var(--ink);
+  box-shadow: 0 2px 8px rgba(16, 20, 24, 0.18);
+}
+/* Shrinking the map does not shrink it — it puts it away, which is what the
+   real screen does once you stop caring where the car is. The map is SHOWN by
+   default; this is the way back from a collapse you asked for, not a gate in
+   front of the map. */
+.trk__showmap {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  /* A button does not fill its block parent on its own, and this one stands in
+     for the map, so it has to span exactly what the map spanned. */
+  width: calc(100% - 2 * var(--gut));
+  margin: 10px var(--gut) 0; padding: 12px;
+  background: #fff; border-radius: 14px;
+  font-size: var(--f-md); font-weight: 700; color: var(--green);
+  box-shadow: var(--sh-1);
+}
+
 .trkmap__share {
   position: absolute; right: 10px; bottom: 10px;
   display: inline-flex; align-items: center; gap: 7px;
@@ -2142,7 +2164,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* ---------- who has the order ---------- */
 .trkc__who { display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; }
 .trkc__face { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%; object-fit: cover; }
-.trkc__name { flex: 1; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.22; }
+.trkc__name { flex: 1; font-size: calc(var(--f-xl) + 2px); font-weight: 700; letter-spacing: -0.3px; line-height: 1.22; }
 .trkc__call {
   flex: none; width: 42px; height: 42px; border-radius: 50%;
   display: grid; place-items: center;
@@ -2175,6 +2197,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .trkc__row { display: flex; align-items: flex-start; gap: 14px; padding: 16px; width: 100%; text-align: left;
   font-size: var(--f-md); color: var(--mut); line-height: 1.35; }
 .trkc__row--sep { border-top: 1px solid var(--line); align-items: center; }
+/* A single line next to a 40px disc belongs on its centre line. flex-start is
+   right for the address above it, which runs to four lines and has to start
+   level with its pin — it is wrong for one name and a number. */
+.trkc__row--mid { align-items: center; }
 .trkc__row b { color: var(--ink); font-weight: 600; }
 .trkc__shield { flex: none; color: var(--green); display: grid; place-items: center; }
 

@@ -12,6 +12,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconCopy,
+  IconExpand,
   IconHeart,
   IconBag,
   IconLike,
@@ -72,6 +73,7 @@ export default function OrderSuccess() {
 
   /** Seconds since the order was placed. Everything on this screen reads it. */
   const [elapsed, setElapsed] = useState(0);
+  const [mapOpen, setMapOpen] = useState(true);
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -135,14 +137,22 @@ export default function OrderSuccess() {
         </h1>
       </header>
 
-      {/* Always on screen. There is no collapsed state and no control to
-          restore one: where the order is, is what this screen is for, and
-          making that a thing you switch back on is a step nobody wants. */}
-      <DeliveryMap
-        u={u}
-        onShare={() => toast('Location sharing is out of scope for this prototype')}
-        label={done ? 'Your order has arrived' : `${PARTNER} is ${minsLeft} minutes away`}
-      />
+      {/* Shown by default, always. The shrink button is the way to put it away
+          once you have stopped caring where the car is — it is never something
+          you have to press to see the map in the first place. */}
+      {mapOpen ? (
+        <DeliveryMap
+          u={u}
+          onCollapse={() => setMapOpen(false)}
+          onShare={() => toast('Location sharing is out of scope for this prototype')}
+          label={done ? 'Your order has arrived' : `${PARTNER} is ${minsLeft} minutes away`}
+        />
+      ) : (
+        <button type="button" className="trk__showmap" onClick={() => setMapOpen(true)}>
+          <IconExpand size={17} />
+          Show live map
+        </button>
+      )}
 
       <div className="trk__body">
         {/* ---- who has the order ---- */}
@@ -240,7 +250,7 @@ export default function OrderSuccess() {
             </span>
           </div>
 
-          <div className="trkc__row">
+          <div className="trkc__row trkc__row--mid">
             <span className="trkc__ic trkc__ic--sm"><IconCallOutline size={18} /></span>
             <span className="grow trkc__at">
               {ACCOUNT.first}, {mask(address.phone)}

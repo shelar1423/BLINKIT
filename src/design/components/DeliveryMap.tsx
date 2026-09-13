@@ -1,4 +1,4 @@
-import { IconShareUp } from '../elements/Icons';
+import { IconShareUp, IconShrinkDiagonal } from '../elements/Icons';
 
 /* ============================================================
    The live delivery map.
@@ -66,11 +66,13 @@ const BURST_S: Track = { t: [0, 0.8333, 0.9583, 1], v: [0.4, 0.4, 1.35, 1.35] };
 
 export function DeliveryMap({
   u,
+  onCollapse,
   onShare,
   label,
 }: {
   /** Position on the design's timeline, 0..1. */
   u: number;
+  onCollapse: () => void;
   onShare: () => void;
   label: string;
 }) {
@@ -108,6 +110,10 @@ export function DeliveryMap({
           <image href="/track/car.svg" x="553.51" y="75.35" width="67" height="36" />
         </g>
       </svg>
+
+      <button type="button" className="trkmap__zoom" aria-label="Hide map" onClick={onCollapse}>
+        <IconShrinkDiagonal size={20} />
+      </button>
 
       <button type="button" className="trkmap__share" onClick={onShare}>
         <IconShareUp size={15} />
