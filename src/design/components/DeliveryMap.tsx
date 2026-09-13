@@ -54,6 +54,11 @@ const RIG_ROT: Track = {
 };
 const RIG_OP: Track = { t: [0, 0.0333, 0.075, 0.85, 0.9, 1], v: [0, 0, 1, 1, 0, 0] };
 
+/** Where on the design's timeline the car reaches the door. */
+export const ARRIVE_U = 0.8258;
+/** ...and where the handover has finished and the burst has played out. */
+export const DONE_U = 0.9;
+
 /* ---- the house, and the burst it makes when the car lands ---- */
 const HOME_S: Track = { t: [0, 0.8417, 0.87, 0.925, 1], v: [1, 1, 1.2, 1, 1] };
 const BURST_O: Track = { t: [0, 0.8333, 0.8633, 0.9583, 1], v: [0, 0, 0.95, 0, 0] };
@@ -61,14 +66,11 @@ const BURST_S: Track = { t: [0, 0.8333, 0.9583, 1], v: [0.4, 0.4, 1.35, 1.35] };
 
 export function DeliveryMap({
   u,
-  arriving,
   onShare,
   label,
 }: {
   /** Position on the design's timeline, 0..1. */
   u: number;
-  /** Whether this lap is the one that ends at the door. */
-  arriving: boolean;
   onShare: () => void;
   label: string;
 }) {
@@ -76,11 +78,9 @@ export function DeliveryMap({
   const y = sample(RIG_Y, u);
   const rot = sample(RIG_ROT, u);
   const op = sample(RIG_OP, u);
-  /* On every other lap the house just sits there, which is the truth: the car
-     going past is the animation looping, not an arrival. */
-  const home = arriving ? sample(HOME_S, u) : 1;
-  const burstO = arriving ? sample(BURST_O, u) : 0;
-  const burstS = arriving ? sample(BURST_S, u) : 0.4;
+  const home = sample(HOME_S, u);
+  const burstO = sample(BURST_O, u);
+  const burstS = sample(BURST_S, u);
 
   return (
     <div className="trkmap">

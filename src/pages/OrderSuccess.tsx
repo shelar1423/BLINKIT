@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
-import { DeliveryMap } from '../design/components/DeliveryMap';
+import { ARRIVE_U, DeliveryMap, DONE_U } from '../design/components/DeliveryMap';
 import { rupees } from '../data/catalog';
 import { ADDRESSES } from '../data/addresses';
 import { useStore } from '../store/useStore';
@@ -38,22 +38,20 @@ import { useToast } from '../App';
    so the number and the picture can never disagree.
    ============================================================ */
 
-/* One lap of the map, in real seconds.
+/* The whole delivery, in real seconds.
  *
- * Stretching a single traversal across the whole delivery was the mistake:
- * however the number was tuned, one drive had to carry seven minutes, so the
- * car could only ever crawl. The design already loops — the car fades out at
- * the house and fades back in at the store, which is what makes a lap join
- * cleanly to the next — so the map runs at the speed it was drawn for and
- * simply goes round again.
+ * One drive, not a loop. Looping let the map run at the speed it was drawn
+ * for, but it put the car on the doorstep every ten seconds while the ETA
+ * still read five minutes — the text and the picture saying different things,
+ * which is the one thing this screen must never do.
  *
- * The ETA is still read off the same motion, just at a coarser grain: one lap
- * is one minute off the clock. Seven laps, seven minutes, and the count only
- * moves when the car has actually driven the route again. */
-const LOOP_S = 10;
-/** What the ETA reads at the start of the trip. */
+ * So the trip IS the drive: ten seconds, start to door. The ETA is computed
+ * from the car's own position on the route, so it counts down continuously
+ * while the car moves and reaches its last minute exactly as the car reaches
+ * the house. */
+const TRIP_S = 10;
+/** What the ETA reads as the car pulls away from the store. */
 const TRIP_MIN = 7;
-const TRIP_S = LOOP_S * TRIP_MIN;
 
 const PARTNER = 'Sangram';
 const ACCOUNT = { name: 'Aarav Mehta', first: 'Aarav', phone: '9620964510' };
@@ -107,21 +105,18 @@ export default function OrderSuccess() {
     );
   }
 
-  const done = elapsed >= TRIP_S;
-  /* Which lap the car is on, and where it is within it. */
-  const lap = Math.min(TRIP_MIN - 1, Math.floor(elapsed / LOOP_S));
-  const u = done ? 1 : (elapsed % LOOP_S) / LOOP_S;
-  const minsLeft = Math.max(1, TRIP_MIN - lap);
-  /* The house only pops once, on the lap that is actually the last one. A
-     doorstep celebration every ten seconds while the ETA still reads five
-     minutes would be a lie the animation tells about itself. */
-  const arriving = lap >= TRIP_MIN - 1;
+  const u = Math.min(1, elapsed / TRIP_S);
+  const done = u >= DONE_U;
+  /* Straight off the car's progress along the route, so the number moves
+     whenever the car does. */
+  const drive = Math.min(1, u / ARRIVE_U);
+  const minsLeft = Math.max(1, Math.ceil((1 - drive) * TRIP_MIN));
 
   const said = done
     ? 'I have handed over your order. Thanks for ordering!'
-    : minsLeft <= 1
+    : drive > 0.9
       ? 'I am at your location, please collect your order'
-      : minsLeft <= 4
+      : drive > 0.45
         ? 'I am on my way to your location'
         : 'I have picked up your order, and I am on the way';
 
@@ -145,7 +140,6 @@ export default function OrderSuccess() {
           making that a thing you switch back on is a step nobody wants. */}
       <DeliveryMap
         u={u}
-        arriving={arriving}
         onShare={() => toast('Location sharing is out of scope for this prototype')}
         label={done ? 'Your order has arrived' : `${PARTNER} is ${minsLeft} minutes away`}
       />
