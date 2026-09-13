@@ -394,12 +394,24 @@ input, select, textarea { font: inherit; color: inherit; }
   color: #F5A623;
 }
 
+/* Columns that FILL the row, rather than two 126px cards with the leftovers
+   dumped between them.
+
+   The fixed width was deliberate — every card in the app the same size — and
+   it holds on the phone it was measured on and comes apart on any wider one:
+   `space-between` has to put the spare somewhere, and with a fixed column it
+   all goes into the gap. On a 430px handset that is about 78px of nothing down
+   the middle of the listing. The card width was never the thing worth keeping
+   constant; the RHYTHM was.
+
+   `minmax(0, 1fr)` because a bare `1fr` is `minmax(auto, 1fr)`, and auto
+   refuses to go below the content's intrinsic width — long product titles then
+   push the column wider than its share and the grid overflows sideways. */
 .pgrid {
-  display: grid; grid-template-columns: repeat(2, var(--pcard-w));
-  justify-content: space-between;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px 10px; padding: 12px var(--gut) 20px;
 }
-@media (min-width: 560px) { .pgrid { grid-template-columns: repeat(3, var(--pcard-w)); } }
+@media (min-width: 560px) { .pgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 /* Horizontal product rail.
    `scroll-padding-inline` is doing real work: the snapport defaults to the
    scrollport, so `scroll-snap-align: start` was snapping the first card to x=0
@@ -3343,14 +3355,23 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* The side padding and the column gap both have to clear the ADD's 6px
    overhang, or the right-hand column pushes it off the screen. */
-/* Two cards of the SAME width as every other card in the app, with whatever
-   the listing column has spare going between them — not two columns that
-   divide up the leftovers and land at a different width per screen. */
+/* Two columns that divide the listing between them — which is the opposite of
+   what this said before, and the reason it broke.
+
+   It used to be two fixed 126px cards with `space-between`, so every pixel a
+   wider screen added went into the gap instead of into the cards: on a wider
+   handset the listing read as two narrow columns with a hole down the middle.
+   The cards grow with the column now.
+
+   The side padding and the column gap are both 10px and stay that way — they
+   have to clear the ADD's 6px overhang, or the right-hand column pushes it off
+   the screen. A third column past 620px, so a tablet gets more cards rather
+   than absurdly wide ones. */
 .catgrid {
-  display: grid; grid-template-columns: repeat(2, var(--pcard-w));
-  justify-content: space-between;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 24px 10px; padding: 10px 10px 14px;
 }
+@media (min-width: 620px) { .catgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .catempty { padding: 28px 12px; text-align: center; color: var(--mut); }
 .linkbtn {
   background: none; border: 0; padding: 6px 0;
