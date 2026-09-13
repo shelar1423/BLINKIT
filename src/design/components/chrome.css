@@ -334,10 +334,14 @@
 .cartbar { display: flex; justify-content: center; }
 .cartpill {
   display: flex; align-items: center; gap: 12px;
-  background: var(--green); color: #fff;
+  /* The pill's own green, lighter than the action green the ADD buttons wear.
+     A literal rather than `--green`: this is not that colour and never was,
+     and pointing it at the token would make every ADD in the app follow the
+     next change to this pill. */
+  background: #48A541; color: #fff;
   border-radius: 999px;
   padding: 8px 8px 8px 10px;
-  box-shadow: 0 8px 24px rgba(12, 131, 31, 0.34);
+  box-shadow: 0 8px 24px rgba(72, 165, 65, 0.34);
   max-width: 100%;
 }
 /* Clipping belongs to the unfurl and the furl ONLY, and is switched on for the
@@ -430,7 +434,11 @@
    is only 60px wide, and text allowed to wrap there makes the bar a line
    taller — so it opened 31px high and dropped as the words unwrapped. The
    height has to be constant for the open to read as one movement. */
-.cartpill__txt { flex: 1 1 auto; min-width: 0; padding-left: 2px; }
+/* Left, explicitly. The pill is a <button>, and a button's UA default is
+   `text-align: center` — which both lines were inheriting. It only LOOKED
+   like one of them: "View cart" nearly fills its box so its centring is
+   invisible, while "1 Item" is short enough to sit visibly adrift. */
+.cartpill__txt { flex: 1 1 auto; min-width: 0; padding-left: 2px; text-align: left; }
 .cartpill__txt b {
   display: block; font-size: var(--f-xl); font-weight: 800; line-height: 1.18;
   white-space: nowrap;
@@ -442,7 +450,9 @@
 .cartpill__go {
   flex: 0 0 44px; width: 44px; height: 44px; border-radius: 50%;
   display: grid; place-items: center;
-  background: var(--green-dk); color: #fff;
+  /* The same step down from the pill that --green-dk is from --green, so the
+     disc keeps reading as a well in the pill rather than as a second colour. */
+  background: #3B8735; color: #fff;
 }
 .cartpill:active { transform: scale(0.985); }
 
