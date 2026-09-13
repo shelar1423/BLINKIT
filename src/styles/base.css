@@ -177,14 +177,23 @@ input, select, textarea { font: inherit; color: inherit; }
   letter-spacing: 0.02em;
   box-shadow: 0 1px 2px rgba(16, 20, 24, 0.06);
 }
-.add:active { background: var(--green-tint); }
+/* Pressed, and once added, the control is not a flat fill. There is a sheen
+   down it: brighter across the top, a touch of shade at the foot. Written as a
+   gradient over the SAME green rather than as new colours, so the brand value
+   is still the one thing setting the hue and the gloss is only light on top
+   of it. */
+.add:active {
+  background-color: var(--green-tint);
+  background-image: var(--gloss);
+}
 .stepper {
   display: inline-flex;
   align-items: center;
   height: var(--ctl-h);
   min-width: 62px;
   border-radius: var(--r-ctl);
-  background: var(--green);
+  background-color: var(--green);
+  background-image: var(--gloss);
   color: #fff;
   overflow: hidden;
   box-shadow: var(--sh-1);
@@ -299,6 +308,9 @@ input, select, textarea { font: inherit; color: inherit; }
   aspect-ratio: 100 / 36;
   padding: 0 50% 0 10px;
   border-top: 1px solid var(--line);
+  /* Not white. The band under the shot is a shade cooler than the panel it
+     sits in, which is what separates the two without a second rule. */
+  background: #F8F9FD;
   font-size: var(--f-base); font-weight: 700; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
@@ -307,7 +319,9 @@ input, select, textarea { font: inherit; color: inherit; }
    bottom below. 50% of the card wide, 35% of the card tall. */
 .pcard__act {
   position: absolute; right: 0; bottom: -3px; z-index: 3;
-  width: 50%;
+  /* Four wider than half the card, and it grows LEFT because this is pinned
+     right — so the button stays flush with the panel's edge. */
+  width: calc(50% + 4px);
 }
 /* Sized off the real listing and left alone. The button is HALF the card wide
    and derives its height from that width, which is what makes it overhang the
@@ -322,9 +336,16 @@ input, select, textarea { font: inherit; color: inherit; }
    there is no jump on press either way. */
 .pcard__act .add, .pcard__act .stepper {
   width: 100%; min-width: 0;
-  height: auto; aspect-ratio: 142 / 105;
+  /* Still derived from the width, still no fixed height — see the note above,
+     which is the whole reason this button overhangs at all.
+
+     154/100 rather than 142/105: four pixels wider and four shorter on a
+     390pt phone, which is the shape as measured off the real card. The ratio
+     is how that has to be expressed here, because the height is a consequence
+     of the width and a vertical padding on a box this size changes nothing. */
+  height: auto; aspect-ratio: 154 / 100;
   border-radius: var(--r-ctl);
-  padding: 0 6px;
+  padding: 0 8px;
 }
 
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
@@ -1338,7 +1359,7 @@ input, select, textarea { font: inherit; color: inherit; }
    look cramped inside its own box. */
 .cat__im {
   width: 100%; aspect-ratio: 1 / 1.02;
-  border-radius: var(--r-lg); background: #E7EFF1;
+  border-radius: var(--r-lg); background: #E4F2F3;
   overflow: hidden; padding: 10px;
 }
 .cat__im img { width: 100%; height: 100%; object-fit: contain; }

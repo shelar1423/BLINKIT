@@ -122,6 +122,15 @@
   --f-3xl: 24px;
 
   /* --- radius: Blinkit is rounder than most Indian q-commerce --- */
+  /* The sheen on a pressed or filled control. One definition, so every green
+     button in the app catches the light the same way. */
+  --gloss: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.20) 0%,
+    rgba(255, 255, 255, 0.06) 52%,
+    rgba(0, 0, 0, 0.07) 100%
+  );
+
   --r-xs: 4px;
   --r-sm: 6px;
   /* category rail: the disc, and the top pad the active bar aligns to */
