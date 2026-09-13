@@ -16,6 +16,14 @@ export type BoostQuality = 'perfect' | 'good' | 'miss';
 
 export const raceInteraction = {
   launchEnabled: true,
+  /**
+   * Debris on the track.
+   *
+   * OFF while the launcher, gates and ramp are being tuned: a rebound off a
+   * rock is the one thing that can throw the car out of a jump or an aim run,
+   * and it makes those three impossible to judge. One word to put back.
+   */
+  debrisEnabled: false,
   boostEnabled: true,
   jumpEnabled: true,
 

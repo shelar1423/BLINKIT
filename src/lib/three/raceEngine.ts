@@ -657,7 +657,7 @@ export class RaceEngine {
     this.buildScenery();
     this.buildFinishGate();
     this.buildPickups();
-    this.buildDebris();
+    if (raceInteraction.debrisEnabled) this.buildDebris();
     this.buildArProps();
 
     this.root.add(this.carTilt);
@@ -1363,8 +1363,21 @@ export class RaceEngine {
       this.speed += ((boosting ? 34 : 24) - this.speed) * Math.min(1, dt * 1.8);
     }
     const prevT = this.t;
-    this.t = (this.t + (this.speed * dt) / this.curveLen) % 1;
-    if (prevT > 0.92 && this.t < 0.08) this.lap += 1;
+    /* Hitting debris sets a NEGATIVE speed — the car rebounds — so this has to
+       wrap both ways. A bare `% 1` returns a negative for a negative operand,
+       which put `t` outside 0..1 and made every position on the lap wrong
+       until the car had driven forward past the seam again. */
+    this.t = ((((this.t + (this.speed * dt) / this.curveLen) % 1) + 1) % 1);
+    if (prevT > 0.92 && this.t < 0.08 && this.speed > 0) this.lap += 1;
+
+    /* Events only fire while the car is going FORWARDS.
+
+       Reversing off a chunk of debris made `prevT > this.t` true on every
+       frame, which is exactly the shape of the lap-seam test the gates and the
+       ramp use — so a debris hit anywhere near the ramp tripped it and the car
+       climbed into the air for no reason the player could see. It also handed
+       out boosts at gates the car had never reached. */
+    const goingForward = this.speed > 0;
 
     /* Where the nose wants to be this frame. Chased rather than assigned: the
        arc's slope at the lip is far steeper than the ramp that launched the
@@ -1374,7 +1387,7 @@ export class RaceEngine {
     let pitchTarget = 0;
 
     /* The ramp. Armed the same way as the gates, and for the same reason. */
-    if (this.interactions && raceInteraction.jumpEnabled && this.airT < 0) {
+    if (this.interactions && raceInteraction.jumpEnabled && goingForward && this.airT < 0) {
       const jLead = (this.speed * raceInteraction.jumpWarnLead) / this.curveLen;
       const jAhead = (raceInteraction.jumpAt - this.t + 1) % 1;
       if (!this.jumpArmed && jAhead < jLead) {
@@ -1440,7 +1453,7 @@ export class RaceEngine {
        because `t` per second depends on how fast the car happens to be going
        — a lead measured in curve units would give a flying car half the
        warning of a slow one, and the warning is the thing being scored. */
-    if (this.interactions && raceInteraction.boostEnabled) {
+    if (this.interactions && raceInteraction.boostEnabled && goingForward) {
       const lead = (this.speed * raceInteraction.boostWarnLead) / this.curveLen;
       for (let i = 0; i < this.boostGates.length; i++) {
         const g = this.boostGates[i];
