@@ -8,11 +8,30 @@ import { IconClock, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar
 const TILT_MS = 440;
 const ROLL_MS = 300;
 
-export function AddControl({ product, size = 'sm' }: { product: Product; size?: 'sm' | 'lg' }) {
-  const qty = useStore((s) => s.cart[product.id] ?? 0);
-  const add = useStore((s) => s.add);
-  const setQty = useStore((s) => s.setQty);
-
+/**
+ * The quantity control itself: a rocker that tips, catches the light and rolls
+ * its digit.
+ *
+ * Its own component because the product detail sheet had hand-rolled the same
+ * markup — same classes, same glyphs — and so inherited the LOOK of this
+ * control and none of its behaviour. Two copies of a control are two copies
+ * free to drift, and they had. Whoever owns the quantity passes it in.
+ */
+export function Stepper({
+  qty,
+  onDec,
+  onInc,
+  size = 'sm',
+  className = '',
+  label,
+}: {
+  qty: number;
+  onDec: () => void;
+  onInc: () => void;
+  size?: 'sm' | 'lg';
+  className?: string;
+  label: string;
+}) {
   /* ---- the rocker ----
      Pressing an end tips that end away, the way a physical rocker switch
      does, and the light slides across to whichever end came up. Driven from
@@ -44,6 +63,69 @@ export function AddControl({ product, size = 'sm' }: { product: Product; size?: 
     tiltT.current = window.setTimeout(() => setTilt(null), TILT_MS);
   };
 
+  /* The card is a link; its stepper must not follow it. Harmless where there
+     is nothing to follow. */
+  const stop = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const glyph = size === 'lg' ? 15 : 14;
+
+  return (
+    <div
+      className={
+        'stepper' +
+        (size === 'lg' ? ' stepper--lg' : '') +
+        (tilt === 'inc' ? ' is-rock-r' : tilt === 'dec' ? ' is-rock-l' : '') +
+        (className ? ' ' + className : '')
+      }
+      role="group"
+      aria-label={label}
+    >
+      <button
+        type="button"
+        onClick={(e) => {
+          stop(e);
+          rock('dec');
+          onDec();
+        }}
+        aria-label="Decrease quantity"
+      >
+        <IconMinus size={glyph} />
+      </button>
+      {/* The two spans are one number mid-roll, so only the settled one is
+          ever read out. */}
+      <span className="stepper__q">
+        {roll !== null && (
+          <span className="stepper__n stepper__n--out" key={'out' + roll} aria-hidden="true">
+            {roll}
+          </span>
+        )}
+        <span className={'stepper__n' + (roll !== null ? ' stepper__n--in' : '')} key={'in' + qty}>
+          {qty}
+        </span>
+      </span>
+      <button
+        type="button"
+        onClick={(e) => {
+          stop(e);
+          rock('inc');
+          onInc();
+        }}
+        aria-label="Increase quantity"
+      >
+        <IconPlus size={glyph} />
+      </button>
+    </div>
+  );
+}
+
+export function AddControl({ product, size = 'sm' }: { product: Product; size?: 'sm' | 'lg' }) {
+  const qty = useStore((s) => s.cart[product.id] ?? 0);
+  const add = useStore((s) => s.add);
+  const setQty = useStore((s) => s.setQty);
+
   const stop = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -65,50 +147,13 @@ export function AddControl({ product, size = 'sm' }: { product: Product; size?: 
     );
   }
   return (
-    <div
-      className={
-        'stepper' +
-        (size === 'lg' ? ' stepper--lg' : '') +
-        (tilt === 'inc' ? ' is-rock-r' : tilt === 'dec' ? ' is-rock-l' : '')
-      }
-      role="group"
-      aria-label={`Quantity for ${product.name}`}
-    >
-      <button
-        type="button"
-        onClick={(e) => {
-          stop(e);
-          rock('dec');
-          setQty(product.id, qty - 1);
-        }}
-        aria-label="Decrease quantity"
-      >
-        <IconMinus size={14} />
-      </button>
-      {/* Live, so the count is still announced; the two spans are one number
-          mid-roll and only the settled one should ever be read out. */}
-      <span className="stepper__q">
-        {roll !== null && (
-          <span className="stepper__n stepper__n--out" key={'out' + roll} aria-hidden="true">
-            {roll}
-          </span>
-        )}
-        <span className={'stepper__n' + (roll !== null ? ' stepper__n--in' : '')} key={'in' + qty}>
-          {qty}
-        </span>
-      </span>
-      <button
-        type="button"
-        onClick={(e) => {
-          stop(e);
-          rock('inc');
-          setQty(product.id, qty + 1);
-        }}
-        aria-label="Increase quantity"
-      >
-        <IconPlus size={14} />
-      </button>
-    </div>
+    <Stepper
+      qty={qty}
+      size={size}
+      label={`Quantity for ${product.name}`}
+      onDec={() => setQty(product.id, qty - 1)}
+      onInc={() => setQty(product.id, qty + 1)}
+    />
   );
 }
 

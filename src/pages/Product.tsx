@@ -13,15 +13,13 @@ import {
   IconCube,
   IconFlag,
   IconHeart,
-  IconMinus,
-  IconPlus,
   IconReplace,
   IconRotate,
   IconSearch,
   IconShare,
   IconStock,
 } from '../design/elements/Icons';
-import { ProductCard, Stars } from '../design/components/ProductCard';
+import { ProductCard, Stars, Stepper } from '../design/components/ProductCard';
 import { CartPill } from '../design/components/CartPill';
 import { SectionHeader } from '../design/components/Chrome';
 import { Sheet } from '../design/components/Sheet';
@@ -479,15 +477,14 @@ export default function Product() {
            width both before and after, so the stepper simply inherits the
            slot the button was occupying. There is no "Go to Cart" here —
            the cart bar above already is that. */
-        <div className="stepper stepper--lg grow" role="group" aria-label="Quantity">
-          <button type="button" onClick={() => setQty(product.id, qty - 1)} aria-label="Decrease quantity">
-            <IconMinus size={15} />
-          </button>
-          <span className="stepper__q">{qty}</span>
-          <button type="button" onClick={() => setQty(product.id, qty + 1)} aria-label="Increase quantity">
-            <IconPlus size={15} />
-          </button>
-        </div>
+        <Stepper
+          qty={qty}
+          size="lg"
+          className="grow"
+          label="Quantity"
+          onDec={() => setQty(product.id, qty - 1)}
+          onInc={() => setQty(product.id, qty + 1)}
+        />
       )}
     </>
   );
