@@ -3376,10 +3376,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .dropclock__cell small {
   display: block; margin-top: 9px;
   font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.14em;
-  /* 0.6 was too far back. At this size, under this tracking, on a busy
-     photographic ground, DAYS and HRS were greying out rather than reading as
-     the quiet half of a pair — the digits still lead at full white. */
-  color: rgba(255, 255, 255, 0.88);
+  /* Full white. At this size, under this tracking, over a busy photographic
+     hero, anything held back greyed out rather than reading as the quiet half
+     of a pair. The digits still lead on size and on their own dark flaps. */
+  color: #fff;
 }
 
 /* ---- one flap ----
