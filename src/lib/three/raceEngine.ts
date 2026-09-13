@@ -1344,21 +1344,39 @@ export class RaceEngine {
    * parameters, so the framing does not change if the circuit is resized.
    * BEHIND/HEIGHT are tuned so a 4.2-unit car sits in the lower third of frame.
    */
+  /**
+   * Chase camera: behind the CAR along its heading, looking into the turn.
+   *
+   * It used to sit at a point 8.5 units back ALONG THE CURVE and look at one 6
+   * units forward along it — which is fine on a circle of radius 33 and wrong
+   * on a corner of radius 15, because those two points are then most of a
+   * quarter-turn apart and the camera ends up looking across the chord at the
+   * outside wall rather than down the road. The oval never exposed it; the new
+   * corners do.
+   *
+   * So the position is offset from the car along the car's OWN heading, which
+   * cannot be thrown by corner radius, while the look-at still runs forward
+   * along the curve so the camera leads into the bend instead of staring at
+   * the apex barrier.
+   */
   cameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3 }) {
-    const BEHIND = 8.5;  // metres of track behind the car
-    const HEIGHT = 3.0;  // camera height above the road
-    const AHEAD = 6.0;   // look-at point in front of the car
+    const BEHIND = 9.5;
+    const HEIGHT = 3.4;
+    const AHEAD = 9.0;
     const up = new THREE.Vector3(0, 1, 0);
-    const dBack = BEHIND / this.curveLen;
-    const dAhead = AHEAD / this.curveLen;
 
-    const p = this.curve.getPointAt((this.t - dBack + 1) % 1);
-    const tan = this.curve.getTangentAt(this.t);
+    const on = this.curve.getPointAt(this.t);
+    const tan = this.curve.getTangentAt(this.t).clone().setY(0).normalize();
     const right = new THREE.Vector3().crossVectors(tan, up).normalize();
-    out.pos.copy(p).addScaledVector(right, this.lateral * 0.55).setY(HEIGHT);
+    const car = on.clone().addScaledVector(right, this.lateral);
 
-    const ahead = this.curve.getPointAt((this.t + dAhead) % 1);
-    out.look.copy(ahead).addScaledVector(right, this.lateral * 0.7).setY(0.7);
+    out.pos.copy(car).addScaledVector(tan, -BEHIND);
+    // rises with the car so the jump stays in frame instead of leaving the top
+    out.pos.y = HEIGHT + this.jumpHeightNow * 0.55;
+
+    const ahead = this.curve.getPointAt((this.t + AHEAD / this.curveLen) % 1);
+    out.look.copy(ahead).addScaledVector(right, this.lateral * 0.5);
+    out.look.y = 0.8 + this.jumpHeightNow * 0.7;
     return out;
   }
 
@@ -1372,16 +1390,19 @@ export class RaceEngine {
     const HEIGHT = 0.9;   // just above the car roof
     const AHEAD  = 5.0;   // look-at well ahead for a sense of speed
     const up = new THREE.Vector3(0, 1, 0);
-    const dBack  = BEHIND / this.curveLen;
-    const dAhead = AHEAD  / this.curveLen;
+    const dAhead = AHEAD / this.curveLen;
 
-    const p   = this.curve.getPointAt((this.t - dBack + 1) % 1);
-    const tan = this.curve.getTangentAt(this.t);
+    // behind the CAR along its heading, for the same reason the chase cam is
+    const on = this.curve.getPointAt(this.t);
+    const tan = this.curve.getTangentAt(this.t).clone().setY(0).normalize();
     const right = new THREE.Vector3().crossVectors(tan, up).normalize();
-    out.pos.copy(p).addScaledVector(right, this.lateral * 0.4).setY(HEIGHT);
+    const car = on.clone().addScaledVector(right, this.lateral);
+    out.pos.copy(car).addScaledVector(tan, -BEHIND);
+    out.pos.y = HEIGHT + this.jumpHeightNow;
 
     const ahead = this.curve.getPointAt((this.t + dAhead) % 1);
-    out.look.copy(ahead).addScaledVector(right, this.lateral * 0.55).setY(0.4);
+    out.look.copy(ahead).addScaledVector(right, this.lateral * 0.55);
+    out.look.y = 0.4 + this.jumpHeightNow * 0.8;
     return out;
   }
 
