@@ -1,0 +1,29 @@
+# Netlify build settings.
+#
+# The SPA fallback is NOT here — it lives in `public/_redirects`, which Vite
+# copies into the build output untouched. Netlify reads `_redirects` from the
+# publish directory, so the rule is already in the right place and repeating it
+# here would be two sources for one behaviour.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# The AR race asks for the rear camera and the motion sensors. Safari only
+# grants those over https on a permitted origin, and Netlify sets a restrictive
+# default — without this the camera prompt never appears and the race falls
+# back to the 3D browser version on every phone.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Permissions-Policy = "camera=(self), gyroscope=(self), accelerometer=(self), magnetometer=(self), xr-spatial-tracking=(self)"
+
+# Hashed assets are immutable by construction — Vite puts the content hash in
+# the filename, so a changed file is a different URL and can never be stale.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
