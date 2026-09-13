@@ -25,6 +25,7 @@ import { ProductCard, Stars } from '../design/components/ProductCard';
 import { CartPill } from '../design/components/CartPill';
 import { SectionHeader } from '../design/components/Chrome';
 import { Sheet } from '../design/components/Sheet';
+import { TrackRing } from '../design/components/DriftLoader';
 import { useToast } from '../App';
 import { useARSupport } from '../lib/useARSupport';
 
@@ -540,7 +541,7 @@ export default function Product() {
                 <div className="pdp__3d" ref={host} />
                 {!ready && !err && (
                   <div className="loadbox" style={{ position: 'absolute', inset: 0 }}>
-                    <span className="spin" />
+                    <TrackRing className="trackload trackload--sm" />
                     <p>Getting your car ready… {pct > 0 ? `${pct}%` : ''}</p>
                   </div>
                 )}

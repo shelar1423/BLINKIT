@@ -4,6 +4,7 @@ const Diag = lazy(() => import('./pages/Diag'));
 import { BottomNav } from './design/components/BottomNav';
 import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
+import { DriftLoader } from './design/components/DriftLoader';
 import { primeAudio } from './lib/horn';
 
 import Home from './pages/Home';
@@ -69,7 +70,9 @@ export default function App() {
     <Ctx.Provider value={value}>
       <div className="app">
         <ErrorBoundary>
-        <Suspense fallback={<div className="loadbox" style={{ minHeight: '60vh' }}><span className="spin" /><p>Loading…</p></div>}>
+        {/* While a page's code downloads — the race and AR screens are the heavy
+            ones — the same Hot Wheels loader the race uses, not a spinner. */}
+        <Suspense fallback={<DriftLoader />}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/hot-wheels" element={<HotWheels />} />

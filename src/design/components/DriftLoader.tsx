@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import './driftloader.css';
 
 /**
@@ -22,14 +22,16 @@ export const LOADER_MS = 3000;
 const R = 76;
 const CHECK_COLS = 6;
 
-function TrackRing() {
+/** The track ring on its own, for waits inside a page (the PDP's 3D stage). */
+export function TrackRing({ className = 'trackload' }: { className?: string }) {
   const sq = 22 / 3; // three rows across the 22-unit track
+  const maskId = 'trackload-' + useId().replace(/:/g, '');
   return (
-    <svg className="trackload" viewBox="0 0 200 200" aria-hidden="true">
+    <svg className={className} viewBox="0 0 200 200" aria-hidden="true">
       <defs>
         {/* The track is revealed by a stroke drawing round the circle, so every
             layer of it — rails, bed, highlight — lays down together. */}
-        <mask id="trackload-draw" maskUnits="userSpaceOnUse">
+        <mask id={maskId} maskUnits="userSpaceOnUse">
           <circle
             className="trackload__draw"
             cx="100" cy="100" r={R}
@@ -43,7 +45,7 @@ function TrackRing() {
       {/* the groove the track is laid into */}
       <circle cx="100" cy="100" r={R} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="26" />
 
-      <g mask="url(#trackload-draw)">
+      <g mask={`url(#${maskId})`}>
         <circle cx="100" cy="100" r={R} fill="none" stroke="#C94F00" strokeWidth="26" />
         <circle cx="100" cy="100" r={R} fill="none" stroke="#FF7A1A" strokeWidth="20" />
         {/* the lit edge of the outer rail */}

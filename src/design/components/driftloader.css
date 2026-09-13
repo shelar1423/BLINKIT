@@ -26,6 +26,9 @@
   overflow: visible;
   filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
 }
+/* inside a page, e.g. the PDP's 3D stage while the model loads */
+.trackload--sm { width: 56px; filter: none; }
+
 /* Lays the track from the start line all the way round, then picks it up
    from the start line behind itself, and goes again. */
 .trackload__draw {

@@ -461,12 +461,19 @@ export default function ARView() {
     };
   };
   const s = statusCard();
+  /* Arriving with ?go=1, the camera is about to open on its own. Cover the
+     moment before it does — the support check still running, the launch not yet
+     called — with the same loader, so the intro screen never flashes up
+     between the car picker and the race. */
+  const pendingAuto =
+    autoStart && !triedAuto.current && !phase && !outcome &&
+    (support === null || (arWorks && !!car.glb && canAutoStart()));
 
   return (
     <>
       {/* The wait, with something in it. Sits above everything, including the
           AR overlay, because it is covering the moment that overlay appears. */}
-      {busy && <DriftLoader lines={inspect ? ['Getting your car ready', 'Opening your camera'] : AR_LOADER_LINES} />}
+      {(busy || pendingAuto) && <DriftLoader lines={inspect ? ['Getting your car ready', 'Opening your camera'] : AR_LOADER_LINES} />}
 
       {/* the DOM overlay lives outside the page so WebXR & Camera mode can adopt it */}
       {/* `outcome` forces idle as well as `phase`. Relying on phase alone left
