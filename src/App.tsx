@@ -1,8 +1,6 @@
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 const Diag = lazy(() => import('./pages/Diag'));
-// TEMPORARY: design review of the race result screen
-const ResultPreview = lazy(() => import('./pages/ResultPreview'));
 import { BottomNav } from './design/components/BottomNav';
 import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -31,7 +29,7 @@ export const useToast = () => useContext(Ctx);
 /** Routes that take over the screen — no bottom nav, no page padding. */
 const FULLSCREEN = ['/race/play'];
 /** Routes with their own sticky action bar, where Blinkit drops the tab bar. */
-const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/cart$/, /^\/checkout$/, /^\/ar(\/|$)/, /^\/diag$/, /^\/preview\//];
+const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/cart$/, /^\/checkout$/, /^\/ar(\/|$)/, /^\/diag$/];
 
 export default function App() {
   const [msg, setMsg] = useState<string | null>(null);
@@ -89,8 +87,6 @@ export default function App() {
           <Route path="/order-success" element={<OrderSuccess />} />
           {/* device diagnostics — deliberately unlinked */}
           <Route path="/diag" element={<Diag />} />
-          {/* TEMPORARY: race result without racing */}
-          <Route path="/preview/result" element={<ResultPreview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>

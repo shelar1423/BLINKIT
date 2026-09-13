@@ -51,8 +51,6 @@ export type RaceResultProps = {
   onExit: () => void;
   exitLabel: string;
   toast: (m: string) => void;
-  /** Show the share hint even if it has been seen before. For the preview route. */
-  forceShareTip?: boolean;
 };
 
 /** The share hint shows once per device: the first result screen only. */
@@ -61,7 +59,7 @@ const SHARE_TIP_MS = 4000;
 
 export function RaceResult({
   outcome, car, tier, isBest, totalPoints, racesLeft, inviteUrl,
-  onRaceAgain, onRewards, onViewCar, onLeaderboard, onExit, exitLabel, toast, forceShareTip,
+  onRaceAgain, onRewards, onViewCar, onLeaderboard, onExit, exitLabel, toast,
 }: RaceResultProps) {
   /* The number counts up. A score that is simply present reads as a fact; one
      that arrives reads as something you earned. */
@@ -80,14 +78,14 @@ export function RaceResult({
     } catch {
       /* storage blocked: show it */
     }
-    if (seen && !forceShareTip) return;
+    if (seen) return;
     const on = window.setTimeout(() => setTip(true), 900);
     const off = window.setTimeout(() => setTip(false), 900 + SHARE_TIP_MS);
     return () => {
       window.clearTimeout(on);
       window.clearTimeout(off);
     };
-  }, [forceShareTip]);
+  }, []);
 
   useEffect(() => {
     const target = outcome.score;
