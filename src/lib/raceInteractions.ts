@@ -57,11 +57,13 @@ export const raceInteraction = {
   /**
    * Seconds of warning before the IDEAL lift, not before the gate.
    *
-   * This is the run-up the gauge fills across, and it is also exactly the
-   * window bullet time is held open for — at 0.3 speed it is about three real
-   * seconds, which is the whole reason a lift this exact is playable at all.
+   * This is the run-up the gauge fills across. It is NOT the window bullet
+   * time is held open for, which is the last 45% of it — the two were the same
+   * number once, and the only way to give the player more warning was to give
+   * them more slow motion. The gauge now appears at full speed and the clock
+   * dips later.
    */
-  boostWarnLead: 1.35,
+  boostWarnLead: 1.7,
 
   /**
    * Seconds the car spends in the air over a gate.
@@ -99,7 +101,7 @@ export const raceInteraction = {
      their frame rate did. Bullet time is what turns these into a reachable
      amount of real time — 0.055 sim is about 180ms of real reaction — rather
      than a widening of the window itself. */
-  gatePerfectSec: 0.055,
+  gatePerfectSec: 0.075,
   /**
    * Past this the car does not leave the road at all.
    *

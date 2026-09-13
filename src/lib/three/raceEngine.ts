@@ -108,9 +108,23 @@ export type EngineOpts = {
    passes four of them, and the race is still exactly `duration` SIMULATED
    seconds long. What changes is how much real time those seconds take.
 
-   0.3 turns the 0.9s warning into three real seconds, which is the window the
-   brief asks for. */
-const SLOW_BOOST = 0.3;
+   0.4, not 0.3. At 0.3 the run-up took three and a half real seconds and the
+   flight was held slow on top of it — measured, 45% of every lap was in slow
+   motion, which stops reading as a moment and starts reading as the game
+   being broken. Shallower, shorter, and released the instant the player
+   acts. */
+const SLOW_BOOST = 0.4;
+/**
+ * How far into the run-up the clock starts dropping, 0..1 of the gauge.
+ *
+ * The cue and the slowdown used to arrive together, so the only way to get
+ * more warning was more slow motion. They are separate now: the gauge appears
+ * at long range and runs at FULL speed for the first stretch, so the ring is
+ * something you see coming and start reading before anything slows down. The
+ * clock only dips for the last part, which is the part where the timing
+ * actually has to be judged.
+ */
+const GATE_SLOW_FROM = 0.55;
 /** The lap is done. Slower still, because nothing is being aimed at any more. */
 const SLOW_FINISH = 0.22;
 /** Real seconds between the last corner and the result screen. */
@@ -1085,8 +1099,6 @@ export class RaceEngine {
   private fireT = 0;
   /** Which gate is currently asking for a lift, or -1. */
   private armedGate = -1;
-  /** A gate jump is in the air, and the clock stays down until it lands. */
-  private slowThroughFlight = false;
   /* ---- the clock ----
      `timeScale` is what the simulation actually runs at; `slowTarget` is what
      it is heading for. Everything in `update` below the ramp runs on simulated
@@ -1505,11 +1517,6 @@ export class RaceEngine {
       this.airTime = raceInteraction.gateAirtime;
       this.airPeak = raceInteraction.gateRingY;
       this.airFrom = 0;
-      /* Stay slow until the wheels are back down. The gate closes on the lift,
-         so without this the world snaps back to full speed at the exact
-         moment the car is about to go through the hoop — which is the one
-         second of the lap worth watching. */
-      this.slowThroughFlight = true;
     }
     return true;
   }
@@ -2569,7 +2576,6 @@ export class RaceEngine {
       if (this.airT >= 1) {
         this.airT = -1;
         this.jumpHeightNow = 0;
-        this.slowThroughFlight = false;
         this.opts.onJumpLand?.();
       } else {
         /* Leaves at `airFrom` and comes down to road level, so a ramp jump
@@ -2629,7 +2635,6 @@ export class RaceEngine {
         }
 
         if (g.armed && !g.lifted) {
-          gateArmed = true;
           /* The gauge. 0 when the gate arms, 1 exactly on the beat, and past 1
              while the window is still closing — the overlay clamps what it
              draws, but the engine reports the truth so a late lift can still
@@ -2639,6 +2644,16 @@ export class RaceEngine {
           g.stoke = Math.max(0, Math.min(1, k));
           this.opts.onGateCue?.(i, k);
 
+          /* The clock is down only while a lift can still be made. Past the
+             acceptance window there is nothing left for the player to do, and
+             holding slow motion through the rest of the approach was most of
+             where it was going: a lap in which nobody lifted at all spent
+             fifteen seconds in slow motion waiting for something that was
+             never coming. */
+          const errSec = ((ahead - ideal) * this.curveLen) / Math.max(1, this.speed);
+          const stillOpen = errSec > -raceInteraction.gateAcceptSec;
+          if (stillOpen && k >= GATE_SLOW_FROM) gateArmed = true;
+
           /* Nothing is aimed at any more, but the car still has to arrive
              where the hole is. Eased rather than snapped: the player may be
              mid-corner-exit when the gate arms, and yanking the car onto the
@@ -2646,10 +2661,13 @@ export class RaceEngine {
           this.lateral -= this.lateral * chase(2.2, dt);
           this.lateralVel -= this.lateralVel * chase(2.2, dt);
         } else if (g.armed) {
-          /* Lifted, still short of the hoop. The clock stays down and the car
-             stays lined up — the verdict is not in yet, because the verdict is
-             where the car IS when it gets there. */
-          gateArmed = true;
+          /* Lifted, still short of the hoop. Full speed from here: the lift IS
+             the moment, and the world surging back up as the car leaves the
+             road is the release the slow motion was building to. Holding it
+             slow across the ring meant every gate cost six real seconds.
+
+             The car stays lined up, though — the verdict is not in yet,
+             because the verdict is where the car IS when it gets there. */
           this.lateral -= this.lateral * chase(2.2, dt);
           this.lateralVel -= this.lateralVel * chase(2.2, dt);
         }
@@ -2670,8 +2688,7 @@ export class RaceEngine {
        changed it. Written inside `onBoostArm` instead, a gate that armed and a
        lap that ended on the same frame would each set it and the last one to
        run would win. */
-    this.slowTarget =
-      this.outroAt >= 0 ? SLOW_FINISH : gateArmed || this.slowThroughFlight ? SLOW_BOOST : 1;
+    this.slowTarget = this.outroAt >= 0 ? SLOW_FINISH : gateArmed ? SLOW_BOOST : 1;
 
     // --- lateral ---
     // Grip falls away while the handbrake is down, so the same steering input

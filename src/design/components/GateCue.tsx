@@ -22,17 +22,18 @@
 const SPREAD = 1.7;
 
 export function GateCue({ k, canLift }: { k: number; canLift: boolean }) {
-  /* Both bands are measured, not guessed, and both are a fraction of the
-     run-up — the gauge IS the window, so what it shows has to be the window's
-     real width or it is lying about what a lift costs.
+  /* Both bands are measured against the engine, not guessed — the gauge IS
+     the window, so what it shows has to be the window's real width or it is
+     lying about what a lift costs. Swept at 0.025 of k:
 
-     `now` is gatePerfectSec (0.055s) over the 0.95s run-up: k 0.942 to 1.058.
-     `near` is the span that actually carries the car through the hoop, swept
-     against the engine: k 0.80 to 1.18. Outside that the car clips the ring,
-     which is why past it the gauge says late rather than merely dimming. */
-  const now = k >= 0.942 && k <= 1.058;
-  const near = !now && k >= 0.8 && k <= 1.18;
-  const late = k > 1.18;
+       scores at all   k 0.85 .. 1.15   (the car clears the hoop)
+       scores perfect  k 0.95 .. 1.05   (and lands the beat)
+
+     Outside the wider band the car clips the ring, which is why past it the
+     gauge says late rather than merely dimming. */
+  const now = k >= 0.95 && k <= 1.05;
+  const near = !now && k >= 0.85 && k <= 1.15;
+  const late = k > 1.15;
 
   /* Clamped at the bottom so an overdue ring keeps shrinking past the target
      instead of stopping on it and reading as still-good. */
