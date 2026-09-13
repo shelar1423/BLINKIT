@@ -17,8 +17,7 @@ export type BoostQuality = 'perfect' | 'good' | 'miss';
 export const raceInteraction = {
   launchEnabled: true,
   boostEnabled: true,
-  /** Not built yet — the ramp and the lift gesture are the next step. */
-  jumpEnabled: false,
+  jumpEnabled: true,
 
   /** Pixels of drag that count as a full launcher pull. */
   launchMaxPull: 140,
@@ -40,7 +39,35 @@ export const raceInteraction = {
 
   scoreBoostGood: 250,
   scoreBoostPerfect: 500,
+
+  /* ---- the jump ----
+     One ramp, at a fixed point of the lap, clear of both gates so the two
+     mechanics never ask for the phone at the same moment. */
+  jumpAt: 0.5,
+  /** Seconds of warning before the takeoff edge. */
+  jumpWarnLead: 1.3,
+  /** How long the lift gesture is accepted for, in ms, from the cue. */
+  jumpWindowMs: 800,
+  /** Degrees of upward pitch that count as a lift. */
+  jumpPitchDeg: 14,
+  /** A lift this early or late in the window is good rather than perfect. */
+  jumpPerfectMs: 260,
+  /** Seconds the car spends off the road. Fixed — the arc is not negotiable. */
+  jumpAirtime: 1.05,
+  /** Peak height above the road, in engine units. */
+  jumpHeight: 7.5,
+
+  scoreJumpGood: 200,
+  scoreJumpPerfect: 400,
 } as const;
+
+export type JumpQuality = 'perfect' | 'good' | 'miss';
+
+export function jumpPoints(q: JumpQuality) {
+  if (q === 'perfect') return raceInteraction.scoreJumpPerfect;
+  if (q === 'good') return raceInteraction.scoreJumpGood;
+  return 0;
+}
 
 /** What a given angular error is worth, before the lock is considered. */
 export function boostBand(errorDeg: number): BoostQuality {

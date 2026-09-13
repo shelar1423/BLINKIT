@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { color } from '../../design/constants';
 import { circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
-import { boostBand, boostPoints, raceInteraction, type BoostQuality } from '../raceInteractions';
+import { boostBand, boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
 import { loadCar } from './modelLoader';
 import { primeAudio, skid } from '../horn';
 
@@ -55,6 +55,8 @@ export type ARHandle = {
   launch: (power: number) => void;
   /** Hold the start lights while the launcher is being drawn back. */
   armLaunch: (drawn: boolean) => void;
+  /** Swipe-up / key fallback for the jump. */
+  jumpNow: () => void;
   setSteer: (v: number) => void;
   setThrottle: (v: number) => void;
   setBrake: (v: number) => void;
@@ -95,6 +97,9 @@ type Opts = {
   onBoostAim?: (a: { index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null) => void;
   /** What the gate was worth once the car was through it. */
   onBoostResult?: (r: { index: number; quality: BoostQuality; points: number }) => void;
+  /** The lift window is open, or has closed. */
+  onJumpCue?: (open: boolean) => void;
+  onJumpResult?: (r: { quality: JumpQuality; points: number }) => void;
   onObstacleCountChange?: (count: number) => void;
   onProximityAlert?: (alert: boolean) => void;
   /** Surface mapping progress while the circuit sits on the table. */
@@ -453,6 +458,8 @@ function lights(scene: THREE.Scene) {
  * without the hold, sweeping the phone across the gate scores the same as
  * aiming at it.
  */
+const jumpFwd = new THREE.Vector3();
+
 function makeBoostAim() {
   let index = -1;
   let world: THREE.Vector3 | null = null;
@@ -507,7 +514,62 @@ function makeBoostAim() {
   };
 }
 
-function makeEngine(opts: Opts, onDone: () => void, aim: ReturnType<typeof makeBoostAim>) {
+/**
+ * The lift.
+ *
+ * Pitch is read off the CAMERA rather than from a DeviceOrientationEvent, so
+ * one implementation covers WebXR — where there is no orientation event, only
+ * a head pose — and the camera fallback, where the pose is derived from one.
+ * It is the same physical gesture either way: the top of the phone comes up.
+ *
+ * The brief is firm that this must not try to measure vertical displacement.
+ * Browser IMUs cannot do centimetres, and a jump that fails on sensor noise is
+ * a race lost to hardware. A pitch delta is something a phone can actually
+ * report.
+ */
+function makeJumpInput() {
+  let open = false;
+  let liftAt = 0;
+  let base: number | null = null;
+
+  return {
+    get isOpen() {
+      return open;
+    },
+    arm() {
+      open = true;
+      liftAt = 0;
+      base = null;
+    },
+    /** Camera pitch in degrees, positive = nose up. */
+    feed(pitchDeg: number) {
+      if (!open || liftAt) return;
+      // first sample after arming is the baseline, whatever the phone was at
+      if (base === null) base = pitchDeg;
+      if (pitchDeg - base >= raceInteraction.jumpPitchDeg) liftAt = performance.now();
+    },
+    /** Swipe or key, for devices that cannot report pitch. */
+    manual() {
+      if (open && !liftAt) liftAt = performance.now();
+    },
+    /* Lifting AS the ramp arrives is the skill; lifting the moment the cue
+       appears is merely obeying it. */
+    resolve(): JumpQuality {
+      open = false;
+      if (!liftAt) return 'miss';
+      const since = performance.now() - liftAt;
+      liftAt = 0;
+      return since <= raceInteraction.jumpPerfectMs ? 'perfect' : 'good';
+    },
+  };
+}
+
+function makeEngine(
+  opts: Opts,
+  onDone: () => void,
+  aim: ReturnType<typeof makeBoostAim>,
+  jump: ReturnType<typeof makeJumpInput>,
+) {
   const engine: RaceEngine = new RaceEngine({
     laps: 2,
     duration: 45,
@@ -526,6 +588,20 @@ function makeEngine(opts: Opts, onDone: () => void, aim: ReturnType<typeof makeB
       opts.onBoostResult?.({ index: i, quality, points });
       opts.onBoostAim?.(null);
     },
+    onJumpArm: () => {
+      jump.arm();
+      opts.onJumpCue?.(true);
+      window.setTimeout(() => {
+        if (jump.isOpen) opts.onJumpCue?.(false);
+      }, raceInteraction.jumpWindowMs);
+    },
+    onJumpTakeoff: () => {
+      const quality = jump.resolve();
+      const points = jumpPoints(quality);
+      engine.awardJump(points);
+      opts.onJumpCue?.(false);
+      opts.onJumpResult?.({ quality, points });
+    },
     onFinish: (o) => {
       onDone();
       opts.onFinish(o);
@@ -534,12 +610,20 @@ function makeEngine(opts: Opts, onDone: () => void, aim: ReturnType<typeof makeB
   engine.setPresentation('ar');
   return {
     engine,
-    /** Call every frame while racing; drives the reticle and the gate's glow. */
+    /** Call every frame while racing; drives the reticle, the glow and the lift. */
     tickAim(camera: THREE.Camera, dtMs: number) {
+      if (jump.isOpen) {
+        camera.getWorldDirection(jumpFwd);
+        jump.feed(THREE.MathUtils.radToDeg(Math.asin(Math.max(-1, Math.min(1, -jumpFwd.y)))));
+      }
       const a = aim.sample(camera, dtMs);
       if (!a) return;
       engine.setBoostGlow(a.index, a.locked ? 1 : a.quality === 'good' ? 0.5 : 0.1);
       opts.onBoostAim?.(a);
+    },
+    /** Swipe-up or key, for where pitch is not available. */
+    jumpNow() {
+      jump.manual();
     },
   };
 }
@@ -762,7 +846,8 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   const inspect = opts.mode === 'inspect';
 
   const boostAim = makeBoostAim();
-  const race = makeEngine(opts, () => setPhase('placed'), boostAim);
+  const jumpInput = makeJumpInput();
+  const race = makeEngine(opts, () => setPhase('placed'), boostAim, jumpInput);
   const engine = race.engine;
   /* In inspect mode the car is shown at true 1:64 scale — a real Hot Wheels
      car is about 7.4 cm long — so what lands on the table is the size of the
@@ -1070,6 +1155,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     startRace,
     launch,
     armLaunch,
+    jumpNow: () => race.jumpNow(),
     nudgeScale: (f) => setSize(sizeM * f),
     setSize,
     getSize: () => sizeM,
@@ -1211,7 +1297,8 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const inspect = opts.mode === 'inspect';
   const ground = inspect ? GROUND_INSPECT : GROUND;
   const boostAim = makeBoostAim();
-  const race = makeEngine(opts, () => setPhase('placed'), boostAim);
+  const jumpInput = makeJumpInput();
+  const race = makeEngine(opts, () => setPhase('placed'), boostAim, jumpInput);
   const engine = race.engine;
   /* True 1:64 is 7.4cm, and at the half-metre this places at that is a
      thumbnail you cannot see the details of — which is the whole point of
@@ -1501,6 +1588,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     startRace,
     launch,
     armLaunch,
+    jumpNow: () => race.jumpNow(),
     nudgeScale: (f) => setSize(sizeM * f),
     setSize,
     getSize: () => sizeM,

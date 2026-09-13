@@ -22,7 +22,7 @@ import {
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
-import type { BoostQuality } from '../lib/raceInteractions';
+import type { BoostQuality, JumpQuality } from '../lib/raceInteractions';
 import {
   engineStart,
   engineStop,
@@ -155,6 +155,16 @@ export default function ARView() {
            on screen said why. */
         onPickup: (points) => pushPop(points, 'up'),
         onBoostAim: setBoostAim,
+        onJumpCue: setJumpCue,
+        onJumpResult: (r) => {
+          setJumpCue(false);
+          setJumpFlash(r);
+          if (r.points > 0) {
+            pushPop(r.points, 'up');
+            playPowerUp();
+          }
+          window.setTimeout(() => setJumpFlash(null), 1100);
+        },
         onBoostResult: (r) => {
           setBoostAim(null);
           setBoostFlash(r);
@@ -314,6 +324,7 @@ export default function ARView() {
       if (e.key === 'ArrowDown' || e.key === 's') brake(true);
       if (e.key === ' ') slide(true);
       if (e.key === 'h') hornNow();
+      if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') handle.current?.jumpNow();
     };
     const keyUp = (e: KeyboardEvent) => {
       if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) release();
@@ -389,6 +400,15 @@ export default function ARView() {
   /* The gate being approached, and the verdict once it is behind us. */
   const [boostAim, setBoostAim] = useState<{ index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null>(null);
   const [boostFlash, setBoostFlash] = useState<{ index: number; quality: BoostQuality; points: number } | null>(null);
+  const [jumpCue, setJumpCue] = useState(false);
+  const jumpSwipeFrom = useRef<number | null>(null);
+  const [jumpFlash, setJumpFlash] = useState<{ quality: JumpQuality; points: number } | null>(null);
+
+  /* What to tell them to do. A phone whose pitch we can read is told to lift;
+     anything else is told what it can actually do, because an instruction the
+     device cannot satisfy is worse than no instruction. */
+  const liftable = support?.kind === 'webxr' || support?.kind === 'camera';
+  const jumpHow = liftable ? 'Lift the phone' : 'Swipe up';
 
   const tier = outcome ? tierFor(outcome.score) : null;
 
@@ -474,6 +494,41 @@ export default function ARView() {
                 </span>
               </div>
             )}
+            {/* The lift cue. Its own band above the reticle's place, and a
+                swipe target of its own — on a phone that cannot report pitch
+                the whole cue IS the control, so it has to be touchable. */}
+            {phase === 'racing' && jumpCue && (
+              <div
+                className="arjump"
+                onPointerDown={(e) => {
+                  jumpSwipeFrom.current = e.clientY;
+                }}
+                onPointerMove={(e) => {
+                  if (jumpSwipeFrom.current === null) return;
+                  if (jumpSwipeFrom.current - e.clientY > 42) {
+                    jumpSwipeFrom.current = null;
+                    handle.current?.jumpNow();
+                  }
+                }}
+                onPointerUp={() => {
+                  jumpSwipeFrom.current = null;
+                }}
+              >
+                <span className="arjump__k">Jump ahead</span>
+                <b>{jumpHow}</b>
+              </div>
+            )}
+            {phase === 'racing' && jumpFlash && (
+              <p className={'arboost__verdict is-' + jumpFlash.quality} aria-live="polite">
+                {jumpFlash.quality === 'perfect'
+                  ? 'Perfect jump'
+                  : jumpFlash.quality === 'good'
+                    ? 'Jump'
+                    : 'No lift'}
+                {jumpFlash.points > 0 && <b>+{jumpFlash.points}</b>}
+              </p>
+            )}
+
             {phase === 'racing' && boostFlash && (
               <p className={'arboost__verdict is-' + boostFlash.quality} aria-live="polite">
                 {boostFlash.quality === 'perfect'

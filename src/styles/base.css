@@ -2708,6 +2708,28 @@ input, select, textarea { font: inherit; color: inherit; }
    offset. Absolutely positioned it sat in the same band as the racing hint,
    so "Hold GO · Arrows steer · Tap screen to drop hazard" printed straight
    across the steering pads and the GO button. */
+/* ---------- the lift cue ----------
+   Above the reticle's place so the two never sit on top of each other, and
+   touchable because on a device that cannot report pitch this cue is itself
+   the control. */
+.arjump {
+  position: fixed; left: 50%; top: 22%;
+  transform: translateX(-50%);
+  display: grid; justify-items: center; gap: 3px;
+  padding: 10px 20px 12px;
+  border-radius: var(--r-lg);
+  background: rgba(12, 16, 28, 0.74);
+  backdrop-filter: blur(8px);
+  text-align: center; z-index: 212;
+  pointer-events: auto; touch-action: none;
+  animation: arboostIn 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.arjump__k {
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
+  color: var(--yellow);
+}
+.arjump b { font-size: var(--f-lg); font-weight: 800; color: #fff; }
+
 /* ---------- boost gate aim ----------
    Dead centre, because the aim IS the phone: you point the device at the
    flame, so the crosshair belongs where the device points and not where a

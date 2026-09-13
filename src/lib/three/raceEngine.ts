@@ -41,6 +41,12 @@ export type EngineOpts = {
   onPickup?: (points: number, name: string) => void;
   /** A boost gate has come into view — `world` is the flame to aim at. */
   onBoostArm?: (index: number, world: THREE.Vector3) => void;
+  /** The ramp is coming; the lift window is open from here. */
+  onJumpArm?: () => void;
+  /** Wheels have left the ramp. */
+  onJumpTakeoff?: () => void;
+  /** Back on the road. */
+  onJumpLand?: () => void;
   /** The car is at the gate. Whatever the aim was worth, it is worth now. */
   onBoostCross?: (index: number) => void;
   /** Points taken off for hitting something. Reported from the one place that
@@ -484,6 +490,10 @@ export class RaceEngine {
   private startLamps: THREE.MeshBasicMaterial[] = [];
   /** The two gates, in lap order, with the flame each one is aimed at. */
   private boostGates: { t: number; target: THREE.Object3D; flame: THREE.MeshBasicMaterial; armed: boolean }[] = [];
+  /** Airborne state. `airT` counts 0..1 across the arc; -1 means on the road. */
+  private airT = -1;
+  private jumpArmed = false;
+  private jumpHeightNow = 0;
 
   constructor(opts: EngineOpts = {}) {
     this.opts = opts;
@@ -726,6 +736,7 @@ export class RaceEngine {
 
     this.root.add(this.finishGate);
     if (raceInteraction.boostEnabled) this.buildBoostGates();
+    if (raceInteraction.jumpEnabled) this.buildRamp();
   }
 
   /**
@@ -805,10 +816,67 @@ export class RaceEngine {
     gate.flame.color.setHex(k > 0.99 ? 0xFFD400 : 0xFF6A00);
   }
 
+  /** True while the wheels are off the road. */
+  get airborne() {
+    return this.airT >= 0;
+  }
+
+  /** Award a jump the session has judged. */
+  awardJump(points: number) {
+    this.score += points;
+    if (points > 0) haptic(points >= raceInteraction.scoreJumpPerfect ? [16, 30, 16] : 20);
+  }
+
   /** Award a boost the session has judged. */
   awardBoost(points: number, speedUp: boolean) {
     this.score += points;
     if (speedUp) this.boost();
+  }
+
+  /**
+   * The ramp, on the road at the jump point.
+   *
+   * Visual only. The car's arc is computed, not collided — a ramp the car has
+   * to physically climb is a ramp it can also clip, stub its nose on, or take
+   * at the wrong angle and cartwheel off, and none of those are the jump the
+   * player was asked for. The brief is explicit: a deterministic base jump the
+   * input decorates rather than decides.
+   */
+  private buildRamp() {
+    const up = new THREE.Vector3(0, 1, 0);
+    const t = raceInteraction.jumpAt;
+    const p = this.curve.getPointAt(t);
+    const tan = this.curve.getTangentAt(t);
+
+    const g = new THREE.Group();
+    g.position.copy(p);
+    g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tan.clone().setY(0).normalize());
+
+    /* A wedge: a box tipped up about its trailing edge, so the road rises to a
+       takeoff lip rather than a block appearing in the way. */
+    const len = 13;
+    const rise = 2.6;
+    const geo = new THREE.BoxGeometry(ROAD_W, 0.7, len);
+    const mat = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.5, metalness: 0.05 });
+    this.disposables.push(geo, mat);
+    const wedge = new THREE.Mesh(geo, mat);
+    wedge.rotation.x = -Math.atan2(rise, len);
+    wedge.position.set(0, rise / 2, len / 2);
+    g.add(wedge);
+
+    // chevrons up the face, so the takeoff reads before the car is on it
+    const chevGeo = new THREE.PlaneGeometry(ROAD_W * 0.7, 0.9).rotateX(-Math.PI / 2);
+    const chevMat = new THREE.MeshBasicMaterial({ color: 0xFFD400, transparent: true, opacity: 0.9 });
+    this.disposables.push(chevGeo, chevMat);
+    for (let i = 0; i < 3; i++) {
+      const c = new THREE.Mesh(chevGeo, chevMat);
+      const z = 2.5 + i * 3.4;
+      c.position.set(0, (rise * z) / len + 0.42, z);
+      c.rotation.x = -Math.atan2(rise, len);
+      g.add(c);
+    }
+    this.root.add(g);
+    void up;
   }
 
   private buildPickups() {
@@ -993,6 +1061,7 @@ export class RaceEngine {
     const tan = this.curve.getTangentAt(this.t);
     const right = new THREE.Vector3().crossVectors(tan, up).normalize();
     this.carTilt.position.copy(pos).addScaledVector(right, this.lateral);
+    if (this.jumpHeightNow > 0) this.carTilt.position.y += this.jumpHeightNow;
     this.carTilt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), tan.clone().setY(0).normalize());
     // A drifting car points where it *was* going, not where it is sliding to.
     if (this.driftYaw !== 0) this.carTilt.rotateY(this.driftYaw);
@@ -1159,6 +1228,40 @@ export class RaceEngine {
     const prevT = this.t;
     this.t = (this.t + (this.speed * dt) / this.curveLen) % 1;
     if (prevT > 0.92 && this.t < 0.08) this.lap += 1;
+
+    /* The ramp. Armed the same way as the gates, and for the same reason. */
+    if (raceInteraction.jumpEnabled && this.airT < 0) {
+      const jLead = (this.speed * raceInteraction.jumpWarnLead) / this.curveLen;
+      const jAhead = (raceInteraction.jumpAt - this.t + 1) % 1;
+      if (!this.jumpArmed && jAhead < jLead) {
+        this.jumpArmed = true;
+        this.opts.onJumpArm?.();
+      }
+      const crossed = prevT <= raceInteraction.jumpAt && this.t > raceInteraction.jumpAt;
+      const wrapped = prevT > this.t && (raceInteraction.jumpAt > prevT || raceInteraction.jumpAt <= this.t);
+      if (this.jumpArmed && (crossed || wrapped)) {
+        this.jumpArmed = false;
+        this.airT = 0;
+        this.opts.onJumpTakeoff?.();
+      }
+    }
+
+    /* Airborne. The car keeps travelling along the curve — it is the ROAD that
+       drops away, not the car that leaves the track — so there is no way to
+       come down anywhere but back on it. A jump you can fail off the side of
+       is a jump that ends the race on a sensor reading, which the brief rules
+       out. Input decides what it was worth, never whether you made it. */
+    if (this.airT >= 0) {
+      this.airT += dt / raceInteraction.jumpAirtime;
+      if (this.airT >= 1) {
+        this.airT = -1;
+        this.jumpHeightNow = 0;
+        this.opts.onJumpLand?.();
+      } else {
+        // a parabola: up fast, over, down — 4h(1-h) peaks at 1 halfway across
+        this.jumpHeightNow = raceInteraction.jumpHeight * 4 * this.airT * (1 - this.airT);
+      }
+    }
 
     /* Boost gates. Armed by DISTANCE rather than by a fixed lead in `t`,
        because `t` per second depends on how fast the car happens to be going
