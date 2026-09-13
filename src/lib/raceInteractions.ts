@@ -31,14 +31,15 @@ export const raceInteraction = {
   launchMaxPull: 140,
 
   /* ---- boost gates ----
-     Positions are curve `t`, 0..1 around the lap. Two of them, far enough
-     apart that the first has finished being scored before the second is
-     announced, and neither sits on the start line where the launch already
-     has the player's attention. */
-  boostGates: [0.3, 0.7],
+     Positions are curve `t`, 0..1 around the lap. Both sit at the END of a
+     straight, and the warning is short enough that the WHOLE aim window falls
+     on that straight: measured, the circuit's straights run 0.025-0.170,
+     0.300-0.398, 0.525-0.670 and 0.800-0.897. Aiming a phone while fighting a
+     corner is the thing this whole layout exists to avoid. */
+  boostGates: [0.37, 0.87],
 
   /** Seconds of warning before the car reaches a gate. */
-  boostWarnLead: 1.4,
+  boostWarnLead: 0.9,
   /** Angular error, in degrees, for each band. */
   boostPerfectDeg: 7,
   boostGoodDeg: 16,
@@ -49,19 +50,31 @@ export const raceInteraction = {
   scoreBoostPerfect: 500,
 
   /* ---- the jump ----
-     One ramp, at a fixed point of the lap, clear of both gates so the two
-     mechanics never ask for the phone at the same moment. */
-  jumpAt: 0.5,
+     On the long straight at 0.525-0.670, placed so the climb AND the landing
+     both finish before the corner: 13 units of ramp is 0.044 of the lap and
+     the airtime another 0.092, which lands the car at 0.666 with the corner
+     still ahead of it. A jump that comes down mid-corner lands sideways.
+
+     The cue arms after the first gate's verdict has cleared, so the two
+     mechanics never speak over each other. */
+  jumpAt: 0.53,
   /** Seconds of warning before the takeoff edge. */
-  jumpWarnLead: 1.3,
+  jumpWarnLead: 1.0,
   /** How long the lift gesture is accepted for, in ms, from the cue. */
   jumpWindowMs: 800,
   /** Degrees of upward pitch that count as a lift. */
   jumpPitchDeg: 14,
   /** A lift this early or late in the window is good rather than perfect. */
   jumpPerfectMs: 260,
-  /** Seconds the car spends off the road. Fixed — the arc is not negotiable. */
-  jumpAirtime: 1.05,
+  /**
+   * Seconds the car spends off the road. Fixed — the arc is not negotiable.
+   *
+   * 0.8, not 1.05, because airtime is distance: at the boosted top speed of 34
+   * the longer hang carried the car 0.121 of a lap and it came down past the
+   * end of the straight, in the corner, sideways. At 0.8 the whole jump — ramp
+   * and flight — fits inside the straight even at full boost.
+   */
+  jumpAirtime: 0.8,
   /** Peak height above the road, in engine units. */
   jumpHeight: 7.5,
 

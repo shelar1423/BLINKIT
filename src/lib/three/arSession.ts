@@ -105,7 +105,13 @@ type Opts = {
   /** What the gate was worth once the car was through it. */
   onBoostResult?: (r: { index: number; quality: BoostQuality; points: number }) => void;
   /** The lift window is open, or has closed. */
-  onJumpCue?: (open: boolean) => void;
+  /**
+   * The lift window opened or closed. `canLift` says whether this device can
+   * actually SEE a lift — without a gyro the camera pose never pitches, so the
+   * gesture is undetectable and telling someone to lift their phone is telling
+   * them to do something that cannot work.
+   */
+  onJumpCue?: (open: boolean, canLift: boolean) => void;
   onJumpResult?: (r: { quality: JumpQuality; points: number }) => void;
   onObstacleCountChange?: (count: number) => void;
   onProximityAlert?: (alert: boolean) => void;
@@ -458,6 +464,7 @@ function makeEngine(
   onDone: () => void,
   aim: ReturnType<typeof makeBoostAim>,
   jump: ReturnType<typeof makeJumpInput>,
+  canLift: () => boolean,
 ) {
   const engine: RaceEngine = new RaceEngine({
     /* The AR session is the caller that has the aim, the lift and the cues. */
@@ -481,16 +488,16 @@ function makeEngine(
     },
     onJumpArm: () => {
       jump.arm();
-      opts.onJumpCue?.(true);
+      opts.onJumpCue?.(true, canLift());
       window.setTimeout(() => {
-        if (jump.isOpen) opts.onJumpCue?.(false);
+        if (jump.isOpen) opts.onJumpCue?.(false, canLift());
       }, raceInteraction.jumpWindowMs);
     },
     onJumpTakeoff: () => {
       const quality = jump.resolve();
       const points = jumpPoints(quality);
       engine.awardJump(points);
-      opts.onJumpCue?.(false);
+      opts.onJumpCue?.(false, canLift());
       opts.onJumpResult?.({ quality, points });
     },
     onFinish: (o) => {
@@ -737,7 +744,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   const boostAim = makeBoostAim();
   const jumpInput = makeJumpInput();
-  const race = makeEngine(opts, () => setPhase('placed'), boostAim, jumpInput);
+  const race = makeEngine(opts, () => setPhase('placed'), boostAim, jumpInput, () => true);
   const engine = race.engine;
   /* In inspect mode the car is shown at true 1:64 scale — a real Hot Wheels
      car is about 7.4 cm long — so what lands on the table is the size of the
@@ -1189,7 +1196,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const ground = inspect ? GROUND_INSPECT : GROUND;
   const boostAim = makeBoostAim();
   const jumpInput = makeJumpInput();
-  const race = makeEngine(opts, () => setPhase('placed'), boostAim, jumpInput);
+  const race = makeEngine(opts, () => setPhase('placed'), boostAim, jumpInput, () => haveOrientation);
   const engine = race.engine;
   /* True 1:64 is 7.4cm, and at the half-metre this places at that is a
      thumbnail you cannot see the details of — which is the whole point of

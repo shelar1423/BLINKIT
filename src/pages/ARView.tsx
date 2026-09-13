@@ -155,7 +155,10 @@ export default function ARView() {
            on screen said why. */
         onPickup: (points) => pushPop(points, 'up'),
         onBoostAim: setBoostAim,
-        onJumpCue: setJumpCue,
+        onJumpCue: (open, canLift) => {
+          setJumpCue(open);
+          setCanLift(canLift);
+        },
         onJumpResult: (r) => {
           setJumpCue(false);
           setJumpFlash(r);
@@ -413,11 +416,15 @@ export default function ARView() {
   const jumpSwipeFrom = useRef<number | null>(null);
   const [jumpFlash, setJumpFlash] = useState<{ quality: JumpQuality; points: number } | null>(null);
 
-  /* What to tell them to do. A phone whose pitch we can read is told to lift;
-     anything else is told what it can actually do, because an instruction the
-     device cannot satisfy is worse than no instruction. */
-  const liftable = support?.kind === 'webxr' || support?.kind === 'camera';
-  const jumpHow = liftable ? 'Lift the phone' : 'Swipe up';
+  /* What to tell them to do.
+     This used to guess from the device KIND, which was wrong: a phone that has
+     a camera but no motion permission reports `camera` and cannot detect a
+     lift at all — so the cue said "Lift the phone", the tilt was invisible to
+     us, and every jump came back "No lift" with nothing to explain why. The
+     session now reports whether pitch is actually arriving, and the cue only
+     asks for a lift when a lift can be seen. */
+  const [canLift, setCanLift] = useState(false);
+  const jumpHow = canLift ? 'Lift the phone' : 'Swipe up';
 
   const tier = outcome ? tierFor(outcome.score) : null;
 
@@ -523,6 +530,13 @@ export default function ARView() {
                   jumpSwipeFrom.current = null;
                 }}
               >
+                {/* Three chevrons running upward. The instruction is a
+                    movement, so the cue has to show the movement — "lift" on
+                    its own gives no clue how far, how fast, or in which
+                    direction the phone is supposed to go. */}
+                <span className="arjump__arrows" aria-hidden="true">
+                  <i /><i /><i />
+                </span>
                 <span className="arjump__k">Jump ahead</span>
                 <b>{jumpHow}</b>
               </div>

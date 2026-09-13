@@ -95,16 +95,57 @@ const RAIL_H = 1.6;
  * own 17.8% reads clearly at that distance, so AR and the 3D race share it.
  */
 
-/** Oval-ish circuit with a couple of kinks so it reads as a track, not a ring. */
+/**
+ * The circuit: four straights joined by four corners.
+ *
+ * It used to be an oval with a couple of kinks, which meant the car was turning
+ * for the whole lap — and every one of the new skill moments wants a moment of
+ * NOT turning. You cannot hold a phone on a boost gate while fighting a
+ * constant curve, and a ramp taken mid-corner lands the car sideways.
+ *
+ * The straights are laid down as MANY collinear points, not two. A Catmull-Rom
+ * segment bends toward whatever sits on either side of it, so the segments next
+ * to a corner bow however collinear their own endpoints are — with four points
+ * a straight only held its middle third, measured. With eight, the bowing stays
+ * in the two segments that meet the corners, where it reads as turn-in.
+ *
+ * Scaled to keep roughly the extent the oval had, so the road stays the same
+ * fraction of the circuit and the car is the same size on the table.
+ */
 function buildCurve() {
+  const S = 46;
+  const a = 0.95; // half-width, to the outside of the left/right straights
+  const b = 0.8; // half-depth, to the outside of the top/bottom straights
+  const r = 0.32; // corner radius
+
   const pts: THREE.Vector3[] = [];
-  const R = 42;
-  const shape: [number, number][] = [
-    [0, -1], [0.72, -0.92], [1.02, -0.55], [1.06, 0], [0.94, 0.5],
-    [0.55, 0.86], [0, 1], [-0.58, 0.9], [-1.0, 0.56], [-1.08, 0],
-    [-0.98, -0.5], [-0.6, -0.9],
-  ];
-  for (const [x, z] of shape) pts.push(new THREE.Vector3(x * R, 0, z * R * 0.78));
+  const at = (x: number, z: number) => pts.push(new THREE.Vector3(x * S, 0, z * S));
+
+  /** Both ends included — the straight owns its tangent points. */
+  const straight = (x0: number, z0: number, x1: number, z1: number, n: number) => {
+    for (let i = 0; i <= n; i++) at(x0 + ((x1 - x0) * i) / n, z0 + ((z1 - z0) * i) / n);
+  };
+  /** Interior arc points only, so the joins are not doubled up. */
+  const corner = (cx: number, cz: number, from: number, to: number, n = 3) => {
+    for (let i = 1; i < n; i++) {
+      const th = ((from + ((to - from) * i) / n) * Math.PI) / 180;
+      at(cx + r * Math.cos(th), cz + r * Math.sin(th));
+    }
+  };
+
+  // bottom straight, +x — the start line and the launcher live here
+  straight(-(a - r), -b, a - r, -b, 8);
+  corner(a - r, -(b - r), -90, 0);
+  // right straight, +z
+  straight(a, -(b - r), a, b - r, 6);
+  corner(a - r, b - r, 0, 90);
+  // top straight, -x
+  straight(a - r, b, -(a - r), b, 8);
+  corner(-(a - r), b - r, 90, 180);
+  // left straight, -z
+  straight(-a, b - r, -a, -(b - r), 6);
+  corner(-(a - r), -(b - r), 180, 270);
+
   return new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.5);
 }
 

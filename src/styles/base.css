@@ -2724,6 +2724,26 @@ input, select, textarea { font: inherit; color: inherit; }
   pointer-events: auto; touch-action: none;
   animation: arboostIn 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+.arjump__arrows { display: grid; justify-items: center; gap: 1px; margin-bottom: 3px; }
+/* Chevrons drawn as rotated corners, running upward in sequence so the cue
+   reads as a direction rather than as three static marks. */
+.arjump__arrows i {
+  display: block; width: 13px; height: 13px;
+  border-top: 3px solid var(--yellow);
+  border-right: 3px solid var(--yellow);
+  transform: rotate(-45deg);
+  animation: jumpArrow 1.05s ease-in-out infinite;
+}
+.arjump__arrows i:nth-child(1) { animation-delay: 0.22s; }
+.arjump__arrows i:nth-child(2) { animation-delay: 0.11s; }
+.arjump__arrows i:nth-child(3) { animation-delay: 0s; }
+@keyframes jumpArrow {
+  0%, 60%, 100% { opacity: 0.22; }
+  30% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arjump__arrows i { animation: none; opacity: 0.85; }
+}
 .arjump__k {
   font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
   color: var(--yellow);
