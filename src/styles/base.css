@@ -4298,7 +4298,7 @@ input, select, textarea { font: inherit; color: inherit; }
   display: inline-flex; align-items: center; gap: 4px;
   min-width: 0; white-space: nowrap;
 }
-.ckochip__emo { font-style: normal; font-size: 13px; line-height: 1; }
+.ckochip__emo { width: 20px; height: 20px; object-fit: contain; flex: 0 0 auto; }
 /* The flag is a band across the top INSIDE the chip, not a badge floating over
    its edge: all four chips have to stay the same height and sit on the same
    baseline, and a badge riding the border makes one of them taller. */
@@ -4313,7 +4313,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The three small rows under the tip: gift packaging, ordering for someone
    else, and the cancellation policy. */
 .ckorow { display: flex; align-items: center; gap: 12px; }
-.ckorow__ic { font-size: 22px; line-height: 1; flex: 0 0 auto; }
+.ckorow__ic { width: 44px; height: 44px; object-fit: contain; flex: 0 0 auto; }
 .ckorow__t { min-width: 0; }
 .ckorow__t b, .ckorow--act b { font-size: var(--f-base); font-weight: 700; color: var(--ink); }
 .ckorow__t p { margin: 2px 0 0; font-size: var(--f-sm); color: var(--mut); }

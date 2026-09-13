@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AddControl, ProductCard } from '../design/components/ProductCard';
-import { AddressSheet, Mark, PaymentSheet } from '../design/components/CheckoutSheets';
+import { Mark } from '../design/components/CheckoutSheets';
 import { SHOP_CARS, rupees } from '../data/catalog';
 import { ADDRESSES, findMethod } from '../data/addresses';
 import { useCartLines, useStore, useTotals } from '../store/useStore';
@@ -33,10 +33,10 @@ import {
 /* The amounts the real checkout offers, and the flag on the one most people
    pick. Data at module scope rather than inline JSX, so the row is a list
    being rendered instead of three buttons that happen to look alike. */
-const TIPS: { amt: number; emo: string }[] = [
-  { amt: 20, emo: '😄' },
-  { amt: 30, emo: '🤗' },
-  { amt: 50, emo: '😍' },
+const TIPS: { amt: number; icon: string }[] = [
+  { amt: 20, icon: '/checkout/tip-20.webp' },
+  { amt: 30, icon: '/checkout/tip-30.webp' },
+  { amt: 50, icon: '/checkout/tip-50.webp' },
 ];
 /* The flag on ₹15 is the real one's, and it is worth more than a "most
    picked" label: it says what the money BUYS. A meal is a unit somebody can
@@ -57,8 +57,6 @@ export default function Cart() {
   const donation = useStore((s) => s.donation);
   const setTip = useStore((s) => s.setTip);
   const setDonation = useStore((s) => s.setDonation);
-  const [payOpen, setPayOpen] = useState(false);
-  const [addrOpen, setAddrOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const placeOrder = useStore((s) => s.placeOrder);
   /* Set before any navigation this page performs itself, so the empty-cart
@@ -204,7 +202,7 @@ export default function Cart() {
                 onClick={() => setTip(t.amt)}
               >
                 <span className="ckochip__v">
-                  <i className="ckochip__emo" aria-hidden="true">{t.emo}</i>
+                  <img className="ckochip__emo" src={t.icon} alt="" />
                   {rupees(t.amt)}
                 </span>
               </button>
@@ -215,7 +213,7 @@ export default function Cart() {
               onClick={() => setTip(tip === 75 ? 0 : 75)}
             >
               <span className="ckochip__v">
-                <i className="ckochip__emo" aria-hidden="true">👏</i>
+                <img className="ckochip__emo" src="/checkout/tip-custom.webp" alt="" />
                 Custom
               </span>
             </button>
@@ -223,7 +221,7 @@ export default function Cart() {
         </section>
 
         <section className="ckocard ckorow">
-          <span className="ckorow__ic" aria-hidden="true">🎁</span>
+          <img className="ckorow__ic" src="/checkout/gift-bag.webp" alt="" />
           <span className="ckorow__t">
             <b>Gift Packaging</b>
             <p>Apologies, currently unavailable at this location</p>
@@ -271,23 +269,24 @@ export default function Cart() {
           reads: where it is going, how it is paid for, and the amount sitting
           on the button that spends it. */}
       <div className="ckofoot">
-        <button type="button" className="ckoaddr" onClick={() => setAddrOpen(true)}>
+        {/* Display only: the address and payment pickers are not part of this
+            prototype. */}
+        <div className="ckoaddr">
           <span className="ckoaddr__ic" aria-hidden="true"><IconPin size={17} /></span>
           <span className="ckoaddr__t">
             <b>Delivering to {address.label}</b>
             <p>{address.line}</p>
           </span>
-          <span className="ckoaddr__ch">Change</span>
-        </button>
+        </div>
 
         <div className="ckopay">
-          <button type="button" className="ckopay__m" onClick={() => setPayOpen(true)}>
+          <div className="ckopay__m">
             <span className="ckopay__k">
               <span className="ckopay__mark"><Mark mark={pay.mark} /></span>
-              PAY USING <IconCaretDown size={11} />
+              PAY USING
             </span>
             <span className="ckopay__v">{pay.label}</span>
-          </button>
+          </div>
           <button
             type="button"
             className="ckopay__go"
@@ -312,8 +311,6 @@ export default function Cart() {
         </div>
       </div>
 
-      <PaymentSheet open={payOpen} onClose={() => setPayOpen(false)} />
-      <AddressSheet open={addrOpen} onClose={() => setAddrOpen(false)} />
     </div>
   );
 }
