@@ -33,12 +33,19 @@ import {
 /* The amounts the real checkout offers, and the flag on the one most people
    pick. Data at module scope rather than inline JSX, so the row is a list
    being rendered instead of three buttons that happen to look alike. */
-const TIPS: { amt: number; flag?: string }[] = [
-  { amt: 20 },
-  { amt: 30, flag: 'Most tipped' },
-  { amt: 50 },
+const TIPS: { amt: number; emo: string }[] = [
+  { amt: 20, emo: '😄' },
+  { amt: 30, emo: '🤗' },
+  { amt: 50, emo: '😍' },
 ];
-const DONATIONS = [1, 2, 5];
+/* The flag on ₹15 is the real one's, and it is worth more than a "most
+   picked" label: it says what the money BUYS. A meal is a unit somebody can
+   picture; a popularity badge is only social proof. */
+const DONATIONS: { amt: number; flag?: string }[] = [
+  { amt: 5 },
+  { amt: 10 },
+  { amt: 15, flag: '1 MEAL' },
+];
 
 export default function Cart() {
   const nav = useNavigate();
@@ -150,12 +157,42 @@ export default function Cart() {
           </div>
         </section>
 
-        {/* Tip, and the donation. Both are banner-plus-controls: the artwork
-            carries its own headline and subtitle, so the card under it is only
-            the part you can actually press. Neither is preselected — a
-            checkout that adds money on your behalf and waits to see if you
-            notice is a dark pattern, and this one is being shown to the people
-            whose product it is. */}
+        {/* Feeding India first, then the tip, then the three small rows. The
+            order is the real screen's order, and it is not arbitrary: the
+            donation is the ask that needs the most room to land, and it gets
+            it while the player is still reading rather than after they have
+            already decided what they are adding.
+
+            Neither is preselected, and tapping your current choice clears it.
+            A checkout that adds money on your behalf and waits to see whether
+            you notice is a dark pattern. */}
+        <section className="ckocard ckotip">
+          <img className="ckotip__art" src="/checkout/feeding-india.png" alt="Join us at Feeding India" />
+          <p className="ckotip__when">
+            Donate with <button type="button" className="ckotip__sel">this order <IconCaretDown size={11} /></button>
+          </p>
+          <div className="ckochips">
+            {DONATIONS.map((d) => (
+              <button
+                key={d.amt}
+                type="button"
+                className={'ckochip' + (donation === d.amt ? ' is-on' : '') + (d.flag ? ' has-flag' : '')}
+                onClick={() => setDonation(d.amt)}
+              >
+                {d.flag && <span className="ckochip__flag">{d.flag}</span>}
+                <span className="ckochip__v">{rupees(d.amt)}</span>
+              </button>
+            ))}
+            <button
+              type="button"
+              className={'ckochip' + (donation > 0 && !DONATIONS.some((d) => d.amt === donation) ? ' is-on' : '')}
+              onClick={() => setDonation(donation === 25 ? 0 : 25)}
+            >
+              <span className="ckochip__v">Custom</span>
+            </button>
+          </div>
+        </section>
+
         <section className="ckocard ckotip">
           <img className="ckotip__art" src="/checkout/tip-partner.png" alt="Tip your delivery partner" />
           <div className="ckochips">
@@ -166,8 +203,10 @@ export default function Cart() {
                 className={'ckochip' + (tip === t.amt ? ' is-on' : '')}
                 onClick={() => setTip(t.amt)}
               >
-                {t.flag && <span className="ckochip__flag">{t.flag}</span>}
-                {rupees(t.amt)}
+                <span className="ckochip__v">
+                  <i className="ckochip__emo" aria-hidden="true">{t.emo}</i>
+                  {rupees(t.amt)}
+                </span>
               </button>
             ))}
             <button
@@ -175,33 +214,33 @@ export default function Cart() {
               className={'ckochip' + (tip > 0 && !TIPS.some((t) => t.amt === tip) ? ' is-on' : '')}
               onClick={() => setTip(tip === 75 ? 0 : 75)}
             >
-              Custom
+              <span className="ckochip__v">
+                <i className="ckochip__emo" aria-hidden="true">👏</i>
+                Custom
+              </span>
             </button>
           </div>
-          {tip > 0 && (
-            <p className="ckotip__note">
-              {rupees(tip)} tip added. 100% goes to your delivery partner.
-            </p>
-          )}
         </section>
 
-        <section className="ckocard ckotip">
-          <img className="ckotip__art" src="/checkout/feeding-india.png" alt="Join us at Feeding India" />
-          <div className="ckochips">
-            {DONATIONS.map((d) => (
-              <button
-                key={d}
-                type="button"
-                className={'ckochip' + (donation === d ? ' is-on' : '')}
-                onClick={() => setDonation(d)}
-              >
-                {rupees(d)}
-              </button>
-            ))}
-            <button type="button" className="ckochip ckochip--link">
-              Know more
-            </button>
-          </div>
+        <section className="ckocard ckorow">
+          <span className="ckorow__ic" aria-hidden="true">🎁</span>
+          <span className="ckorow__t">
+            <b>Gift Packaging</b>
+            <p>Apologies, currently unavailable at this location</p>
+          </span>
+        </section>
+
+        <section className="ckocard ckorow ckorow--act">
+          <b>Ordering for someone else?</b>
+          <button type="button" className="ckorow__a">Add details</button>
+        </section>
+
+        <section className="ckocard ckopolicy">
+          <b>Cancellation Policy</b>
+          <p>
+            Once order placed, any cancellation may result in a fee. In case of unexpected delays
+            leading to order cancellation, a complete refund will be provided.
+          </p>
         </section>
 
         <section className="ckocard ckobill">

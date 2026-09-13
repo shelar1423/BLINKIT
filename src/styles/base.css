@@ -3810,7 +3810,15 @@ input, select, textarea { font: inherit; color: inherit; }
   grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-columns: minmax(0, 1fr);
   background: #F4F6FB;
+  /* The same width the rest of the app is capped to. `position: fixed` escapes
+     `.app`, so without this the checkout was the only screen that ran the full
+     width of a laptop — which is why its cards, and the ADD buttons inside
+     them, came out enormous on a desktop and correct on a phone. `inset: 0`
+     plus auto inline margins centres it. */
+  max-width: 520px;
+  margin-inline: auto;
 }
+@media (min-width: 1024px) { .cko { max-width: 560px; } }
 .cko__bar {
   display: flex; align-items: center; gap: 10px;
   padding: calc(var(--safe-t) + 8px) 14px 10px;
@@ -3959,12 +3967,19 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckopay__go {
   flex: 1 1 auto; min-width: 0;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  height: 52px; padding: 0 16px; border: 0; border-radius: 14px;
+  height: 52px; padding: 0 16px; border: 0;
+  /* 12, not 14. Measured off the supplied crop the corner is about 23% of the
+     button's height; at 14 on 52 it was 27% and read as over-rounded. */
+  border-radius: 12px;
   background: var(--green); color: #fff;
 }
-.ckopay__amt { display: grid; justify-items: start; line-height: 1.05; }
-.ckopay__amt b { font-size: var(--f-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
-.ckopay__amt small { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.08em; opacity: 0.85; }
+/* Semi-bold, with the label under it at a regular weight and real air between
+   the two. At 800 over 700 with the lines almost touching, the block read as
+   one heavy stamp; the amount is the thing to notice and TOTAL is only telling
+   you what it is. */
+.ckopay__amt { display: grid; justify-items: start; gap: 3px; line-height: 1.1; }
+.ckopay__amt b { font-size: var(--f-lg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ckopay__amt small { font-size: var(--f-2xs); font-weight: 400; letter-spacing: 0.08em; opacity: 0.9; }
 /* Not bold. The real button sets this at a regular weight and a size close to
    the amount beside it — at 800 it shouted over the total, which is the number
    the button actually commits you to. */
@@ -4133,37 +4148,65 @@ input, select, textarea { font: inherit; color: inherit; }
   aspect-ratio: 662 / 220;
   object-fit: cover;
 }
+/* "Donate with this order", where "this order" is the part you can change. */
+.ckotip__when {
+  margin: 0; padding: 12px 14px 0;
+  font-size: var(--f-base); color: var(--ink);
+}
+.ckotip__sel {
+  border: 0; background: none; padding: 0 0 1px;
+  font-size: var(--f-base); font-weight: 600; color: var(--ink);
+  border-bottom: 1px dashed var(--line-2);
+}
+.ckotip__sel svg { vertical-align: -1px; margin-left: 2px; }
+
+/* Four equal columns, not a wrapping row. The amounts are a SET — you are
+   picking one of four — and equal widths say that where flow layout would size
+   each one to its own text and imply they are different kinds of thing. */
 .ckochips {
-  display: flex; flex-wrap: wrap; gap: 8px;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px;
   padding: 12px 14px 14px;
 }
 .ckochip {
   position: relative;
-  flex: 0 0 auto;
-  min-width: 64px; height: 38px; padding: 0 14px;
-  border: 1px solid var(--line-2); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  min-width: 0; height: 46px; padding: 0 3px;
+  border: 1px solid var(--line-2); border-radius: 12px;
   background: #fff; color: var(--ink);
-  font-size: var(--f-base); font-weight: 700; font-variant-numeric: tabular-nums;
+  /* One step down from the body size. At --f-base the tip row's widest chip,
+     an emoji plus "Custom", needed 78px inside an 80px column and lost its
+     last two letters. */
+  font-size: var(--f-sm); font-weight: 600; font-variant-numeric: tabular-nums;
+  overflow: hidden;
 }
-.ckochip.is-on {
-  background: var(--green); border-color: var(--green); color: #fff;
+.ckochip.is-on { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+.ckochip__v {
+  display: inline-flex; align-items: center; gap: 4px;
+  min-width: 0; white-space: nowrap;
 }
-.ckochip--link {
-  border-color: transparent; color: var(--green);
-  font-weight: 700; padding: 0 8px; min-width: 0;
-}
-/* The flag rides the chip's top edge rather than sitting inside it: inside, it
-   either shrank the amount or made one chip taller than its neighbours. */
+.ckochip__emo { font-style: normal; font-size: 13px; line-height: 1; }
+/* The flag is a band across the top INSIDE the chip, not a badge floating over
+   its edge: all four chips have to stay the same height and sit on the same
+   baseline, and a badge riding the border makes one of them taller. */
 .ckochip__flag {
-  position: absolute; left: 50%; top: -8px;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  padding: 1px 6px; border-radius: 999px;
-  background: var(--hw-o); color: #fff;
-  font-size: 9px; font-weight: 800; letter-spacing: 0.01em;
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: 2px 0;
+  background: #E8F6EC; color: var(--green);
+  font-size: 9px; font-weight: 700; letter-spacing: 0.04em;
 }
-.ckochips { padding-top: 18px; } /* room for the flag above the first row */
-.ckotip__note {
-  margin: 0; padding: 0 14px 14px;
-  font-size: var(--f-sm); font-weight: 600; color: var(--green);
+.ckochip.has-flag .ckochip__v { margin-top: 14px; }
+
+/* The three small rows under the tip: gift packaging, ordering for someone
+   else, and the cancellation policy. */
+.ckorow { display: flex; align-items: center; gap: 12px; }
+.ckorow__ic { font-size: 22px; line-height: 1; flex: 0 0 auto; }
+.ckorow__t { min-width: 0; }
+.ckorow__t b, .ckorow--act b { font-size: var(--f-base); font-weight: 700; color: var(--ink); }
+.ckorow__t p { margin: 2px 0 0; font-size: var(--f-sm); color: var(--mut); }
+.ckorow--act { justify-content: space-between; }
+.ckorow__a {
+  border: 0; background: none; padding: 0; flex: 0 0 auto;
+  font-size: var(--f-base); font-weight: 700; color: var(--green);
 }
+.ckopolicy b { display: block; font-size: var(--f-base); font-weight: 700; color: var(--ink); }
+.ckopolicy p { margin: 4px 0 0; font-size: var(--f-sm); line-height: 1.5; color: var(--mut); }
