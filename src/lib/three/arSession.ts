@@ -118,53 +118,117 @@ type Opts = {
  * the thing already placed, and people stop looking for the button that places
  * it. A plan reads as a proposal.
  */
+/**
+ * A ribbon of real geometry along a path.
+ *
+ * Not `LineLoop`. WebGL ignores `LineBasicMaterial.linewidth` — every line is
+ * one DEVICE pixel however wide you ask for it — so a plan drawn with lines is
+ * a set of hairlines over a live camera feed, which at 3x DPR is a third of a
+ * CSS pixel and reads as nothing at all. Width has to be geometry to exist.
+ */
+function ribbon(pts: THREE.Vector3[], width: number, y: number, hex: number, opacity: number, closed = true) {
+  const half = width / 2;
+  const n = pts.length;
+  const pos: number[] = [];
+  const idx: number[] = [];
+  const t = new THREE.Vector3();
+  for (let i = 0; i < n; i++) {
+    /* The normal at each point, from the chord through its neighbours. An
+       open path has no neighbours past its ends, so those fall back to the
+       one segment they do have — otherwise the first and last points take
+       their direction from the wrap and the ribbon folds back on itself. */
+    const prev = closed ? pts[(i - 1 + n) % n] : pts[Math.max(0, i - 1)];
+    const next = closed ? pts[(i + 1) % n] : pts[Math.min(n - 1, i + 1)];
+    t.subVectors(next, prev).normalize();
+    const nx = -t.z;
+    const nz = t.x;
+    pos.push(pts[i].x + nx * half, y, pts[i].z + nz * half);
+    pos.push(pts[i].x - nx * half, y, pts[i].z - nz * half);
+  }
+  // one quad per segment; an open path has one fewer segment than it has points
+  for (let i = 0; i < (closed ? n : n - 1); i++) {
+    const a = i * 2;
+    const b = a + 1;
+    const c = (((i + 1) % n) * 2);
+    const d = c + 1;
+    idx.push(a, b, c, b, d, c);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  return new THREE.Mesh(
+    geo,
+    new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false }),
+  );
+}
+
+/** The road surface itself, filled between the two edges. */
+function roadBand(left: THREE.Vector3[], right: THREE.Vector3[], y: number, hex: number, opacity: number) {
+  const n = left.length;
+  const pos: number[] = [];
+  const idx: number[] = [];
+  for (let i = 0; i < n; i++) {
+    pos.push(left[i].x, y, left[i].z);
+    pos.push(right[i].x, y, right[i].z);
+  }
+  for (let i = 0; i < n; i++) {
+    const a = i * 2;
+    const b = a + 1;
+    const c = ((i + 1) % n) * 2;
+    const d = c + 1;
+    idx.push(a, b, c, b, d, c);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  return new THREE.Mesh(
+    geo,
+    new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity, side: THREE.DoubleSide, depthWrite: false }),
+  );
+}
+
+/**
+ * The circuit, drawn as a plan on the surface you are pointing at.
+ *
+ * The reticle says "a track goes here"; this says WHICH track and HOW BIG,
+ * before you commit to it. Built from the engine's own curve at `trackSizeM`
+ * across, so what is outlined is what arrives.
+ *
+ * Every part of it is a mesh with a width in metres. Drawn as lines it was
+ * geometrically perfect and completely invisible.
+ */
 function makeBlueprint(trackSizeM: number) {
   const g = new THREE.Group();
   g.name = 'blueprint';
   const plan = circuitPlan();
 
-  const edge = (pts: THREE.Vector3[], hex: number, opacity: number, y: number) => {
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const line = new THREE.LineLoop(geo, new THREE.LineBasicMaterial({ color: hex, transparent: true, opacity }));
-    line.position.y = y;
-    return line;
-  };
+  // widths in metres, converted to the plan's normalised unit
+  const w = (metres: number) => metres / trackSizeM;
 
-  // the road itself — two rails, at the width the car will actually have
-  g.add(edge(plan.left, color.hwO.int, 0.95, 0.004));
-  g.add(edge(plan.right, color.hwO.int, 0.95, 0.004));
+  /* The road as a translucent band, so the circuit reads as a shape at a
+     glance rather than as two thin curves you have to join up yourself. */
+  g.add(roadBand(plan.left, plan.right, 0.0025, color.hwO.int, 0.22));
+  // its edges, bright, at a width that survives a camera feed
+  g.add(ribbon(plan.left, w(0.016), 0.004, color.hwO.int, 0.95));
+  g.add(ribbon(plan.right, w(0.016), 0.004, color.hwO.int, 0.95));
+  // the axis, in blueprint blue
+  g.add(ribbon(plan.centre, w(0.006), 0.0045, 0x7CC4FF, 0.75));
 
-  // the axis, dashed, the way a plan draws a centreline
-  const cGeo = new THREE.BufferGeometry().setFromPoints(plan.centre);
-  const centre = new THREE.LineLoop(
-    cGeo,
-    new THREE.LineDashedMaterial({ color: 0x5AA9FF, transparent: true, opacity: 0.7, dashSize: 0.02, gapSize: 0.018 }),
-  );
-  centre.computeLineDistances();
-  centre.position.y = 0.0035;
-  g.add(centre);
-
-  /* The ground it will take up. Drawn as four corner brackets rather than a
-     closed rectangle: a full box around the plan competes with the track lines
-     inside it, and the corners alone are enough to read the extent. */
-  const { w, d, cx, cz } = plan.footprint;
-  const hw = w / 2;
-  const hd = d / 2;
-  const arm = Math.min(hw, hd) * 0.34;
-  const bracket = new THREE.BufferGeometry().setFromPoints(
-    ([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).flatMap(([sx, sz]) => [
-      new THREE.Vector3(cx + sx * hw, 0, cz + sz * hd - sz * arm),
-      new THREE.Vector3(cx + sx * hw, 0, cz + sz * hd),
-      new THREE.Vector3(cx + sx * hw, 0, cz + sz * hd),
-      new THREE.Vector3(cx + sx * hw - sx * arm, 0, cz + sz * hd),
-    ]),
-  );
-  const corners = new THREE.LineSegments(
-    bracket,
-    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 }),
-  );
-  corners.position.y = 0.003;
-  g.add(corners);
+  /* The ground it will take up, as four corner brackets rather than a closed
+     rectangle: a full box competes with the track lines inside it, and the
+     corners alone are enough to read the extent. */
+  const { w: fw, d: fd, cx, cz } = plan.footprint;
+  const hw = fw / 2;
+  const hd = fd / 2;
+  const arm = Math.min(hw, hd) * 0.3;
+  const bw = w(0.014);
+  for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]] as const) {
+    const corner = new THREE.Vector3(cx + sx * hw, 0, cz + sz * hd);
+    g.add(ribbon(
+      [corner.clone().setZ(corner.z - sz * arm), corner.clone(), corner.clone().setX(corner.x - sx * arm)],
+      bw, 0.0035, 0xffffff, 0.8, false,
+    ));
+  }
 
   g.scale.setScalar(trackSizeM);
   return g;
