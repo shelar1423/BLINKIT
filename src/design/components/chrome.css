@@ -287,7 +287,15 @@
 .bnav__i.is-on::before {
   content: '';
   position: absolute; inset: 0 3px;
-  border-radius: 999px;
+  /* A rounded rectangle, not a stadium.
+
+     999px here made the lozenge's ends full half-circles: the bar is 66.4 tall
+     and the lozenge 54.4, so the radius resolved to 27.2 and there was no
+     straight edge left anywhere on it. That IS concentric with a stadium bar,
+     which is why it looked defensible and still read wrong — the reference
+     lozenge has long flat top and bottom edges and corners at roughly a
+     quarter of its height. 14 on 54.4 is 26%, measured off it. */
+  border-radius: 14px;
   background: rgba(31, 31, 31, 0.05);
 }
 .bnav__i > * { position: relative; z-index: 1; }
