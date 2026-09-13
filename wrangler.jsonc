@@ -14,10 +14,13 @@
     "directory": "./dist/",
 
     // Serves index.html with a 200 for any path that does not match a real
-    // file, which is what /hot-wheels/bone-shaker and /campaign need. This is
-    // the Workers-native equivalent of the `/* /index.html 200` line in
-    // public/_redirects; that file stays for Pages and Netlify, and is simply
-    // redundant here rather than conflicting.
+    // file, which is what /hot-wheels/bone-shaker and /campaign need.
+    //
+    // This is the ONLY place the SPA fallback is declared for Cloudflare. A
+    // `/* /index.html 200` line in public/_redirects is not merely redundant
+    // alongside it — the asset server rejects the deploy with "infinite loop
+    // detected", because html_handling strips `/index` and `.html` before the
+    // rule is re-evaluated. Netlify's copy of the rule lives in netlify.toml.
     "not_found_handling": "single-page-application"
   }
 }

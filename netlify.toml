@@ -1,9 +1,13 @@
 # Netlify build settings.
 #
-# The SPA fallback is NOT here — it lives in `public/_redirects`, which Vite
-# copies into the build output untouched. Netlify reads `_redirects` from the
-# publish directory, so the rule is already in the right place and repeating it
-# here would be two sources for one behaviour.
+# The SPA fallback lives here now. It used to be a `/* /index.html 200` line in
+# `public/_redirects`, which Vite copied into the build output for whichever
+# host was reading it — but Cloudflare's asset server REJECTS that rule outright
+# ("infinite loop detected"), because its own html_handling already strips
+# `/index` and `.html`, so rewriting to `/index.html` re-enters the same rule.
+# Cloudflare gets the behaviour from `not_found_handling` in wrangler.jsonc
+# instead, and Netlify gets it from the block below. One rule per host, and
+# neither file has to know about the other.
 
 [build]
   command = "npm run build"
@@ -11,6 +15,18 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# Real files win: Netlify serves an asset when one exists at the path and only
+# falls through to this rule when nothing matches, so it cannot swallow
+# /assets, /models, /cars and friends the way it looks like it might.
+#
+# 200 rather than 301/302: the request is rewritten to index.html internally
+# while the browser keeps the original URL, which is what lets React Router see
+# /hot-wheels/bone-shaker instead of being bounced to /.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
 
 # The AR race asks for the rear camera and the motion sensors. Safari only
 # grants those over https on a permitted origin, and Netlify sets a restrictive
