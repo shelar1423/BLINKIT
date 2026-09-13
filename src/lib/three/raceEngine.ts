@@ -646,7 +646,7 @@ function coBrandTexture(): THREE.CanvasTexture {
     ctx.textAlign = 'left';
     ctx.fillStyle = '#1F1F1F';
     ctx.fillText(dark, startX, midY);
-    ctx.fillStyle = '#0C831F';
+    ctx.fillStyle = '#328617';
     ctx.fillText(green, startX + wDark, midY);
     ctx.textAlign = 'center';
 

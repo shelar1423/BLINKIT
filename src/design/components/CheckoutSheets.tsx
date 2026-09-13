@@ -59,7 +59,7 @@ export function Mark({ mark }: { mark: string }) {
     return (
       <span className="paymark paymark--blink">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M13 3 6 13h4l-1 8 8-11h-4z" fill="#F8CB46" stroke="#0C831F" strokeWidth="1.2" strokeLinejoin="round" />
+          <path d="M13 3 6 13h4l-1 8 8-11h-4z" fill="#F8CB46" stroke="#328617" strokeWidth="1.2" strokeLinejoin="round" />
         </svg>
       </span>
     );

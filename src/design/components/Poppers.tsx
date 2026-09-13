@@ -27,7 +27,7 @@ import { useMemo } from 'react';
    screen, whose ground is that same yellow — a sixth of the confetti would
    simply stop existing halfway down. Every colour in this list reads both on
    the dark race and on the reward screen. */
-const COLORS = ['#ED1C24', '#FF6A00', '#FFFFFF', '#0B5FD0', '#0C831F', '#FF9A3D'];
+const COLORS = ['#ED1C24', '#FF6A00', '#FFFFFF', '#0B5FD0', '#328617', '#FF9A3D'];
 
 const PER_SIDE = 22;
 

@@ -8,21 +8,16 @@
   padding: 0 var(--gut);
 }
 /* The co-brand, up in the top of the screen rather than stacked on the ring.
-   On a white pill so both marks can wear their own colours: Hot Wheels red,
-   blink in black, it in Blinkit green. */
+   Hot Wheels red, blink in black, it in Blinkit green. */
 .driftload__mast {
-  position: absolute; left: 50%; top: calc(var(--safe-t) + 12vh);
-  transform: translateX(-50%);
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 16px;
-  border-radius: 999px;
-  background: #fff;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  position: absolute; left: 0; right: 0; top: calc(var(--safe-t) + 12vh);
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  white-space: nowrap;
 }
-.driftload__mast img { height: 22px; width: auto; }
-.driftload__mast i { font-style: normal; font-size: 13px; color: var(--mut); font-weight: 600; }
+.driftload__mast img { height: 44px; width: auto; }
+.driftload__mast i { font-style: normal; font-size: 20px; color: var(--ink); font-weight: 600; }
 .driftload__mast b {
-  font-size: 20px; font-weight: 800; letter-spacing: -0.8px; color: var(--ink);
+  font-size: 34px; font-weight: 800; letter-spacing: -1.2px; color: var(--ink);
 }
 .driftload__mast b em { font-style: normal; color: var(--green); }
 

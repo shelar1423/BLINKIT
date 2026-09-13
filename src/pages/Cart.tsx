@@ -47,6 +47,12 @@ const DONATIONS: { amt: number; flag?: string }[] = [
   { amt: 15, flag: '1 MEAL' },
 ];
 
+/** "#307, Mi Casa Premium Stay, Rahinj Nagar, Near MIT…" -> the first three parts and an ellipsis. */
+function shortAddress(line: string) {
+  const parts = line.split(',').map((p) => p.trim());
+  return parts.length > 3 ? `${parts.slice(0, 3).join(', ')}…` : line;
+}
+
 export default function Cart() {
   const nav = useNavigate();
   const lines = useCartLines();
@@ -191,7 +197,7 @@ export default function Cart() {
           </div>
         </section>
 
-        <section className="ckocard ckotip">
+        <section className="ckocard ckotip ckotip--tip">
           <img className="ckotip__art" src="/checkout/tip-partner.png" alt="Tip your delivery partner" />
           <div className="ckochips">
             {TIPS.map((t) => (
@@ -245,10 +251,10 @@ export default function Cart() {
           <h2>Bill details</h2>
           <div className="ckobill__r"><span>Item total</span><b>{rupees(totals.items)}</b></div>
           <div className="ckobill__r">
-            <span>Delivery charge</span>
+            <span className="ckobill__dot">Delivery charge</span>
             <b>{totals.delivery === 0 ? <em>FREE</em> : rupees(totals.delivery)}</b>
           </div>
-          <div className="ckobill__r"><span>Handling charge</span><b>{rupees(totals.handling)}</b></div>
+          <div className="ckobill__r"><span className="ckobill__dot">Handling charge</span><b>{rupees(totals.handling)}</b></div>
           {totals.tip > 0 && (
             <div className="ckobill__r"><span>Delivery tip</span><b>{rupees(totals.tip)}</b></div>
           )}
@@ -261,7 +267,7 @@ export default function Cart() {
               <b><em>− {rupees(totals.rewardValue)}</em></b>
             </div>
           )}
-          <div className="ckobill__r ckobill__r--tot"><span>To pay</span><b>{rupees(totals.toPay)}</b></div>
+          <div className="ckobill__r ckobill__r--tot"><span className="ckobill__dot">Grand total</span><b>{rupees(totals.toPay)}</b></div>
         </section>
       </main>
 
@@ -274,16 +280,19 @@ export default function Cart() {
         <div className="ckoaddr">
           <span className="ckoaddr__ic" aria-hidden="true"><IconPin size={17} /></span>
           <span className="ckoaddr__t">
-            <b>Delivering to {address.label}</b>
-            <p>{address.line}</p>
+            <b><span className="ckoaddr__k">Delivering to</span> {address.label}</b>
+            {/* The first three parts only — house, building, area — then the
+                ellipsis. The rest of the address is not read from here. */}
+            <p>{shortAddress(address.line)}</p>
           </span>
+          <span className="ckoaddr__ch">Change</span>
         </div>
 
         <div className="ckopay">
           <div className="ckopay__m">
             <span className="ckopay__k">
               <span className="ckopay__mark"><Mark mark={pay.mark} /></span>
-              PAY USING
+              PAY USING <IconCaretDown className="ckopay__up" size={11} />
             </span>
             <span className="ckopay__v">{pay.label}</span>
           </div>

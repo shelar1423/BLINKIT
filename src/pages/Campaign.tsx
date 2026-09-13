@@ -10,7 +10,7 @@ import { IconChevronRight, IconFlag, IconInfo } from '../design/elements/Icons';
 export default function Campaign() {
   const nav = useNavigate();
   const [howOpen, setHowOpen] = useState(false);
-  const { racesLeft, totalPoints, unlockedRewards, bestScore } = useStore();
+  const { racesLeft, totalPoints, unlockedRewards } = useStore();
 
   const next = REWARD_TIERS.find((t) => totalPoints < t.min);
   const cashEarned = REWARD_TIERS.filter((t) => unlockedRewards.includes(t.id)).reduce((a, t) => a + t.value, 0);
@@ -168,7 +168,7 @@ export default function Campaign() {
         </div>
       </main>
       <Sheet open={howOpen} onClose={() => setHowOpen(false)}>
-        <HowToPlay bestScore={bestScore} />
+        <HowToPlay />
       </Sheet>
     </>
   );

@@ -248,7 +248,7 @@ input, select, textarea { font: inherit; color: inherit; }
   aspect-ratio: 1 / 1.02;
   display: grid; place-items: center;
   overflow: hidden;
-  background: var(--appbase);
+  background: var(--product-bg);
   border-radius: calc(var(--r-md) - 1px) calc(var(--r-md) - 1px) 0 0;
 }
 /* Our shots are cut-outs on a flat ground, not the lifestyle photography the
@@ -284,7 +284,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* White fill AND a stroke. The reference heart is white because it sits on
    dark lifestyle photography; our cut-outs are on a near-white ground, where a
    white-on-white heart disappears. The outline is what carries it on both. */
-.pcard__save svg { fill: #fff; filter: drop-shadow(0 1px 2px rgba(16, 20, 24, 0.3)); }
+.pcard__save svg { fill: #fff; }
 .pcard__save.is-on svg { fill: var(--hw-r); color: var(--hw-r); }
 /* Pager, bottom-left inside the photo. Only drawn when there is more than one
    picture, so the count is always the number of real photographs. */
@@ -387,9 +387,14 @@ input, select, textarea { font: inherit; color: inherit; }
    weight as the price, and at 500 ours read as a caption under it. */
 .pcard__nm {
   font-size: var(--f-lg); line-height: 1.3; font-weight: 600; color: var(--ink);
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   min-height: calc(var(--f-lg) * 1.3 * 2);
   margin-top: 2px;
+}
+/* The full name everywhere a car is being shopped — it always ends in "Car",
+   and cutting it off hid that. Only the checkout's suggestion shelf, where the
+   cards are narrow and the name is not what is being decided, clamps to two. */
+.cko .pcard__nm {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .pcard__un { font-size: var(--f-xs); color: var(--mut); }
 .pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; margin-top: 4px; }
@@ -1329,7 +1334,7 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative; z-index: 2; width: 13px; height: 13px; border-radius: 50%;
   background: #fff; border: 2px solid #E0BE55;
 }
-.track__n.on { background: var(--green); border-color: #fff; box-shadow: 0 0 0 2px rgba(12, 131, 31, 0.18); }
+.track__n.on { background: var(--green); border-color: #fff; box-shadow: 0 0 0 2px rgba(50, 134, 23, 0.18); }
 .track__sp { flex: 1; }
 .track__car {
   position: absolute; top: 50%; transform: translateY(-58%); z-index: 3; width: 54px;
@@ -1685,7 +1690,7 @@ input, select, textarea { font: inherit; color: inherit; }
    cars; the other catalogue photos are opaque and sat on it as a white
    rectangle. The depth comes from a soft shadow under the car instead. */
 .pdp__stage {
-  position: relative; aspect-ratio: 1 / 0.86; background: #fff;
+  position: relative; aspect-ratio: 1 / 0.86; background: var(--product-bg);
   margin-top: calc(var(--shdr-h) * -1);
   padding-top: var(--shdr-h);
   border-radius: var(--r-lg) var(--r-lg) 0 0;
@@ -1721,7 +1726,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* view pager — one dot per view that actually exists */
-.pdp__pager { background: #fff; display: flex; justify-content: center; gap: 7px; padding: 4px 0 14px; }
+.pdp__pager { display: flex; justify-content: center; gap: 7px; padding: 4px 0 14px; }
 .pdp__dot { position: relative; width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); transition: background-color 0.15s ease; }
 .pdp__dot.is-on { background: var(--ink); }
 /* 7px of dot, 44px of target. */
@@ -1738,11 +1743,14 @@ input, select, textarea { font: inherit; color: inherit; }
    below — the only two gaps on the page that were not 8. */
 .pdp__chips {
   display: flex; gap: 8px;
-  background: #fff; margin-top: 8px; padding: 0 var(--gut);
+  margin-top: 8px; padding: 0 var(--gut);
   overflow-x: auto; scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
 .pdp__chips::-webkit-scrollbar { display: none; }
+/* Everything under the photo that belongs to it — pager, View in your space,
+   the spec chips — on the photo's own ground, so the hero reads as one block. */
+.pdp__herofoot { background: var(--product-bg); padding-bottom: 12px; }
 /* Two halves in one container, as the real spec chip is built: the label on a
    tinted ground, the value on white under it. Ours was a single flat grey box
    with both lines in it, which read as one label wrapped onto two lines rather
@@ -3413,10 +3421,6 @@ input, select, textarea { font: inherit; color: inherit; }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .howcard__tip b { font-weight: 800; }
-.howcard__best {
-  padding: 0 12px 12px;
-  font-size: var(--f-xs); color: #2A3C6B;
-}
 
 /* ---------- category page: rail + grid ----------
    Blinkit's category listing: a sticky picture-led rail of groups down the
@@ -3569,25 +3573,41 @@ input, select, textarea { font: inherit; color: inherit; }
    Expandable, because the attribute list is long and most people came to buy
    rather than read it. The chip above scrolls here and opens it, which is what
    it should have done instead of apologising in a toast. */
-.pdpspec { padding: 0; overflow: hidden; }
-.pdpspec__h {
+/* ---- product details sheet (View details) ---- */
+.sheet__panel--pdd { max-height: 82vh; height: 82vh; }
+.pdd__x {
+  position: absolute; left: 50%; bottom: calc(82vh + 14px);
+  transform: translateX(-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(28, 32, 42, 0.82); border: 0; color: #fff;
+  display: grid; place-items: center; z-index: 2;
+}
+.pdd__head { display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); margin: 0 calc(var(--gut) * -1); padding-inline: var(--gut); }
+.pdd__thumb {
+  flex: 0 0 48px; width: 48px; height: 48px;
+  border: 1px solid var(--line); border-radius: 10px;
+  background: var(--product-bg); object-fit: contain; padding: 3px;
+}
+.pdd__head h2 { margin: 0; font-size: var(--f-lg); font-weight: 700; color: var(--ink); line-height: 1.3; }
+.pdd { padding-top: 14px; }
+.pdd__k { margin: 0 0 10px; font-size: var(--f-base); font-weight: 700; color: var(--ink); }
+.pdd__k + .pdd__acc { margin-top: 0; }
+.pdd__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.pdd__acc { background: var(--product-bg); border-radius: var(--r-md); margin-top: 8px; overflow: hidden; }
+.pdd__acch {
   display: flex; align-items: center; gap: 8px;
-  width: 100%; padding: 13px 12px;
-  background: none; border: 0;
-  font-size: var(--f-md); font-weight: 800; color: var(--ink);
-  text-align: left;
+  width: 100%; padding: 14px 12px;
+  background: none; border: 0; text-align: left;
+  font-size: var(--f-base); font-weight: 700; color: var(--ink);
 }
-.pdpspec__chev { color: var(--mut); display: grid; place-items: center; transition: transform 180ms ease; }
-.pdpspec__chev.is-open { transform: rotate(180deg); }
-.pdpspec__list { margin: 0; padding: 0 12px 6px; }
-.pdpspec__list > div {
-  display: grid; grid-template-columns: 40% 1fr; gap: 10px;
-  padding: 9px 0;
-  border-top: 1px solid var(--line);
-}
-.pdpspec__list dt { font-size: var(--f-xs); color: var(--mut); font-weight: 600; }
-.pdpspec__list dd { margin: 0; font-size: var(--f-xs); font-weight: 700; color: var(--ink); text-align: right; }
-@media (prefers-reduced-motion: reduce) { .pdpspec__chev { transition: none; } }
+.pdd__chev { color: var(--ink); display: grid; place-items: center; transition: transform 180ms ease; }
+.pdd__chev.is-open { transform: rotate(180deg); }
+.pdd__list { margin: 0; padding: 4px 12px 8px; border-top: 1px solid var(--line); }
+.pdd__list > div { display: grid; grid-template-columns: 42% 1fr; gap: 10px; padding: 11px 0; }
+.pdd__list dt { font-size: var(--f-md); font-weight: 600; color: var(--ink); }
+.pdd__list dd { margin: 0; font-size: var(--f-md); font-weight: 400; color: var(--mut); }
+.pdd__foot { position: static; padding: 0; border: 0; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .pdd__chev { transition: none; } }
 
 
 /* ---------- not found ----------
@@ -4005,7 +4025,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckoline__wish {
   margin-top: 5px; padding: 0; border: 0; background: none;
   font-size: var(--f-sm); font-weight: 600; color: var(--mut);
-  text-decoration: underline; text-underline-offset: 2px;
+  text-decoration: underline dashed #BDBDBD; text-decoration-thickness: 1px; text-underline-offset: 3px;
 }
 .ckoline__right { display: grid; gap: 8px; justify-items: end; }
 .ckoline__p { margin: 0; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
@@ -4029,6 +4049,8 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-base);
 }
 .ckobill__r--tot span, .ckobill__r--tot b { color: var(--ink); font-weight: 800; }
+/* charges that carry an explanation, and the total, are dotted-underlined */
+.ckobill__dot { text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 
 /* ---- the foot ---- */
 .ckofoot {
@@ -4056,28 +4078,30 @@ input, select, textarea { font: inherit; color: inherit; }
      is not where they are read — the sheet is. */
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.ckoaddr__k { font-weight: 500; }
 .ckoaddr__ch { flex: 0 0 auto; font-size: var(--f-base); font-weight: 700; color: var(--green); }
 
-.ckopay { display: flex; align-items: center; gap: 10px; padding: 10px 12px 12px; }
+.ckopay { display: flex; align-items: center; gap: 24px; padding: 10px 12px 12px; }
+.ckopay__up { transform: rotate(180deg); }
 .ckopay__m {
   flex: 0 0 auto; border: 0; background: none; padding: 0; text-align: left;
   display: grid; gap: 2px;
 }
 .ckopay__k {
-  display: flex; align-items: center; gap: 4px;
-  font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.04em; color: var(--mut);
+  display: flex; align-items: center; gap: 5px;
+  font-size: var(--f-sm); font-weight: 500; letter-spacing: 0; color: var(--ink-2);
 }
 /* The chosen method's own mark, beside the label. It is the sheet's tile at a
    third of the size: same drawing, so the foot and the sheet agree about what
    you picked, and it is what makes this block wide enough that the button
    beside it stops running the whole width of the phone. */
-.ckopay__mark { display: inline-flex; width: 26px; height: 15px; }
+.ckopay__mark { display: inline-flex; width: 36px; height: 20px; }
 .ckopay__mark .paymark {
   width: 100%; height: 100%; border-radius: 3px; min-width: 0;
 }
-.ckopay__mark .paymark svg { width: 11px; height: 11px; }
-.ckopay__mark .paymark--word { font-size: 5px; }
-.ckopay__v { font-size: var(--f-sm); font-weight: 700; color: var(--ink); }
+.ckopay__mark .paymark svg { width: 14px; height: 14px; }
+.ckopay__mark .paymark--word { font-size: 7px; }
+.ckopay__v { font-size: var(--f-md); font-weight: 500; color: var(--ink-2); }
 .ckopay__go {
   flex: 1 1 auto; min-width: 0;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -4265,7 +4289,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* "Donate with this order", where "this order" is the part you can change. */
 .ckotip__when {
   margin: 0; padding: 12px 14px 0;
-  font-size: var(--f-base); color: var(--ink);
+  font-size: var(--f-base); font-weight: 600; color: var(--ink);
 }
 .ckotip__sel {
   border: 0; background: none; padding: 0 0 1px;
@@ -4309,6 +4333,11 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: 9px; font-weight: 700; letter-spacing: 0.04em;
 }
 .ckochip.has-flag .ckochip__v { margin-top: 14px; }
+/* The tip row sits tight under its banner, in slightly shorter pills. */
+.ckotip--tip .ckochips { padding-top: 0; margin-top: -10px; }
+.ckotip--tip .ckochip { height: 42px; }
+/* The donation amounts sit 6px under "Donate with this order". */
+.ckotip__when + .ckochips { padding-top: 6px; }
 
 /* The three small rows under the tip: gift packaging, ordering for someone
    else, and the cancellation policy. */

@@ -8,7 +8,7 @@ const HOW_TO: { t: string; icon: string; c: ReactNode }[] = [
 ];
 
 /** How to play. Opened from the campaign hub's "How it works" pill. */
-export function HowToPlay({ bestScore = 0 }: { bestScore?: number }) {
+export function HowToPlay() {
   return (
     <div className="howcard">
       <div className="howcard__hd">
@@ -26,11 +26,6 @@ export function HowToPlay({ bestScore = 0 }: { bestScore?: number }) {
           </div>
         ))}
       </div>
-      {bestScore > 0 && (
-        <p className="howcard__best">
-          Your best so far: <b className="t-num">{bestScore.toLocaleString('en-IN')} pts</b>
-        </p>
-      )}
     </div>
   );
 }

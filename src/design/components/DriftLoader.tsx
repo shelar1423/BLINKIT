@@ -103,7 +103,7 @@ export function DriftLoader({
     <div className="driftload" role="status" aria-live="polite">
       {/* The lockup, because this is the one moment the campaign has the whole screen. */}
       <span className="driftload__mast">
-        <img src="/brand/hot-wheels.svg" alt="Hot Wheels" />
+        <img src="/brand/hot-wheels-logo.webp" alt="Hot Wheels" />
         <i aria-hidden="true">&times;</i>
         <b>blink<em>it</em></b>
       </span>
