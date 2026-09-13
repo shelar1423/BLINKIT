@@ -2136,12 +2136,26 @@ input, select, textarea { font: inherit; color: inherit; }
   background: var(--green-tint); color: var(--green);
 }
 .trkc__call:active { background: #D8F5D8; }
-/* Full width inside the card, not a pill: it is the partner speaking, and it
-   should read as a line of theirs rather than a badge on the card. */
+/* The partner speaking, so it is drawn as speech: a bubble indented to the
+   avatar's own left edge with a tail pointing back up at them. Full width and
+   square, which is what it was, read as a status banner the app had written —
+   the tail is what makes it a person talking. */
 .trkc__said {
+  position: relative;
+  margin: 0 16px 14px;
+  padding: 11px 14px;
+  border-radius: 12px;
   background: var(--green-tint); color: #1B7A2C;
-  padding: 11px 16px;
   font-size: var(--f-md); font-weight: 500; line-height: 1.35;
+}
+.trkc__said::before {
+  content: '';
+  position: absolute; left: -7px; top: 11px;
+  width: 8px; height: 15px;
+  background: var(--green-tint);
+  /* Apex on the left, high up, so it aims at the face above rather than
+     straight out at the card's edge. */
+  clip-path: polygon(100% 0, 100% 100%, 0 18%);
 }
 
 .trkc__row { display: flex; align-items: flex-start; gap: 14px; padding: 16px; width: 100%; text-align: left;
