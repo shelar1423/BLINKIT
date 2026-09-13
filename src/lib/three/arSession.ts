@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { color } from '../../design/constants';
-import { circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
+import { chase, circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
 import { cameraPitchDeg, makeDeviceAim, makeJumpInput, makeLeverDrag } from './raceInput';
 
@@ -1113,8 +1113,8 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
         fpCamLook.copy(fpTarget.look);
         fpInited = true;
       } else {
-        fpCamPos.lerp(fpTarget.pos, Math.min(1, dt * 7));
-        fpCamLook.lerp(fpTarget.look, Math.min(1, dt * 9));
+        fpCamPos.lerp(fpTarget.pos, chase(7, dt));
+        fpCamLook.lerp(fpTarget.look, chase(9, dt));
       }
 
       // Convert fp camera position from track-local to world:
@@ -1615,7 +1615,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       engine.launcherCameraTarget(lnTarget);
       const wp = engine.root.localToWorld(lnTarget.pos.clone());
       const wl = engine.root.localToWorld(lnTarget.look.clone());
-      camera.position.lerp(wp, Math.min(1, dt * 2.4));
+      camera.position.lerp(wp, chase(2.4, dt));
 
       lookM.lookAt(camera.position, wl, UP);
       qBase.setFromRotationMatrix(lookM);
@@ -1629,12 +1629,12 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       } else {
         qWant.copy(qBase);
       }
-      camera.quaternion.slerp(qWant, Math.min(1, dt * 4));
+      camera.quaternion.slerp(qWant, chase(4, dt));
     } else if (phase !== 'racing') {
       /* Back to the player's own eye, or the placement reticle would be cast
          from wherever the last launcher view left the camera. */
       gyroRefSet = false;
-      camera.position.lerp(camHome, Math.min(1, dt * 3.5));
+      camera.position.lerp(camHome, chase(3.5, dt));
     }
 
     if (phase === 'racing') {
@@ -1656,8 +1656,8 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
         fpCamLook.copy(worldFPLook);
         fpInited = true;
       } else {
-        fpCamPos.lerp(worldFPPos, Math.min(1, dt * 7));
-        fpCamLook.lerp(worldFPLook, Math.min(1, dt * 9));
+        fpCamPos.lerp(worldFPPos, chase(7, dt));
+        fpCamLook.lerp(worldFPLook, chase(9, dt));
       }
 
       camera.position.copy(fpCamPos);

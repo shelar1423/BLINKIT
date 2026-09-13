@@ -114,6 +114,24 @@ const SLOW_FINISH = 0.22;
 /** Real seconds between the last corner and the result screen. */
 const FINISH_OUTRO = 1.9;
 
+/**
+ * The fraction to move toward a target this frame, for an exponential chase.
+ *
+ * Every one of these used to be written `chase(rate, dt)`, which is the
+ * first term of this expansion and is wrong in exactly the way that matters on
+ * a phone: it is LINEAR in dt, so a frame that takes twice as long moves twice
+ * as far, and a stutter makes the camera lunge. The exponential form converges
+ * on the same place at the same speed whatever the frame rate did, so a run of
+ * uneven frames reads as uneven frames rather than as the camera shaking.
+ *
+ * `rate` is per second; higher is tighter. The numbers at the call sites are
+ * unchanged and mean the same thing — at 60fps the two forms differ by about a
+ * tenth of a step, and they only diverge when the frame rate does.
+ */
+export function chase(rate: number, dt: number) {
+  return 1 - Math.exp(-rate * dt);
+}
+
 const ROAD_W = 9;
 
 /* The ramp, in one place: the mesh is built from these and so is the climb the
@@ -2308,7 +2326,7 @@ export class RaceEngine {
     const up = new THREE.Vector3(0, 1, 0);
 
     const on = this.curve.getPointAt(this.t);
-    const tan = this.curve.getTangentAt(this.t).clone().setY(0).normalize();
+    const tan = this.smoothTangent(this.t);
     const right = new THREE.Vector3().crossVectors(tan, up).normalize();
     const car = on.clone().addScaledVector(right, this.lateral);
 
@@ -2327,6 +2345,29 @@ export class RaceEngine {
    * behind the car so the player sees the road from near the driver's POV.
    * The car stays visible in the lower portion of the frame.
    */
+  /**
+   * The heading to point a camera along, with the curve's own jitter taken out.
+   *
+   * `getTangentAt` is the instantaneous tangent, and a Catmull-Rom spline is
+   * only C1: its CURVATURE steps at every control point. The tangent itself is
+   * continuous, so nothing looks wrong in a still frame — but its rate of
+   * change is not, and a camera built on it swings at a speed that jumps from
+   * one frame to the next. Measured around a lap, the yaw rate was changing by
+   * up to 44 deg/s between consecutive frames in the corners. That is the
+   * shake.
+   *
+   * A chord between two points either side of the car is the same heading with
+   * the steps averaged out — a low-pass filter with no state, no lag, and no
+   * dependence on frame rate. 6 units either way is about a car length and a
+   * half, which is short enough to still lead into a bend.
+   */
+  private smoothTangent(t: number) {
+    const D = 6 / this.curveLen;
+    const a = this.curve.getPointAt((t - D + 1) % 1);
+    const b = this.curve.getPointAt((t + D) % 1);
+    return b.clone().sub(a).setY(0).normalize();
+  }
+
   fpCameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3 }) {
     const BEHIND = 2.5;   // much closer than the 3D chase cam
     const HEIGHT = 0.9;   // just above the car roof
@@ -2334,9 +2375,13 @@ export class RaceEngine {
     const up = new THREE.Vector3(0, 1, 0);
     const dAhead = AHEAD / this.curveLen;
 
-    // behind the CAR along its heading, for the same reason the chase cam is
+    /* Behind the CAR along its heading, for the same reason the chase cam is —
+       and off the same smoothed heading, which matters more here than there:
+       this camera sits 2.5 units back rather than 9.5, and the closer the
+       camera is to what it is following the larger the angle any given wobble
+       becomes. The AR race is where the shake was worst, and this is why. */
     const on = this.curve.getPointAt(this.t);
-    const tan = this.curve.getTangentAt(this.t).clone().setY(0).normalize();
+    const tan = this.smoothTangent(this.t);
     const right = new THREE.Vector3().crossVectors(tan, up).normalize();
     const car = on.clone().addScaledVector(right, this.lateral);
     out.pos.copy(car).addScaledVector(tan, -BEHIND);
@@ -2362,8 +2407,8 @@ export class RaceEngine {
        Into slow motion fast and out of it gently: the drop is the punch that
        tells you the gate is here, and the climb back is the car picking the
        speed back up. Symmetrical rates made the return read as a stutter. */
-    const chase = this.slowTarget < this.timeScale ? 9 : 3.6;
-    this.timeScale += (this.slowTarget - this.timeScale) * Math.min(1, dtReal * chase);
+    const clockRate = this.slowTarget < this.timeScale ? 9 : 3.6;
+    this.timeScale += (this.slowTarget - this.timeScale) * chase(clockRate, dtReal);
     if (Math.abs(this.timeScale - this.slowTarget) < 0.004) this.timeScale = this.slowTarget;
     setAudioTimeScale(this.timeScale);
     const slowNow = this.timeScale < 0.85;
@@ -2393,7 +2438,7 @@ export class RaceEngine {
       const a = this.throttle * 20 - this.braking * 30 - drag;
       this.speed = Math.max(0, Math.min(vMax, this.speed + a * dt));
     } else {
-      this.speed += ((boosting ? 34 : 24) - this.speed) * Math.min(1, dt * 1.8);
+      this.speed += ((boosting ? 34 : 24) - this.speed) * chase(1.8, dt);
     }
     const prevT = this.t;
     /* Hitting debris sets a NEGATIVE speed — the car rebounds — so this has to
@@ -2489,7 +2534,7 @@ export class RaceEngine {
       }
     }
 
-    this.jumpPitch += (pitchTarget - this.jumpPitch) * Math.min(1, dt * 9);
+    this.jumpPitch += (pitchTarget - this.jumpPitch) * chase(9, dt);
     if (Math.abs(this.jumpPitch) < 0.002) this.jumpPitch = 0;
 
     /* Boost gates. Armed by DISTANCE rather than by a fixed lead in `t`,
@@ -2542,13 +2587,13 @@ export class RaceEngine {
              where the hole is. Eased rather than snapped: the player may be
              mid-corner-exit when the gate arms, and yanking the car onto the
              centreline would read as the game taking the wheel. */
-          this.lateral -= this.lateral * Math.min(1, dt * 2.2);
+          this.lateral -= this.lateral * chase(2.2, dt);
         } else if (g.armed) {
           /* Lifted, still short of the hoop. The clock stays down and the car
              stays lined up — the verdict is not in yet, because the verdict is
              where the car IS when it gets there. */
           gateArmed = true;
-          this.lateral -= this.lateral * Math.min(1, dt * 2.2);
+          this.lateral -= this.lateral * chase(2.2, dt);
         }
 
         // crossing it: the wrapped gap jumps from nearly a lap to nearly zero
@@ -2574,8 +2619,8 @@ export class RaceEngine {
     // Grip falls away while the handbrake is down, so the same steering input
     // moves the car much further across the road and swings the nose with it.
     const wantGrip = this.drifting && this.speed > 6 ? 0.32 : 1;
-    this.grip += (wantGrip - this.grip) * Math.min(1, dt * 6);
-    this.steerSmooth += (this.steer - this.steerSmooth) * Math.min(1, dt * 9);
+    this.grip += (wantGrip - this.grip) * chase(6, dt);
+    this.steerSmooth += (this.steer - this.steerSmooth) * chase(9, dt);
 
     // 7 m/s at full lock takes about a second to cross half the road, which is
     // steerable. The old 15 crossed the whole road in under 0.6s — the car
@@ -2585,7 +2630,7 @@ export class RaceEngine {
     this.lateral += this.steerSmooth * dt * 7 * slide * bite;
 
     const wantYaw = -this.steerSmooth * (1 - this.grip) * 0.85;
-    this.driftYaw += (wantYaw - this.driftYaw) * Math.min(1, dt * 7);
+    this.driftYaw += (wantYaw - this.driftYaw) * chase(7, dt);
     if (Math.abs(this.lateral) > LANE_LIMIT) {
       this.lateral = Math.sign(this.lateral) * LANE_LIMIT;
       // Scrubbing the barrier costs speed. Scale by dt, otherwise the penalty

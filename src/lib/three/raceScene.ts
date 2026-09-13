@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
 import { makeJumpInput, makeLeverDrag } from './raceInput';
-import { RaceEngine, type EngineOpts, type RaceStats, type RaceOutcome } from './raceEngine';
+import { RaceEngine, chase, type EngineOpts, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
 
 export type RaceHandle = {
@@ -284,8 +284,8 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
          which drives the chevrons standing over the lever and nothing else. */
       engine.tickIdle(dt);
       engine.launcherCameraTarget(lnTarget);
-      camPos.lerp(lnTarget.pos, Math.min(1, dt * 4));
-      camLook.lerp(lnTarget.look, Math.min(1, dt * 5));
+      camPos.lerp(lnTarget.pos, chase(4, dt));
+      camLook.lerp(lnTarget.look, chase(5, dt));
       camera.position.copy(camPos);
       camera.lookAt(camLook);
       renderer.render(scene, camera);
@@ -296,8 +296,8 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     engine.cameraTarget(target);
 
     // critically damped-ish follow so the camera never jitters
-    camPos.lerp(target.pos, Math.min(1, dt * 6.5));
-    camLook.lerp(target.look, Math.min(1, dt * 8));
+    camPos.lerp(target.pos, chase(6.5, dt));
+    camLook.lerp(target.look, chase(8, dt));
     camera.position.copy(camPos);
     camera.lookAt(camLook);
 
