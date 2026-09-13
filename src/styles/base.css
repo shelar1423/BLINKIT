@@ -2047,7 +2047,11 @@ input, select, textarea { font: inherit; color: inherit; }
      the screen instead of centring on whatever space is left beside it. */
   padding: calc(var(--safe-t) + 12px) 56px 18px;
   text-align: center;
-  position: relative;
+  /* Pinned: where the order is and when it lands is the one thing that should
+     never scroll away, and it stays a containing block for the back button. */
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 .trk__back {
   position: absolute; left: 12px; top: calc(var(--safe-t) + 10px);
