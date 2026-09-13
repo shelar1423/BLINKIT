@@ -31,12 +31,26 @@ import {
    making a different one.
    ============================================================ */
 
+/* The amounts the real checkout offers, and the flag on the one most people
+   pick. Data at module scope rather than inline JSX, so the row is a list
+   being rendered instead of three buttons that happen to look alike. */
+const TIPS: { amt: number; flag?: string }[] = [
+  { amt: 20 },
+  { amt: 30, flag: 'Most tipped' },
+  { amt: 50 },
+];
+const DONATIONS = [1, 2, 5];
+
 export default function Cart() {
   const nav = useNavigate();
   const lines = useCartLines();
   const totals = useTotals();
   const addressId = useStore((s) => s.addressId);
   const payId = useStore((s) => s.payId);
+  const tip = useStore((s) => s.tip);
+  const donation = useStore((s) => s.donation);
+  const setTip = useStore((s) => s.setTip);
+  const setDonation = useStore((s) => s.setDonation);
   const [payOpen, setPayOpen] = useState(false);
   const [addrOpen, setAddrOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -137,6 +151,60 @@ export default function Cart() {
           </div>
         </section>
 
+        {/* Tip, and the donation. Both are banner-plus-controls: the artwork
+            carries its own headline and subtitle, so the card under it is only
+            the part you can actually press. Neither is preselected — a
+            checkout that adds money on your behalf and waits to see if you
+            notice is a dark pattern, and this one is being shown to the people
+            whose product it is. */}
+        <section className="ckocard ckotip">
+          <img className="ckotip__art" src="/checkout/tip-partner.png" alt="Tip your delivery partner" />
+          <div className="ckochips">
+            {TIPS.map((t) => (
+              <button
+                key={t.amt}
+                type="button"
+                className={'ckochip' + (tip === t.amt ? ' is-on' : '')}
+                onClick={() => setTip(t.amt)}
+              >
+                {t.flag && <span className="ckochip__flag">{t.flag}</span>}
+                {rupees(t.amt)}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={'ckochip' + (tip > 0 && !TIPS.some((t) => t.amt === tip) ? ' is-on' : '')}
+              onClick={() => setTip(tip === 75 ? 0 : 75)}
+            >
+              Custom
+            </button>
+          </div>
+          {tip > 0 && (
+            <p className="ckotip__note">
+              {rupees(tip)} tip added. 100% goes to your delivery partner.
+            </p>
+          )}
+        </section>
+
+        <section className="ckocard ckotip">
+          <img className="ckotip__art" src="/checkout/feeding-india.png" alt="Join us at Feeding India" />
+          <div className="ckochips">
+            {DONATIONS.map((d) => (
+              <button
+                key={d}
+                type="button"
+                className={'ckochip' + (donation === d ? ' is-on' : '')}
+                onClick={() => setDonation(d)}
+              >
+                {rupees(d)}
+              </button>
+            ))}
+            <button type="button" className="ckochip ckochip--link">
+              Know more
+            </button>
+          </div>
+        </section>
+
         <section className="ckocard ckobill">
           <h2>Bill details</h2>
           <div className="ckobill__r"><span>Item total</span><b>{rupees(totals.items)}</b></div>
@@ -145,6 +213,12 @@ export default function Cart() {
             <b>{totals.delivery === 0 ? <em>FREE</em> : rupees(totals.delivery)}</b>
           </div>
           <div className="ckobill__r"><span>Handling charge</span><b>{rupees(totals.handling)}</b></div>
+          {totals.tip > 0 && (
+            <div className="ckobill__r"><span>Delivery tip</span><b>{rupees(totals.tip)}</b></div>
+          )}
+          {totals.donation > 0 && (
+            <div className="ckobill__r"><span>Feeding India donation</span><b>{rupees(totals.donation)}</b></div>
+          )}
           {totals.rewardValue > 0 && (
             <div className="ckobill__r">
               <span>Racing reward</span>

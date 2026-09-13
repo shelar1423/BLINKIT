@@ -75,6 +75,8 @@ export const FREE_DELIVERY_MIN = 199;
 export type Totals = {
   items: number; mrp: number; savings: number; delivery: number;
   handling: number; rewardValue: number; toPay: number;
+  /** What the player chose to add on top: a tip, and a donation. */
+  tip: number; donation: number;
   /** rupees still needed for free delivery; 0 once unlocked */
   freeDeliveryShortfall: number;
   freeDeliveryProgress: number; // 0..1
@@ -84,6 +86,11 @@ export type Totals = {
 export function computeTotals(
   lines: { product: Product; qty: number }[],
   claimed: { value: number; freeDelivery: boolean } | null,
+  /* Both are opt-in extras rather than charges, so they are arguments here
+     instead of constants: nothing about the order decides them, the player
+     does, and a bill that computed them itself would be deciding for them. */
+  tip = 0,
+  donation = 0,
 ): Totals {
   const items = lines.reduce((a, l) => a + l.product.price * l.qty, 0);
   const mrp = lines.reduce((a, l) => a + (l.product.mrp ?? l.product.price) * l.qty, 0);
@@ -92,10 +99,17 @@ export function computeTotals(
   const delivery = items === 0 ? 0 : freeDel ? 0 : 25;
   const handling = items === 0 ? 0 : 9;
   const savings = mrp - items + (freeDel && items > 0 ? 25 : 0) + rewardValue;
-  const toPay = Math.max(0, items + delivery + handling - rewardValue);
+  /* An empty cart carries neither. They are things you add to an order, and
+     there is no order to add them to. */
+  const tipDue = items === 0 ? 0 : tip;
+  const donationDue = items === 0 ? 0 : donation;
+  const toPay = Math.max(0, items + delivery + handling - rewardValue) + tipDue + donationDue;
   const freeDeliveryShortfall = freeDel ? 0 : Math.max(0, FREE_DELIVERY_MIN - items);
   const freeDeliveryProgress = freeDel ? 1 : Math.min(1, items / FREE_DELIVERY_MIN);
-  return { items, mrp, savings, delivery, handling, rewardValue, toPay, freeDeliveryShortfall, freeDeliveryProgress };
+  return {
+    items, mrp, savings, delivery, handling, rewardValue, toPay,
+    tip: tipDue, donation: donationDue, freeDeliveryShortfall, freeDeliveryProgress,
+  };
 }
 
 export function linesFromCart(cart: Record<string, number>) {
@@ -113,6 +127,9 @@ type State = {
   addressId: string;
   /** Which payment method the Place Order button will use. */
   payId: string;
+  /** Rupees tipped to the rider, and donated to Feeding India. 0 is off. */
+  tip: number;
+  donation: number;
   selectedCarId: string;
   racesLeft: number;
   totalPoints: number;
@@ -134,6 +151,8 @@ type State = {
 
   setAddress: (id: string) => void;
   setPay: (id: string) => void;
+  setTip: (n: number) => void;
+  setDonation: (n: number) => void;
   add: (id: string, qty?: number) => void;
   setQty: (id: string, qty: number) => void;
   removeLine: (id: string) => void;
@@ -164,6 +183,8 @@ export const useStore = create<State>()(
       cart: {},
       addressId: 'hostel',
       payId: 'bhim',
+      tip: 0,
+      donation: 0,
       selectedCarId: CARS[0].id,
       racesLeft: MAX_RACES,
       totalPoints: 0,
@@ -181,6 +202,10 @@ export const useStore = create<State>()(
 
       setAddress: (id) => set({ addressId: id }),
       setPay: (id) => set({ payId: id }),
+      /* Tapping the chip you already chose turns it off. A row of amounts with
+         no way back is a row you can only ever tip MORE from. */
+      setTip: (n) => set((st) => ({ tip: st.tip === n ? 0 : n })),
+      setDonation: (n) => set((st) => ({ donation: st.donation === n ? 0 : n })),
       add: (id, qty = 1) => set((s) => ({ cart: { ...s.cart, [id]: (s.cart[id] ?? 0) + qty } })),
       setQty: (id, qty) =>
         set((s) => {
@@ -322,7 +347,12 @@ export function useCartLines() {
 export function useTotals(): Totals {
   const cart = useStore((s) => s.cart);
   const claimed = useStore((s) => s.claimedReward);
-  return useMemo(() => computeTotals(linesFromCart(cart), claimed), [cart, claimed]);
+  const tip = useStore((s) => s.tip);
+  const donation = useStore((s) => s.donation);
+  return useMemo(
+    () => computeTotals(linesFromCart(cart), claimed, tip, donation),
+    [cart, claimed, tip, donation],
+  );
 }
 
 export function useCartCount() {

@@ -3916,7 +3916,12 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 -4px 18px rgba(16, 24, 40, 0.06);
 }
 .ckoaddr {
-  width: 100%; border: 0; background: #FFF7EC;
+  width: 100%; border: 0; background: #fff;
+  /* White, like the rest of the foot. The cream this had was invented — the
+     real row is the same surface as the payment row beneath it, and a tinted
+     band there reads as a warning about the address rather than as the
+     address. The hairline is what separates them. */
+  border-bottom: 1px solid var(--line);
   display: flex; align-items: center; gap: 10px; text-align: left;
   padding: 11px 14px;
 }
@@ -4080,3 +4085,60 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; place-items: center; font-size: 10px;
 }
 .addr.is-on .addr__btn { background: #fff; }
+
+/* ---------- tip, and the donation ----------
+   Both are a supplied banner with controls underneath. The artwork carries its
+   own headline and subtitle, so this card contributes no text of its own above
+   the chips — anything written here would be saying a second time what the
+   image already says, in a different typeface. */
+/* No `overflow: hidden` here, and that is not an oversight.
+   A grid item with `overflow: hidden` is a scroll container, and a scroll
+   container's automatic minimum size is 0 rather than min-content — so the
+   auto row sized to nothing and the card computed to 0px tall with its banner
+   and chips clipped out of existence. Measured: hidden 0px, visible 176px.
+   The only thing it was there for was rounding the banner against the card's
+   corners, which the banner can do itself. */
+.ckotip { padding: 0; }
+.ckotip__art {
+  display: block; width: 100%;
+  border-radius: 18px 18px 0 0;
+  /* The supplied banners are 662x220. Stated, so the card does not collapse
+     and then jolt to full height when the image lands; and matched to the real
+     ratio so `cover` has nothing to crop. */
+  aspect-ratio: 662 / 220;
+  object-fit: cover;
+}
+.ckochips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 12px 14px 14px;
+}
+.ckochip {
+  position: relative;
+  flex: 0 0 auto;
+  min-width: 64px; height: 38px; padding: 0 14px;
+  border: 1px solid var(--line-2); border-radius: 10px;
+  background: #fff; color: var(--ink);
+  font-size: var(--f-base); font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.ckochip.is-on {
+  background: var(--green); border-color: var(--green); color: #fff;
+}
+.ckochip--link {
+  border-color: transparent; color: var(--green);
+  font-weight: 700; padding: 0 8px; min-width: 0;
+}
+/* The flag rides the chip's top edge rather than sitting inside it: inside, it
+   either shrank the amount or made one chip taller than its neighbours. */
+.ckochip__flag {
+  position: absolute; left: 50%; top: -8px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  padding: 1px 6px; border-radius: 999px;
+  background: var(--hw-o); color: #fff;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.01em;
+}
+.ckochips { padding-top: 18px; } /* room for the flag above the first row */
+.ckotip__note {
+  margin: 0; padding: 0 14px 14px;
+  font-size: var(--f-sm); font-weight: 600; color: var(--green);
+}
