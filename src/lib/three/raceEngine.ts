@@ -1164,10 +1164,14 @@ export class RaceEngine {
   private airT = -1;
   /** Which ring the current flight took off for, or -1. */
   private airFromGate = -1;
+  /** A ring lifted for early, waiting for its takeoff point; -1 if none. */
+  private pendingLift = -1;
   /** Distance travelled round the loop, or -1 when not on it. */
   private loopS = -1;
   /** 0 = chase, 1 = the camera out in front of the loop. */
   private loopK = 0;
+  /** The loop's track, taken away once it has been driven — it is a lap-one feature. */
+  private loopGroup: THREE.Group | null = null;
   /** Where the finish camera stands, as a lap position in x (fixed, so the car closes on it). */
   private frontAnchor: THREE.Vector3 | null = null;
   /* The arc currently being flown. The ramp and the gates are the same flight
@@ -1720,19 +1724,36 @@ export class RaceEngine {
        that jumps for no reason a second after the ring has gone past reads as
        a bug rather than as a mistake. It still counts as the player's answer,
        so the gate is theirs to have missed. */
-    if (Math.abs(errSec) > raceInteraction.gateAcceptSec) return true;
+    /* Early lifts are held for the takeoff point (below), so they are taken
+       from much further out than late ones, which can only be flown so far. */
+    if (errSec > raceInteraction.gateEarlySec || errSec < -raceInteraction.gateAcceptSec) return true;
 
     /* Airborne from the floor — there is no ramp here, the car simply leaves
        the road. Only if it is not already flying: a lift taken during the
        ramp's own jump must not restart the arc mid-air. */
     if (this.airT < 0 && this.rampU < 0) {
-      this.airT = 0;
-      this.airFromGate = i;
-      this.airTime = raceInteraction.gateAirtime;
-      this.airPeak = raceInteraction.gateRingY;
-      this.airFrom = 0;
+      /* Flown ON the beat, whenever inside the window the lift came. Only
+         the last ring is in slow motion now, and at full speed a tilt that
+         lands a fraction early or late was sending the car over or under
+         the hoop — a lift you made, scored as a miss. So an early lift
+         waits for the takeoff point, and a late one starts the arc a little
+         way in. The timing still decides perfect versus good. */
+      if (errSec > 0) {
+        this.pendingLift = i;
+      } else {
+        this.beginGateFlight(i, Math.min(0.12, -errSec / raceInteraction.gateAirtime));
+      }
     }
     return true;
+  }
+
+  private beginGateFlight(i: number, startAt = 0) {
+    this.pendingLift = -1;
+    this.airT = startAt;
+    this.airFromGate = i;
+    this.airTime = raceInteraction.gateAirtime;
+    this.airPeak = raceInteraction.gateRingY;
+    this.airFrom = 0;
   }
 
   /** Score the gate, put its fire out, and stop reporting it. */
@@ -1836,6 +1857,7 @@ export class RaceEngine {
     const g = new THREE.Group();
     g.add(new THREE.Mesh(geo, mat), new THREE.Mesh(lipGeoL, lipMat), new THREE.Mesh(lipGeoR, lipMat));
     this.root.add(g);
+    this.loopGroup = g;
   }
 
   /** The lane gate i sits in on the current lap. */
@@ -1856,7 +1878,7 @@ export class RaceEngine {
    */
   private get laneLock(): number | null {
     if (this.loopS >= 0) return this.loopLateral();
-    if (this.interactions && raceInteraction.loopEnabled) {
+    if (this.interactions && raceInteraction.loopEnabled && this.lap === 0) {
       const ahead = ((raceInteraction.loopAt - this.t + 1) % 1) * this.curveLen;
       if (ahead < raceInteraction.loopLeadIn) return -raceInteraction.loopShift;
     }
@@ -1882,6 +1904,7 @@ export class RaceEngine {
       if (lanes) g.lane.position.x = lanes[Math.min(this.lap, lanes.length - 1)] ?? 0;
     });
     this.armedGate = -1;
+    this.pendingLift = -1;
   }
 
   /** Dim or light a gate's flame — the session brightens the one being run at. */
@@ -3069,11 +3092,12 @@ export class RaceEngine {
     /* The loop holds the lap still while the car goes round it. */
     if (this.loopS >= 0) {
       this.t = raceInteraction.loopAt;
-      this.speed = Math.max(this.speed, 16);
-      this.loopS += this.speed * dt;
+      this.speed = Math.max(this.speed, 19);
+      // a touch quicker round the loop than on the road, so it doesn't crawl
+      this.loopS += this.speed * 1.18 * dt;
       if (this.loopS >= this.loopLen) this.loopS = -1;
     } else if (
-      this.interactions && raceInteraction.loopEnabled && this.speed > 0 && this.airT < 0 &&
+      this.interactions && raceInteraction.loopEnabled && this.lap === 0 && this.speed > 0 && this.airT < 0 &&
       prevT < raceInteraction.loopAt && this.t >= raceInteraction.loopAt && this.t - prevT < 0.2
     ) {
       this.t = raceInteraction.loopAt;
@@ -3082,6 +3106,8 @@ export class RaceEngine {
     if (prevT > 0.92 && this.t < 0.08 && this.speed > 0) {
       this.lap += 1;
       this.rearmGates();
+      // the loop is driven once; on lap two the road runs clear
+      if (this.loopGroup) this.loopGroup.visible = false;
     }
 
     /* Events only fire while the car is going FORWARDS.
@@ -3206,6 +3232,9 @@ export class RaceEngine {
 
         // forward distance to the gate, wrapped
         const ahead = (g.t - this.t + 1) % 1;
+        if (this.pendingLift === i && !g.done && ahead <= this.gateIdealAhead() && this.airT < 0) {
+          this.beginGateFlight(i);
+        }
         if (this.isFinalGate(i) && !g.done && ahead < lead * MOMENT_LEAD && this.outroAt < 0) momentWant = true;
         if (!g.armed && !g.done && ahead < lead && this.outroAt < 0) {
           g.armed = true;
@@ -3293,9 +3322,10 @@ export class RaceEngine {
     {
       const aheadLoop = ((raceInteraction.loopAt - this.t + 1) % 1) * this.curveLen;
       const loopWant = this.interactions && raceInteraction.loopEnabled &&
-        (this.loopS >= 0 || (aheadLoop < 12 && this.outroAt < 0));
-      // in over the run-in, and out slowly once the car is off the loop
-      this.loopK += ((loopWant ? 1 : 0) - this.loopK) * chase(loopWant ? 2.6 : 1.1, dtReal);
+        (this.loopS >= 0 || (aheadLoop < 14 && this.lap === 0 && this.outroAt < 0));
+      /* Slow both ways — out to the side over the run-in and back behind
+         the car over a couple of seconds — so the camera never swings. */
+      this.loopK += ((loopWant ? 1 : 0) - this.loopK) * chase(loopWant ? 2.0 : 0.9, dtReal);
       if (!loopWant && this.loopK < 0.002) this.loopK = 0;
     }
     const frontTo = this.cinematic && this.finalPhase === 3 && this.cineTail <= 0 ? 1 : 0;

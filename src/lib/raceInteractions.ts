@@ -149,6 +149,8 @@ export const raceInteraction = {
    * hoop, so the lift is simply dropped and the car drives under it.
    */
   gateAcceptSec: 0.34,
+  /** How early a lift may come and still be flown — held for the takeoff point. */
+  gateEarlySec: 0.75,
 
   scoreBoostGood: 250,
   scoreBoostPerfect: 500,
