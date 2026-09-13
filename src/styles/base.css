@@ -2036,6 +2036,7 @@ input, select, textarea { font: inherit; color: inherit; }
    the person bringing the order. The page ground is the app base so the cards
    read as cards; the bar and the map sit flush to the edges above them.
    ============================================================ */
+/* ---------- order tracking ---------- */
 .trk { background: var(--appbase); padding-bottom: 0; }
 
 .trk__top {
@@ -2044,125 +2045,183 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Centred on the bar, with the back button floating over the left. The
      padding is symmetric at the button's width so a long ETA stays centred on
      the screen instead of centring on whatever space is left beside it. */
-  padding: calc(var(--safe-t) + 10px) 48px 16px;
+  padding: calc(var(--safe-t) + 12px) 56px 18px;
   text-align: center;
   position: relative;
 }
 .trk__back {
-  position: absolute; left: 8px; top: calc(var(--safe-t) + 8px);
-  width: 36px; height: 36px; display: grid; place-items: center;
-  color: #fff; border-radius: 50%;
+  position: absolute; left: 12px; top: calc(var(--safe-t) + 10px);
+  width: 40px; height: 40px; display: grid; place-items: center;
+  color: var(--ink); background: #F1F6EE; border-radius: 50%;
 }
-.trk__back:active { background: rgba(255, 255, 255, 0.16); }
-.trk__k { font-size: var(--f-sm); font-weight: 600; color: rgba(255, 255, 255, 0.85); }
-.trk__eta { font-size: var(--f-2xl); font-weight: 800; letter-spacing: -0.4px; margin-top: 2px; }
+.trk__back:active { background: #DCE8D6; }
+.trk__k { font-size: var(--f-base); font-weight: 700; color: rgba(255, 255, 255, 0.92); }
+.trk__eta { font-size: var(--f-2xl); font-weight: 800; letter-spacing: -0.4px; margin-top: 3px; }
 
-/* ---------- map ---------- */
-.trk__mapwrap {
+/* ---------- the map ----------
+   The card is the design file's own frame, 740 x 414 with an 18px radius, and
+   the drawing inside it is one SVG in that coordinate system — which is why
+   nothing here is sized in pixels. The car's path, the pins and the flame are
+   all placed in viewBox units, so the whole scene scales with the phone
+   instead of being re-laid-out for it. */
+.trkmap {
   position: relative;
   margin: 10px var(--gut) 0;
-  border-radius: var(--r-lg);
+  border-radius: 18px;
   overflow: hidden;
-  background: #E9ECF0;
+  background: #E3E4EC;
+  aspect-ratio: 740 / 414;
   box-shadow: var(--sh-1);
 }
-/* Collapsed, the map is a band cropped to the middle of the art, where the
-   route and YOUR LOCATION are. Expanding shows the whole thing, which is what
-   gives the button something real to do. */
-.trk__map { display: block; width: 100%; height: 208px; object-fit: cover; object-position: 50% 46%; }
-.trk__mapwrap.is-big .trk__map { height: auto; }
+.trkmap__svg { display: block; width: 100%; height: 100%; }
 
-/* The one thing added over the art: a live badge, because a still picture of a
-   map says nothing about whether it is current. */
-.trk__live {
-  position: absolute; left: 10px; bottom: 10px;
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(16, 20, 24, 0.72); color: #fff;
-  border-radius: 999px; padding: 4px 10px 4px 8px;
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.1em;
-  backdrop-filter: blur(6px);
+/* Each moving part turns about the centre the design gave it, stated in
+   viewBox units so it survives any card width. */
+.trkmap__store { transform-box: view-box; animation: trkBob 6s ease-in-out infinite; }
+.trkmap__home { transform-box: view-box; transform-origin: 158px 294.47px; }
+.trkmap__burst { transform-box: view-box; transform-origin: 155.74px 296.89px; }
+.trkmap__rig { transform-box: view-box; transform-origin: 582.51px 91.52px; }
+.trkmap__flame { transform-box: view-box; transform-origin: 543px 91.507px; animation: trkFlame 0.38s ease-in-out infinite; }
+
+@keyframes trkBob {
+  0%, 50%, 100% { transform: translateY(0); }
+  25%, 75% { transform: translateY(-5px); }
 }
-.trk__live i {
-  width: 7px; height: 7px; border-radius: 50%; background: #46E06B;
-  animation: livePulse 1.6s ease-in-out infinite;
+@keyframes trkFlame {
+  0%, 100% { opacity: 1; transform: scale(1.12, 1.04); }
+  50% { opacity: 0.62; transform: scale(0.88, 0.94); }
 }
-@keyframes livePulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.72); }
+@media (prefers-reduced-motion: reduce) {
+  .trkmap__store, .trkmap__flame { animation: none; }
 }
-.trk__zoom {
+
+.trkmap__zoom {
   position: absolute; top: 10px; right: 10px;
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   display: grid; place-items: center;
   background: #fff; color: var(--ink);
   box-shadow: 0 2px 8px rgba(16, 20, 24, 0.18);
 }
+.trkmap__share {
+  position: absolute; right: 10px; bottom: 10px;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #fff; color: var(--ink);
+  border-radius: 999px; padding: 8px 14px;
+  font-size: var(--f-sm); font-weight: 700;
+  box-shadow: 0 2px 10px rgba(16, 20, 24, 0.18);
+}
+/* Shrinking the map does not shrink it — it puts it away, which is what the
+   real screen does once you stop caring where the car is. */
+.trk__showmap {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  /* A button does not fill its block parent on its own, and this one stands in
+     for the map, so it has to span exactly what the map spanned. */
+  width: calc(100% - 2 * var(--gut));
+  margin: 10px var(--gut) 0; padding: 12px;
+  background: #fff; border-radius: 14px;
+  font-size: var(--f-md); font-weight: 700; color: var(--green);
+  box-shadow: var(--sh-1);
+}
 
-.trk__body { padding: 12px var(--gut) 20px; display: grid; gap: 12px; }
-.trk__cardh { font-size: var(--f-md); font-weight: 800; margin-bottom: 8px; }
-/* The item card has no padding of its own — its rows bring theirs — so the
-   heading has to match them or it hangs off the card's left edge. */
-.trk__items .trk__cardh { padding: 14px var(--gut) 0; margin-bottom: 2px; }
+/* ---------- the card stack ---------- */
+/* The column is pinned to the container, not left implicit: an `auto` track
+   sizes to its widest child and would run the cards past the map's edge. */
+.trk__body { padding: 12px var(--gut) 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
 
-/* ---------- the delivery partner ---------- */
-.trk__partner { padding: 14px; display: grid; gap: 12px; }
-.trk__who { display: flex; align-items: center; gap: 12px; }
-.trk__face { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%; overflow: hidden; }
-.trk__name { flex: 1; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; }
-.trk__call {
-  flex: none; width: 42px; height: 42px; border-radius: 50%;
+.trkc { background: var(--surface); border-radius: 16px; overflow: hidden; }
+/* The head row is the pattern the whole stack is built from: a grey disc, a
+   title with its explanation under it, and whatever the row opens. */
+.trkc__hd { display: flex; align-items: center; gap: 14px; padding: 16px; width: 100%; text-align: left; }
+.trkc--link { display: flex; align-items: center; }
+.trkc__ic {
+  flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%;
   display: grid; place-items: center;
-  border: 1px solid var(--line); background: #fff; color: var(--green);
+  background: #F0F1F5; color: var(--ink);
 }
-.trk__call:active { background: var(--green-tint); }
+.trkc__ic--sm { flex-basis: 40px; width: 40px; height: 40px; }
+.trkc__ic--pts { background: var(--green-tint); color: var(--green); font-weight: 800; font-size: var(--f-sm); }
+.trkc__t { flex: 1; min-width: 0; }
+.trkc__t b { display: block; font-size: var(--f-lg); font-weight: 700; line-height: 1.28; letter-spacing: -0.2px; }
+.trkc__t small { display: block; font-size: var(--f-md); color: var(--mut); line-height: 1.35; margin-top: 2px; }
+.trkc__caret { color: var(--ink); flex: none; transition: transform 0.18s ease; }
+.trkc__caret.is-open { transform: rotate(180deg); }
 
-/* What they said, quoted on their own tint so it reads as a message rather
-   than as another line of the page's copy. */
-.trk__said {
-  background: var(--green-tint);
-  border-radius: var(--r-md);
-  padding: 10px 12px;
-  font-size: var(--f-md); color: var(--green-dk); line-height: 1.45;
-}
-
-.trk__tip { display: flex; align-items: center; gap: 10px; }
-.trk__tipt { display: block; font-size: var(--f-base); font-weight: 800; line-height: 1.3; }
-.trk__tips { display: block; font-size: var(--f-sm); color: var(--mut); margin-top: 2px; }
-.trk__tipart { width: 84px; height: auto; flex: none; }
-
-/* Tip amounts. A scroller, because "Other" has to stay reachable without the
-   row shrinking the amounts to fit. */
-.trk__chips {
-  display: flex; gap: 8px;
-  overflow-x: auto; scrollbar-width: none;
-  margin: 0 -14px; padding: 2px 14px;
-}
-.trk__chips::-webkit-scrollbar { display: none; }
-.tipchip {
-  flex: none; min-width: 78px;
-  display: grid; justify-items: center; gap: 1px;
-  border: 1px solid var(--line-2); border-radius: var(--r-md);
-  background: #fff; padding: 9px 12px;
-}
-.tipchip b { font-size: var(--f-base); font-weight: 800; font-variant-numeric: tabular-nums; }
-.tipchip small { font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.04em; color: var(--gold-ink); }
-.tipchip.is-on { border-color: var(--green); background: var(--green-tint); }
-.tipchip.is-on b { color: var(--green-dk); }
-
-.trk__safety {
-  display: flex; align-items: center; gap: 11px;
-  width: 100%; text-align: left;
-  border-top: 1px solid var(--line); padding-top: 12px;
-}
-.trk__shield {
-  flex: none; width: 34px; height: 34px; border-radius: 50%;
+/* ---------- who has the order ---------- */
+.trkc__who { display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; }
+.trkc__face { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%; object-fit: cover; }
+.trkc__name { flex: 1; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.22; }
+.trkc__call {
+  flex: none; width: 42px; height: 42px; border-radius: 50%;
   display: grid; place-items: center;
   background: var(--green-tint); color: var(--green);
 }
-.trk__safety b { display: block; font-size: var(--f-md); font-weight: 700; }
-.trk__safety small { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 1px; }
+.trkc__call:active { background: #D8F5D8; }
+/* Full width inside the card, not a pill: it is the partner speaking, and it
+   should read as a line of theirs rather than a badge on the card. */
+.trkc__said {
+  background: var(--green-tint); color: #1B7A2C;
+  padding: 11px 16px;
+  font-size: var(--f-md); font-weight: 500; line-height: 1.35;
+}
 
-.trk__addr { padding: 14px; }
+.trkc__row { display: flex; align-items: flex-start; gap: 14px; padding: 16px; width: 100%; text-align: left;
+  font-size: var(--f-md); color: var(--mut); line-height: 1.35; }
+.trkc__row--sep { border-top: 1px solid var(--line); align-items: center; }
+.trkc__row b { color: var(--ink); font-weight: 600; }
+.trkc__shield { flex: none; color: var(--green); display: grid; place-items: center; }
+
+/* ---------- delivery instructions ---------- */
+.trkc__notes { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 16px; }
+.trkc__note {
+  border: 1px solid var(--line-2); border-radius: 999px;
+  padding: 7px 13px; font-size: var(--f-sm); font-weight: 600; color: var(--ink-2);
+}
+.trkc__note.is-on { border-color: var(--green); background: var(--green-tint); color: var(--green); }
+
+/* ---------- delivery details ---------- */
+.trkc__by {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0 16px; padding: 10px 12px; border-radius: 10px;
+  background: #E8F4F1; color: #10796A;
+  font-size: var(--f-md); font-weight: 600;
+}
+.trkc__at { display: block; font-size: var(--f-lg); font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
+.trkc__line { display: block; font-size: var(--f-md); color: var(--mut); line-height: 1.4; margin-top: 2px; }
+.trkc__change {
+  display: inline-flex; align-items: center; gap: 1px; margin-top: 3px;
+  color: var(--green); font-size: var(--f-md); font-weight: 700;
+}
+
+/* ---------- order summary ---------- */
+.trkc__oid { display: flex; align-items: center; gap: 6px; }
+.trkc__oid button { color: var(--mut-2); display: inline-grid; place-items: center; }
+.trkc__thumbs { display: flex; gap: 10px; padding: 2px 16px 16px; overflow-x: auto; scrollbar-width: none; }
+.trkc__thumbs::-webkit-scrollbar { display: none; }
+.trkc__thumb {
+  position: relative; flex: 0 0 74px; width: 74px; height: 74px;
+  border-radius: 12px; background: var(--surface-2); overflow: hidden;
+}
+.trkc__thumb img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+.trkc__thumb i {
+  position: absolute; right: 4px; bottom: 4px; font-style: normal;
+  background: rgba(31, 31, 31, 0.78); color: #fff;
+  border-radius: 6px; padding: 1px 5px;
+  font-size: var(--f-2xs); font-weight: 800;
+}
+.trkc__lines { border-top: 1px solid var(--line); padding: 12px 16px; display: grid; gap: 10px; }
+.trkc__ln { display: flex; align-items: baseline; gap: 12px; font-size: var(--f-md); }
+.trkc__ln small { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 1px; }
+.trkc__ln b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.trkc__ln--tot { border-top: 1px dashed var(--line); padding-top: 10px; font-weight: 700; }
+.trkc__ln--save b { color: var(--green); }
+
+.trkc__foot {
+  border-top: 1px solid var(--line); width: 100%; padding: 14px;
+  text-align: center; color: var(--green); font-weight: 700; font-size: var(--f-lg);
+}
+.trkc__split { border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; }
+.trkc__split button { padding: 14px; color: var(--green); font-weight: 700; font-size: var(--f-lg); }
+.trkc__split button + button { border-left: 1px solid var(--line); }
 .rowcard__ic--pts { background: var(--green-tint); color: var(--green); font-weight: 800; font-size: var(--f-sm); }
 
 /* ---------- cart ---------- */
