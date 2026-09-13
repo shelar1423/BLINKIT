@@ -48,6 +48,16 @@ export type EngineOpts = {
    * for one commit.
    */
   interactions?: boolean;
+  /**
+   * The tracking shot on the last gate of the run.
+   *
+   * Off by default, and it MUST stay off in AR. In AR the render camera is the
+   * phone and cannot be moved, so the chase is faked by shifting the whole
+   * track under it (see arSession) — which means a "camera move" there is the
+   * player's table swinging across the room. The shot is only ever honest
+   * where the camera is virtual, which is the 3D race.
+   */
+  cinematicCamera?: boolean;
   laps?: number;
   duration?: number; // seconds
   onTick?: (s: RaceStats) => void;
@@ -123,6 +133,27 @@ const SLOW_BOOST = 0.5;
  * actually has to be judged.
  */
 const GATE_SLOW_FROM = 0.3;
+
+/* ---- the last gate's tracking shot ----
+ *
+ * On the final gate of the run the camera leaves the car's tail and swings out
+ * to its right shoulder, holds there through the jump, and rides the landing
+ * before easing back. Once per race, not once per gate: four of these would be
+ * the bullet-time problem again, and the point of a cinematic beat is that it
+ * happens when the race is nearly won.
+ *
+ * All of this is camera. Nothing below feeds the simulation, so two players who
+ * drive the same line still score the same.
+ */
+/** How far out to the car's right the camera sits, in world units. */
+const CINE_SIDE = 10.5;
+/** Ride height there. Lower than the chase, so the jump reads against the sky. */
+const CINE_HEIGHT = 2.0;
+/** Seconds the shot is held after the wheels are down again. */
+const CINE_TAIL = 0.45;
+/** How fast the camera swings, in REAL seconds — the world may be in slow
+ *  motion, but a camera move that slowed down with it would read as a stall. */
+const CINE_RATE = 4.2;
 /** The lap is done. Slower still, because nothing is being aimed at any more. */
 const SLOW_FINISH = 0.22;
 /** Real seconds between the last corner and the result screen. */
@@ -1120,6 +1151,11 @@ export class RaceEngine {
   private airFrom = 0;
   private jumpArmed = false;
   private jumpHeightNow = 0;
+  /** 0 = behind the car, 1 = fully out at its right shoulder. */
+  private cineK = 0;
+  /** Seconds of tracking shot still owed, counted in real time. */
+  private cineTail = 0;
+  private readonly cinematic: boolean;
   /** 0..1 up the ramp's face; -1 when not on it. */
   private rampU = -1;
   private launcher = new THREE.Group();
@@ -1157,6 +1193,7 @@ export class RaceEngine {
     this.opts = opts;
     this.interactions = opts.interactions ?? false;
     this.laps = opts.laps ?? 2;
+    this.cinematic = opts.cinematicCamera ?? false;
     this.duration = opts.duration ?? 45;
     this.curveLen = this.curve.getLength();
     const cb = new THREE.Box3().setFromPoints(this.curve.getSpacedPoints(96));
@@ -2572,7 +2609,31 @@ export class RaceEngine {
     const ahead = this.curve.getPointAt((this.t + AHEAD / this.curveLen) % 1);
     out.look.copy(ahead).addScaledVector(right, this.lateral * 0.5);
     out.look.y = 0.8 + this.jumpHeightNow * 0.7;
+
+    /* ...and on the last gate, out to the car's right instead.
+     *
+     * Blended rather than cut, and blended HERE rather than in the scene: the
+     * caller already eases towards whatever this returns, so a moving target
+     * is a camera move for free and there is no second smoother to fight.
+     *
+     * The framing is the car itself rather than the road ahead. From the side
+     * there is no road ahead to lead into — what the shot is about is the car
+     * leaving the ground, passing through the hole, and coming down. */
+    if (this.cineK > 0.001) {
+      const side = car.clone().addScaledVector(right, CINE_SIDE);
+      side.y = CINE_HEIGHT + this.jumpHeightNow * 0.45;
+      out.pos.lerp(side, this.cineK);
+
+      const on2 = car.clone().addScaledVector(tan, 1.6);
+      on2.y = 0.9 + this.jumpHeightNow * 0.95;
+      out.look.lerp(on2, this.cineK);
+    }
     return out;
+  }
+
+  /** The last gate of the last lap — the one the tracking shot is for. */
+  private isFinalGate(i: number) {
+    return this.cinematic && this.lap >= this.laps - 1 && i === this.boostGates.length - 1;
   }
 
   /**
@@ -2807,6 +2868,9 @@ export class RaceEngine {
        is not the gate, it is half an airtime before the gate — lift there and
        the top of the arc lands in the middle of the hole. */
     let gateArmed = false;
+    /* Raised by the LAST gate of the LAST lap, from the moment its run-up is
+       far enough along to be worth watching. */
+    let cineWant = false;
     if (this.interactions && raceInteraction.boostEnabled && goingForward) {
       const lead = (this.speed * raceInteraction.boostWarnLead) / this.curveLen;
       this.fireT += dt;
@@ -2851,6 +2915,7 @@ export class RaceEngine {
           const errSec = ((ahead - ideal) * this.curveLen) / Math.max(1, this.speed);
           const stillOpen = errSec > -raceInteraction.gateAcceptSec;
           if (stillOpen && k >= GATE_SLOW_FROM) gateArmed = true;
+          if (this.isFinalGate(i) && k >= GATE_SLOW_FROM) cineWant = true;
 
           /* Nothing is aimed at any more, but the car still has to arrive
              where the hole is. Eased rather than snapped: the player may be
@@ -2866,6 +2931,9 @@ export class RaceEngine {
              The car stays lined up, though — the verdict is not in yet,
              because the verdict is where the car IS when it gets there. */
           this.lateral -= this.lateral * chase(2.2, dt);
+          /* Lifted but still short of the hoop — the part of the shot the
+             whole thing exists for. */
+          if (this.isFinalGate(i)) cineWant = true;
         }
 
         // crossing it: the wrapped gap jumps from nearly a lap to nearly zero
@@ -2885,6 +2953,19 @@ export class RaceEngine {
        lap that ended on the same frame would each set it and the last one to
        run would win. */
     this.slowTarget = this.outroAt >= 0 ? SLOW_FINISH : gateArmed ? SLOW_BOOST : 1;
+
+    /* The shot's own clock, and like the one above it is set from STATE rather
+       than from the events that changed it. `cineWant` covers the approach and
+       the flight up to the hoop; the airborne test carries it across the ring
+       and down, because the landing is the half of the move worth watching;
+       and the tail holds it a beat longer so the camera is not already leaving
+       as the wheels touch. Real seconds throughout — the tail is a length of
+       film, not a length of race. */
+    if (cineWant || (this.cineTail > 0 && this.jumpHeightNow > 0.05)) this.cineTail = CINE_TAIL;
+    else if (this.cineTail > 0) this.cineTail = Math.max(0, this.cineTail - dtReal);
+    const cineTo = this.cinematic && this.cineTail > 0 && this.outroAt < 0 ? 1 : 0;
+    this.cineK += (cineTo - this.cineK) * chase(CINE_RATE, dtReal);
+    if (Math.abs(this.cineK - cineTo) < 0.002) this.cineK = cineTo;
 
     // --- lateral ---
     // Grip falls away while the handbrake is down, so the same steering input

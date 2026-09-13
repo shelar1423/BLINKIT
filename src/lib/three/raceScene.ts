@@ -145,6 +145,9 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
 
   const engineOpts: EngineOpts = {
     interactions: true,
+    /* Only here. The AR paths share this engine but not its camera — theirs is
+       the phone, and they move the track under it instead. */
+    cinematicCamera: true,
     duration: opts.duration ?? 45,
     laps: opts.laps ?? 2,
     onTick: opts.onTick,
