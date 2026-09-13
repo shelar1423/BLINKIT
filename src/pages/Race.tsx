@@ -9,12 +9,11 @@ import { IconAR, IconCheck, IconFlag } from '../design/elements/Icons';
 import { useARSupport } from '../lib/useARSupport';
 
 /** Race preparation: pick the car, then choose 3D or AR. */
-/* The three things you do, in the order you do them. Four words each: the
-   pictures carry the instruction and the text only names it. */
-const HOW_TO = [
-  { icon: '/howto/point.png', t: 'Point', s: 'At a table or floor' },
-  { icon: '/howto/tilt.png', t: 'Tilt', s: 'To steer through corners' },
-  { icon: '/howto/grab.png', t: 'Grab', s: 'Groceries on the way' },
+/* The three things you do, in the order you do them. */
+const HOW_TO: { t: string; icon: string; c: React.ReactNode }[] = [
+  { t: 'point', icon: '/howto/point.png', c: <>Point your camera at a table or floor</> },
+  { t: 'tilt', icon: '/howto/tilt.png', c: <>Hold <b>GO</b> and tilt to steer</> },
+  { t: 'grab', icon: '/howto/grab.png', c: <>Grab groceries on the way. Each bag is worth 500.</> },
 ];
 
 /* A word and a colour for each car.
@@ -59,22 +58,19 @@ export default function Race() {
         <div className="shell" style={{ paddingTop: 12 }}>
           <div className="howcard">
             <div className="howcard__hd">
-              <span>How to play</span>
+              <h2>How to play</h2>
               <b>Two laps &middot; 45 seconds</b>
             </div>
-            <div className="howcard__art">
-              <img src="/campaign/how-ar-placement.webp" alt="A Hot Wheels car placed on a real table through the camera" />
-            </div>
-            {/* Three columns, not three stacked lines. The same shape the hub's
-                Blinkit Cash / Rewards / Leaderboard strip uses, because it is
-                the same job: three peers you scan rather than a list you read
-                top to bottom. Each one is a picture and four words. */}
+            {/* Three peers you scan, not a list you read. The card is WHITE,
+                and that is load-bearing rather than a taste: the supplied icons
+                are opaque PNGs with a white ground baked in, so on any tinted
+                card each one sits in a visible white square. */}
             <div className="howgrid">
-              {HOW_TO.map((h) => (
+              {HOW_TO.map((h, i) => (
                 <div key={h.t}>
+                  <span className="howgrid__n">{i + 1}</span>
                   <img src={h.icon} alt="" />
-                  <b>{h.t}</b>
-                  <span>{h.s}</span>
+                  <span className="howgrid__c">{h.c}</span>
                 </div>
               ))}
             </div>

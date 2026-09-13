@@ -3288,30 +3288,59 @@ input, select, textarea { font: inherit; color: inherit; }
 .howcard {
   border-radius: var(--r-lg);
   overflow: hidden;
-  background: linear-gradient(180deg, #EAF2FF, #DCE9FF);
-  border: 1px solid rgba(16, 42, 107, 0.12);
+  /* White, and that is load-bearing rather than a taste. The supplied step
+     icons are opaque PNGs with a white ground baked into them — their corner
+     pixels are rgba(254,254,255,255) — so on the blue-tinted card this used to
+     be, each one sat in a visible white square. Matching the card to the icons
+     is what makes them read as drawings on the page instead of as three
+     pasted-in tiles. */
+  background: #fff;
+  border: 1px solid rgba(16, 42, 107, 0.14);
 }
-/* The heading band carries the run's terms on the right as well now. "Two
-   laps, 45 seconds" is the other thing you need before pressing start, and it
-   was a footnote under the steps. No `text-align` any more: it is a flex row,
-   and the two ends place themselves. */
+/* The heading is the card's own title now, not a caps band across the top of
+   it: dark and large on the left, the run's terms on the right in the blue
+   that everything clickable on this screen already uses. */
 .howcard__hd {
-  background: #102A6B;
-  color: #fff;
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 8px 12px;
-  font-size: var(--f-2xs); font-weight: 800;
-  letter-spacing: 0.18em; text-transform: uppercase;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding: 14px 14px 2px;
+}
+.howcard__hd h2 {
+  margin: 0;
+  font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.02em;
+  color: #102A6B;
 }
 .howcard__hd b {
-  font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.04em;
-  text-transform: none; opacity: 0.82;
+  flex: 0 0 auto;
+  font-size: var(--f-sm); font-weight: 800; color: #1B5BD7;
 }
-.howcard__art { position: relative; }
-/* The source is a tall portrait and the car sits well below its middle, so a
-   centred cover crop of a short band framed the wall behind it. The asset is
-   cropped to the car; this only has to hold the shape. */
-.howcard__art img { display: block; width: 100%; height: 132px; object-fit: cover; object-position: center 54%; }
+
+.howgrid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 10px 4px 16px;
+}
+.howgrid > div {
+  display: grid; justify-items: center; align-content: start; gap: 6px;
+  padding: 4px 8px; text-align: center;
+  border-left: 1px solid rgba(16, 42, 107, 0.10);
+}
+.howgrid > div:first-child { border-left: 0; }
+/* The step number rides above its picture. Red, because it is the one thing
+   here that is a sequence and everything else on the card is blue. */
+.howgrid__n {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--hw-r); color: #fff;
+  display: grid; place-items: center;
+  font-size: var(--f-sm); font-weight: 800;
+}
+/* Big. These are illustrations rather than glyphs — a phone standing on a
+   surface, a phone rocking between two arrows, a Blinkit bag — and at 38px
+   none of that was legible. */
+.howgrid img { width: 72px; height: 72px; object-fit: contain; }
+.howgrid__c {
+  font-size: var(--f-sm); line-height: 1.35; color: var(--ink);
+  text-wrap: balance;
+}
+.howgrid__c b { font-weight: 800; }
 
 .howsteps { list-style: none; margin: 0; padding: 12px 12px 2px; display: grid; gap: 8px; }
 .howsteps li {
@@ -4269,28 +4298,6 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .ckopolicy b { display: block; font-size: var(--f-base); font-weight: 700; color: var(--ink); }
 .ckopolicy p { margin: 4px 0 0; font-size: var(--f-sm); line-height: 1.5; color: var(--mut); }
-
-/* ---------- how to play: the three columns ---------- */
-/* Three peers you scan, not a list you read. The same shape as the hub's
-   Blinkit Cash / Rewards / Leaderboard strip: one bordered grid, hairlines
-   between the cells, the picture above the words. */
-.howgrid {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  background: rgba(255, 255, 255, 0.55);
-  border-top: 1px solid rgba(16, 42, 107, 0.12);
-}
-.howgrid > div {
-  display: grid; justify-items: center; gap: 2px;
-  padding: 11px 6px 12px; text-align: center;
-  border-left: 1px solid rgba(16, 42, 107, 0.12);
-}
-.howgrid > div:first-child { border-left: 0; }
-.howgrid img { width: 38px; height: 38px; object-fit: contain; margin-bottom: 2px; }
-.howgrid b { font-size: var(--f-sm); font-weight: 800; color: #102A6B; }
-.howgrid span {
-  font-size: var(--f-2xs); line-height: 1.3; color: #3C5590;
-  text-wrap: balance;
-}
 
 /* ---------- the car's own colour ----------
    Selecting a car outlines it in a hue sampled from that car's own paint, so
