@@ -122,7 +122,16 @@ function buildCurve() {
   const r = 0.32; // corner radius
 
   const pts: THREE.Vector3[] = [];
-  const at = (x: number, z: number) => pts.push(new THREE.Vector3(x * S, 0, z * S));
+  /* A quarter turn, applied as the points are laid down.
+
+     The layout below is written with the start straight along +x because that
+     is the readable way to describe a rounded rectangle. But the AR anchor
+     turns the circuit to face the player down -z, so an unrotated circuit put
+     the launch straight ACROSS the view: the launcher sat off to one side and
+     the first thing the car did was drive left to right. Rotating here rather
+     than on `root` keeps `circuitPlan()` — the placement blueprint — honest,
+     since it samples this same curve. */
+  const at = (x: number, z: number) => pts.push(new THREE.Vector3(z * S, 0, -x * S));
 
   /** Both ends included — the straight owns its tangent points. */
   const straight = (x0: number, z0: number, x1: number, z1: number, n: number) => {
@@ -1019,10 +1028,16 @@ export class RaceEngine {
        and a paddle, rotating about the axis across the track. Everything else
        here is scenery and never moves.
 
-       It sits left of centre. Dead centre put it between the camera and the
-       car during the launch framing — the player would have been aiming at
-       their own thumb. */
-    this.launchLever.position.set(-2.7, 1.05, 3.1);
+       Beside the sled it drives, and one lane off the centreline.
+
+       Not because the lever should be off-centre — the LAUNCHER is centred in
+       frame, which is what was actually wrong before, when the circuit's start
+       straight ran across the view and pushed the whole thing off the left
+       edge. The lever steps aside by three units because the car sits on that
+       centreline: a seven-unit lever directly behind a one-unit-tall car hides
+       it from every camera lower than a plan view. Three units is more than
+       the two half-widths, so the car is clear at any sane angle. */
+    this.launchLever.position.set(-3.0, 1.05, 4.2);
     this.launcher.add(this.launchLever);
 
     const armGeo = new THREE.BoxGeometry(1.15, 4.3, 0.95);
@@ -1113,20 +1128,22 @@ export class RaceEngine {
    * framing has to show. The car, the sled and the lane ahead are all in shot.
    */
   launcherCameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3 }) {
-    const up = new THREE.Vector3(0, 1, 0);
     const p = this.curve.getPointAt(0);
     const tan = this.curve.getTangentAt(0).clone().setY(0).normalize();
-    const right = new THREE.Vector3().crossVectors(tan, up).normalize();
-    out.pos
-      .copy(p)
-      .addScaledVector(tan, -(LAUNCH_TRAVEL + 23))
-      .addScaledVector(right, 10.5);
-    out.pos.y = 11.5;
+    out.pos.copy(p).addScaledVector(tan, -(LAUNCH_TRAVEL + 17));
+    /* Squarely on the track's axis, so the launch straight runs straight up
+       the middle of the screen rather than off across it.
+
+       Low enough to be a view along the track rather than a plan of it. What
+       decides it is the sled grip, three units tall and three behind the car:
+       clearing that needs y > 1.5 + 0.469 * the distance back, so 14 at 26.
+       Sixteen has margin and still reads as standing behind the launcher. */
+    out.pos.y = 16.0;
     /* Looking PAST the car rather than at it, so the lane the launch is about
        to send it down is the subject and the launcher sits in the near corner.
        Framed on the launcher itself the shot was all spring and no race. */
-    out.look.copy(p).addScaledVector(tan, 7.0).addScaledVector(right, -1.0);
-    out.look.y = 1.6;
+    out.look.copy(p).addScaledVector(tan, 8.0);
+    out.look.y = 0.8;
     return out;
   }
 
