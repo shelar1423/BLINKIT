@@ -1309,6 +1309,13 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   scene.add(anchor);
 
   let phase: ARPhase = 'ready';
+  /* Launcher framing. Separate lerp state from the chase cam so the move from
+     one to the other is a continuation rather than a snap: the chase cam
+     seeds itself from wherever this left the camera. */
+  const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const lnLook = new THREE.Vector3();
+  let lnInited = false;
+
   const setPhase = (p: ARPhase) => {
     if (p !== 'placed') lnInited = false;
     phase = p;
@@ -1537,12 +1544,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const fpTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   const fpCamPos = new THREE.Vector3();
   const fpCamLook = new THREE.Vector3();
-  /* Launcher framing. Separate lerp state from the chase cam so the move from
-     one to the other is a continuation rather than a snap: the chase cam
-     seeds itself from wherever this left the camera. */
-  const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
-  const lnLook = new THREE.Vector3();
-  let lnInited = false;
   let fpInited = false;
 
   function cleanup() {
