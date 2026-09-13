@@ -472,6 +472,8 @@ export class RaceEngine {
   readonly trackExtent: number;
   private disposables: (THREE.BufferGeometry | THREE.Material | THREE.Texture)[] = [];
   private finishGate = new THREE.Group();
+  /** The three lamps on the start gantry, in order: red, amber, green. */
+  private startLamps: THREE.MeshBasicMaterial[] = [];
 
   constructor(opts: EngineOpts = {}) {
     this.opts = opts;
@@ -684,7 +686,50 @@ export class RaceEngine {
       post.position.copy(p).addScaledVector(right, (ROAD_W / 2 + 0.4) * s).setY(3);
       this.finishGate.add(post);
     }
+
+    /* Start lights on the left-hand post. Every Hot Wheels set has a gantry on
+       the start line and the race already had posts standing there doing
+       nothing — so the lights go where a real set puts them, rather than
+       arriving as a fourth object beside the gate. */
+    const housing = new THREE.Mesh(
+      new THREE.BoxGeometry(2.6, 7.4, 1.4),
+      new THREE.MeshStandardMaterial({ color: 0x14161C, roughness: 0.7 }),
+    );
+    housing.position.copy(p).addScaledVector(right, -(ROAD_W / 2 + 3.1)).setY(6.4);
+    housing.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tan.clone().setY(0).normalize());
+    this.finishGate.add(housing);
+    const lampGeo = new THREE.CircleGeometry(0.86, 20);
+    this.disposables.push(lampGeo);
+    /* Unlit is the same hue heavily darkened rather than grey: a grey lamp
+       that turns red reads as a different object lighting up, a dark red one
+       reads as the same bulb coming on. */
+    for (const [i, hex] of [0xFF3B30, 0xFFC400, 0x22C55E].entries()) {
+      const mat = new THREE.MeshBasicMaterial({ color: hex });
+      mat.color.multiplyScalar(0.14);
+      this.disposables.push(mat);
+      const lamp = new THREE.Mesh(lampGeo, mat);
+      lamp.position.set(0, 2.3 - i * 2.3, 0.75);
+      housing.add(lamp);
+      this.startLamps.push(mat);
+    }
+    this.setStartLights(0);
+
     this.root.add(this.finishGate);
+  }
+
+  /**
+   * Which lamps are lit: 0 none, 1 red, 2 red+amber, 3 green.
+   *
+   * The colours are multiplied rather than swapped so a lamp is always its own
+   * colour and only its brightness changes.
+   */
+  setStartLights(stage: 0 | 1 | 2 | 3) {
+    const on = [stage >= 1 && stage < 3, stage === 2, stage === 3];
+    const hexes = [0xFF3B30, 0xFFC400, 0x22C55E];
+    this.startLamps.forEach((m, i) => {
+      m.color.setHex(hexes[i]);
+      if (!on[i]) m.color.multiplyScalar(0.14);
+    });
   }
 
   private buildPickups() {
@@ -917,6 +962,22 @@ export class RaceEngine {
 
   start() {
     this.running = true;
+  }
+
+  /**
+   * Launch off the line with the speed the pull earned.
+   *
+   * `start()` set the car running from a standstill, which is right for a
+   * countdown and wrong for a launcher — pulling a sled back and letting go
+   * that produces no movement is a dead control. Power 0 is a fumbled release
+   * and barely moves; a full pull leaves the line already at the pace the car
+   * would otherwise need a straight to reach, and trips the boost.
+   */
+  launch(power: number) {
+    const p = Math.max(0, Math.min(1, power));
+    this.running = true;
+    this.speed = 5 + p * 19;
+    if (p > 0.85) this.boost();
   }
 
   pause() {

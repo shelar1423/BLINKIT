@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Button } from '../design/elements';
 import type React from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -317,6 +317,63 @@ export default function ARView() {
     };
   }, [phase, press, release, gas, brake, slide, hornNow]);
 
+  /* How far the launcher is drawn back, 0..1.
+
+     The live value is a ref and the state is only for painting it. Firing the
+     launch from inside a `setPull` updater looked tidier and was wrong: React
+     may call an updater twice or throw one away, so the launch was landing
+     twice or not at all — and it did not land here, which is what kept the car
+     on the line however far the sled was drawn. Updaters compute state and
+     nothing else. */
+  const PULL_TRAVEL = 140;
+  const [pull, setPull] = useState(0);
+  const pullFrom = useRef<number | null>(null);
+  const pullNow = useRef(0);
+  const armed = useRef(false);
+
+  const beginPull = useCallback((e: React.PointerEvent) => {
+    pullFrom.current = e.clientY;
+    pullNow.current = 0;
+    armed.current = false;
+    /* Capture keeps the pull alive when the finger leaves the control, which
+       it will — the sled travels with it. Synthetic pointers have no id to
+       capture, so this is allowed to fail. */
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      /* not a real pointer */
+    }
+    handle.current?.armLaunch(false);
+    primeAudio();
+  }, []);
+
+  const movePull = useCallback((e: React.PointerEvent) => {
+    if (pullFrom.current === null) return;
+    /* Down is back. Upward travel is the finger going the wrong way, which is
+       not a negative launch — it is no launch yet. */
+    const v = Math.max(0, Math.min(1, (e.clientY - pullFrom.current) / PULL_TRAVEL));
+    pullNow.current = v;
+    setPull(v);
+    const want = v > 0.5;
+    if (want !== armed.current) {
+      armed.current = want;
+      handle.current?.armLaunch(want);
+    }
+  }, []);
+
+  const endPull = useCallback(() => {
+    if (pullFrom.current === null) return;
+    pullFrom.current = null;
+    const v = pullNow.current;
+    pullNow.current = 0;
+    armed.current = false;
+    setPull(0);
+    /* Under a tenth is a tap or a slip, not a launch: the sled snaps back and
+       the gantry goes to red rather than starting a race nobody asked for. */
+    if (v < 0.1) handle.current?.armLaunch(false);
+    else handle.current?.launch(v);
+  }, []);
+
   const tier = outcome ? tierFor(outcome.score) : null;
 
   const statusCard = () => {
@@ -528,10 +585,35 @@ export default function ARView() {
               )}
               {phase === 'placed' && (
                 <>
+                  {/* Pull back and let go, rather than press Start.
+
+                      A launcher is the one control every Hot Wheels set has
+                      and no racing game does, and it is the moment the toy
+                      makes on a carpet: the tension you wind up is the speed
+                      you get out. Pressing a button gives the same race every
+                      time; drawing the sled back means leaving the line is
+                      something you did rather than something that happened. */}
                   {!inspect && (
-                    <Button variant="hwBlue" block type="button" onClick={() => handle.current?.startRace()}>
-                      Start race
-                    </Button>
+                    <div
+                      className={'arlaunch' + (pull > 0.02 ? ' is-drawn' : '')}
+                      style={{ '--pull': pull } as CSSProperties}
+                      onPointerDown={beginPull}
+                      onPointerMove={movePull}
+                      onPointerUp={endPull}
+                      onPointerCancel={endPull}
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Pull the launcher back and release to start"
+                    >
+                      <span className="arlaunch__track" aria-hidden="true">
+                        <i />
+                      </span>
+                      <span className="arlaunch__sled">
+                        <IconFlag size={16} />
+                        {pull > 0.02 ? `${Math.round(pull * 100)}%` : 'Pull to launch'}
+                      </span>
+                      <small>{pull > 0.85 ? 'Perfect launch — let go' : 'Drag down, then release'}</small>
+                    </div>
                   )}
                   <Button variant="ghostDark" block type="button" onClick={() => handle.current?.reset()}>
                     <IconRotate size={15} /> Reposition track

@@ -2708,6 +2708,53 @@ input, select, textarea { font: inherit; color: inherit; }
    offset. Absolutely positioned it sat in the same band as the racing hint,
    so "Hold GO · Arrows steer · Tap screen to drop hazard" printed straight
    across the steering pads and the GO button. */
+/* ---------- the launcher ----------
+   A sled on a rail. The rail fills as it is drawn back, the sled travels down
+   with the finger, and letting go fires it — so the control does on screen the
+   thing the hand is doing, which a button labelled Start cannot. */
+.arlaunch {
+  --pull: 0;
+  position: relative;
+  display: grid; justify-items: center; gap: 6px;
+  padding: 10px 12px 12px;
+  border-radius: var(--r-lg);
+  background: rgba(12, 16, 28, 0.72);
+  backdrop-filter: blur(8px);
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  pointer-events: auto;
+}
+.arlaunch__track {
+  position: relative;
+  width: 100%; height: 6px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+/* Charge, drawn from the left, so the rail reads as tension stored rather than
+   as a progress bar counting towards something. */
+.arlaunch__track i {
+  position: absolute; inset: 0 auto 0 0;
+  width: calc(var(--pull) * 100%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--yellow) 0%, #FA8318 60%, #ED1C24 100%);
+}
+.arlaunch__sled {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; height: 46px;
+  border-radius: var(--r-md);
+  background: #ED1C24; color: #fff;
+  font-size: var(--f-base); font-weight: 800; letter-spacing: -0.2px;
+  font-variant-numeric: tabular-nums;
+  /* The sled itself travels — capped well short of the 140px of input so the
+     control never walks off the bottom of the screen. */
+  transform: translateY(calc(var(--pull) * 26px));
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.arlaunch.is-drawn .arlaunch__sled { background: #C8151C; }
+.arlaunch small {
+  font-size: var(--f-xs); color: rgba(255, 255, 255, 0.76);
+  transform: translateY(calc(var(--pull) * 26px));
+}
+
 .arov__drive {
   display: flex; align-items: flex-end; justify-content: space-between;
   gap: clamp(8px, 3vw, 12px); pointer-events: none;

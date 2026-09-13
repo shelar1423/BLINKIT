@@ -50,6 +50,10 @@ export type ARHandle = {
   placeNow: () => void;
   reset: () => void;
   startRace: () => void;
+  /** Release the launcher. `power` 0..1 is how far the sled was pulled back. */
+  launch: (power: number) => void;
+  /** Hold the start lights while the launcher is being drawn back. */
+  armLaunch: (drawn: boolean) => void;
   setSteer: (v: number) => void;
   setThrottle: (v: number) => void;
   setBrake: (v: number) => void;
@@ -578,7 +582,11 @@ function adjustGestures(
      pointer-events, ever worked. Guard against the controls so a tap on a
      button is not also read as a drag. */
   const fromControl = (e: PointerEvent) =>
-    !!(e.target as HTMLElement | null)?.closest('button,a,input,.arov__drive,.arov__size');
+    /* `.arlaunch` is a div, not a button — it has to be, because it handles
+       its own pointer capture for the pull. Without it in this list the
+       gesture layer read a launcher pull as a drag-to-move on the track and
+       the car never left the line. */
+    !!(e.target as HTMLElement | null)?.closest('button,a,input,.arov__drive,.arov__size,.arlaunch');
   const guard = (fn: (e: PointerEvent) => void) => (e: PointerEvent) => {
     if (fromControl(e)) return;
     fn(e);
@@ -733,6 +741,23 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     engine.start();
   }
 
+  /* The lights are the launcher's feedback: red the moment you take hold of
+     the sled, amber as you draw it back past halfway, green on release. They
+     are not a countdown — nothing is being timed — they are the gantry
+     answering the hand on the launcher. */
+  function armLaunch(drawn: boolean) {
+    if (phase !== 'placed') return;
+    engine.setStartLights(drawn ? 2 : 1);
+  }
+
+  function launch(power: number) {
+    if (phase !== 'placed') return;
+    engine.setStartLights(3);
+    startBanner.visible = false;
+    setPhase('racing');
+    engine.launch(power);
+  }
+
   /** Drop the circuit onto the detected surface, flat on the floor */
   function place() {
     if (phase === 'racing' || phase === 'placed') return;
@@ -755,6 +780,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     anchor.visible = true;
     reticle.visible = false;
     startBanner.visible = true;
+    /* Red on the gantry the moment the circuit lands: the track is down and
+       held, waiting for the launcher. */
+    if (!inspect) engine.setStartLights(1);
     setPhase('placed');
   }
 
@@ -943,6 +971,8 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       setPhase('ready');
     },
     startRace,
+    launch,
+    armLaunch,
     nudgeScale: (f) => setSize(sizeM * f),
     setSize,
     getSize: () => sizeM,
@@ -1213,6 +1243,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     startBanner.visible = true;
     if (!inspect) {
     }
+    /* Red on the gantry the moment the circuit lands: the track is down and
+       held, waiting for the launcher. */
+    if (!inspect) engine.setStartLights(1);
     setPhase('placed');
   }
 
@@ -1223,6 +1256,23 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     startBanner.visible = false;
     setPhase('racing');
     engine.start();
+  }
+
+  /* The lights are the launcher's feedback: red the moment you take hold of
+     the sled, amber as you draw it back past halfway, green on release. They
+     are not a countdown — nothing is being timed — they are the gantry
+     answering the hand on the launcher. */
+  function armLaunch(drawn: boolean) {
+    if (phase !== 'placed') return;
+    engine.setStartLights(drawn ? 2 : 1);
+  }
+
+  function launch(power: number) {
+    if (phase !== 'placed') return;
+    engine.setStartLights(3);
+    startBanner.visible = false;
+    setPhase('racing');
+    engine.launch(power);
   }
 
   // DOM-level tap-to-place & tap-to-start
@@ -1349,6 +1399,8 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       setPhase('ready');
     },
     startRace,
+    launch,
+    armLaunch,
     nudgeScale: (f) => setSize(sizeM * f),
     setSize,
     getSize: () => sizeM,
