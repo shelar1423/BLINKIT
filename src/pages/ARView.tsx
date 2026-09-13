@@ -23,6 +23,7 @@ import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
+import { RaceCoach } from '../design/components/RaceCoach';
 import { Poppers } from '../design/components/Poppers';
 import type { BoostQuality, JumpQuality } from '../lib/raceInteractions';
 import {
@@ -95,6 +96,9 @@ export default function ARView() {
   /* The flag has dropped and the paper is in the air. Set about two seconds
      ahead of `outcome` and never cleared: the confetti ends itself. */
   const [cheering, setCheering] = useState(false);
+  /* The briefing, shown the moment the circuit is on the table. Reset on every
+     placement, so re-placing a track re-explains it. */
+  const [coached, setCoached] = useState(false);
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
   const [isBest, setIsBest] = useState(false);
@@ -151,6 +155,9 @@ export default function ARView() {
            placement step, which can be many seconds of pointing at the floor. */
         onPhase: (p) => {
           setPhase(p);
+          /* Fresh briefing each time a circuit goes down — re-placing a track
+             is the one moment somebody is most likely to want it again. */
+          if (p === 'placed') setCoached(false);
           if (p === 'racing') engineStart();
           else engineStop();
         },
@@ -190,8 +197,8 @@ export default function ARView() {
         onPenalty: (points) => pushPop(points, 'down'),
         /* The hint line already carries obstacle messages in red; a crash is
            the same kind of news and belongs in the same place. */
-        onCrash: () => {
-          playHit();
+        onCrash: (lost) => {
+          pushPop(lost, 'down');
           setLastHitMessage('Crashed — take the corner');
           window.setTimeout(() => setLastHitMessage(null), 1400);
         },
@@ -436,6 +443,15 @@ export default function ARView() {
 
   const tier = outcome ? tierFor(outcome.score) : null;
 
+  /* The 3D race's HUD, from the moment the circuit is on the table. Before
+     that the phase is still about finding a surface, which the chip bar and
+     the placement hints are for. */
+  const raceHud = phase === 'placed' || phase === 'racing';
+  const arLeft = stats?.timeLeft ?? 45;
+  const arMM = Math.floor(arLeft / 60);
+  const arSS = String(Math.floor(arLeft % 60)).padStart(2, '0');
+  const arLow = arLeft <= 10;
+
   const statusCard = () => {
     if (!support) return { cls: '', title: 'Checking device…', body: 'Seeing whether this phone can do AR.' };
     if (arWorks)
@@ -473,23 +489,44 @@ export default function ARView() {
                 overlay root is the only DOM the headset composites, so a
                 vignette rendered anywhere else would simply not exist. */}
             {slowmo && <div className="btime" aria-hidden="true" />}
+            {/* From the moment the circuit is down, the AR race wears the 3D
+                race's HUD — the same two cards, the same clock, the same
+                progress bar. They were a row of chips before: a car name, an
+                apple count, "5,400 pts", "32s". Two screens of one game
+                reporting the same two numbers two different ways.
+
+                The car name and the grocery count are gone with the chips.
+                Neither is something you read mid-race, and every pickup
+                already announces itself as a number lifting off the car. */}
+            {raceHud ? (
+              <>
+                <div className="hud__top">
+                  <div className="hud__c">
+                    <b className="t-num">{(stats?.score ?? 0).toLocaleString('en-IN')}</b>
+                    <span>POINTS</span>
+                  </div>
+                  <div className={'hud__c' + (arLow ? ' is-low' : '')}>
+                    <b className="t-num">{arMM}:{arSS}</b>
+                    <span>TIME LEFT</span>
+                  </div>
+                  <button
+                    className="hud__x"
+                    type="button"
+                    onClick={() => handle.current?.end()}
+                    aria-label="Exit AR"
+                  >
+                    <IconClose size={17} />
+                  </button>
+                </div>
+                <div className="hud__bar" aria-hidden="true">
+                  <i style={{ width: `${(stats?.progress ?? 0) * 100}%` }} />
+                </div>
+              </>
+            ) : (
             <div className="arov__bar">
               <span className="arov__chip arov__chip--name">
                 <IconAR size={14} /> {car.name.replace('Hot Wheels ', '')}
               </span>
-              {phase === 'racing' && stats && (
-                <>
-                  <span className="arov__chip t-num">
-                    🍏 {stats.groceries}
-                  </span>
-                  <span className="arov__chip t-num">
-                    {stats.score.toLocaleString('en-IN')} pts
-                  </span>
-                  <span className="arov__chip t-num" style={{ color: stats.timeLeft <= 10 ? '#ff4d4f' : '#fff' }}>
-                    ⏱ {Math.ceil(stats.timeLeft)}s
-                  </span>
-                </>
-              )}
               <button
                 className="arov__chip arov__x"
                 type="button"
@@ -499,6 +536,7 @@ export default function ARView() {
                 <IconClose size={15} />
               </button>
             </div>
+            )}
 
             {phase === 'ready' && stuck && (
               <p className="arov__help">
@@ -616,15 +654,13 @@ export default function ARView() {
                 </small>
               </p>
             )}
-            {phase === 'racing' && stats && (
+            {/* Only the things that go wrong get a line now. The standing
+                advice — hold GO, arrows steer, groceries add points — was
+                permanent text on a camera feed, and it is all in the briefing
+                the race opens with. */}
+            {phase === 'racing' && lastHitMessage && (
               <p className="arov__hint">
-                {lastHitMessage ? (
-                  <span style={{ color: '#ff5252', fontWeight: 700 }}>{lastHitMessage}</span>
-                ) : (
-                  <small>
-                    Hold GO · Arrows steer · <strong>Groceries add points, debris takes them</strong>
-                  </small>
-                )}
+                <span style={{ color: '#ff5252', fontWeight: 700 }}>{lastHitMessage}</span>
               </p>
             )}
 
@@ -813,6 +849,14 @@ export default function ARView() {
 
       {/* Outside .arov, which goes visibility:hidden the moment the result
           arrives — and the paper is still in the air for a second after it. */}
+      {/* Outside .arov, which is pointer-events:none — the briefing is the one
+          thing on this screen you have to be able to press. In a WebXR session
+          the headset composites only that overlay, so this is a camera-mode
+          briefing; WebXR is not a path any phone in this campaign takes. */}
+      {phase === 'placed' && !coached && !outcome && !inspect && (
+        <RaceCoach mode="ar" onDone={() => setCoached(true)} />
+      )}
+
       {cheering && <Poppers />}
 
       {/* Results screen */}

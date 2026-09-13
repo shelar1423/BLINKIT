@@ -24,8 +24,8 @@ type Opts = {
   onTick: (s: RaceStats) => void;
   onPickup: (points: number, name: string) => void;
   onPenalty?: (points: number) => void;
-  /** The car ploughed into a barrier. */
-  onCrash?: () => void;
+  /** The car ploughed into a barrier, and what it cost. */
+  onCrash?: (pointsLost: number) => void;
   onFinish: (o: RaceOutcome) => void;
   onProgress?: (pct: number, mb: number) => void;
   duration?: number;

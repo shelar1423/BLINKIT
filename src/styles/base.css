@@ -3634,3 +3634,95 @@ input, select, textarea { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .popr { display: none; }
 }
+
+/* ---------- the race briefing ----------
+   Said once, over the screen it refers to, so that the race itself can carry
+   no text at all beyond the score and the clock. Every note sits on the part
+   of the frame it describes with a leader down to a dot: the mapping from
+   instruction to thing is made by position rather than by the reader.
+
+   Above .arov (200) because in AR it annotates that overlay's own HUD, and
+   below .rwd (260) because a result must never appear behind a briefing. */
+.coach {
+  position: fixed; inset: 0; z-index: 230;
+  pointer-events: auto;
+  overscroll-behavior: none; touch-action: none;
+  animation: coach-in 260ms ease-out both;
+}
+.coach__dim {
+  position: absolute; inset: 0;
+  background: radial-gradient(120% 80% at 50% 45%, rgba(4,7,16,0.52), rgba(4,7,16,0.8));
+  backdrop-filter: blur(2px);
+}
+
+.coach__note {
+  position: absolute;
+  display: flex; align-items: center; gap: 0;
+  /* Vertically centred on the dot's line, horizontally anchored by `left` or
+     `right` so the DOT lands on the coordinate whatever the card's text does. */
+  transform: translateY(-50%);
+}
+.coach__note--left { flex-direction: row-reverse; }
+
+.coach__dot {
+  flex: 0 0 auto;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--hw-o);
+  box-shadow: 0 0 0 4px rgba(255,106,0,0.28), 0 0 16px rgba(255,106,0,0.6);
+}
+.coach__line {
+  flex: 0 0 auto;
+  width: 26px; height: 0;
+  border-top: 1px dashed rgba(255,255,255,0.5);
+}
+.coach__card {
+  flex: 0 1 auto;
+  /* Capped so a note never runs the width of the screen, and never narrower
+     than a readable measure on a 320px phone. */
+  width: min(56vw, 210px);
+  display: grid; gap: 3px;
+  color: #fff;
+  /* Its own ground. The dim alone cannot carry white text: half of what is
+     behind this is an orange track under a key light, and the notes sat on it
+     as grey-on-bright. A panel makes every note legible over anything. */
+  background: rgba(8, 11, 20, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--r);
+  padding: 9px 11px;
+}
+.coach__note--left .coach__card { text-align: right; justify-items: end; }
+.coach__card b {
+  display: flex; align-items: center; gap: 7px;
+  font-size: var(--f-base); font-weight: 800; letter-spacing: -0.01em;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.9);
+}
+.coach__note--left .coach__card b { flex-direction: row-reverse; }
+.coach__card small {
+  font-size: var(--f-xs); font-weight: 600; line-height: 1.45;
+  color: rgba(255,255,255,0.82);
+  text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+}
+.coach__foot {
+  position: absolute; left: var(--gut); right: var(--gut);
+  bottom: calc(var(--safe-b) + 18px);
+  display: grid; gap: 8px; justify-items: stretch;
+}
+.coach__alt {
+  justify-self: center;
+  border: 0; background: none; padding: 6px 10px;
+  color: rgba(255,255,255,0.78);
+  font-size: var(--f-xs); font-weight: 700;
+  text-decoration: underline; text-underline-offset: 3px;
+}
+
+@keyframes coach-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach { animation-duration: 1ms; }
+}
+
+/* The exit button borrows the 3D race's HUD, and .arov is pointer-events:none
+   so its children have to opt back in one at a time. */
+.arov .hud__x { pointer-events: auto; }

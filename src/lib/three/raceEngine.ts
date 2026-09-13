@@ -77,8 +77,8 @@ export type EngineOpts = {
   /** Points taken off for hitting something. Reported from the one place that
    *  deducts them, so every caller that bounces the car gets it for free. */
   onPenalty?: (points: number) => void;
-  /** The car hit a barrier hard enough to count as a crash. */
-  onCrash?: () => void;
+  /** The car hit a barrier hard enough to count as a crash, and what it cost. */
+  onCrash?: (pointsLost: number) => void;
   /**
    * The clock has dropped into bullet time, or come back out of it.
    *
@@ -2737,8 +2737,13 @@ export class RaceEngine {
         this.speed *= 0.42;
         this.score = Math.max(0, this.score - CRASH_PENALTY);
         haptic([30, 40, 60]);
-        this.opts.onPenalty?.(CRASH_PENALTY);
-        this.opts.onCrash?.();
+        /* Reported through `onCrash` and NOT through `onPenalty`, which is the
+           obstacle path and carries the hit sample with it. Corners are the
+           mistake a player makes most often, and a sample on every one of them
+           turned the race into a percussion piece. The deduction still shows,
+           the phone still buzzes, and the car still visibly ploughs the wall —
+           that is enough to know what happened. */
+        this.opts.onCrash?.(CRASH_PENALTY);
       } else {
         // Scrubbing the barrier costs speed. Scale by dt, otherwise the penalty
         // is applied per frame and a 120 Hz phone punishes twice as hard.

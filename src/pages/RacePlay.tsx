@@ -10,6 +10,7 @@ import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconMute, IconRotate, IconSound } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
+import { RaceCoach } from '../design/components/RaceCoach';
 import { Poppers } from '../design/components/Poppers';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { horn as playHorn, primeAudio } from '../lib/horn';
@@ -52,7 +53,6 @@ export default function RacePlay() {
   const [loaded, setLoaded] = useState(false);
   const mountedAt = useRef(performance.now());
   const [err, setErr] = useState<string | null>(null);
-  const [pull, setPull] = useState(0);
   const [launched, setLaunched] = useState(false);
   const [stats, setStats] = useState<RaceStats>({
     score: 0, groceries: 0, timeLeft: 45, lap: 1, laps: 2, progress: 0, speedKph: 0,
@@ -69,9 +69,9 @@ export default function RacePlay() {
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
   const [isBest, setIsBest] = useState(false);
-  /* Tilt is an upgrade, not a gate. Touch steering already works, so this only
-     has to be offered once and then go away for good. */
-  const [tiltAsked, setTiltAsked] = useState(false);
+  /* The briefing is up until it is dismissed, and the race does not begin
+     until it is: everything it explains is on the screen behind it. */
+  const [coached, setCoached] = useState(false);
 
   // guard: no attempts left
   useEffect(() => {
@@ -122,11 +122,13 @@ export default function RacePlay() {
         setEventFlash({ kind: 'boost', quality: r.quality, points: r.points });
         window.setTimeout(() => setEventFlash(null), 1100);
       },
-      onCrash: () => {
+      /* No sample. `onPenalty` — the obstacle path — carries the hit sound,
+         and routing crashes through it made every corner a drum hit. */
+      onCrash: (lost) => {
+        pushPop(lost, 'down');
         setEventFlash({ kind: 'crash', quality: 'miss', points: 0 });
         window.setTimeout(() => setEventFlash(null), 1100);
       },
-      onPull: setPull,
       onBulletTime: setSlowmo,
       /* The celebration starts here, not on `onFinish`. By the time the result
          screen has the score, the moment it is celebrating is two seconds
@@ -418,39 +420,9 @@ export default function RacePlay() {
             </div>
           )}
 
-          {/* iOS gates motion access behind a gesture, so it has to be asked for
-              here rather than silently on mount. As a panel in the middle of
-              the stage it read as a second choice to make immediately after
-              choosing 3D, and it sat over a race that had already started with
-              no way to dismiss it. It is a strip now, out of the racing line,
-              and it closes. */}
-          {tiltState === 'needs-permission' && !tiltAsked && (
-            <div className="tiltask" onPointerDown={(e) => e.stopPropagation()}>
-              <span className="tiltask__c">
-                <b>Steer by tilting</b>
-                <small>Touch steering works either way</small>
-              </span>
-              <Button
-                variant="hwBlue"
-                size="sm"
-                type="button"
-                onClick={() => {
-                  setTiltAsked(true);
-                  void enableTilt();
-                }}
-              >
-                Enable
-              </Button>
-              <button
-                className="tiltask__x"
-                type="button"
-                aria-label="Keep touch steering"
-                onClick={() => setTiltAsked(true)}
-              >
-                <IconClose size={15} />
-              </button>
-            </div>
-          )}
+          {/* The tilt offer used to be a strip here, over the race. It is a
+             line in the briefing now — the one screen that exists to explain
+             the controls is the right place to offer a different one. */}
           {/* the whole stage is a steering surface, so a tap on these buttons
               must not also register as "steer hard right" */}
           <div className="steer__acts" onPointerDown={(e) => e.stopPropagation()}>
@@ -507,26 +479,23 @@ export default function RacePlay() {
               <IconDrift size={22} />
             </button>}
           </div>
-          {/* Not before the car has left the line. It is advice about driving,
-              and until the lever goes there is nothing to drive — it only sat
-              across the co-brand plate on the back of the launcher. */}
-          {launched && (
-            <p className="steer__hint">
-              {tiltDriving ? 'Tilt your phone to steer' : 'Hold either side to steer'} · handbrake to drift · {stats.groceries} collected
-            </p>
-          )}
         </div>
       )}
 
-      {!launched && loaded && !err && (
-        <p className="arov__hint lnhint">
-          {pull > 0.02 ? `Launcher drawn ${Math.round(pull * 100)}%` : 'Pull the launcher'}
-          <small>
-            {pull > 0.02
-              ? 'Let go to fire'
-              : 'Drag the red lever back and release · or press Space'}
-          </small>
-        </p>
+      {/* The briefing, and after it nothing but the score and the clock. The
+          launcher prompt used to live here — two lines pinned over the lower
+          third of the frame, which is exactly where the launcher is. What it
+          said is in the briefing now, and the chevrons running down over the
+          lever carry the reminder without a word. */}
+      {loaded && !err && !coached && !outcome && (
+        <RaceCoach
+          mode="3d"
+          onDone={() => setCoached(true)}
+          tilt={{
+            offer: tiltState === 'needs-permission',
+            onEnable: () => void enableTilt(),
+          }}
+        />
       )}
 
       {slowmo && !outcome && <div className="btime" aria-hidden="true" />}
