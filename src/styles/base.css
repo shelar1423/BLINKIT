@@ -2790,31 +2790,65 @@ input, select, textarea { font: inherit; color: inherit; }
    Dead centre, because the aim IS the phone: you point the device at the
    flame, so the crosshair belongs where the device points and not where a
    thumb happens to be. */
-.arboost {
-  position: fixed; left: 50%; top: 44%;
+/* ---------- the gate's timing gauge ----------
+   Replaces the aim crosshair. The gate is a hoop to jump through now, so the
+   screen's whole job is to show the beat arriving: a ring closing onto a fixed
+   target, and when they meet the phone comes up.
+
+   Sits at 46%, which is the gap: the chase camera keeps the hoop in the upper
+   third of the frame and the car in the lower third, and a gauge in the middle
+   covers neither. Concentric with the hoop was the first attempt and read as a
+   second ring drawn on the first — the player could no longer tell which
+   circle was the track hardware and which was the instruction. */
+.gatecue {
+  position: fixed; left: 50%; top: 46%;
   transform: translate(-50%, -50%);
-  display: grid; justify-items: center; gap: 10px;
+  display: grid; place-items: center;
+  width: 104px; height: 104px;
   pointer-events: none; z-index: 210;
 }
-.arboost__ring {
-  width: 92px; height: 92px; border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.55);
-  /* Contracts as the aim closes, so the ring reports the angle rather than
-     merely sitting there — locked is the smallest it gets. */
-  transition: width 140ms ease, height 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+.gatecue__target,
+.gatecue__closing {
+  grid-area: 1 / 1;
+  width: 62px; height: 62px; border-radius: 50%;
+  box-sizing: border-box;
 }
-.arboost.is-good .arboost__ring { width: 74px; height: 74px; border-color: rgba(255, 196, 0, 0.9); }
-.arboost.is-perfect .arboost__ring { width: 58px; height: 58px; border-color: #FFC400; }
-.arboost.is-locked .arboost__ring {
-  width: 48px; height: 48px;
-  border-color: #FFD400; border-width: 3px;
-  box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.22), 0 0 22px rgba(255, 160, 0, 0.7);
+/* The mark to hit. Steady, so the eye has something fixed to judge against —
+   two moving rings would be a puzzle rather than a cue. */
+.gatecue__target {
+  border: 2px dashed rgba(255, 255, 255, 0.62);
 }
-.arboost__cue {
+/* The beat, arriving. No transition: its scale is set from the engine's own
+   per-frame `k`, and a CSS transition on top would add its own lag to a gauge
+   whose entire purpose is that it is not lagging. */
+.gatecue__closing {
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.45);
+}
+.gatecue.is-near .gatecue__closing { border-color: #FFC400; }
+.gatecue.is-now .gatecue__closing {
+  border-color: #FFD400;
+  box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.24), 0 0 26px rgba(255, 160, 0, 0.75);
+}
+.gatecue.is-now .gatecue__target { border-style: solid; border-color: #FFD400; }
+.gatecue.is-late .gatecue__closing { border-color: #FF4D4F; opacity: 0.75; }
+
+.gatecue__k {
+  grid-area: 1 / 1;
+  align-self: end;
+  /* Clear of the rings rather than inside them: at the beat the closing ring
+     is exactly on the target and any text in there is behind two borders. */
+  margin-bottom: -34px;
+  white-space: nowrap;
   font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.04em;
-  color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
 }
-.arboost.is-locked .arboost__cue { color: #FFD400; }
+.gatecue.is-now .gatecue__k { color: #FFD400; font-size: var(--f-sm); letter-spacing: 0.1em; }
+.gatecue.is-late .gatecue__k { color: #FF7A7A; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gatecue__closing { transition: none; }
+}
 
 /* The verdict, once the gate is behind you. Above the reticle's place so it
    does not sit on the road the car is still driving. */
@@ -2832,7 +2866,6 @@ input, select, textarea { font: inherit; color: inherit; }
   to { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .arboost__ring { transition: none; }
   .arboost__verdict { animation: none; }
 }
 

@@ -3,7 +3,7 @@ import { color, scene } from '../../design/constants';
 import { PICKUPS } from '../../data/catalog';
 import { haptic } from '../haptics';
 import { setAudioTimeScale } from '../raceAudio';
-import { raceInteraction } from '../raceInteractions';
+import { gateBand, raceInteraction, type BoostQuality } from '../raceInteractions';
 
 /* ============================================================
    Race It Home — arcade race engine.
@@ -52,16 +52,28 @@ export type EngineOpts = {
   duration?: number; // seconds
   onTick?: (s: RaceStats) => void;
   onPickup?: (points: number, name: string) => void;
-  /** A boost gate has come into view — `world` is the flame to aim at. */
-  onBoostArm?: (index: number, world: THREE.Vector3) => void;
+  /**
+   * A boost gate's run-up, every frame of it.
+   *
+   * `k` runs 0 to 1 and reaches 1 on the beat — the instant the player should
+   * lift. Past 1 the window is closing; it stops being reported once the gate
+   * has been judged. This is what the timing gauge on the overlay is drawn
+   * from, and it is the only thing the overlay needs to know.
+   */
+  onGateCue?: (index: number, k: number) => void;
   /** The ramp is coming; the lift window is open from here. */
   onJumpArm?: () => void;
   /** Wheels have left the ramp. */
   onJumpTakeoff?: () => void;
   /** Back on the road. */
   onJumpLand?: () => void;
-  /** The car is at the gate. Whatever the aim was worth, it is worth now. */
-  onBoostCross?: (index: number) => void;
+  /**
+   * The lift was taken, or the gate went by without one.
+   *
+   * `errSec` is signed simulated seconds off the beat — positive is early —
+   * and is `null` when nobody lifted at all.
+   */
+  onGateResult?: (r: { index: number; quality: BoostQuality; errSec: number | null }) => void;
   /** Points taken off for hitting something. Reported from the one place that
    *  deducts them, so every caller that bounces the car gets it for free. */
   onPenalty?: (points: number) => void;
@@ -116,8 +128,6 @@ const LAUNCH_TRAVEL = 9;
 const LEVER_REST = -0.24;
 const LEVER_PULLED = 0.98;
 
-/** Scratch for gate world positions — allocating one per frame is litter. */
-const boostWorld = new THREE.Vector3();
 const LANE_LIMIT = ROAD_W / 2 - 0.9;
 /**
  * Side-rail height. Measured off real Hot Wheels track, whose walls are ~6 mm
@@ -515,10 +525,25 @@ function coBrandTexture(): THREE.CanvasTexture {
     ctx.textBaseline = 'middle';
     const midY = H / 2 + 2;
 
-    // blinkit, lettered — left of the cross
-    ctx.fillStyle = '#1F1F1F';
+    /* blinkit, lettered — left of the cross, and lettered in TWO colours.
+
+       The real mark sets "blink" in near-black and "it" in the brand green,
+       and a single-colour version of somebody's wordmark is the sort of thing
+       a brand team notices first. Drawn left-aligned from a measured start
+       rather than centred, because two `fillText` calls at one centred x would
+       stack the halves on top of each other. */
     ctx.font = "800 92px system-ui, -apple-system, 'Figtree', sans-serif";
-    ctx.fillText('blinkit', W * 0.27, midY);
+    const dark = 'blink';
+    const green = 'it';
+    const wDark = ctx.measureText(dark).width;
+    const wGreen = ctx.measureText(green).width;
+    const startX = W * 0.27 - (wDark + wGreen) / 2;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#1F1F1F';
+    ctx.fillText(dark, startX, midY);
+    ctx.fillStyle = '#0C831F';
+    ctx.fillText(green, startX + wDark, midY);
+    ctx.textAlign = 'center';
 
     // the cross
     ctx.fillStyle = 'rgba(31,31,31,0.55)';
@@ -965,12 +990,25 @@ export class RaceEngine {
     /** The two counter-rotating fire sheets, and the hoop they surround. */
     fire: THREE.Mesh[];
     fireMats: THREE.MeshBasicMaterial[];
-    /** 0..1, how hard the player is aiming at this one. Drives how it burns. */
+    /** 0..1, how close the run-up is to the beat. Drives how it burns. */
     stoke: number;
     armed: boolean;
+    /** Judged already — by a lift, or by the car going under it. */
+    done: boolean;
+    /** The player has acted. The gauge stops; the verdict waits for the gate. */
+    lifted: boolean;
+    /** Simulated seconds the lift was off the beat. Null if nobody lifted. */
+    liftErr: number | null;
   }[] = [];
   /** Airborne state. `airT` counts 0..1 across the arc; -1 means on the road. */
   private airT = -1;
+  /* The arc currently being flown. The ramp and the gates are the same flight
+     with different numbers — the ramp leaves the road already at the lip's
+     height, a gate leaves it from the floor — so the numbers live here rather
+     than being read from one fixed place in `raceInteraction`. */
+  private airTime: number = raceInteraction.jumpAirtime;
+  private airPeak: number = raceInteraction.jumpHeight;
+  private airFrom = 0;
   private jumpArmed = false;
   private jumpHeightNow = 0;
   /** 0..1 up the ramp's face; -1 when not on it. */
@@ -983,10 +1021,18 @@ export class RaceEngine {
   private launchCoils: THREE.Mesh[] = [];
   /** 0..1 — how far the sled is drawn back. */
   private launchPull = 0;
+  /** The "pull me down" chevrons standing over the lever, top one first. */
+  private leverCue: THREE.Mesh[] = [];
+  /** Seconds the cue has been running. Real time — nothing is racing yet. */
+  private cueT = 0;
   /** Nose angle, radians. Positive is nose up. */
   private jumpPitch = 0;
   /** Seconds of fire, for the boost gates. Never reset — it only ever turns. */
   private fireT = 0;
+  /** Which gate is currently asking for a lift, or -1. */
+  private armedGate = -1;
+  /** A gate jump is in the air, and the clock stays down until it lands. */
+  private slowThroughFlight = false;
   /* ---- the clock ----
      `timeScale` is what the simulation actually runs at; `slowTarget` is what
      it is heading for. Everything in `update` below the ramp runs on simulated
@@ -1274,7 +1320,12 @@ export class RaceEngine {
     const legGeo = new THREE.CylinderGeometry(0.5, 0.62, 11, 10);
     const legMat = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.55, metalness: 0.05 });
     const beamGeo = new THREE.BoxGeometry(ROAD_W + 3.4, 1.5, 1.5);
-    const ringGeo = new THREE.TorusGeometry(2.9, 0.42, 10, 30);
+    /* Built from the tuning file's own numbers, not from literals that happen
+       to match them — the judge measures the car against this hoop, and two
+       copies of its size is two hoops. */
+    const ringGeo = new THREE.TorusGeometry(
+      raceInteraction.gateRingRadius, raceInteraction.gateRingTube, 10, 30,
+    );
     this.disposables.push(legGeo, legMat, beamGeo, ringGeo);
 
     for (const [i, t] of raceInteraction.boostGates.entries()) {
@@ -1299,7 +1350,7 @@ export class RaceEngine {
       const flameMat = new THREE.MeshBasicMaterial({ color: 0xFF6A00, transparent: true, opacity: 0.92 });
       this.disposables.push(flameMat);
       const ring = new THREE.Mesh(ringGeo, flameMat);
-      ring.position.y = 5.4;
+      ring.position.y = raceInteraction.gateRingY;
       g.add(ring);
 
       /* And the fire around it. Two sheets of the same painting, counter-
@@ -1325,7 +1376,7 @@ export class RaceEngine {
         });
         this.disposables.push(ftex, fmat);
         const sheet = new THREE.Mesh(fireGeo, fmat);
-        sheet.position.y = 5.4;
+        sheet.position.y = raceInteraction.gateRingY;
         sheet.position.z = layer ? 0.06 : -0.06;
         sheet.renderOrder = 3;
         g.add(sheet);
@@ -1340,13 +1391,114 @@ export class RaceEngine {
       g.add(target);
 
       this.root.add(g);
-      this.boostGates.push({ t, target, flame: flameMat, fire, fireMats, stoke: 0, armed: false });
+      this.boostGates.push({ t, target, flame: flameMat, fire, fireMats, stoke: 0, armed: false, done: false, lifted: false, liftErr: null });
       void i;
       void right;
     }
   }
 
-  /** Dim or light a gate's flame — the session brightens the one being aimed at. */
+  /**
+   * How far ahead of the gate the car has to leave the road, as a fraction of
+   * the lap.
+   *
+   * Half an airtime's travel: the arc peaks in the middle, so a takeoff half
+   * an airtime early puts the peak exactly at the gate. Derived from the
+   * CURRENT speed every frame rather than fixed, because a boosted car covers
+   * a third more ground in the same flight and would otherwise come down in
+   * front of the hoop.
+   */
+  private gateIdealAhead() {
+    return (this.speed * raceInteraction.gateAirtime * 0.5) / this.curveLen;
+  }
+
+  /**
+   * The player lifted. Judge it, and fly the arc it earned.
+   *
+   * Returns false when there was nothing to lift for, so the session can pass
+   * the gesture on to the ramp's own window instead — the two use the same
+   * movement and must never both claim one lift.
+   */
+  liftGate() {
+    const i = this.armedGate;
+    if (i < 0) return false;
+    const g = this.boostGates[i];
+    if (!g || !g.armed || g.done) return false;
+
+    const ahead = (g.t - this.t + 1) % 1;
+    /* Signed simulated seconds off the beat: positive is early, negative is
+       late. Converted through the car's own speed, so the number means the
+       same thing whether it was travelling at 26 or boosted to 34. */
+    const errSec = ((ahead - this.gateIdealAhead()) * this.curveLen) / Math.max(1, this.speed);
+
+    /* The player has acted. The gauge stops here; the verdict does not arrive
+       until the car reaches the hoop, because until then there is nothing to
+       judge — the whole rule is where the car gets to. */
+    g.lifted = true;
+    g.liftErr = errSec;
+
+    /* Too far out to reach the hoop at all. The lift is dropped rather than
+       flown: an arc begun this late comes down beyond the gate, and a car
+       that jumps for no reason a second after the ring has gone past reads as
+       a bug rather than as a mistake. It still counts as the player's answer,
+       so the gate is theirs to have missed. */
+    if (Math.abs(errSec) > raceInteraction.gateAcceptSec) return true;
+
+    /* Airborne from the floor — there is no ramp here, the car simply leaves
+       the road. Only if it is not already flying: a lift taken during the
+       ramp's own jump must not restart the arc mid-air. */
+    if (this.airT < 0 && this.rampU < 0) {
+      this.airT = 0;
+      this.airTime = raceInteraction.gateAirtime;
+      this.airPeak = raceInteraction.gateRingY;
+      this.airFrom = 0;
+      /* Stay slow until the wheels are back down. The gate closes on the lift,
+         so without this the world snaps back to full speed at the exact
+         moment the car is about to go through the hoop — which is the one
+         second of the lap worth watching. */
+      this.slowThroughFlight = true;
+    }
+    return true;
+  }
+
+  /** Score the gate, put its fire out, and stop reporting it. */
+  private closeGate(i: number, quality: BoostQuality, errSec: number | null) {
+    const g = this.boostGates[i];
+    if (!g || g.done) return;
+    g.armed = false;
+    g.done = true;
+    g.stoke = 0;
+    this.setBoostGlow(i, 0);
+    if (this.armedGate === i) this.armedGate = -1;
+
+    const points = quality === 'perfect' ? raceInteraction.scoreBoostPerfect
+      : quality === 'good' ? raceInteraction.scoreBoostGood
+      : 0;
+    if (points > 0) {
+      this.score += points;
+      this.boost();
+      haptic(quality === 'perfect' ? [16, 28, 16] : 18);
+    }
+    this.opts.onGateResult?.({ index: i, quality, errSec });
+  }
+
+  /**
+   * Every gate is fresh again at the start of a lap.
+   *
+   * `done` is what stops one gate being judged twice on the way past it; it
+   * has to be cleared somewhere or the second lap would have no gates at all.
+   */
+  private rearmGates() {
+    for (const g of this.boostGates) {
+      g.armed = false;
+      g.done = false;
+      g.stoke = 0;
+      g.lifted = false;
+      g.liftErr = null;
+    }
+    this.armedGate = -1;
+  }
+
+  /** Dim or light a gate's flame — the session brightens the one being run at. */
   setBoostGlow(index: number, k: number) {
     const gate = this.boostGates[index];
     if (!gate) return;
@@ -1488,11 +1640,20 @@ export class RaceEngine {
       }
     }
 
-    // the back stop the spring pushes off
-    const stopGeo = roundedBox(LW * 2 - 1.0, 2.6, 1.1, 0.3);
+    /* The back stop the spring pushes off.
+
+       2.2 tall, not 2.6. The co-brand plate mounted on its rear face is tipped
+       back to meet the launch camera, which walks its upper half INTO the
+       stop's box — and the stop, being the dark part, won the depth test and
+       drew a black bar straight across the plate between the chequer and the
+       wordmarks. Measured: the tipped plate crosses the stop's rear plane at
+       y=2.28, so a stop that ends below that cannot occlude it. Everything
+       above is now plate standing proud of the stop, which is what a sign
+       bolted to the back of a launcher looks like anyway. */
+    const stopGeo = roundedBox(LW * 2 - 1.0, 2.2, 1.1, 0.3);
     this.disposables.push(stopGeo);
     const stop = new THREE.Mesh(stopGeo, dark);
-    stop.position.set(0, 1.3, LAUNCH_TRAVEL + 5.4);
+    stop.position.set(0, 1.1, LAUNCH_TRAVEL + 5.4);
     this.launcher.add(stop);
 
     /* The co-brand plate, square-on to the launch camera.
@@ -1606,9 +1767,88 @@ export class RaceEngine {
     this.leverHit.position.y = 2.6;
     this.launchLever.add(this.leverHit);
 
+    /* ---- the cue ----
+
+       Three chevrons standing over the lever, running downward on a loop.
+
+       A lever nobody knows is a lever is scenery, and this one is small, red,
+       and sitting in a scene full of other small red parts. The instruction is
+       a DIRECTION — down — so the cue has to be a direction rather than a
+       word; the same reasoning as the lift arrows on the jump.
+
+       In the scene rather than on the overlay, so it belongs to the launcher:
+       it is at the right size and the right angle in the 3D race and the AR
+       one without either of them knowing it exists, and it leaves with the
+       launcher when the car does. */
+    const cueShape = new THREE.Shape();
+    {
+      const w = 0.95;
+      const h = 0.8;
+      const t = 0.34;
+      cueShape.moveTo(-w, 0);
+      cueShape.lineTo(0, -h);
+      cueShape.lineTo(w, 0);
+      cueShape.lineTo(w - t, 0);
+      cueShape.lineTo(0, -h + t * 1.35);
+      cueShape.lineTo(-w + t, 0);
+      cueShape.closePath();
+    }
+    const cueGeo = new THREE.ShapeGeometry(cueShape);
+    this.disposables.push(cueGeo);
+    for (let i = 0; i < 3; i++) {
+      /* One material per chevron — they fade on different phases, and opacity
+         lives on the material, so a shared one would fade all three together
+         and the cue would blink instead of running. */
+      const m = new THREE.MeshBasicMaterial({
+        color: 0xFFC400,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        toneMapped: false,
+      });
+      this.disposables.push(m);
+      const chev = new THREE.Mesh(cueGeo, m);
+      /* Over the lever's rest position, not parented to it: parented, the cue
+         would swing away with the arm the moment it was grabbed, which is
+         exactly when it stops being needed and should simply fade. */
+      chev.position.set(-2.3, 8.5 - i * 1.15, 3.4);
+      chev.rotation.x = -0.5; // square-on to the launch camera, like the plate
+      this.launcher.add(chev);
+      this.leverCue.push(chev);
+    }
+
     this.root.add(this.launcher);
     this.launcher.visible = true;
     this.setLaunchPull(0);
+  }
+
+  /**
+   * Animate what moves before the race does.
+   *
+   * The engine's `update` is not ticked until the lever goes — no clock, no
+   * pickups, nothing — so anything that has to live during the launch view
+   * needs its own tick. Right now that is the lever cue and nothing else.
+   *
+   * dt in real seconds. There is no simulation to be in step with yet, so
+   * there is no time scale here either.
+   */
+  tickIdle(dt: number) {
+    if (!this.launcher.visible || !this.leverCue.length) return;
+    this.cueT += dt;
+    /* Gone once the lever is moving. The cue is an answer to "what do I do",
+       and by then it has been answered. */
+    const alive = Math.max(0, 1 - this.launchPull * 5);
+    const PERIOD = 1.15;
+    for (const [i, chev] of this.leverCue.entries()) {
+      const phase = ((this.cueT / PERIOD) - i * 0.22) % 1;
+      const k = phase < 0 ? phase + 1 : phase;
+      /* Up fast, hold, out slowly — so the three read as one thing travelling
+         down rather than three things blinking in turn. */
+      const fade = k < 0.16 ? k / 0.16 : Math.max(0, 1 - (k - 0.16) / 0.62);
+      (chev.material as THREE.MeshBasicMaterial).opacity = fade * 0.92 * alive;
+      chev.position.y = 8.5 - i * 1.15 - k * 0.45;
+    }
   }
 
   /**
@@ -2161,7 +2401,10 @@ export class RaceEngine {
        which put `t` outside 0..1 and made every position on the lap wrong
        until the car had driven forward past the seam again. */
     this.t = ((((this.t + (this.speed * dt) / this.curveLen) % 1) + 1) % 1);
-    if (prevT > 0.92 && this.t < 0.08 && this.speed > 0) this.lap += 1;
+    if (prevT > 0.92 && this.t < 0.08 && this.speed > 0) {
+      this.lap += 1;
+      this.rearmGates();
+    }
 
     /* Events only fire while the car is going FORWARDS.
 
@@ -2208,6 +2451,9 @@ export class RaceEngine {
       if (this.rampU >= 1) {
         this.rampU = -1;
         this.airT = 0;
+        this.airTime = raceInteraction.jumpAirtime;
+        this.airPeak = raceInteraction.jumpHeight;
+        this.airFrom = RAMP_RISE; // it leaves the road at the lip's height
         this.opts.onJumpTakeoff?.();
       }
     }
@@ -2218,23 +2464,27 @@ export class RaceEngine {
        is a jump that ends the race on a sensor reading, which the brief rules
        out. Input decides what it was worth, never whether you made it. */
     if (this.airT >= 0) {
-      this.airT += dt / raceInteraction.jumpAirtime;
+      this.airT += dt / this.airTime;
       if (this.airT >= 1) {
         this.airT = -1;
         this.jumpHeightNow = 0;
+        this.slowThroughFlight = false;
         this.opts.onJumpLand?.();
       } else {
-        /* Leaves the lip at the ramp's height and comes down to road level, so
-           the arc starts where the ramp ended instead of teleporting to zero.
-           The parabola on top peaks halfway across. */
+        /* Leaves at `airFrom` and comes down to road level, so a ramp jump
+           starts where the ramp ended instead of teleporting to zero — and a
+           gate jump, which leaves from the floor, starts at zero because that
+           is what `airFrom` is for it. The parabola on top peaks halfway
+           across, which is what puts a gate lift through the middle of the
+           hoop when it lands on the beat. */
         const a = this.airT;
-        const h = raceInteraction.jumpHeight;
-        this.jumpHeightNow = RAMP_RISE * (1 - a) + h * 4 * a * (1 - a);
+        const h = this.airPeak;
+        this.jumpHeightNow = this.airFrom * (1 - a) + h * 4 * a * (1 - a);
         /* The nose follows the arc rather than staying level: up on the way
            out, through flat at the apex, down on the way in. dy/da divided by
            the distance covered in that time IS the slope the car is on. */
-        const dyda = -RAMP_RISE + h * 4 * (1 - 2 * a);
-        const run = Math.max(1, this.speed * raceInteraction.jumpAirtime);
+        const dyda = -this.airFrom + h * 4 * (1 - 2 * a);
+        const run = Math.max(1, this.speed * this.airTime);
         pitchTarget = Math.max(-0.6, Math.min(0.6, Math.atan2(dyda, run)));
       }
     }
@@ -2245,7 +2495,12 @@ export class RaceEngine {
     /* Boost gates. Armed by DISTANCE rather than by a fixed lead in `t`,
        because `t` per second depends on how fast the car happens to be going
        — a lead measured in curve units would give a flying car half the
-       warning of a slow one, and the warning is the thing being scored. */
+       warning of a slow one, and the warning is the thing being judged.
+
+       The gate is a hoop the car has to be IN THE AIR to pass through: at road
+       level it drives under the ring with a car's height to spare. So the beat
+       is not the gate, it is half an airtime before the gate — lift there and
+       the top of the arc lands in the middle of the hole. */
     let gateArmed = false;
     if (this.interactions && raceInteraction.boostEnabled && goingForward) {
       const lead = (this.speed * raceInteraction.boostWarnLead) / this.curveLen;
@@ -2267,19 +2522,44 @@ export class RaceEngine {
 
         // forward distance to the gate, wrapped
         const ahead = (g.t - this.t + 1) % 1;
-        if (!g.armed && ahead < lead && this.outroAt < 0) {
+        if (!g.armed && !g.done && ahead < lead && this.outroAt < 0) {
           g.armed = true;
-          g.target.getWorldPosition(boostWorld);
-          this.opts.onBoostArm?.(i, boostWorld.clone());
+          this.armedGate = i;
         }
+
+        if (g.armed && !g.lifted) {
+          gateArmed = true;
+          /* The gauge. 0 when the gate arms, 1 exactly on the beat, and past 1
+             while the window is still closing — the overlay clamps what it
+             draws, but the engine reports the truth so a late lift can still
+             be told apart from no lift at all. */
+          const ideal = this.gateIdealAhead();
+          const k = (lead - ahead) / Math.max(1e-6, lead - ideal);
+          g.stoke = Math.max(0, Math.min(1, k));
+          this.opts.onGateCue?.(i, k);
+
+          /* Nothing is aimed at any more, but the car still has to arrive
+             where the hole is. Eased rather than snapped: the player may be
+             mid-corner-exit when the gate arms, and yanking the car onto the
+             centreline would read as the game taking the wheel. */
+          this.lateral -= this.lateral * Math.min(1, dt * 2.2);
+        } else if (g.armed) {
+          /* Lifted, still short of the hoop. The clock stays down and the car
+             stays lined up — the verdict is not in yet, because the verdict is
+             where the car IS when it gets there. */
+          gateArmed = true;
+          this.lateral -= this.lateral * Math.min(1, dt * 2.2);
+        }
+
         // crossing it: the wrapped gap jumps from nearly a lap to nearly zero
         const crossed = prevT <= g.t && this.t > g.t;
         const wrapped = prevT > this.t && (g.t > prevT || g.t <= this.t);
         if (g.armed && (crossed || wrapped)) {
-          g.armed = false;
-          this.opts.onBoostCross?.(i);
+          /* The moment of truth, and the only honest place to judge it: not
+             where the phone was, but where the CAR was when it reached the
+             hoop. Everything the player can see is in this one number. */
+          this.closeGate(i, gateBand(this.jumpHeightNow, g.liftErr), g.liftErr);
         }
-        if (g.armed) gateArmed = true;
       }
     }
 
@@ -2287,7 +2567,8 @@ export class RaceEngine {
        changed it. Written inside `onBoostArm` instead, a gate that armed and a
        lap that ended on the same frame would each set it and the last one to
        run would win. */
-    this.slowTarget = this.outroAt >= 0 ? SLOW_FINISH : gateArmed ? SLOW_BOOST : 1;
+    this.slowTarget =
+      this.outroAt >= 0 ? SLOW_FINISH : gateArmed || this.slowThroughFlight ? SLOW_BOOST : 1;
 
     // --- lateral ---
     // Grip falls away while the handbrake is down, so the same steering input

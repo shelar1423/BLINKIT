@@ -9,6 +9,7 @@ import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconMute, IconRotate, IconSound } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
+import { GateCue } from '../design/components/GateCue';
 import { Poppers } from '../design/components/Poppers';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { horn as playHorn, primeAudio } from '../lib/horn';
@@ -40,8 +41,8 @@ export default function RacePlay() {
   /* A ref as well as state: the pointer handlers are bound once and read this
      every move, and a captured state value would be the one from the render
      that bound them. */
-  const aiming = useRef(false);
-  const [boostAim, setBoostAim] = useState<{ index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null>(null);
+  const atGate = useRef(false);
+  const [gateCue, setGateCue] = useState<{ index: number; k: number } | null>(null);
   const [jumpCue, setJumpCue] = useState(false);
   const [eventFlash, setEventFlash] = useState<{ kind: 'boost' | 'jump'; quality: BoostQuality | JumpQuality; points: number } | null>(null);
   const tilt = useRef<TiltSteer | null>(null);
@@ -108,15 +109,16 @@ export default function RacePlay() {
   useEffect(() => {
     if (!host.current || !car.glb) return;
     const h = createRaceScene(host.current, {
-      onBoostAim: (a) => {
-        aiming.current = !!a;
-        setBoostAim(a);
-        /* Hold the wheel straight for the moment of the gate. */
-        if (a) handle.current?.engine.setSteer(0);
+      onGateCue: (c) => {
+        atGate.current = !!c;
+        setGateCue(c);
+        /* Hold the wheel straight through the gate. The car is being lined up
+           on the hoop by the engine; a steering input mid-run-up fights it. */
+        if (c) handle.current?.engine.setSteer(0);
       },
       onBoostResult: (r) => {
-        aiming.current = false;
-        setBoostAim(null);
+        atGate.current = false;
+        setGateCue(null);
         setEventFlash({ kind: 'boost', quality: r.quality, points: r.points });
         window.setTimeout(() => setEventFlash(null), 1100);
       },
@@ -233,31 +235,23 @@ export default function RacePlay() {
     const stage = host.current?.parentElement;
     if (!stage) return;
     let holding = false;
-    let lastX = 0;
-    let lastY = 0;
     let swipeFrom: number | null = null;
     const down = (e: PointerEvent) => {
       holding = true;
-      lastX = e.clientX;
-      lastY = e.clientY;
       swipeFrom = e.clientY;
-      /* While a gate is armed the same surface aims instead of steering — one
-         thumb cannot do both, and the brief allows steering to be stabilised
-         for the moment of the boost. The car keeps driving; it just runs
-         straight, which is also what makes the aim fair to judge. */
-      if (!aiming.current) steerTo(e.clientX);
+      /* Steering still works through a gate. The engine eases the car back to
+         the centreline on its own so it arrives where the hole is, and taking
+         the wheel away on top of that would mean the run-up to a gate is also
+         the one moment of the lap the player is not driving. */
+      steerTo(e.clientX);
     };
     const move = (e: PointerEvent) => {
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      /* A mouse aims on movement alone; a thumb has to be down. */
-      if (aiming.current && (holding || e.pointerType === 'mouse')) {
-        handle.current?.aimBy(dx, dy);
-        return;
-      }
-      if (swipeFrom !== null && swipeFrom - e.clientY > 46) {
+      /* A swipe up is the lift — the gate's, if a gate is asking, otherwise
+         the ramp's. Shorter while a gate is open, because the whole mechanic
+         there is WHEN, and a long swipe spends most of its travel deciding
+         whether it was one. */
+      const swipe = atGate.current ? 26 : 46;
+      if (swipeFrom !== null && swipeFrom - e.clientY > swipe) {
         swipeFrom = null;
         handle.current?.jumpNow();
       }
@@ -383,14 +377,7 @@ export default function RacePlay() {
 
           {/* The same cues the AR race shows, because they are the same three
               moments — only the input differs. */}
-          {boostAim && (
-            <div className={'arboost is-' + boostAim.quality + (boostAim.locked ? ' is-locked' : '')} aria-hidden="true">
-              <span className="arboost__ring" />
-              <span className="arboost__cue">
-                {boostAim.locked ? 'Locked' : boostAim.quality === 'miss' ? 'Boost ahead' : 'Drag to aim'}
-              </span>
-            </div>
-          )}
+          {gateCue && <GateCue k={gateCue.k} canLift={false} />}
           {jumpCue && (
             <div className="arjump">
               <span className="arjump__k">Jump ahead</span>
@@ -401,7 +388,7 @@ export default function RacePlay() {
             <p className={'arboost__verdict is-' + eventFlash.quality} aria-live="polite">
               {eventFlash.quality === 'miss'
                 ? eventFlash.kind === 'boost'
-                  ? 'Missed the gate'
+                  ? 'Missed the ring'
                   : 'No jump'
                 : eventFlash.kind === 'boost'
                   ? eventFlash.quality === 'perfect'
@@ -414,7 +401,11 @@ export default function RacePlay() {
             </p>
           )}
 
-          {!tiltDriving && (
+          {/* Not before the car has left the line — the same reasoning as the
+              hint below. They are steering affordances, there is nothing to
+              steer yet, and the right-hand one sat squarely on the launcher's
+              co-brand plate. */}
+          {!tiltDriving && launched && (
             <div className="steer__pads" aria-hidden="true">
               <span className="steer__pad"><IconChevronLeft size={22} /></span>
               <span className="steer__pad"><IconChevronRight size={22} /></span>
@@ -488,7 +479,11 @@ export default function RacePlay() {
             >
               {mute ? <IconMute size={21} /> : <IconSound size={21} />}
             </button>
-            <button
+            {/* Also held back until the launch. It is the lowest button in the
+                column, which put it directly over the back of the launcher —
+                the one part of the frame the player is being asked to look at
+                and drag. */}
+            {launched && <button
               type="button"
               className={'arov__pad arov__pad--sm' + (drift ? ' is-on' : '')}
               aria-label="Drift"
@@ -504,7 +499,7 @@ export default function RacePlay() {
               onPointerCancel={() => slide(false)}
             >
               <IconDrift size={22} />
-            </button>
+            </button>}
           </div>
           {/* Not before the car has left the line. It is advice about driving,
               and until the lever goes there is nothing to drive — it only sat

@@ -22,6 +22,7 @@ import {
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
+import { GateCue } from '../design/components/GateCue';
 import { Poppers } from '../design/components/Poppers';
 import type { BoostQuality, JumpQuality } from '../lib/raceInteractions';
 import {
@@ -160,7 +161,7 @@ export default function ARView() {
         /* AR was throwing pickups away entirely — the score moved and nothing
            on screen said why. */
         onPickup: (points) => pushPop(points, 'up'),
-        onBoostAim: setBoostAim,
+        onGateCue: setGateCue,
         onJumpCue: (open, canLift) => {
           setJumpCue(open);
           setCanLift(canLift);
@@ -178,7 +179,7 @@ export default function ARView() {
           window.setTimeout(() => setJumpFlash(null), 1100);
         },
         onBoostResult: (r) => {
-          setBoostAim(null);
+          setGateCue(null);
           setBoostFlash(r);
           if (r.points > 0) {
             pushPop(r.points, 'up');
@@ -365,7 +366,7 @@ export default function ARView() {
   const [pull, setPull] = useState(0);
 
   /* The gate being approached, and the verdict once it is behind us. */
-  const [boostAim, setBoostAim] = useState<{ index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null>(null);
+  const [gateCue, setGateCue] = useState<{ index: number; k: number; canLift: boolean } | null>(null);
   const [boostFlash, setBoostFlash] = useState<{ index: number; quality: BoostQuality; points: number } | null>(null);
   const [jumpCue, setJumpCue] = useState(false);
   const jumpSwipeFrom = useRef<number | null>(null);
@@ -501,18 +502,11 @@ export default function ARView() {
 
             {phase === 'racing' && <ScorePops pops={pops} />}
 
-            {/* The boost reticle. Centre of the screen, because the aim is the
-                phone rather than a cursor — you point the whole device at the
-                flame, so the crosshair is where the device points. It only
-                exists while a gate is armed; a permanent reticle would read as
-                something to drive with. */}
-            {phase === 'racing' && boostAim && (
-              <div className={'arboost is-' + boostAim.quality + (boostAim.locked ? ' is-locked' : '')} aria-hidden="true">
-                <span className="arboost__ring" />
-                <span className="arboost__cue">
-                  {boostAim.locked ? 'Locked' : boostAim.quality === 'miss' ? 'Boost ahead' : 'Aim at the flame'}
-                </span>
-              </div>
+            {/* The gate's timing gauge. There is no crosshair any more: the
+                hoop hangs above the road and the car goes under it unless it
+                jumps, so the gate asks WHEN rather than WHERE. */}
+            {phase === 'racing' && gateCue && (
+              <GateCue k={gateCue.k} canLift={gateCue.canLift} />
             )}
             {/* The lift cue. Its own band above the reticle's place, and a
                 swipe target of its own — on a phone that cannot report pitch

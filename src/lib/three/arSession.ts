@@ -1,12 +1,10 @@
 import * as THREE from 'three';
 import { color } from '../../design/constants';
 import { circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
-import { boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
-import { cameraPitchDeg, makeBoostAim, makeDeviceAim, makeDragAim, makeJumpInput, makeLeverDrag } from './raceInput';
+import { jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
+import { cameraPitchDeg, makeDeviceAim, makeJumpInput, makeLeverDrag } from './raceInput';
 
 /** Scratch for the aim ray; one per frame would be litter. */
-const aimFrom = new THREE.Vector3();
-const aimDir = new THREE.Vector3();
 import { loadCar } from './modelLoader';
 import { primeAudio, skid } from '../horn';
 
@@ -100,8 +98,13 @@ type Opts = {
   onError: (msg: string) => void;
   onEnd: () => void;
   onObstacleHit?: (info: { type: string; pointsLost: number }) => void;
-  /** Aim state for the boost gate the car is approaching, or null between them. */
-  onBoostAim?: (a: { index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null) => void;
+  /**
+   * The run-up to a boost gate, or null between them.
+   *
+   * `k` reaches 1 on the beat — the instant the phone should come up. The
+   * overlay draws a gauge from it; there is nothing to aim at any more.
+   */
+  onGateCue?: (c: { index: number; k: number; canLift: boolean } | null) => void;
   /** What the gate was worth once the car was through it. */
   onBoostResult?: (r: { index: number; quality: BoostQuality; points: number }) => void;
   /** The lift window is open, or has closed. */
@@ -470,13 +473,12 @@ function lights(scene: THREE.Scene) {
 function makeEngine(
   opts: Opts,
   onDone: () => void,
-  aim: ReturnType<typeof makeBoostAim>,
+  /** The gate's lift window. Same watcher as the ramp's, a separate instance. */
+  gateLift: ReturnType<typeof makeJumpInput>,
   jump: ReturnType<typeof makeJumpInput>,
   canLift: () => boolean,
   /** Nose-up angle of the PHONE, or null where that cannot be known. */
   pitchDeg: () => number | null,
-  /** Where the player is pointing — not necessarily where the camera looks. */
-  aimDirection: (camera: THREE.Camera) => THREE.Vector3,
   /** Take the current pose as the rest position for a fresh gesture. */
   recentre: () => void,
 ) {
@@ -488,22 +490,25 @@ function makeEngine(
     onTick: opts.onTick,
     onPickup: opts.onPickup,
     onPenalty: opts.onPenalty,
-    onBoostArm: (i, world) => {
-      /* Rest pose captured at the moment the gate appears: the gesture is
-         "tilt from where you are holding it", not "hold it at some angle". */
-      recentre();
-      aim.arm(i, world);
+    onGateCue: (index, k) => {
+      if (!gateLift.isOpen) {
+        /* Rest pose captured at the moment the gate appears: the gesture is
+           "tilt up from where you are holding it", not "hold it at some
+           angle". Nobody races with the phone at a known pitch. */
+        recentre();
+        gateLift.arm();
+      }
+      opts.onGateCue?.({ index, k, canLift: canLift() });
     },
-    onBoostCross: (i) => {
-      /* Judged on the last aim sampled before the car reached the gate, so a
-         phone whipped away on the line does not undo a held lock. */
-      const quality = aim.resolve();
-      const points = boostPoints(quality);
-      engine.awardBoost(points, quality !== 'miss');
-      engine.setBoostGlow(i, 0);
-      aim.clear();
-      opts.onBoostResult?.({ index: i, quality, points });
-      opts.onBoostAim?.(null);
+    onGateResult: ({ index, quality }) => {
+      gateLift.close();
+      opts.onGateCue?.(null);
+      opts.onBoostResult?.({
+        index,
+        quality,
+        points: quality === 'perfect' ? raceInteraction.scoreBoostPerfect
+          : quality === 'good' ? raceInteraction.scoreBoostGood : 0,
+      });
     },
     onJumpArm: () => {
       recentre();
@@ -530,22 +535,32 @@ function makeEngine(
   engine.setPresentation('ar');
   return {
     engine,
-    /** Call every frame while racing; drives the reticle, the glow and the lift. */
-    tickAim(camera: THREE.Camera, dtMs: number) {
+    /**
+     * Call every frame while racing. Watches the phone for the two lifts.
+     *
+     * The gate's window is read first and, once it has fired, closed — so one
+     * movement of the phone can never be counted by both windows on a frame
+     * where a gate closes and the ramp arms.
+     */
+    tickLift() {
+      const p = pitchDeg();
+      if (gateLift.isOpen) {
+        if (p !== null) gateLift.feed(p);
+        opts.onJumpLift?.(gateLift.progress);
+        /* On the INSTANT it crosses, not on a resolve at the end of a window:
+           the whole mechanic is when the phone came up, and a judgement
+           deferred to the gate would be judging where the car got to. */
+        if (gateLift.lifted) engine.liftGate();
+        return;
+      }
       if (jump.isOpen) {
-        const p = pitchDeg();
         if (p !== null) jump.feed(p);
         opts.onJumpLift?.(jump.progress);
       }
-      camera.getWorldPosition(aimFrom);
-      aimDir.copy(aimDirection(camera));
-      const a = aim.sample(aimFrom, aimDir, dtMs);
-      if (!a) return;
-      engine.setBoostGlow(a.index, a.locked ? 1 : a.quality === 'good' ? 0.5 : 0.1);
-      opts.onBoostAim?.(a);
     },
     /** Swipe-up or key, for where pitch is not available. */
     jumpNow() {
+      if (gateLift.isOpen && engine.liftGate()) return;
       jump.manual();
     },
   };
@@ -801,16 +816,15 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   const inspect = opts.mode === 'inspect';
 
-  const boostAim = makeBoostAim();
+  const gateLift = makeJumpInput();
   const jumpInput = makeJumpInput();
   const race = makeEngine(
     opts,
     () => setPhase('placed'),
-    boostAim,
+    gateLift,
     jumpInput,
     () => true,
     () => cameraPitchDeg(renderer.xr.isPresenting ? renderer.xr.getCamera() : camera),
-    (cam) => cam.getWorldDirection(new THREE.Vector3()),
     () => {},
   );
   const engine = race.engine;
@@ -1074,7 +1088,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       engine.update(dt);
       /* After the engine, so a gate armed on this frame is aimed at on this
          frame rather than one behind. */
-      race.tickAim(renderer.xr.isPresenting ? renderer.xr.getCamera() : camera, dt * 1000);
+      race.tickLift();
 
       // Vision & Pinned Obstacle Collision Check
       const localCarPos = new THREE.Vector3();
@@ -1109,6 +1123,11 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       // anchorWorldPos = camWorldPos - fpCamPos * anchorScale
       anchor.position.copy(camWorldPos).addScaledVector(fpCamPos, -scale);
     }
+
+    /* The launcher's own animation — the chevrons over the lever. The engine
+       is not ticked until the lever goes, so this is the only thing keeping
+       the launch view alive. */
+    if (phase === 'placed') engine.tickIdle(dt);
 
     renderer.render(scene, camera);
   });
@@ -1270,34 +1289,23 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
   const inspect = opts.mode === 'inspect';
   const ground = inspect ? GROUND_INSPECT : GROUND;
-  const boostAim = makeBoostAim();
+  const gateLift = makeJumpInput();
   const jumpInput = makeJumpInput();
   /* The phone, read straight off the orientation event rather than off the
      render camera — which, during the race, is the chase camera and knows
-     nothing about how the phone is being held. The aim is that pose applied as
-     an OFFSET to the chase camera's forward, so tilting the phone swings where
-     you are pointing without taking the car out of shot. */
+     nothing about how the phone is being held. Both lifts are measured from
+     it: the camera's own pitch is the game's framing, not the player's wrist,
+     which is why every lift used to come back "No lift". */
   const deviceAim = makeDeviceAim();
-  const aimOffset = makeDragAim();
   const race = makeEngine(
     opts,
     () => setPhase('placed'),
-    boostAim,
+    gateLift,
     jumpInput,
     () => deviceAim.live,
     () => (deviceAim.live ? deviceAim.pitchDeg : null),
-    (cam) => {
-      if (deviceAim.live) {
-        aimOffset.set(
-          THREE.MathUtils.degToRad(-deviceAim.yawDeg),
-          THREE.MathUtils.degToRad(deviceAim.pitchDeg),
-        );
-      }
-      return aimOffset.direction(cam);
-    },
     () => {
       deviceAim.recentre();
-      aimOffset.reset();
     },
   );
   const engine = race.engine;
@@ -1603,6 +1611,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
        still and you are looking down the lane; turn it thirty degrees and you
        turn thirty degrees. */
     if (phase === 'placed' && !inspect) {
+      engine.tickIdle(dt);
       engine.launcherCameraTarget(lnTarget);
       const wp = engine.root.localToWorld(lnTarget.pos.clone());
       const wl = engine.root.localToWorld(lnTarget.look.clone());
@@ -1630,7 +1639,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
     if (phase === 'racing') {
       engine.update(dt);
-      race.tickAim(camera, dt * 1000);
+      race.tickLift();
 
 
       const scale = engine.root.scale.x || (sizeM / engine.trackExtent);

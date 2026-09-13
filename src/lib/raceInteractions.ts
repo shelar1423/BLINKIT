@@ -14,6 +14,12 @@
 
 export type BoostQuality = 'perfect' | 'good' | 'miss';
 
+/* The gate used to be an AIM: point the phone at the flame and hold it there.
+   It is a JUMP now — the ring is a hoop, the car passes under it at road
+   level, and getting through the middle of it means leaving the road on the
+   beat. Same gesture as the ramp (the top of the phone comes up), judged on
+   when rather than on where. */
+
 export const raceInteraction = {
   launchEnabled: true,
   /**
@@ -38,18 +44,71 @@ export const raceInteraction = {
      0.428-0.573 and 0.702-0.799. Aiming a phone while fighting a corner is
      the thing this whole layout exists to avoid.
 
-     These moved when the lap was re-cut to begin mid-straight — which shifted
-     every straight by about a tenth and left both gates sitting in corners.
-     They are derived from that map, not chosen. */
-  boostGates: [0.29, 0.79],
+     They moved again when the gate stopped being an aim and became a jump.
+     An aim wants the gate at the END of a straight, so the whole approach is
+     spent not turning. A jump wants it in the MIDDLE, because the arc has to
+     take off before the hoop and land after it — and at 0.29 the straight ran
+     out nine units past the gate, which put every landing in the corner.
+     These are the midpoints of the second and fourth straights, measured from
+     that same map. At the boosted top speed of 34 the flight spans 0.205-0.296
+     and 0.705-0.796, so ramp and landing are both still on tarmac. */
+  boostGates: [0.2505, 0.7505],
 
-  /** Seconds of warning before the car reaches a gate. */
-  boostWarnLead: 0.9,
-  /** Angular error, in degrees, for each band. */
-  boostPerfectDeg: 7,
-  boostGoodDeg: 16,
-  /** How long the aim must hold inside the perfect cone to count as locked. */
-  boostLockMs: 240,
+  /**
+   * Seconds of warning before the IDEAL lift, not before the gate.
+   *
+   * This is the run-up the gauge fills across, and it is also exactly the
+   * window bullet time is held open for — at 0.3 speed it is about three real
+   * seconds, which is the whole reason a lift this exact is playable at all.
+   */
+  boostWarnLead: 1.35,
+
+  /**
+   * Seconds the car spends in the air over a gate.
+   *
+   * The takeoff is half an airtime before the gate, so a lift on the beat puts
+   * the top of the arc in the middle of the hoop.
+   */
+  gateAirtime: 0.8,
+  /* The hoop itself. The MESH is built from these numbers and so is the
+     judge, because the one thing this mechanic cannot afford is for the two to
+     disagree: the whole promise is that going through the ring is what scores,
+     and a scoring rule that drifts from the geometry breaks that promise
+     without anything on screen admitting it. */
+  gateRingY: 5.4,
+  gateRingRadius: 2.9,
+  gateRingTube: 0.42,
+  /**
+   * How far off the ring's centre the car may be and still count as through.
+   *
+   * The clear hole has a radius of 2.48. This is 1.6, which leaves room for
+   * the car's own body — it is about 1.5 tall — so anything scored as through
+   * the ring is unmistakably through it on screen, and anything scored a miss
+   * is unmistakably clipping it.
+   */
+  gateThroughTol: 1.6,
+
+  /* How far off the beat a lift may be for the DOUBLE score, in SIMULATED
+     seconds. Only `perfect` is judged on timing; `good` is judged on the
+     geometry above, because the arc is flat at the top and a tenth of a second
+     either side of the beat looks identical going through the hoop. Paying
+     that as a miss is the version of this that makes players furious — you saw
+     yourself go through the ring and got nothing.
+     Simulated, not real: the leaderboard compares two players who drove the
+     same line, and the sim clock is the one thing both of them share whatever
+     their frame rate did. Bullet time is what turns these into a reachable
+     amount of real time — 0.055 sim is about 180ms of real reaction — rather
+     than a widening of the window itself. */
+  gatePerfectSec: 0.055,
+  /**
+   * Past this the car does not leave the road at all.
+   *
+   * A late lift still jumps — you have to SEE why it did not count, and a car
+   * that sails over the ring behind it says that better than any label. Past
+   * a third of a second of sim time there is no arc left that reaches the
+   * hoop, so the lift is simply dropped and the car drives under it.
+   */
+  gateAcceptSec: 0.34,
 
   scoreBoostGood: 250,
   scoreBoostPerfect: 500,
@@ -95,11 +154,18 @@ export function jumpPoints(q: JumpQuality) {
   return 0;
 }
 
-/** What a given angular error is worth, before the lock is considered. */
-export function boostBand(errorDeg: number): BoostQuality {
-  if (errorDeg <= raceInteraction.boostPerfectDeg) return 'perfect';
-  if (errorDeg <= raceInteraction.boostGoodDeg) return 'good';
-  return 'miss';
+/**
+ * What a gate was worth, judged where the car actually was when it got there.
+ *
+ * `height` is the car's height at the gate and `errSec` how far the lift was
+ * off the beat — or null if nobody lifted. Through the hoop always pays;
+ * landing the beat as well pays double.
+ */
+export function gateBand(height: number, errSec: number | null): BoostQuality {
+  const through = Math.abs(height - raceInteraction.gateRingY) <= raceInteraction.gateThroughTol;
+  if (!through) return 'miss';
+  if (errSec !== null && Math.abs(errSec) <= raceInteraction.gatePerfectSec) return 'perfect';
+  return 'good';
 }
 
 export function boostPoints(q: BoostQuality) {

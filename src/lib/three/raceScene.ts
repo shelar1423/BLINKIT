@@ -1,18 +1,14 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
-import { makeBoostAim, makeDragAim, makeJumpInput, makeLeverDrag } from './raceInput';
+import { jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
+import { makeJumpInput, makeLeverDrag } from './raceInput';
 import { RaceEngine, type EngineOpts, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
 
-/** Scratch for the aim ray. */
-const aimFrom = new THREE.Vector3();
-
 export type RaceHandle = {
   engine: RaceEngine;
-  /** Steer the boost aim — a drag, in pixels. */
-  aimBy: (dxPx: number, dyPx: number) => void;
-  /** Swipe-up or key: the jump, for a race with no phone to lift. */
+  /** Swipe-up or key: the lift, for a race with no phone to lift. Serves both
+   *  the ramp and the boost gates — same gesture, whichever window is open. */
   jumpNow: () => void;
   /** Fire the launcher without touching the lever — the keyboard's way in. */
   launch: (power: number) => void;
@@ -32,7 +28,8 @@ type Opts = {
   onProgress?: (pct: number, mb: number) => void;
   duration?: number;
   laps?: number;
-  onBoostAim?: (a: { index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null) => void;
+  /** The run-up to a gate: `k` reaches 1 on the beat. Null once it is over. */
+  onGateCue?: (c: { index: number; k: number } | null) => void;
   onBoostResult?: (r: { index: number; quality: BoostQuality; points: number }) => void;
   onJumpCue?: (open: boolean) => void;
   onJumpResult?: (r: { quality: JumpQuality; points: number }) => void;
@@ -140,12 +137,11 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
   cool.position.set(6, -14, -26);
   scene.add(cool);
 
-  /* The same judge the AR race uses. What differs is only where the aim comes
-     from: there it is the phone's pose, here it is an offset the player drags
-     away from a chase camera they do not otherwise control. */
-  const boostAim = makeBoostAim();
-  const dragAim = makeDragAim();
+  /* Two lift windows, never open at once: the ramp's and the gate's. They are
+     the same gesture — here a swipe or a key, in AR the phone itself — so the
+     one that is open takes it and the other never sees it. */
   const jumpInput = makeJumpInput();
+  const gateLift = makeJumpInput();
 
   const engineOpts: EngineOpts = {
     interactions: true,
@@ -154,18 +150,19 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     onTick: opts.onTick,
     onPickup: opts.onPickup,
     onPenalty: opts.onPenalty,
-    onBoostArm: (i, world) => {
-      boostAim.arm(i, world);
-      dragAim.reset();
+    onGateCue: (index, k) => {
+      if (!gateLift.isOpen) gateLift.arm();
+      opts.onGateCue?.({ index, k });
     },
-    onBoostCross: (i) => {
-      const quality = boostAim.resolve();
-      const points = boostPoints(quality);
-      engine.awardBoost(points, quality !== 'miss');
-      engine.setBoostGlow(i, 0);
-      boostAim.clear();
-      opts.onBoostAim?.(null);
-      opts.onBoostResult?.({ index: i, quality, points });
+    onGateResult: ({ index, quality }) => {
+      gateLift.close();
+      opts.onGateCue?.(null);
+      opts.onBoostResult?.({
+        index,
+        quality,
+        points: quality === 'perfect' ? raceInteraction.scoreBoostPerfect
+          : quality === 'good' ? raceInteraction.scoreBoostGood : 0,
+      });
     },
     onJumpArm: () => {
       jumpInput.arm();
@@ -282,8 +279,10 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     last = now;
 
     if (launching) {
-      /* The engine is NOT ticked: no clock, no pickups, nothing moving until
-         the lever is let go. Only the launcher framing. */
+      /* The simulation is NOT ticked: no clock, no pickups, nothing moving
+         until the lever is let go. Only the launcher framing — and `tickIdle`,
+         which drives the chevrons standing over the lever and nothing else. */
+      engine.tickIdle(dt);
       engine.launcherCameraTarget(lnTarget);
       camPos.lerp(lnTarget.pos, Math.min(1, dt * 4));
       camLook.lerp(lnTarget.look, Math.min(1, dt * 5));
@@ -296,20 +295,6 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     engine.update(dt);
     engine.cameraTarget(target);
 
-    /* Aim, judged against the same cone in degrees as the AR race. The offset
-       relaxes back to centre when nothing is armed, so a gate you gave up on
-       does not leave the next one skewed. */
-    if (boostAim.active) {
-      camera.getWorldPosition(aimFrom);
-      const a = boostAim.sample(aimFrom, dragAim.direction(camera), dt * 1000);
-      if (a) {
-        engine.setBoostGlow(a.index, a.locked ? 1 : a.quality === 'good' ? 0.5 : 0.1);
-        opts.onBoostAim?.(a);
-      }
-    } else {
-      dragAim.settle(dt);
-    }
-
     // critically damped-ish follow so the camera never jitters
     camPos.lerp(target.pos, Math.min(1, dt * 6.5));
     camLook.lerp(target.look, Math.min(1, dt * 8));
@@ -321,8 +306,13 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
 
   return {
     engine,
-    aimBy: (dx, dy) => dragAim.nudge(dx, dy),
-    jumpNow: () => jumpInput.manual(),
+    /* The gate's window first. Both are the same gesture and only one can be
+       open at a time, but asking in a fixed order means a swipe can never be
+       counted twice on the frame a gate closes and the ramp arms. */
+    jumpNow: () => {
+      if (gateLift.isOpen && engine.liftGate()) return;
+      jumpInput.manual();
+    },
     /* Kept for the fallback path. It clears the launcher on the way through,
        so a race started this way does not leave one standing on the track. */
     start: () => {
