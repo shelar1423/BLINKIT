@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../design/elements';
 import { Sheet } from '../design/components/Sheet';
 import { HowToPlay } from '../design/components/HowToPlay';
 import { PageHeader } from '../design/components/Chrome';
 import { LEADERBOARD, rupees } from '../data/catalog';
 import { hasReached, MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
-import { IconChevronRight, IconFlag, IconInfo } from '../design/elements/Icons';
+import { IconChevronRight, IconInfo } from '../design/elements/Icons';
 
 export default function Campaign() {
   const nav = useNavigate();
@@ -48,16 +49,16 @@ export default function Campaign() {
           <div className="hub__c">
             <span className="hub__t">Race It Home</span>
             <span className="hub__s">Race. Collect. Win.</span>
-            <button
-              className="hub__go"
-              type="button"
+            {/* The storefront's Race now, exactly: track orange, the same curved
+                rectangle and the same sheen. */}
+            <Button
+              variant="hwTrack"
+              className="mystery__go hub__cta"
               disabled={racesLeft <= 0}
               onClick={() => nav('/race')}
             >
-              <IconFlag size={15} />
-              <span>{racesLeft > 0 ? 'Race Now' : 'No races left'}</span>
-              <IconChevronRight size={17} />
-            </button>
+              {racesLeft > 0 ? 'Race now' : 'No races left'}
+            </Button>
           </div>
         </div>
 

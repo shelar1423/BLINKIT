@@ -1597,6 +1597,8 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-base); font-weight: 800; letter-spacing: -0.2px;
   box-shadow: 0 6px 16px rgba(8, 20, 56, 0.38);
 }
+/* the hub's Race now sits under its tagline, not centred like the storefront's */
+.hub__cta { margin: 12px 0 0; }
 .hub__go:active { background: var(--yellow-dk); transform: scale(0.97); }
 .hub__go:disabled { background: rgba(255, 255, 255, 0.26); color: #fff; box-shadow: none; }
 /* The storefront's Race now sparkle, on the hub's. Same keyframes, same 3.4s
