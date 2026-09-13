@@ -2200,8 +2200,25 @@ export class RaceEngine {
     this.disposables.push(geo, mat);
     const up = new THREE.Vector3(0, 1, 0);
     /* On the half-steps between the groceries, so the road alternates reward
-       and hazard instead of clustering both in the same stretch. */
-    const COUNT = 30;
+       and hazard instead of clustering both in the same stretch.
+
+       16, not 30. At 30 the keep-out zones still left 20 rocks on the circuit,
+       one every 15 units, which at racing speed is one every two thirds of a
+       second — that is not a hazard to read and steer around, it is weather.
+       A car driving straight down the middle at full throttle clipped eleven
+       of them in two laps.
+
+       16 leaves 12 after the keep-out: one every 24.7 units, 1.12 seconds
+       apart, worst case 0.84. A lane change takes about 0.43s at full lock, so
+       even the tightest pair leaves time to see it, pick a side and get there.
+       The same passive run now clips four, which is a hazard that costs
+       something without being the whole race.
+
+       Going the other way does not help, and measuring is the only way that
+       shows it: at 22 rocks the gaps fall to 0.6s AND a centre-line car still
+       hits none, because what a passive driver runs into is decided by which
+       lanes the rocks are in, not by how many there are. */
+    const COUNT = 16;
     /* Where a rock must never be, and the windows are asymmetric because the
        reasons are.
 

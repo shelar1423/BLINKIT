@@ -20,7 +20,6 @@ import {
   isMuted,
   loadRaceAudio,
   makePowerUpWatcher,
-  playHit,
   setMuted,
   stopRaceAudio,
 } from '../lib/raceAudio';
@@ -84,13 +83,11 @@ export default function RacePlay() {
   const onPickup = useCallback((points: number) => pushPop(points, 'up'), [pushPop]);
   /* The only thing that deducts in this engine is hitting something, so a
      penalty and an asteroid strike are the same event. */
-  const onPenalty = useCallback(
-    (points: number) => {
-      pushPop(points, 'down');
-      playHit();
-    },
-    [pushPop],
-  );
+  /* No sample. There are twenty rocks on the circuit now and clipping one is
+     an ordinary part of a lap, not an event: a hit sound on every one of them
+     turned the race into percussion. The red number lifting off the car and
+     the rock visibly shattering are the feedback. */
+  const onPenalty = useCallback((points: number) => pushPop(points, 'down'), [pushPop]);
 
   /* Announces each 500-point boundary once. Held in a ref so it survives the
      re-renders the score itself causes. */

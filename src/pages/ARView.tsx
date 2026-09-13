@@ -31,7 +31,6 @@ import {
   engineStop,
   loadRaceAudio,
   makePowerUpWatcher,
-  playHit,
   playPowerUp,
   stopRaceAudio,
 } from '../lib/raceAudio';
@@ -200,7 +199,6 @@ export default function ARView() {
         onFinish,
         onError: (m) => toast(m),
         onObstacleHit: (hit) => {
-          playHit();
           const msg =
             hit.type === 'room'
               ? 'Hit something real (-100)'
