@@ -35,6 +35,18 @@ export type RaceOutcome = {
 };
 
 export type EngineOpts = {
+  /**
+   * Build and run the three AR skill moments — launcher gantry, boost gates,
+   * ramp.
+   *
+   * Off by default, and deliberately not inferred from `setPresentation`:
+   * these need a caller that has wired `onBoostArm`/`onJumpArm` and has some
+   * way for the player to aim and to lift. Built without that, the gates
+   * promise a boost that can never be scored and the ramp throws the car into
+   * the air with no cue and no reason — which is exactly what the 3D race did
+   * for one commit.
+   */
+  interactions?: boolean;
   laps?: number;
   duration?: number; // seconds
   onTick?: (s: RaceStats) => void;
@@ -429,6 +441,7 @@ export class RaceEngine {
   private curve = buildCurve();
   private curveLen: number;
   private laps: number;
+  private readonly interactions: boolean;
   private duration: number;
   private opts: EngineOpts;
 
@@ -497,6 +510,7 @@ export class RaceEngine {
 
   constructor(opts: EngineOpts = {}) {
     this.opts = opts;
+    this.interactions = opts.interactions ?? false;
     this.laps = opts.laps ?? 2;
     this.duration = opts.duration ?? 45;
     this.curveLen = this.curve.getLength();
@@ -735,8 +749,8 @@ export class RaceEngine {
     this.setStartLights(0);
 
     this.root.add(this.finishGate);
-    if (raceInteraction.boostEnabled) this.buildBoostGates();
-    if (raceInteraction.jumpEnabled) this.buildRamp();
+    if (this.interactions && raceInteraction.boostEnabled) this.buildBoostGates();
+    if (this.interactions && raceInteraction.jumpEnabled) this.buildRamp();
   }
 
   /**
@@ -1230,7 +1244,7 @@ export class RaceEngine {
     if (prevT > 0.92 && this.t < 0.08) this.lap += 1;
 
     /* The ramp. Armed the same way as the gates, and for the same reason. */
-    if (raceInteraction.jumpEnabled && this.airT < 0) {
+    if (this.interactions && raceInteraction.jumpEnabled && this.airT < 0) {
       const jLead = (this.speed * raceInteraction.jumpWarnLead) / this.curveLen;
       const jAhead = (raceInteraction.jumpAt - this.t + 1) % 1;
       if (!this.jumpArmed && jAhead < jLead) {
@@ -1267,7 +1281,7 @@ export class RaceEngine {
        because `t` per second depends on how fast the car happens to be going
        — a lead measured in curve units would give a flying car half the
        warning of a slow one, and the warning is the thing being scored. */
-    if (raceInteraction.boostEnabled) {
+    if (this.interactions && raceInteraction.boostEnabled) {
       const lead = (this.speed * raceInteraction.boostWarnLead) / this.curveLen;
       for (let i = 0; i < this.boostGates.length; i++) {
         const g = this.boostGates[i];

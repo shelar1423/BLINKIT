@@ -571,6 +571,8 @@ function makeEngine(
   jump: ReturnType<typeof makeJumpInput>,
 ) {
   const engine: RaceEngine = new RaceEngine({
+    /* The AR session is the caller that has the aim, the lift and the cues. */
+    interactions: true,
     laps: 2,
     duration: 45,
     onTick: opts.onTick,
