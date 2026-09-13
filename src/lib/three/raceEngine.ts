@@ -156,6 +156,13 @@ const ROAD_W = 9;
    scrub. Their ratio is the top speed across the road: 26 / 3.1 is about 8.4
    units a second, a shade more authority than the old velocity-based steering
    gave, because the driver now has the corner to fight as well as the line. */
+/* How far the travelling pool of light reaches, in track units. Longer ahead
+   than behind, the way headlights are, rather than a halo centred on the car. */
+const GLOW_AHEAD = 26;
+const GLOW_BEHIND = 9;
+/** What a chevron emits where the car is nowhere near it. Nearly nothing. */
+const GLOW_REST = 0.07;
+
 const STEER_ACCEL = 26;
 const LATERAL_DRAG = 3.1;
 /**
@@ -423,7 +430,7 @@ function chevronGlowTexture() {
   const x = c.getContext('2d')!;
   x.fillStyle = '#000';
   x.fillRect(0, 0, 128, 256);
-  paintChevrons(x, 'rgba(140, 205, 35, 0.7)', 'rgba(226, 255, 175, 1)');
+  paintChevrons(x, 'rgba(132, 196, 32, 0.62)', 'rgba(214, 248, 160, 0.92)');
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.colorSpace = THREE.SRGBColorSpace;
@@ -462,7 +469,7 @@ function roadTexture() {
      down the road, and on a circuit where the whole game is now taking corners
      yourself, a marking that reads as direction is worth more than one that
      reads as a groove. */
-  paintChevrons(x, 'rgba(214, 255, 92, 0.42)', 'rgba(244, 255, 214, 0.9)');
+  paintChevrons(x, 'rgba(206, 244, 96, 0.3)', 'rgba(236, 252, 206, 0.72)');
 
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -1129,6 +1136,10 @@ export class RaceEngine {
     /** Simulated seconds the lift was off the beat. Null if nobody lifted. */
     liftErr: number | null;
   }[] = [];
+  /** The road's compiled shader, once three has built it. */
+  private roadShader: { uniforms: Record<string, { value: number }> } | null = null;
+  /** How far the road's v coordinate runs in one lap. */
+  private roadVSpan_ = 1;
   /** Speed across the road, units per second. Positive is toward `right`. */
   private lateralVel = 0;
   /** Unbroken seconds against a barrier. Reset the moment the car comes off. */
@@ -1204,7 +1215,53 @@ export class RaceEngine {
     this.disposables.push(glow);
     roadMat.emissiveMap = glow;
     roadMat.emissive = new THREE.Color(0xffffff);
-    roadMat.emissiveIntensity = 0.9;
+    roadMat.emissiveIntensity = 0.62;
+
+    /* ...but only around the car.
+
+       Lit end to end, a glowing centre line is just a bright stripe: it says
+       the same thing everywhere, so it says nothing about where you are. Lit
+       in a travelling pool it reads the way cats-eyes do from a moving car,
+       and the road ahead of you becomes the part that is lit.
+
+       Done in the shader rather than by swapping textures because the road is
+       ONE mesh — there is no per-chevron object to switch on. What there is,
+       is the road's own v coordinate, which runs 0 to `vSpan` exactly once
+       around the lap. A fragment's v IS its position on the circuit, so the
+       distance from it to the car is a subtraction. */
+    const vSpan = this.roadVSpan(roadGeo);
+    this.roadVSpan_ = vSpan;
+    roadMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uCarV = { value: 0 };
+      shader.uniforms.uSpanV = { value: vSpan };
+      shader.uniforms.uAheadV = { value: (GLOW_AHEAD / this.curveLen) * vSpan };
+      shader.uniforms.uBehindV = { value: (GLOW_BEHIND / this.curveLen) * vSpan };
+      shader.uniforms.uRestGlow = { value: GLOW_REST };
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          '#include <common>',
+          `#include <common>
+          uniform float uCarV;
+          uniform float uSpanV;
+          uniform float uAheadV;
+          uniform float uBehindV;
+          uniform float uRestGlow;`,
+        )
+        .replace(
+          '#include <emissivemap_fragment>',
+          `#include <emissivemap_fragment>
+          {
+            /* Signed distance along the lap, wrapped into [-half, +half] so
+               the pool crosses the start line without tearing. */
+            float dv = vEmissiveMapUv.y - uCarV;
+            dv = dv - uSpanV * floor( dv / uSpanV + 0.5 );
+            float reach = dv > 0.0 ? uAheadV : uBehindV;
+            float lit = 1.0 - smoothstep( 0.0, reach, abs( dv ) );
+            totalEmissiveRadiance *= uRestGlow + ( 1.0 - uRestGlow ) * lit;
+          }`,
+        );
+      this.roadShader = shader as unknown as { uniforms: Record<string, { value: number }> };
+    };
     // The studio IBL exists for the car's die-cast paint; left at full strength
     // it washes the track to pale peach. Damp it per-material, not scene-wide.
     roadMat.envMapIntensity = 0.22;
@@ -2534,6 +2591,20 @@ export class RaceEngine {
     return out;
   }
 
+  /**
+   * How far the road's v coordinate runs over one lap.
+   *
+   * Read off the geometry rather than assumed: it is whatever `roadMesh`
+   * decided, and a number guessed here that disagreed with it would slide the
+   * pool of light along the track relative to the car.
+   */
+  private roadVSpan(geo: THREE.BufferGeometry) {
+    const uv = geo.getAttribute('uv');
+    let max = 0;
+    for (let i = 0; i < uv.count; i++) max = Math.max(max, uv.getY(i));
+    return max || 1;
+  }
+
   /** Advance the simulation. dt in REAL seconds, as the frame measured it. */
   update(dtReal: number) {
     if (!this.running || this.done) return;
@@ -2859,6 +2930,9 @@ export class RaceEngine {
 
     // --- place car ---
     this.layoutCar();
+    /* Walk the pool of light along with the car. One uniform, set from the
+       same `t` that places everything else on the circuit. */
+    if (this.roadShader) this.roadShader.uniforms.uCarV.value = this.t * this.roadVSpan_;
     if (this.car) this.car.rotation.z = -this.steerSmooth * 0.13; // lean into the turn
 
     // --- pickups: exact 2D test on (t, lateral) ---
