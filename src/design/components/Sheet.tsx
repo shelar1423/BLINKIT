@@ -42,7 +42,7 @@ export type SheetProps = {
   panelClass?: string;
 };
 
-const EXIT_MS = 220;
+const EXIT_MS = 280;
 
 export function Sheet({ open, onClose, title, children, footer, header, float, panelClass }: SheetProps) {
   /* `open` is the caller's intent; `mounted` is what is actually in the DOM.
@@ -56,9 +56,19 @@ export function Sheet({ open, onClose, title, children, footer, header, float, p
   useEffect(() => {
     if (open) {
       setMounted(true);
-      // a frame between mount and the shown class, or there is no transition
-      const id = requestAnimationFrame(() => setShown(true));
-      return () => cancelAnimationFrame(id);
+      /* Two frames between mount and the shown class. With one, the browser
+         can paint the mount and the open state together — the sheet then
+         jumps into place with no slide, or its contents flash up before the
+         panel has moved. The second frame guarantees the closed position has
+         been painted first, so there is always a transition to run. */
+      let id2 = 0;
+      const id = requestAnimationFrame(() => {
+        id2 = requestAnimationFrame(() => setShown(true));
+      });
+      return () => {
+        cancelAnimationFrame(id);
+        cancelAnimationFrame(id2);
+      };
     }
     setShown(false);
     const id = window.setTimeout(() => {

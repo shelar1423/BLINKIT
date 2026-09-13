@@ -3333,7 +3333,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .sheet__scrim {
   position: absolute; inset: 0;
   background: rgba(15, 18, 22, 0.44);
-  opacity: 0; transition: opacity 220ms ease;
+  opacity: 0; transition: opacity 280ms ease;
   border: 0; padding: 0;
 }
 .sheet.is-open .sheet__scrim { opacity: 1; }
@@ -3345,11 +3345,25 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   box-shadow: 0 -8px 34px rgba(0, 0, 0, 0.22);
   transform: translateY(100%);
-  transition: transform 220ms cubic-bezier(0.22, 0.8, 0.3, 1);
+  /* a long, soft settle rather than a snap: the curve iOS sheets use */
+  transition: transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   outline: none;
 }
 .sheet.is-open .sheet__panel { transform: translateY(0); }
+/* Anything floating above the panel — the round close buttons — travels with
+   it and fades in, instead of standing in its final spot while the panel is
+   still on its way up. */
+.sheet > :not(.sheet__scrim):not(.sheet__panel) {
+  opacity: 0;
+  transform: translate(-50%, 40px);
+  transition: opacity 220ms ease, transform 320ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.sheet.is-open > :not(.sheet__scrim):not(.sheet__panel) {
+  opacity: 1; transform: translate(-50%, 0);
+  transition-delay: 60ms;
+}
 /* The grip is the drag target, so it needs real height — a 4px bar is not
    something a thumb can find. */
 .sheet__grip { padding: 10px 0 6px; display: grid; place-items: center; touch-action: none; cursor: grab; }
@@ -3765,7 +3779,25 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--green-dk); font-weight: 700;
 }
 .catchip.is-on svg { color: var(--green); }
-.catchip--clear { border-style: dashed; color: var(--mut); }
+.catchip--filters { padding: 0; gap: 0; }
+.catchip__open, .catchip__clear {
+  display: inline-flex; align-items: center; gap: 6px;
+  align-self: stretch; border: 0; background: none;
+  font: inherit; color: inherit;
+}
+.catchip__open { padding: 8px 14px; }
+.catchip--filters.is-on .catchip__open { padding-right: 12px; }
+.catchip--filters.is-on .catchip__open svg:last-child { color: var(--ink); }
+/* the hairline and the clear, inside the same pill */
+.catchip__clear {
+  position: relative; padding: 8px 14px 8px 12px;
+  color: var(--green); font-weight: 700;
+}
+.catchip__clear::before {
+  content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 1px;
+  background: var(--green-line);
+}
+.catchip--filters.is-on { background: #F2FEF2; color: var(--ink); }
 .catcount { font-size: var(--f-xs); color: var(--mut); font-weight: 600; padding: 12px 12px 0; }
 
 /* The side padding and the column gap both have to clear the ADD's 6px
@@ -3814,6 +3846,107 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .tick.is-on { background: var(--green); border-color: var(--green); }
 .sortrow:last-child { border-bottom: 0; }
+
+/* ---------- listing: Sort sheet ----------
+   Radio rows under a title with a hairline, the close floating above. */
+.sheet__panel--sort { overflow: visible; }
+.sheet__panel--sort .sheet__head { border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+.ssheet__x {
+  position: absolute; left: 50%; top: -58px;
+  transform: translateX(-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(28, 32, 42, 0.82); border: 0; color: #fff;
+  display: grid; place-items: center; z-index: 2;
+}
+.ssheet__title { margin: 0; font-size: var(--f-xl); font-weight: 700; color: var(--ink); }
+.ssheet { display: grid; padding: 8px 0 12px; }
+.srow {
+  display: flex; align-items: center; gap: 18px;
+  width: 100%; padding: 12px 2px; border: 0; background: none; text-align: left;
+  font-size: var(--f-lg); font-weight: 400; color: var(--ink-2);
+}
+.srow.is-on { font-weight: 600; color: var(--ink); }
+.srow__r {
+  flex: none; width: 22px; height: 22px; border-radius: 50%;
+  border: 1.5px solid var(--green); background: #fff; position: relative;
+}
+.srow.is-on .srow__r::after {
+  content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--green);
+}
+
+/* ---------- listing: Filters sheet ----------
+   Blinkit's filter sheet: search across every facet, the facets down the left,
+   that facet's options on the right, and Clear / Apply pinned at the foot. */
+.sheet__panel--filters { height: 78vh; max-height: 78vh; background: #F4F6FB; }
+.sheet__panel--filters .sheet__body { flex: 1; display: flex; flex-direction: column; gap: 12px; padding-bottom: 12px; }
+.sheet__panel--filters .sheet__foot { border-top: 0; background: #F4F6FB; }
+.fsheet__x {
+  position: absolute; left: 50%; bottom: calc(78vh + 14px);
+  transform: translateX(-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(28, 32, 42, 0.82); border: 0; color: #fff;
+  display: grid; place-items: center; z-index: 2;
+}
+.fsheet__title { margin: 0; font-size: var(--f-xl); font-weight: 700; color: var(--ink); }
+.fsheet__search {
+  display: flex; align-items: center; gap: 10px;
+  height: 48px; padding: 0 16px; border-radius: 999px;
+  background: #fff; color: var(--ink-2);
+}
+.fsheet__search input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: none;
+  font: inherit; font-size: var(--f-base); font-weight: 500; color: var(--ink);
+}
+.fsheet__search input::placeholder { font-weight: 500; color: var(--mut); }
+.fsheet__box {
+  flex: 1; min-height: 0;
+  display: grid; grid-template-columns: 36% 1fr;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.fsheet__tabs { position: relative; z-index: 1; border-right: 1px solid #EEF0F4; overflow-x: hidden; overflow-y: auto; padding: 4px 0; scrollbar-width: none; }
+.fsheet__tab {
+  position: relative; display: block; width: 100%;
+  padding: 16px 12px 16px 20px; border: 0; background: none; text-align: left;
+  font-size: var(--f-base); font-weight: 500; color: var(--ink-2); line-height: 1.3;
+}
+.fsheet__tab.is-on { color: var(--green); font-weight: 700; background: linear-gradient(90deg, #fff, var(--green-tint)); }
+.fsheet__tab.is-on::after {
+  content: ''; position: absolute; right: -1px; top: 0; bottom: 0; width: 4px;
+  border-radius: 3px 0 0 3px; background: var(--green);
+}
+.fsheet__tab.is-dim { opacity: 0.45; }
+.fsheet__opts {
+  overflow-x: hidden; overflow-y: auto; padding: 4px 0;
+  /* the divider's soft shadow, cast only to the right, onto the options */
+  box-shadow: inset 10px 0 12px -10px rgba(16, 24, 40, 0.14);
+}
+.fopt {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 15px 16px 15px 18px; border: 0; background: none; text-align: left;
+  font-size: var(--f-base); font-weight: 500; color: var(--ink-2);
+}
+.fopt em { font-style: normal; font-weight: 500; color: #5B6475; }
+.fbox {
+  flex: none; width: 22px; height: 22px; border-radius: 4px;
+  border: 1.5px solid var(--green); background: #fff;
+  display: grid; place-items: center; color: #fff;
+}
+.fbox.is-on { background: var(--green); }
+.fsheet__none { padding: 16px 18px; font-size: var(--f-sm); font-weight: 500; color: var(--mut); }
+.fsheet__foot { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.fsheet__foot .btn {
+  height: 52px; border-radius: 12px; font-size: var(--f-lg); font-weight: 500;
+  /* The base button fades only its background and opacity, so on the way to
+     disabled the border and text colour snapped while the rest faded — the
+     button went half grey, then the other half. Everything moves together. */
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+/* Clear Filter: green text on a green outline once there is something to clear */
+.fsheet__foot .btn--outline:not(:disabled) { border-color: var(--green); color: var(--green); }
+/* nothing to apply yet: the grey the reference uses, not a faded green */
+.fsheet__foot .btn--primary:disabled { background: #B0B6C3; color: #fff; opacity: 1; }
+
 .sortrow.is-on { font-weight: 800; color: var(--green); }
 
 /* ---------- PDP: product details ----------

@@ -7,8 +7,10 @@ import { ProductCard } from '../design/components/ProductCard';
 import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, SHOP_CARS, rupees, type Product } from '../data/catalog';
 import { useStore } from '../store/useStore';
 import {
+  IconCaretDown,
   IconCheck,
   IconChevronDown,
+  IconClose,
   IconSearch,
   IconShare,
   IconSliders,
@@ -52,23 +54,37 @@ const GROUPS: Group[] = [
   { id: 'collector', label: 'Collector', match: (p) => /Collector|Premium/i.test(p.series) },
 ];
 
-type SortId = 'featured' | 'priceAsc' | 'priceDesc' | 'rating';
+type SortId = 'featured' | 'priceAsc' | 'priceDesc' | 'rating' | 'discount';
 const SORTS: { id: SortId; label: string }[] = [
-  { id: 'featured', label: 'Featured' },
-  { id: 'priceAsc', label: 'Price: low to high' },
-  { id: 'priceDesc', label: 'Price: high to low' },
-  { id: 'rating', label: 'Customer rating' },
+  { id: 'featured', label: 'Relevance (default)' },
+  { id: 'priceAsc', label: 'Price (low to high)' },
+  { id: 'priceDesc', label: 'Price (high to low)' },
+  { id: 'rating', label: 'Rating (high to low)' },
+  { id: 'discount', label: 'Discount (high to low)' },
 ];
+const discountOf = (p: Product) => (p.mrp && p.mrp > p.price ? (p.mrp - p.price) / p.mrp : 0);
 
 type Band = { id: string; label: string; match: (p: Product) => boolean };
 const BANDS: Band[] = [
-  { id: 'u200', label: `Under ${rupees(200)}`, match: (p) => p.price < 200 },
-  { id: '200-300', label: `${rupees(200)} – ${rupees(300)}`, match: (p) => p.price >= 200 && p.price < 300 },
-  { id: 'o300', label: `${rupees(300)} and above`, match: (p) => p.price >= 300 },
+  { id: 'u200', label: `Below ${rupees(199)}`, match: (p) => p.price < 200 },
+  { id: '200-299', label: `${rupees(200)} - ${rupees(299)}`, match: (p) => p.price >= 200 && p.price < 300 },
+  { id: '300-399', label: `${rupees(300)} - ${rupees(399)}`, match: (p) => p.price >= 300 && p.price < 400 },
+  { id: 'o400', label: `Above ${rupees(400)}`, match: (p) => p.price >= 400 },
 ];
 
 /** Which sheet is open. One at a time, so one piece of state, not four. */
-type SheetId = 'filters' | 'sort' | 'price' | 'series' | null;
+type SheetId = 'filters' | 'sort' | 'series' | null;
+type ModelId = '3d' | 'regular';
+const MODELS: { id: ModelId; label: string }[] = [
+  { id: '3d', label: '3D' },
+  { id: 'regular', label: 'Regular' },
+];
+type FilterTab = 'model' | 'series' | 'price';
+const FILTER_TABS: { id: FilterTab; label: string }[] = [
+  { id: 'model', label: 'Model' },
+  { id: 'series', label: 'Series' },
+  { id: 'price', label: 'Price' },
+];
 
 export default function HotWheels() {
   const nav = useNavigate();
@@ -78,10 +94,11 @@ export default function HotWheels() {
 
   const [group, setGroup] = useState('all');
   const [sort, setSort] = useState<SortId>('featured');
-  const [band, setBand] = useState<string | null>(null);
+  /** Price bands, any of which may match — boxes, not radio buttons. */
+  const [bands, setBands] = useState<string[]>([]);
   const [series, setSeries] = useState<string[]>([]);
-  const [raceOnly, setRaceOnly] = useState(false);
-  const [inStock, setInStock] = useState(false);
+  /** Model: '3d' for cars with a real model (race and AR ready), 'regular' for the rest. */
+  const [models, setModels] = useState<ModelId[]>([]);
   const [sheet, setSheet] = useState<SheetId>(null);
 
   /** The series facet is derived from the catalogue, not typed out twice. */
@@ -110,14 +127,13 @@ export default function HotWheels() {
 
   const shown = useMemo(() => {
     const g = GROUPS.find((x) => x.id === group) ?? GROUPS[0];
-    const bandDef = BANDS.find((b) => b.id === band);
+    const bandDefs = BANDS.filter((b) => bands.includes(b.id));
     const list = all.filter(
       (p) =>
         g.match(p) &&
-        (!bandDef || bandDef.match(p)) &&
+        (bandDefs.length === 0 || bandDefs.some((b) => b.match(p))) &&
         (series.length === 0 || series.includes(p.series.split(' · ')[0])) &&
-        (!raceOnly || Boolean(p.glb)) &&
-        (!inStock || p.stock == null || p.stock > 0),
+        (models.length === 0 || models.includes(p.glb ? '3d' : 'regular')),
     );
     /* Sorting a copy: `all` is memoised off the catalogue, and sorting in
        place would quietly reorder it for every other screen that reads it. */
@@ -125,23 +141,51 @@ export default function HotWheels() {
     if (sort === 'priceAsc') out.sort((a, b) => a.price - b.price);
     if (sort === 'priceDesc') out.sort((a, b) => b.price - a.price);
     if (sort === 'rating') out.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    if (sort === 'discount') out.sort((a, b) => discountOf(b) - discountOf(a));
     return out;
-  }, [all, group, sort, band, series, raceOnly, inStock]);
+  }, [all, group, sort, bands, series, models]);
 
   const sortLabel = SORTS.find((s) => s.id === sort)?.label ?? 'Featured';
-  const bandLabel = BANDS.find((b) => b.id === band)?.label;
-  const extraCount = (raceOnly ? 1 : 0) + (inStock ? 1 : 0);
-  const anyFilter = extraCount > 0 || band !== null || series.length > 0;
+  const bandLabel = bands.length === 1 ? BANDS.find((b) => b.id === bands[0])?.label : `Price (${bands.length})`;
+  const extraCount = models.length + series.length + bands.length;
 
   const clearAll = () => {
-    setBand(null);
+    setBands([]);
     setSeries([]);
-    setRaceOnly(false);
-    setInStock(false);
+    setModels([]);
   };
 
   const toggleSeries = (s: string) =>
     setSeries((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
+
+  /* The Filters sheet works on a draft and commits on Apply, as Blinkit's does:
+     ticking boxes does not reshuffle the grid behind the sheet. */
+  const [tab, setTab] = useState<FilterTab>('model');
+  const [q, setQ] = useState('');
+  const [dModels, setDModels] = useState<ModelId[]>([]);
+  const [dSeries, setDSeries] = useState<string[]>([]);
+  const [dBands, setDBands] = useState<string[]>([]);
+  const openFilters = (at: FilterTab = 'model') => {
+    setDModels(models);
+    setDSeries(series);
+    setDBands(bands);
+    setQ('');
+    setTab(at);
+    setSheet('filters');
+  };
+  const draftDirty =
+    dBands.length !== bands.length || dBands.some((b) => !bands.includes(b)) ||
+    dModels.length !== models.length || dModels.some((m) => !models.includes(m)) ||
+    dSeries.length !== series.length || dSeries.some((x) => !series.includes(x));
+  const draftCount = dModels.length + dSeries.length + dBands.length;
+  const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+  const match = (label: string) => !q || label.toLowerCase().includes(q.trim().toLowerCase());
+  /* Search runs across every tab, so a hit in another tab still shows. */
+  const hits = {
+    model: MODELS.filter((m) => match(m.label)).length,
+    series: allSeries.filter(match).length,
+    price: BANDS.filter((b) => match(b.label)).length,
+  };
 
   return (
     <>
@@ -189,26 +233,31 @@ export default function HotWheels() {
               the green outline so the grid's state is readable without opening
               anything. */}
           <div className="catbar" role="group" aria-label="Filter and sort">
-            <button
-              className={'catchip' + (extraCount ? ' is-on' : '')}
-              type="button"
-              onClick={() => setSheet('filters')}
-            >
-              <IconSliders size={15} />
-              Filters{extraCount ? ` (${extraCount})` : ''}
-              <IconChevronDown size={14} />
-            </button>
+            {/* One pill: open the sheet on the left, and — once anything is
+                applied — clear it all from the right, behind a hairline. */}
+            <span className={'catchip catchip--filters' + (extraCount ? ' is-on' : '')}>
+              <button type="button" className="catchip__open" onClick={() => openFilters()}>
+                <IconSliders size={15} />
+                Filters{extraCount ? ` (${extraCount})` : ''}
+                {extraCount ? <IconCaretDown size={13} /> : <IconChevronDown size={14} />}
+              </button>
+              {extraCount > 0 && (
+                <button type="button" className="catchip__clear" onClick={clearAll}>
+                  Clear
+                </button>
+              )}
+            </span>
             <button
               className={'catchip' + (sort !== 'featured' ? ' is-on' : '')}
               type="button"
               onClick={() => setSheet('sort')}
             >
               <IconSortArrows size={15} />
-              {sort === 'featured' ? 'Sort' : sortLabel.replace(/:.*/, '')}
+              {sort === 'featured' ? 'Sort' : sortLabel.replace(/ \(.*/, '')}
               <IconChevronDown size={14} />
             </button>
-            <button className={'catchip' + (band ? ' is-on' : '')} type="button" onClick={() => setSheet('price')}>
-              {band ? bandLabel : 'Price'}
+            <button className={'catchip' + (bands.length ? ' is-on' : '')} type="button" onClick={() => openFilters('price')}>
+              {bands.length ? bandLabel : 'Price'}
               <IconChevronDown size={14} />
             </button>
             <button
@@ -219,11 +268,6 @@ export default function HotWheels() {
               {series.length ? `Series (${series.length})` : 'Series'}
               <IconChevronDown size={14} />
             </button>
-            {anyFilter && (
-              <button className="catchip catchip--clear" type="button" onClick={clearAll}>
-                Clear all
-              </button>
-            )}
           </div>
 
           <p className="catcount">
@@ -248,51 +292,44 @@ export default function HotWheels() {
         </div>
       </main>
 
-      <Sheet open={sheet === 'sort'} onClose={() => setSheet(null)} title="Sort by">
-        {SORTS.map((o) => (
-          <button
-            key={o.id}
-            type="button"
-            className={'sortrow' + (sort === o.id ? ' is-on' : '')}
-            onClick={() => {
-              setSort(o.id);
-              setSheet(null);
-            }}
-          >
-            <span className="grow">{o.label}</span>
-            {sort === o.id && <IconCheck size={17} />}
-          </button>
-        ))}
+      <Sheet
+        open={sheet === 'sort'}
+        onClose={() => setSheet(null)}
+        panelClass="sheet__panel--sort"
+        /* The close rides on the panel itself, so it sits just above it
+           whatever height the list makes the sheet. */
+        header={
+          <>
+            <button type="button" className="ssheet__x" aria-label="Close" onClick={() => setSheet(null)}>
+              <IconClose size={19} />
+            </button>
+            <h2 className="ssheet__title">Sort by</h2>
+          </>
+        }
+      >
+        <div className="ssheet" role="radiogroup" aria-label="Sort by">
+          {SORTS.map((o) => {
+            const on = sort === o.id;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                className={'srow' + (on ? ' is-on' : '')}
+                onClick={() => {
+                  setSort(o.id);
+                  setSheet(null);
+                }}
+              >
+                <i className="srow__r" aria-hidden="true" />
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
       </Sheet>
 
-      <Sheet open={sheet === 'price'} onClose={() => setSheet(null)} title="Price">
-        <button
-          type="button"
-          className={'sortrow' + (band === null ? ' is-on' : '')}
-          onClick={() => {
-            setBand(null);
-            setSheet(null);
-          }}
-        >
-          <span className="grow">Any price</span>
-          {band === null && <IconCheck size={17} />}
-        </button>
-        {BANDS.map((b) => (
-          <button
-            key={b.id}
-            type="button"
-            className={'sortrow' + (band === b.id ? ' is-on' : '')}
-            onClick={() => {
-              setBand(b.id);
-              setSheet(null);
-            }}
-          >
-            <span className="grow">{b.label}</span>
-            <em className="sortrow__n">{all.filter(b.match).length}</em>
-            {band === b.id && <IconCheck size={17} />}
-          </button>
-        ))}
-      </Sheet>
 
       <Sheet
         open={sheet === 'series'}
@@ -322,30 +359,108 @@ export default function HotWheels() {
         open={sheet === 'filters'}
         onClose={() => setSheet(null)}
         title="Filters"
+        panelClass="sheet__panel--filters"
+        float={
+          <button type="button" className="fsheet__x" aria-label="Close" onClick={() => setSheet(null)}>
+            <IconClose size={19} />
+          </button>
+        }
+        header={<h2 className="fsheet__title">Filters</h2>}
         footer={
-          <Button variant="primary" block onClick={() => setSheet(null)}>
-            Show {shown.length} {shown.length === 1 ? 'product' : 'products'}
-          </Button>
+          <div className="fsheet__foot">
+            <Button
+              variant="outline"
+              block
+              disabled={draftCount === 0}
+              onClick={() => {
+                setDModels([]);
+                setDSeries([]);
+                setDBands([]);
+              }}
+            >
+              Clear Filter
+            </Button>
+            <Button
+              variant="primary"
+              block
+              disabled={!draftDirty}
+              onClick={() => {
+                setModels(dModels);
+                setSeries(dSeries);
+                setBands(dBands);
+                setSheet(null);
+              }}
+            >
+              Apply
+            </Button>
+          </div>
         }
       >
-        <button type="button" className={'sortrow' + (raceOnly ? ' is-on' : '')} onClick={() => setRaceOnly((v) => !v)}>
-          <span className={'tick' + (raceOnly ? ' is-on' : '')} aria-hidden="true">
-            {raceOnly && <IconCheck size={13} />}
-          </span>
-          <span className="grow">
-            Race ready only
-            <small>Has a 3D model and runs in AR</small>
-          </span>
-        </button>
-        <button type="button" className={'sortrow' + (inStock ? ' is-on' : '')} onClick={() => setInStock((v) => !v)}>
-          <span className={'tick' + (inStock ? ' is-on' : '')} aria-hidden="true">
-            {inStock && <IconCheck size={13} />}
-          </span>
-          <span className="grow">
-            In stock
-            <small>Hides anything sold out of this drop</small>
-          </span>
-        </button>
+        <label className="fsheet__search">
+          <IconSearch size={18} />
+          <input type="search" placeholder="Search across filters..." value={q} onChange={(e) => setQ(e.target.value)} />
+        </label>
+
+        <div className="fsheet__box">
+          <div className="fsheet__tabs" role="tablist">
+            {FILTER_TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.id}
+                className={'fsheet__tab' + (tab === t.id ? ' is-on' : '') + (q && !hits[t.id] ? ' is-dim' : '')}
+                onClick={() => setTab(t.id)}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="fsheet__opts" role="tabpanel">
+            {tab === 'model' &&
+              MODELS.filter((m) => match(m.label)).map((m) => {
+                const on = dModels.includes(m.id);
+                const n = all.filter((p) => (p.glb ? '3d' : 'regular') === m.id).length;
+                return (
+                  <button key={m.id} type="button" className="fopt" aria-pressed={on} onClick={() => setDModels((c) => toggle(c, m.id))}>
+                    <span className="grow">
+                      {m.label} <em>({n})</em>
+                    </span>
+                    <i className={'fbox' + (on ? ' is-on' : '')} aria-hidden="true">{on && <IconCheck size={13} />}</i>
+                  </button>
+                );
+              })}
+
+            {tab === 'series' &&
+              allSeries.filter(match).map((x) => {
+                const on = dSeries.includes(x);
+                return (
+                  <button key={x} type="button" className="fopt" aria-pressed={on} onClick={() => setDSeries((c) => toggle(c, x))}>
+                    <span className="grow">
+                      {x} <em>({all.filter((p) => p.series.startsWith(x)).length})</em>
+                    </span>
+                    <i className={'fbox' + (on ? ' is-on' : '')} aria-hidden="true">{on && <IconCheck size={13} />}</i>
+                  </button>
+                );
+              })}
+
+            {tab === 'price' &&
+              BANDS.filter((b) => match(b.label)).map((b) => {
+                const on = dBands.includes(b.id);
+                return (
+                  <button key={b.id} type="button" className="fopt" aria-pressed={on} onClick={() => setDBands((c) => toggle(c, b.id))}>
+                    <span className="grow">
+                      {b.label} <em>({all.filter(b.match).length})</em>
+                    </span>
+                    <i className={'fbox' + (on ? ' is-on' : '')} aria-hidden="true">{on && <IconCheck size={13} />}</i>
+                  </button>
+                );
+              })}
+
+            {q && !hits[tab] && <p className="fsheet__none">No matches in {FILTER_TABS.find((t) => t.id === tab)?.label}</p>}
+          </div>
+        </div>
       </Sheet>
     </>
   );

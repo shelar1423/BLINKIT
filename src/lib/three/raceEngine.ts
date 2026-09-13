@@ -151,6 +151,8 @@ const CINE_SIDE = 10.5;
 const CINE_HEIGHT = 2.0;
 /** Seconds the shot is held after the wheels are down again. */
 const CINE_TAIL = 0.45;
+/** How many gauge-lengths ahead of the last gate the AR galaxy moment begins. */
+const MOMENT_LEAD = 2.2;
 /** How fast the camera swings, in REAL seconds — the world may be in slow
  *  motion, but a camera move that slowed down with it would read as a stall. */
 const CINE_RATE = 4.2;
@@ -1160,6 +1162,12 @@ export class RaceEngine {
    * a camera for it. AR reads it to swap the room for the galaxy.
    */
   private momentK = 0;
+  /** The hole cut in the rails for the side shot, in track-local units. */
+  private readonly railCut = {
+    center: { value: new THREE.Vector3() },
+    radius: { value: 16 },
+    k: { value: 0 },
+  };
   get finalMoment() {
     return this.momentK;
   }
@@ -1291,6 +1299,25 @@ export class RaceEngine {
       side: THREE.DoubleSide,
     });
     railMat.envMapIntensity = 0.3;
+    /* The side shot of the last gate looks at the car across the rail, and at
+       that height the rail hides it. For that shot the rails are cut away
+       around the car — a round hole in both walls, centred on it, opened as
+       the camera swings out and closed as it comes back. */
+    const cut = this.railCut;
+    railMat.onBeforeCompile = (shader) => {
+      shader.uniforms.uCutC = cut.center;
+      shader.uniforms.uCutR = cut.radius;
+      shader.uniforms.uCutK = cut.k;
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vRailLocal;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvRailLocal = position;');
+      shader.fragmentShader = shader.fragmentShader
+        .replace('#include <common>', '#include <common>\nvarying vec3 vRailLocal;\nuniform vec3 uCutC;\nuniform float uCutR;\nuniform float uCutK;')
+        .replace(
+          '#include <clipping_planes_fragment>',
+          '#include <clipping_planes_fragment>\nif ( uCutK > 0.01 && distance( vRailLocal.xz, uCutC.xz ) < uCutR * uCutK ) discard;',
+        );
+    };
     this.disposables.push(railMat);
     for (const side of [1, -1] as const) {
       const rg = railMesh(this.curve, 420, side, RAIL_H);
@@ -2888,6 +2915,9 @@ export class RaceEngine {
     /* Raised by the LAST gate of the LAST lap, from the moment its run-up is
        far enough along to be worth watching. */
     let cineWant = false;
+    /* The galaxy arrives before the side shot does: while the car is still on
+       the straight into the last gate, ahead of its gauge. */
+    let momentWant = false;
     if (this.interactions && raceInteraction.boostEnabled && goingForward) {
       const lead = (this.speed * raceInteraction.boostWarnLead) / this.curveLen;
       this.fireT += dt;
@@ -2908,6 +2938,7 @@ export class RaceEngine {
 
         // forward distance to the gate, wrapped
         const ahead = (g.t - this.t + 1) % 1;
+        if (this.isFinalGate(i) && !g.done && ahead < lead * MOMENT_LEAD && this.outroAt < 0) momentWant = true;
         if (!g.armed && !g.done && ahead < lead && this.outroAt < 0) {
           g.armed = true;
           this.armedGate = i;
@@ -2983,9 +3014,16 @@ export class RaceEngine {
     const cineTo = this.cinematic && this.cineTail > 0 && this.outroAt < 0 ? 1 : 0;
     this.cineK += (cineTo - this.cineK) * chase(CINE_RATE, dtReal);
     if (Math.abs(this.cineK - cineTo) < 0.002) this.cineK = cineTo;
-    const momentTo = this.cineTail > 0 && this.outroAt < 0 ? 1 : 0;
+    const momentTo = (momentWant || this.cineTail > 0) && this.outroAt < 0 ? 1 : 0;
     this.momentK += (momentTo - this.momentK) * chase(CINE_RATE, dtReal);
     if (Math.abs(this.momentK - momentTo) < 0.002) this.momentK = momentTo;
+    // open the rail cut with the side shot, around wherever the car is now
+    this.railCut.k.value = this.cineK;
+    if (this.cineK > 0.001) {
+      const on = this.curve.getPointAt(this.t);
+      const rt = new THREE.Vector3().crossVectors(this.curve.getTangentAt(this.t), new THREE.Vector3(0, 1, 0)).normalize();
+      this.railCut.center.value.copy(on).addScaledVector(rt, this.lateral);
+    }
 
     // --- lateral ---
     // Grip falls away while the handbrake is down, so the same steering input
