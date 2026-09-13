@@ -29,7 +29,7 @@ export const useToast = () => useContext(Ctx);
 /** Routes that take over the screen — no bottom nav, no page padding. */
 const FULLSCREEN = ['/race/play'];
 /** Routes with their own sticky action bar, where Blinkit drops the tab bar. */
-const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/checkout$/, /^\/ar(\/|$)/, /^\/diag$/];
+const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/cart$/, /^\/checkout$/, /^\/ar(\/|$)/, /^\/diag$/];
 
 export default function App() {
   const [msg, setMsg] = useState<string | null>(null);

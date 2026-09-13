@@ -27,11 +27,24 @@ export type SheetProps = {
   children: ReactNode;
   /** Optional pinned action row along the bottom. */
   footer?: ReactNode;
+  /**
+   * Replaces the grip and the centred title.
+   *
+   * Blinkit's own sheets do not all wear the same hat: the payment sheet has a
+   * chevron and a left-aligned heading, the address sheet has neither. What
+   * they DO share is the behaviour underneath — the scrim, Escape, the drag,
+   * the scroll lock — which is the part worth having in one place.
+   */
+  header?: ReactNode;
+  /** Rendered above the panel, outside it. The address sheet's close button. */
+  float?: ReactNode;
+  /** Extra class on the panel, for a sheet that is taller or flush. */
+  panelClass?: string;
 };
 
 const EXIT_MS = 220;
 
-export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
+export function Sheet({ open, onClose, title, children, footer, header, float, panelClass }: SheetProps) {
   /* `open` is the caller's intent; `mounted` is what is actually in the DOM.
      They differ for exactly the length of the close animation. */
   const [mounted, setMounted] = useState(open);
@@ -95,8 +108,9 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
   return (
     <div className={'sheet' + (shown ? ' is-open' : '')}>
       <button className="sheet__scrim" type="button" aria-label="Close" tabIndex={-1} onClick={onClose} />
+      {float}
       <div
-        className="sheet__panel"
+        className={'sheet__panel' + (panelClass ? ' ' + panelClass : '')}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -104,16 +118,30 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
         ref={panel}
         style={drag ? { transform: `translateY(${drag}px)`, transition: 'none' } : undefined}
       >
-        <div
-          className="sheet__grip"
-          onPointerDown={onDown}
-          onPointerMove={onMove}
-          onPointerUp={onUp}
-          onPointerCancel={onUp}
-        >
-          <i />
-        </div>
-        {title && <h2 className="sheet__title">{title}</h2>}
+        {header ? (
+          <div
+            className="sheet__head"
+            onPointerDown={onDown}
+            onPointerMove={onMove}
+            onPointerUp={onUp}
+            onPointerCancel={onUp}
+          >
+            {header}
+          </div>
+        ) : (
+          <>
+            <div
+              className="sheet__grip"
+              onPointerDown={onDown}
+              onPointerMove={onMove}
+              onPointerUp={onUp}
+              onPointerCancel={onUp}
+            >
+              <i />
+            </div>
+            {title && <h2 className="sheet__title">{title}</h2>}
+          </>
+        )}
         <div className="sheet__body">{children}</div>
         {footer && <div className="sheet__foot">{footer}</div>}
       </div>

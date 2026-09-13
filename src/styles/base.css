@@ -3793,3 +3793,290 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The exit button borrows the 3D race's HUD, and .arov is pointer-events:none
    so its children have to opt back in one at a time. */
 .arov .hud__x { pointer-events: auto; }
+
+/* ================= CHECKOUT =================
+   Blinkit's own checkout, rebuilt. The page is a grey ground with white cards
+   floating on it, a fixed header, and a foot that is three stacked statements
+   rather than one bar: where it is going, how it is paid for, and the amount
+   riding on the button. */
+.cko {
+  position: fixed; inset: 0;
+  display: grid;
+  /* BOTH axes constrained. Rows alone leaves the implicit column at `auto`,
+     which is max-content — so the suggestion shelf, three cards wide, sized
+     the column to 651px inside a 375px phone and the whole checkout scrolled
+     sideways. The same trap the product listing fell into, in the other
+     direction. */
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  background: #F4F6FB;
+}
+.cko__bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: calc(var(--safe-t) + 8px) 14px 10px;
+  background: #F4F6FB;
+}
+.cko__bar h1 {
+  flex: 1 1 auto; min-width: 0;
+  margin: 0; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.cko__ic {
+  flex: 0 0 auto;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #fff; border: 0; color: var(--ink);
+  display: grid; place-items: center;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+}
+.cko__share {
+  flex: 0 0 auto;
+  height: 40px; padding: 0 15px; border-radius: 999px;
+  background: #fff; border: 0; color: var(--ink);
+  display: flex; align-items: center; gap: 7px;
+  font-size: var(--f-sm); font-weight: 700;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+}
+.cko__scroll {
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 4px 12px 18px;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: 12px; align-content: start;
+}
+
+.ckocard {
+  background: #fff; border-radius: 18px;
+  padding: 14px;
+}
+.ckocard h2 {
+  margin: 0 0 12px;
+  font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* the ETA strip at the top of the shipment card */
+.ckoeta { display: flex; align-items: center; gap: 11px; padding-bottom: 14px; }
+.ckoeta__ic {
+  width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+  background: #E8F6EC; color: var(--green);
+  display: grid; place-items: center;
+}
+.ckoeta b { display: block; font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+.ckoeta p { margin: 1px 0 0; font-size: var(--f-sm); color: var(--mut); }
+
+.ckoline {
+  display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 12px;
+  align-items: start;
+  padding-top: 14px; border-top: 1px solid var(--line);
+}
+.ckoline__im {
+  width: 72px; height: 72px; border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--line); background: #fff;
+  display: grid; place-items: center;
+}
+.ckoline__im img { width: 100%; height: 100%; object-fit: contain; }
+.ckoline__mid { min-width: 0; }
+.ckoline__t {
+  margin: 0; font-size: var(--f-base); font-weight: 600; line-height: 1.35;
+  color: var(--ink);
+}
+.ckoline__u { margin: 4px 0 0; font-size: var(--f-sm); color: var(--mut); }
+.ckoline__wish {
+  margin-top: 5px; padding: 0; border: 0; background: none;
+  font-size: var(--f-sm); font-weight: 600; color: var(--mut);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.ckoline__right { display: grid; gap: 8px; justify-items: end; }
+.ckoline__p { margin: 0; display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.ckoline__p s { font-size: var(--f-sm); color: var(--mut-2); }
+.ckoline__p b { font-size: var(--f-base); font-weight: 700; color: var(--ink); }
+
+/* the shelf. Three across, which is what the real one runs on a phone. */
+.ckosugg__g {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px 8px;
+}
+
+.ckobill__r {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 6px 0; font-size: var(--f-sm); color: var(--mut);
+}
+.ckobill__r b { font-weight: 700; color: var(--ink); }
+.ckobill__r em { font-style: normal; color: var(--green); }
+.ckobill__r--tot {
+  margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--line);
+  font-size: var(--f-base);
+}
+.ckobill__r--tot span, .ckobill__r--tot b { color: var(--ink); font-weight: 800; }
+
+/* ---- the foot ---- */
+.ckofoot {
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding-bottom: var(--safe-b);
+  box-shadow: 0 -4px 18px rgba(16, 24, 40, 0.06);
+}
+.ckoaddr {
+  width: 100%; border: 0; background: #FFF7EC;
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  padding: 11px 14px;
+}
+.ckoaddr__ic { flex: 0 0 auto; color: #E8A33D; display: grid; place-items: center; }
+.ckoaddr__t { flex: 1 1 auto; min-width: 0; }
+.ckoaddr__t b { display: block; font-size: var(--f-base); font-weight: 700; color: var(--ink); }
+.ckoaddr__t p {
+  margin: 1px 0 0; font-size: var(--f-sm); color: var(--mut);
+  /* One line, cut. The saved addresses run to three lines of text and the foot
+     is not where they are read — the sheet is. */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ckoaddr__ch { flex: 0 0 auto; font-size: var(--f-base); font-weight: 700; color: var(--green); }
+
+.ckopay { display: flex; align-items: center; gap: 10px; padding: 10px 12px 12px; }
+.ckopay__m {
+  flex: 0 0 auto; border: 0; background: none; padding: 0; text-align: left;
+  display: grid; gap: 2px;
+}
+.ckopay__k {
+  display: flex; align-items: center; gap: 3px;
+  font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.04em; color: var(--mut);
+}
+.ckopay__v { font-size: var(--f-sm); font-weight: 700; color: var(--ink); }
+.ckopay__go {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  height: 52px; padding: 0 16px; border: 0; border-radius: 14px;
+  background: var(--green); color: #fff;
+}
+.ckopay__amt { display: grid; justify-items: start; line-height: 1.05; }
+.ckopay__amt b { font-size: var(--f-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
+.ckopay__amt small { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.08em; opacity: 0.85; }
+.ckopay__cta { display: flex; align-items: center; gap: 2px; font-size: var(--f-base); font-weight: 800; }
+
+/* ================= the two sheets ================= */
+.sheet__panel--tall { max-height: 92vh; height: 92vh; }
+/* The address sheet stops short of the payment sheet's height: it has a close
+   button riding above its own top edge, and at 92vh that button lands on the
+   status bar. */
+.sheet__panel--addr { max-height: 84vh; height: 84vh; background: #F4F6FB; }
+.sheet__head { padding: 14px var(--gut) 10px; touch-action: none; cursor: grab; }
+
+.paysheet__head { display: flex; align-items: center; gap: 12px; }
+.paysheet__head h2 {
+  margin: 0; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.02em; color: var(--ink);
+}
+.paysheet__x {
+  width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto;
+  background: #EEF1F6; border: 0; color: var(--ink);
+  display: grid; place-items: center;
+}
+.paysheet { display: grid; gap: 16px; padding-top: 4px; }
+.paygrp h3 {
+  margin: 0 0 8px; font-size: var(--f-base); font-weight: 800; color: var(--ink);
+}
+.paygrp__c { background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.pmrow {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 14px; border: 0; background: none; text-align: left;
+}
+/* Hairlines BETWEEN rows only. A border on every row leaves one hanging under
+   the last, inside the rounded corner, which is the tell of a list built as
+   separate things rather than as one card. */
+.pmrow + .pmrow { border-top: 1px solid var(--line); }
+.pmrow__l { flex: 1 1 auto; min-width: 0; font-size: var(--f-base); color: var(--ink); }
+.pmrow__go { color: var(--mut-2); display: grid; place-items: center; }
+.pmrow__add { font-size: var(--f-sm); font-weight: 800; color: var(--green); letter-spacing: 0.02em; }
+.pmrow.is-off .pmrow__l { color: var(--mut-2); }
+.pmrow__why {
+  margin: 0 14px 14px; padding: 9px 11px;
+  background: #FFF1F1; border-radius: 9px;
+  font-size: var(--f-sm); line-height: 1.4; color: #D8433F;
+}
+
+.paymark {
+  width: 40px; height: 40px; flex: 0 0 auto; border-radius: 9px;
+  border: 1px solid var(--line); background: #fff;
+  display: grid; place-items: center; overflow: hidden;
+}
+.paymark svg { width: 26px; height: 26px; }
+.paymark--dark { background: #111; border-color: #111; }
+.paymark--blink { background: #F6FBF4; }
+.paymark--word { font-size: 9px; font-weight: 800; letter-spacing: -0.02em; }
+.paymark--paytm { color: #00BAF2; }
+.paymark--bhim { color: #6B7280; font-style: italic; }
+.paymark--upi { color: #F26522; }
+.paymark--pluxee { color: #1A1A2E; font-size: 8px; }
+.paymark--mbk { color: #2B5DA8; font-size: 7px; }
+
+.addrsheet__x {
+  position: absolute; left: 50%; bottom: calc(84vh + 14px);
+  transform: translateX(-50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(28, 32, 42, 0.82); border: 0; color: #fff;
+  display: grid; place-items: center; z-index: 2;
+}
+.addrsheet__title {
+  margin: 0; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.02em; color: var(--ink);
+}
+.addrsheet { display: grid; gap: 10px; padding-top: 2px; }
+.addrsheet__act {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 14px; border: 0; border-radius: 14px; background: #fff;
+  text-align: left; font-size: var(--f-base); font-weight: 600; color: var(--ink);
+}
+.addrsheet__act > svg { color: var(--mut-2); flex: 0 0 auto; }
+.addrsheet__act--new { color: var(--green); font-weight: 700; }
+.addrsheet__plus {
+  width: 22px; flex: 0 0 auto; text-align: center;
+  font-size: 21px; font-weight: 400; line-height: 1; color: var(--green);
+}
+.addrsheet__badge {
+  width: 30px; height: 30px; flex: 0 0 auto; border-radius: 8px;
+  display: grid; place-items: center; color: #fff;
+  font-size: 6px; font-weight: 800; letter-spacing: -0.02em;
+}
+.addrsheet__badge--wa { background: #25D366; }
+.addrsheet__badge--z { background: #E23744; }
+.addrsheet__kick {
+  margin: 6px 0 0; font-size: var(--f-sm); font-weight: 600; color: var(--mut);
+}
+
+.addr {
+  display: grid; grid-template-columns: 66px minmax(0, 1fr);
+  gap: 10px; padding: 12px; border-radius: 14px; background: #fff;
+}
+.addr.is-on { background: #F2FAF3; }
+/* `align-content: start` is doing real work. Without it the grid stretches its
+   rows to the card's full height, and the "You're here" pill — which is a
+   background on a piece of text — became a green slab three lines tall down
+   the side of the address. */
+.addr__pin { display: grid; justify-items: center; align-content: start; gap: 4px; position: relative; }
+.addr__ic {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: #F3F5F9; color: #E8A33D;
+  display: grid; place-items: center;
+}
+.addr.is-on .addr__ic { background: #DFF4E3; }
+.addr__pin small {
+  font-size: var(--f-2xs); font-weight: 600; color: var(--mut);
+  text-align: center; line-height: 1.2;
+}
+.addr__pin.is-here small { color: #fff; background: var(--green); border-radius: 5px; padding: 1px 5px; }
+.addr__tick {
+  position: absolute; top: -5px; left: -3px; z-index: 1;
+  width: 17px; height: 17px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  font-style: normal; font-size: 10px; line-height: 17px; text-align: center;
+}
+.addr__body { min-width: 0; display: grid; gap: 8px; }
+.addr__pick { border: 0; background: none; padding: 0; text-align: left; display: grid; gap: 3px; }
+.addr__pick b { font-size: var(--f-base); font-weight: 700; color: var(--ink); }
+.addr__pick p { margin: 0; font-size: var(--f-sm); line-height: 1.45; color: var(--mut); }
+.addr__ph { color: var(--mut); }
+.addr__ph b { font-weight: 700; color: var(--ink); font-size: var(--f-sm); }
+.addr__acts { display: flex; gap: 8px; }
+.addr__btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #fff; border: 1px solid var(--line); color: var(--mut);
+  display: grid; place-items: center; font-size: 10px;
+}
+.addr.is-on .addr__btn { background: #fff; }

@@ -109,6 +109,10 @@ export function linesFromCart(cart: Record<string, number>) {
 
 type State = {
   cart: Record<string, number>;
+  /** Which saved address the checkout is delivering to. */
+  addressId: string;
+  /** Which payment method the Place Order button will use. */
+  payId: string;
   selectedCarId: string;
   racesLeft: number;
   totalPoints: number;
@@ -128,6 +132,8 @@ type State = {
       it drives a chip, not a history page. */
   viewed: string[];
 
+  setAddress: (id: string) => void;
+  setPay: (id: string) => void;
   add: (id: string, qty?: number) => void;
   setQty: (id: string, qty: number) => void;
   removeLine: (id: string) => void;
@@ -156,6 +162,8 @@ export const useStore = create<State>()(
   persist(
     (set, get) => ({
       cart: {},
+      addressId: 'hostel',
+      payId: 'bhim',
       selectedCarId: CARS[0].id,
       racesLeft: MAX_RACES,
       totalPoints: 0,
@@ -171,6 +179,8 @@ export const useStore = create<State>()(
       saved: [],
       viewed: [],
 
+      setAddress: (id) => set({ addressId: id }),
+      setPay: (id) => set({ payId: id }),
       add: (id, qty = 1) => set((s) => ({ cart: { ...s.cart, [id]: (s.cart[id] ?? 0) + qty } })),
       setQty: (id, qty) =>
         set((s) => {
