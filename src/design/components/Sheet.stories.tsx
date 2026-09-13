@@ -66,7 +66,7 @@ export const ScrollingBody: Story = {
         <>
           {Array.from({ length: 24 }, (_, i) => (
             <p key={i} className="t-sm" style={{ lineHeight: 1.6, marginBottom: 10 }}>
-              Clause {i + 1} — buying is independent of the game; you never need to race to own a car.
+              Clause {i + 1}: buying is independent of the game; you never need to race to own a car.
             </p>
           ))}
         </>

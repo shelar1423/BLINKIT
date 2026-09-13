@@ -14,7 +14,7 @@ type Story = StoryObj;
 const phone = (s: React.ReactNode) => <div style={{ width: 375, border: '1px solid #E8E8E8', borderRadius: 12, overflow: 'hidden' }}>{s}</div>;
 
 export const CampaignHeader: Story = {
-  name: 'AppHeader — campaign takeover',
+  name: 'AppHeader · campaign takeover',
   render: () => phone(<AppHeader />),
 };
 

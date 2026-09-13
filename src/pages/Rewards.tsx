@@ -105,7 +105,7 @@ export default function Rewards() {
       done = true;
       closing.current = false;
       claimReward(id);
-      toast(`${label} applied — it comes off at checkout`);
+      toast(`${label} applied. It comes off at checkout`);
     };
     const el = couponRef.current;
     if (!el || typeof el.animate !== 'function') return commit();

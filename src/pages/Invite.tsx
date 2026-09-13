@@ -41,7 +41,7 @@ export default function Invite() {
      a destination of its own rather than one option inside a share sheet two
      taps away. wa.me with no number opens the contact picker. */
   function whatsapp() {
-    const text = `Race It Home on Blinkit — use my code ${referralCode} and we both get an extra race. ${link}`;
+    const text = `Race It Home on Blinkit. Use my code ${referralCode} and we both get an extra race. ${link}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   }
 

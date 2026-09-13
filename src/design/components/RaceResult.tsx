@@ -203,7 +203,7 @@ export function RaceResult({
                 </p>
                 <p className="rwd__fine">
                   {next
-                    ? 'Keep racing — every run adds to the same total.'
+                    ? 'Keep racing. Every run adds to the same total.'
                     : 'Every reward in this drop is yours.'}
                 </p>
               </>

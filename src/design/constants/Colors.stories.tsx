@@ -51,16 +51,16 @@ export const Palette: Story = {
       />
       <Group title="Neutrals" names={['ink', 'ink2', 'mut', 'mut2', 'line', 'line2', 'surface', 'surface2', 'appbase']} />
       <Group
-        title="Campaign — Hot Wheels"
+        title="Campaign · Hot Wheels"
         note="Hot Wheels yellow (#FFC400) is deliberately absent: it collides with Blinkit's #F8CB46, so the campaign leads with flame red."
         names={['hwR', 'hwRDk', 'hwRTint', 'hwO', 'hwB']}
       />
-      <Group title="Dark surfaces" note="The 3D race and AR viewports only — never commerce chrome." names={['tk1', 'tk2', 'tkMut']} />
+      <Group title="Dark surfaces" note="The 3D race and AR viewports only, never commerce chrome." names={['tk1', 'tk2', 'tkMut']} />
 
       <section>
         <h3 style={{ font: '700 15px system-ui', margin: '0 0 2px' }}>Scene</h3>
         <p style={{ font: '400 12px system-ui', color: '#666', margin: '0 0 10px' }}>
-          Used only by three.js, so not CSS custom properties — but the same palette.
+          Used only by three.js, so not CSS custom properties, but the same palette.
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(168px,1fr))', gap: 10 }}>
           {Object.entries(scene).map(([k, v]) => {
@@ -100,7 +100,7 @@ export const Scale: Story = {
         <h3 style={{ font: '700 15px system-ui', margin: '0 0 10px' }}>Type scale (mobile)</h3>
         {Object.entries(fontSize).map(([k, v]) => (
           <p key={k} style={{ fontSize: v, margin: '0 0 6px' }}>
-            {k} · {v}px — Delivery in 8 minutes
+            {k} · {v}px · Delivery in 8 minutes
           </p>
         ))}
       </section>
