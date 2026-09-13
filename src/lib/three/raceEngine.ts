@@ -503,6 +503,98 @@ function coBrandTexture(): THREE.CanvasTexture {
   return tex;
 }
 
+
+/**
+ * The Hot Wheels mark, knocked to white, for the face of the lever paddle.
+ *
+ * The paddle is the part the thumb actually lands on and the nearest thing to
+ * the launch camera, so it carries a mark rather than a lockup — at that size
+ * "blinkit × HOT WHEELS" would resolve to a yellow smudge. The two brands
+ * split across the launcher instead: the partner's yellow runs down the bed,
+ * the flame sits on the red part, and the full lockup stays on the back plate
+ * where there is room to read it.
+ *
+ * White, because the shipped SVG is a flat #ED1C24 and the paddle under it is
+ * the same red — the banners solve it the same way.
+ */
+function leverMarkTexture(): THREE.CanvasTexture {
+  const W = 512;
+  const H = 256;
+  const c = document.createElement('canvas');
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext('2d')!;
+
+  const paint = (logo?: HTMLImageElement) => {
+    ctx.clearRect(0, 0, W, H);
+    if (logo) {
+      const lw = W * 0.86;
+      const lh = lw * (logo.height / logo.width);
+      const t = document.createElement('canvas');
+      t.width = Math.ceil(lw);
+      t.height = Math.ceil(lh);
+      const tc = t.getContext('2d')!;
+      tc.drawImage(logo, 0, 0, lw, lh);
+      tc.globalCompositeOperation = 'source-in';
+      tc.fillStyle = '#fff';
+      tc.fillRect(0, 0, lw, lh);
+      ctx.drawImage(t, (W - lw) / 2, (H - lh) / 2);
+    } else {
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'italic 900 74px system-ui, -apple-system, sans-serif';
+      ctx.fillText('HOT WHEELS', W / 2, H / 2);
+    }
+  };
+
+  paint();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  const img = new Image();
+  img.onload = () => {
+    paint(img);
+    tex.needsUpdate = true;
+  };
+  img.src = '/brand/hot-wheels.svg';
+  return tex;
+}
+
+/**
+ * Blinkit-yellow livery for the bed, chequered along its edges.
+ *
+ * Two strips flanking the spring rather than one panel under it: the coils,
+ * the sled and the car sit down the centreline of the bed, so the middle is
+ * the one part of that surface nothing can be painted on and still be seen.
+ */
+function bedLiveryTexture(): THREE.CanvasTexture {
+  const W = 64;
+  const H = 512;
+  const c = document.createElement('canvas');
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext('2d')!;
+  const g = ctx.createLinearGradient(0, 0, W, 0);
+  g.addColorStop(0, '#E0B02E');
+  g.addColorStop(0.5, '#F8CB46');
+  g.addColorStop(1, '#E0B02E');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  // a chequered run down each long edge
+  const SQ = 16;
+  for (let i = 0; i * SQ < H; i++) {
+    for (const [col, x] of [[0, 0], [1, W - SQ]] as const) {
+      ctx.fillStyle = (i + col) % 2 ? '#1F1F1F' : '#FFFFFF';
+      ctx.fillRect(x, i * SQ, SQ, SQ);
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 /**
  * The raised orange side rails. Built as two vertical ribbons along the road
  * edges — the single detail that makes the circuit read as Hot Wheels track
@@ -1050,6 +1142,22 @@ export class RaceEngine {
     bed.position.set(0, 0.22, midZ);
     this.launcher.add(bed);
 
+    /* Livery down the bed, clear of the centreline where the car, the sled and
+       the spring all live. Lying flat, it is lit by the same light as the bed
+       under it, so this one IS a standard material — unlike the back plate,
+       which faces the player and has to hold its colour whichever way the
+       track has been turned. */
+    const liveryTex = bedLiveryTexture();
+    const liveryMat = new THREE.MeshStandardMaterial({ map: liveryTex, roughness: 0.5 });
+    const liveryGeo = new THREE.PlaneGeometry(1.25, BED - 3.6);
+    this.disposables.push(liveryTex, liveryMat, liveryGeo);
+    for (const sgn of [-1, 1]) {
+      const strip = new THREE.Mesh(liveryGeo, liveryMat);
+      strip.rotation.x = -Math.PI / 2;
+      strip.position.set(sgn * 2.75, 0.46, midZ);
+      this.launcher.add(strip);
+    }
+
     const railGeo = new THREE.BoxGeometry(0.7, 0.95, BED);
     /* A Blinkit-yellow cap along the top of each rail. The rails are Hot
        Wheels orange and the track they join is the same orange, so the
@@ -1166,6 +1274,22 @@ export class RaceEngine {
     pad.position.set(0, 4.45, -0.25);
     pad.rotation.x = -0.3;
     this.launchLever.add(pad);
+
+    /* On the paddle's REAR face — the one turned toward the player — and
+       parented to the paddle so it swings with it, because the mark is part of
+       the moulding rather than a decal floating where the lever used to be.
+
+       The top face was the obvious place and was the wrong one: the paddle
+       leans about 31 degrees toward the track, and the launch camera looks
+       down at about 31, so its upper face is almost exactly edge-on and the
+       mark was invisible. */
+    const markTex = leverMarkTexture();
+    const markMat = new THREE.MeshBasicMaterial({ map: markTex, transparent: true, toneMapped: false });
+    const markGeo = new THREE.PlaneGeometry(2.2, 1.1);
+    this.disposables.push(markTex, markMat, markGeo);
+    const mark = new THREE.Mesh(markGeo, markMat);
+    mark.position.set(0, 0, 0.81);
+    pad.add(mark);
     /* The hinge, shown. A lever with no visible pivot reads as a post that
        happens to lean. */
     const hub = new THREE.Mesh(hubGeo, steel);
