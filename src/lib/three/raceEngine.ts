@@ -77,6 +77,9 @@ const RAMP_ANGLE = Math.atan2(RAMP_RISE, RAMP_LEN);
 
 /** How far the launcher's sled travels when drawn fully back. */
 const LAUNCH_TRAVEL = 9;
+/** Lever angles, radians about the cross-track axis. Rest leans toward the car. */
+const LEVER_REST = -0.24;
+const LEVER_PULLED = 0.98;
 
 /** Scratch for gate world positions — allocating one per frame is litter. */
 const boostWorld = new THREE.Vector3();
@@ -561,6 +564,9 @@ export class RaceEngine {
   private rampU = -1;
   private launcher = new THREE.Group();
   private launchSled = new THREE.Group();
+  private launchLever = new THREE.Group();
+  /** Invisible, generous grab volume for the lever. Raycast target. */
+  private leverHit: THREE.Mesh | null = null;
   private launchCoils: THREE.Mesh[] = [];
   /** 0..1 — how far the sled is drawn back. */
   private launchPull = 0;
@@ -927,26 +933,50 @@ export class RaceEngine {
    * see is the tension you are about to get.
    */
   private buildLauncher() {
-    const up = new THREE.Vector3(0, 1, 0);
     const p = this.curve.getPointAt(0);
     const tan = this.curve.getTangentAt(0);
     this.launcher.position.copy(p);
     this.launcher.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), tan.clone().setY(0).normalize());
 
     const plastic = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.5, metalness: 0.05 });
-    const dark = new THREE.MeshStandardMaterial({ color: 0x15171D, roughness: 0.7 });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x2A2E36, roughness: 0.72 });
     const red = new THREE.MeshStandardMaterial({ color: 0xE01B22, roughness: 0.42, metalness: 0.08 });
     const steel = new THREE.MeshStandardMaterial({ color: 0xB9C2CC, roughness: 0.35, metalness: 0.7 });
     this.disposables.push(plastic, dark, red, steel);
 
-    /* Two guide rails running BACK from the line — local +Z, since the car's
-       own -Z is the way it faces. */
-    const railGeo = new THREE.BoxGeometry(0.7, 0.7, LAUNCH_TRAVEL + 7);
+    const BED = LAUNCH_TRAVEL + 7;
+    const midZ = BED / 2 - 1;
+
+    /* The bed the sled runs along, and the two guide rails standing off it.
+       Local +Z runs BACK from the line, since the car's own -Z is the way it
+       faces. */
+    const bedGeo = new THREE.BoxGeometry(ROAD_W - 1.4, 0.45, BED);
+    this.disposables.push(bedGeo);
+    const bed = new THREE.Mesh(bedGeo, plastic);
+    bed.position.set(0, 0.22, midZ);
+    this.launcher.add(bed);
+
+    const railGeo = new THREE.BoxGeometry(0.7, 0.95, BED);
     this.disposables.push(railGeo);
     for (const sgn of [-1, 1]) {
       const rail = new THREE.Mesh(railGeo, plastic);
-      rail.position.set(sgn * (ROAD_W / 2 - 0.9), 0.35, (LAUNCH_TRAVEL + 7) / 2 - 1);
+      rail.position.set(sgn * (ROAD_W / 2 - 0.9), 0.5, midZ);
       this.launcher.add(rail);
+    }
+
+    /* Buttresses. Four tapered blocks outboard of the rails, which is what
+       carries the toy-set read in the concept art: the launcher is not a
+       block, it is a bed propped up on moulded feet. A four-sided cylinder IS
+       a truncated pyramid, so one geometry does all four. */
+    const footGeo = new THREE.CylinderGeometry(1.05, 1.75, 1.9, 4);
+    this.disposables.push(footGeo);
+    for (const sgn of [-1, 1]) {
+      for (const z of [1.4, BED - 3.2]) {
+        const foot = new THREE.Mesh(footGeo, dark);
+        foot.position.set(sgn * (ROAD_W / 2 - 0.5), 0.95, z);
+        foot.rotation.y = Math.PI / 4;
+        this.launcher.add(foot);
+      }
     }
 
     // the back stop the spring pushes off
@@ -982,9 +1012,53 @@ export class RaceEngine {
       this.launchCoils.push(coil);
     }
 
+    /* ---- the PULL BACK lever ----
+
+       The part the finger actually works, so it is the one part built as a
+       hierarchy rather than a heap of meshes: a pivot group carrying an arm
+       and a paddle, rotating about the axis across the track. Everything else
+       here is scenery and never moves.
+
+       It sits left of centre. Dead centre put it between the camera and the
+       car during the launch framing — the player would have been aiming at
+       their own thumb. */
+    this.launchLever.position.set(-2.7, 1.05, 3.1);
+    this.launcher.add(this.launchLever);
+
+    const armGeo = new THREE.BoxGeometry(1.15, 4.3, 0.95);
+    const padGeo = new THREE.BoxGeometry(2.7, 1.6, 1.6);
+    const hubGeo = new THREE.CylinderGeometry(0.75, 0.75, 1.5, 14);
+    this.disposables.push(armGeo, padGeo, hubGeo);
+
+    const arm = new THREE.Mesh(armGeo, red);
+    arm.position.y = 2.15;
+    this.launchLever.add(arm);
+    const pad = new THREE.Mesh(padGeo, red);
+    pad.position.set(0, 4.45, -0.25);
+    pad.rotation.x = -0.3;
+    this.launchLever.add(pad);
+    /* The hinge, shown. A lever with no visible pivot reads as a post that
+       happens to lean. */
+    const hub = new THREE.Mesh(hubGeo, steel);
+    hub.rotation.z = Math.PI / 2;
+    this.launchLever.add(hub);
+
+    /* A generous invisible box is what the raycast actually tests against.
+       The arm is about a centimetre wide on a placed track and a thumb is not
+       — hit-testing the visible geometry meant a lever you could see and not
+       grab. `material.visible = false` keeps it out of the render while
+       leaving it in the raycast; `object.visible = false` would drop it from
+       both. */
+    const hitGeo = new THREE.BoxGeometry(4.4, 6.4, 3.6);
+    const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+    this.disposables.push(hitGeo, hitMat);
+    this.leverHit = new THREE.Mesh(hitGeo, hitMat);
+    this.leverHit.position.y = 2.6;
+    this.launchLever.add(this.leverHit);
+
     this.root.add(this.launcher);
+    this.launcher.visible = true;
     this.setLaunchPull(0);
-    void up;
   }
 
   /**
@@ -992,10 +1066,13 @@ export class RaceEngine {
    *
    * The CAR comes back with it — it is resting against the plate — which is
    * what makes the pull read as loading a launcher rather than as sliding a
-   * part around behind a car that is ignoring it.
+   * part around behind a car that is ignoring it. The lever swings through the
+   * same `k`, so the thing under the finger and the thing being loaded are
+   * visibly one mechanism.
    */
   setLaunchPull(k: number) {
     this.launchPull = Math.max(0, Math.min(1, k));
+    this.launchLever.rotation.x = LEVER_REST + (LEVER_PULLED - LEVER_REST) * this.launchPull;
     if (!this.launchCoils.length) return;
     const back = this.launchPull * LAUNCH_TRAVEL;
     this.launchSled.position.z = 3.2 + back;
@@ -1007,6 +1084,50 @@ export class RaceEngine {
       coil.scale.z = Math.max(0.35, 1 - this.launchPull * 0.55);
     }
     this.layoutCar();
+  }
+
+  /** How far the lever is currently drawn, 0..1. */
+  get pull() {
+    return this.launchPull;
+  }
+
+  /**
+   * True when `ray` hits the lever.
+   *
+   * The engine owns this rather than the session because the lever lives in
+   * track-local space under `root`, and root carries the AR anchor's scale and
+   * rotation — a caller testing world coordinates against local geometry gets
+   * it wrong in exactly the way that is hard to see.
+   */
+  hitLever(ray: THREE.Raycaster) {
+    if (!this.leverHit || !this.launcher.visible) return false;
+    return ray.intersectObject(this.leverHit, false).length > 0;
+  }
+
+  /**
+   * Where the camera sits while the launcher is being drawn.
+   *
+   * Behind and above the back stop, off to the right so the lever on the left
+   * is side-on to the viewer rather than pointing at them — a lever swinging
+   * toward the camera barely moves on screen, which is the one thing this
+   * framing has to show. The car, the sled and the lane ahead are all in shot.
+   */
+  launcherCameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3 }) {
+    const up = new THREE.Vector3(0, 1, 0);
+    const p = this.curve.getPointAt(0);
+    const tan = this.curve.getTangentAt(0).clone().setY(0).normalize();
+    const right = new THREE.Vector3().crossVectors(tan, up).normalize();
+    out.pos
+      .copy(p)
+      .addScaledVector(tan, -(LAUNCH_TRAVEL + 23))
+      .addScaledVector(right, 10.5);
+    out.pos.y = 11.5;
+    /* Looking PAST the car rather than at it, so the lane the launch is about
+       to send it down is the subject and the launcher sits in the near corner.
+       Framed on the launcher itself the shot was all spring and no race. */
+    out.look.copy(p).addScaledVector(tan, 7.0).addScaledVector(right, -1.0);
+    out.look.y = 1.6;
+    return out;
   }
 
   /** Off the track once the car has gone. */

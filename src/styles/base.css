@@ -2813,57 +2813,6 @@ input, select, textarea { font: inherit; color: inherit; }
   .arboost__verdict { animation: none; }
 }
 
-/* ---------- the launcher's lever ----------
-   Down the left edge, where a thumb reaches and the track is not. The launcher
-   itself is in the scene; this is its handle. A slot, a knob that travels the
-   length of it, and the charge filling in behind — so the control shows the
-   tension it is storing rather than merely reporting a number. */
-.arlever {
-  --pull: 0;
-  position: fixed;
-  left: calc(var(--gut) - 2px);
-  bottom: 26vh;
-  width: 62px;
-  display: grid; justify-items: center; gap: 7px;
-  padding: 10px 8px 9px;
-  border-radius: 999px;
-  background: rgba(10, 14, 24, 0.62);
-  backdrop-filter: blur(7px);
-  touch-action: none; user-select: none; -webkit-user-select: none;
-  pointer-events: auto; z-index: 214;
-}
-.arlever__slot {
-  position: relative;
-  width: 12px; height: 132px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  overflow: hidden;
-}
-/* Charge, filling from the top as the knob comes down — the stroke already
-   travelled, which is the part of a launcher you can normally see compressing. */
-.arlever__fill {
-  position: absolute; left: 0; right: 0; top: 0;
-  height: calc(var(--pull) * 100%);
-  background: linear-gradient(180deg, var(--yellow) 0%, #FA8318 65%, #ED1C24 100%);
-}
-/* Travel is the slot less the knob, so it stops flush at the bottom instead of
-   running past the end of its own rail. */
-.arlever__knob {
-  position: absolute; left: 50%; top: calc(var(--pull) * (132px - 34px));
-  width: 34px; height: 34px; margin-left: -17px;
-  border-radius: 50%;
-  background: #ED1C24;
-  border: 3px solid rgba(255, 255, 255, 0.92);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-}
-.arlever.is-drawn .arlever__knob { background: #C8151C; }
-.arlever b {
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.86);
-  font-variant-numeric: tabular-nums;
-}
-.arlever.is-drawn b { color: var(--yellow); }
-
 .arov__drive {
   display: flex; align-items: flex-end; justify-content: space-between;
   gap: clamp(8px, 3vw, 12px); pointer-events: none;

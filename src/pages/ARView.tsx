@@ -161,6 +161,7 @@ export default function ARView() {
           if (!open) setLiftK(0);
         },
         onJumpLift: setLiftK,
+        onPull: setPull,
         onJumpResult: (r) => {
           setJumpCue(false);
           setJumpFlash(r);
@@ -345,71 +346,15 @@ export default function ARView() {
     };
   }, [phase, press, release, gas, brake, slide, hornNow]);
 
-  /* How far the launcher is drawn back, 0..1.
+  /* How far the launcher is drawn back, 0..1 — reported by the scene.
 
-     The live value is a ref and the state is only for painting it. Firing the
-     launch from inside a `setPull` updater looked tidier and was wrong: React
-     may call an updater twice or throw one away, so the launch was landing
-     twice or not at all — and it did not land here, which is what kept the car
-     on the line however far the sled was drawn. Updaters compute state and
-     nothing else. */
-  const PULL_TRAVEL = 140;
+     This used to be driven by a lever pinned to the left of the screen, with
+     its own pointer capture, its own travel constant and its own tap-to-launch
+     shortcut. The lever lives in the track now, so the overlay has nothing to
+     drive: it only paints what the real one is doing. The refs that fixed the
+     old widget's launch-inside-a-setState bug went with it, since there is no
+     longer a React handler in the path at all. */
   const [pull, setPull] = useState(0);
-  const pullFrom = useRef<number | null>(null);
-  const pullNow = useRef(0);
-  const armed = useRef(false);
-
-  const beginPull = useCallback((e: React.PointerEvent) => {
-    pullFrom.current = e.clientY;
-    pullNow.current = 0;
-    armed.current = false;
-    handle.current?.setLaunchPull(0);
-    /* Capture keeps the pull alive when the finger leaves the control, which
-       it will — the sled travels with it. Synthetic pointers have no id to
-       capture, so this is allowed to fail. */
-    try {
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    } catch {
-      /* not a real pointer */
-    }
-    handle.current?.armLaunch(false);
-    primeAudio();
-  }, []);
-
-  const movePull = useCallback((e: React.PointerEvent) => {
-    if (pullFrom.current === null) return;
-    /* Down is back. Upward travel is the finger going the wrong way, which is
-       not a negative launch — it is no launch yet. */
-    const v = Math.max(0, Math.min(1, (e.clientY - pullFrom.current) / PULL_TRAVEL));
-    pullNow.current = v;
-    setPull(v);
-    /* The sled, the spring and the car all move with the finger — this is the
-       pull, and the overlay is only the handle you happen to be touching. */
-    handle.current?.setLaunchPull(v);
-    const want = v > 0.5;
-    if (want !== armed.current) {
-      armed.current = want;
-      handle.current?.armLaunch(want);
-    }
-  }, []);
-
-  const endPull = useCallback(() => {
-    if (pullFrom.current === null) return;
-    pullFrom.current = null;
-    const v = pullNow.current;
-    pullNow.current = 0;
-    armed.current = false;
-    setPull(0);
-    handle.current?.setLaunchPull(0);
-    /* A TAP LAUNCHES TOO.
-       This used to treat anything under a tenth as a slip and snap the sled
-       back, which made the one control on the screen do nothing at all for
-       anyone who pressed it rather than dragging it — and pressing a thing
-       that looks like a button is what people do. A tap is a real launch at
-       a middling 55%, and the pull is how you earn more than that. The
-       control is never a dead end. */
-    handle.current?.launch(v < 0.1 ? 0.55 : v);
-  }, []);
 
   /* The gate being approached, and the verdict once it is behind us. */
   const [boostAim, setBoostAim] = useState<{ index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null>(null);
@@ -571,39 +516,6 @@ export default function ARView() {
               </p>
             )}
 
-            {/* The launcher's lever, down the left edge.
-
-                The launcher itself is IN the scene, on the track, with the car
-                against its plate — this is the handle you put a thumb on. It
-                holds the left side rather than spanning the bottom because the
-                bottom is where the track is: a full-width control sat directly
-                on the start line it was supposed to be launching from.
-
-                The whole lever is the grab rather than the 3cm sled in the
-                scene: a small plastic part seen at whatever angle the phone
-                happens to be at is not a reliable target, and missing the only
-                control on screen is the failure this is fixing. The sled still
-                follows the thumb, so it reads as pulling the launcher. */}
-            {phase === 'placed' && !inspect && (
-              <div
-                className={'arlever' + (pull > 0.02 ? ' is-drawn' : '')}
-                style={{ '--pull': pull } as CSSProperties}
-                onPointerDown={beginPull}
-                onPointerMove={movePull}
-                onPointerUp={endPull}
-                onPointerCancel={endPull}
-                role="button"
-                tabIndex={0}
-                aria-label="Pull the launcher lever down and release to start"
-              >
-                <span className="arlever__slot" aria-hidden="true">
-                  <i className="arlever__fill" />
-                  <i className="arlever__knob" />
-                </span>
-                <b>{pull > 0.02 ? `${Math.round(pull * 100)}%` : 'PULL'}</b>
-              </div>
-            )}
-
             {/* One column anchored to the bottom, rather than three bands
                 positioned by hand-tuned `bottom` offsets. Those were fine
                 until a phase showed two action buttons instead of one: the
@@ -644,7 +556,9 @@ export default function ARView() {
                 <small>
                   {inspect
                     ? 'Drag to turn it · Pinch to zoom · Twist to spin'
-                    : 'Pinch to resize · Drag to move · Then start the race'}
+                    : pull > 0.02
+                      ? `Launcher drawn ${Math.round(pull * 100)}% · let go to fire`
+                      : 'Drag the red lever back · Pinch to resize · Drag elsewhere to move'}
                 </small>
               </p>
             )}

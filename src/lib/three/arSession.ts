@@ -114,6 +114,8 @@ type Opts = {
   onJumpCue?: (open: boolean, canLift: boolean) => void;
   /** How far the tilt has come toward counting, 0..1 — so it can be SEEN. */
   onJumpLift?: (k: number) => void;
+  /** How far the in-scene launcher lever is drawn, 0..1. */
+  onPull?: (k: number) => void;
   onJumpResult?: (r: { quality: JumpQuality; points: number }) => void;
   onObstacleCountChange?: (count: number) => void;
   onProximityAlert?: (alert: boolean) => void;
@@ -608,6 +610,75 @@ function floorAim(
   return { dist, depression: Math.atan(drop / Math.max(0.01, run)) };
 }
 
+/**
+ * Dragging the launcher lever that is actually in the scene.
+ *
+ * The pull used to be a widget pinned to the left of the screen. It worked,
+ * but it asked the player to operate a picture of a lever while looking at the
+ * real one — and the whole point of putting the track in the room is that the
+ * thing you touch is the thing you see move.
+ *
+ * Down the screen is back on the launcher whatever angle the phone is held at,
+ * so the gesture is measured in screen pixels rather than projected onto the
+ * track. Projecting it was the first attempt: near-vertical framings made the
+ * lever almost impossible to move, because the travel that reads as a long
+ * pull on screen is a few millimetres in the track's own plane.
+ */
+function makeLeverDrag(
+  engine: RaceEngine,
+  camera: THREE.Camera,
+  getPhase: () => ARPhase,
+  onArm: (drawn: boolean) => void,
+  onLaunch: (power: number) => void,
+  onPull: (k: number) => void,
+) {
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  let fromY = 0;
+  let fromPull = 0;
+  let held = false;
+
+  return {
+    grab(x: number, y: number) {
+      if (getPhase() !== 'placed') return false;
+      ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      if (!engine.hitLever(ray)) return false;
+      held = true;
+      fromY = y;
+      fromPull = engine.pull;
+      onArm(false);
+      onPull(engine.pull);
+      return true;
+    },
+    move(y: number) {
+      if (!held) return;
+      const k = fromPull + (y - fromY) / raceInteraction.launchMaxPull;
+      engine.setLaunchPull(k);
+      onArm(engine.pull > 0.5);
+      onPull(engine.pull);
+    },
+    release() {
+      if (!held) return;
+      held = false;
+      const k = engine.pull;
+      /* A brush against the lever is not a launch. Anything under a tenth
+         springs back rather than dribbling the car off the line. */
+      if (k < 0.1) {
+        engine.setLaunchPull(0);
+        onArm(false);
+        onPull(0);
+        return;
+      }
+      onPull(0);
+      onLaunch(k);
+    },
+    get held() {
+      return held;
+    },
+  };
+}
+
 function adjustGestures(
   _ov: HTMLElement,
   anchor: THREE.Object3D,
@@ -615,13 +686,23 @@ function adjustGestures(
   get: () => { phase: ARPhase; size: number },
   setSize: (m: number) => void,
   orbit = false,
+  /* The launcher lever, when there is one. It gets first refusal on every
+     touch: a finger that lands on the lever is pulling it, not sliding the
+     track underneath it. Without that the same drag did both. */
+  lever?: { grab(x: number, y: number): boolean; move(y: number): void; release(): void },
 ) {
   let pts: Record<number, { x: number; y: number }> = {};
   let base = { dist: 0, ang: 0, size: 0, rot: 0 };
+  /** The pointer currently holding the lever, if any. */
+  let leverId: number | null = null;
   const two = () => Object.values(pts);
 
   const onDown = (e: PointerEvent) => {
     if (get().phase !== 'placed') return;
+    if (leverId === null && lever?.grab(e.clientX, e.clientY)) {
+      leverId = e.pointerId;
+      return;
+    }
     pts[e.pointerId] = { x: e.clientX, y: e.clientY };
     const p = two();
     if (p.length === 2) {
@@ -634,6 +715,10 @@ function adjustGestures(
     }
   };
   const onMove = (e: PointerEvent) => {
+    if (leverId === e.pointerId) {
+      lever?.move(e.clientY);
+      return;
+    }
     if (get().phase !== 'placed' || !pts[e.pointerId]) return;
     const prev = pts[e.pointerId];
     pts[e.pointerId] = { x: e.clientX, y: e.clientY };
@@ -661,6 +746,11 @@ function adjustGestures(
     }
   };
   const onUp = (e: PointerEvent) => {
+    if (leverId === e.pointerId) {
+      leverId = null;
+      lever?.release();
+      return;
+    }
     delete pts[e.pointerId];
     base.dist = 0;
   };
@@ -962,7 +1052,12 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   let detachTapPlace: (() => void) | null = () => {
   };
 
-  detachGestures = adjustGestures(opts.overlayRoot, anchor, renderer.xr.getCamera(), () => ({ phase, size: sizeM }), setSize, inspect);
+  detachGestures = adjustGestures(
+    opts.overlayRoot, anchor, renderer.xr.getCamera(), () => ({ phase, size: sizeM }), setSize, inspect,
+    /* In headset AR the camera IS the phone, so there is no launcher framing
+       to move to — you look at the lever yourself. The drag is identical. */
+    makeLeverDrag(engine, renderer.xr.getCamera(), () => phase, armLaunch, launch, (k) => opts.onPull?.(k)),
+  );
 
   /* ---- where the track goes ----
      Straight down the middle of the view, at a fixed distance. That is the
@@ -1215,6 +1310,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
   let phase: ARPhase = 'ready';
   const setPhase = (p: ARPhase) => {
+    if (p !== 'placed') lnInited = false;
     phase = p;
     opts.onPhase(p);
   };
@@ -1432,12 +1528,21 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      stray tap during the race pinned an obstacle you did not ask for. Placement
      is now only ever the explicit button. */
 
-  const detachGestures = adjustGestures(opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize, inspect);
+  const leverDrag = makeLeverDrag(engine, camera, () => phase, armLaunch, launch, (k) => opts.onPull?.(k));
+  const detachGestures = adjustGestures(
+    opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize, inspect, leverDrag,
+  );
 
   // FPP chase-cam state for camera mode
   const fpTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   const fpCamPos = new THREE.Vector3();
   const fpCamLook = new THREE.Vector3();
+  /* Launcher framing. Separate lerp state from the chase cam so the move from
+     one to the other is a continuation rather than a snap: the chase cam
+     seeds itself from wherever this left the camera. */
+  const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const lnLook = new THREE.Vector3();
+  let lnInited = false;
   let fpInited = false;
 
   function cleanup() {
@@ -1468,7 +1573,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   renderer.setAnimationLoop((now) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
+    if (haveOrientation && phase !== 'racing' && phase !== 'placed') camera.quaternion.copy(q);
     if (phase === 'ready' || phase === 'searching') {
       const a = aim();
       reticle.visible = true;
@@ -1506,6 +1611,34 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       const bo = reticle.getObjectByName('burnout');
       if (bo) bo.rotation.y = -now * 0.00035;
     }
+    /* Placed, lever not yet released: sit behind the launcher looking down
+       the lane. This drops the video alignment, which is deliberate and is
+       what the racing branch below already does — once the track is down the
+       camera is a camera in the scene, not a window onto the room. */
+    if (phase === 'placed' && !inspect) {
+      engine.launcherCameraTarget(lnTarget);
+      /* Through root rather than by scaling and adding the anchor's position:
+         root carries the anchor's rotation too, and the track can be twisted
+         while it is being placed. */
+      const wp = engine.root.localToWorld(lnTarget.pos.clone());
+      const wl = engine.root.localToWorld(lnTarget.look.clone());
+      if (!lnInited) {
+        /* Seeded from where the phone is actually looking, so the move to the
+           launcher is a glide from the framing the player just placed in.
+           Copying the target outright cut straight there and lost the
+           connection between the tap and the shot. */
+        lnLook.copy(camera.position).addScaledVector(
+          new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion), 4,
+        );
+        lnInited = true;
+      }
+      camera.position.lerp(wp, Math.min(1, dt * 3.5));
+      lnLook.lerp(wl, Math.min(1, dt * 4));
+      camera.lookAt(lnLook);
+      // hand the chase cam a seed so the launch does not jump-cut
+      fpInited = false;
+    }
+
     if (phase === 'racing') {
       engine.update(dt);
       race.tickAim(camera, dt * 1000);
