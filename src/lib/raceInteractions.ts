@@ -72,6 +72,21 @@ export const raceInteraction = {
      choose rather than a straight corridor; the last one is centred, and the
      car is steered through it for you — nobody can hold a line while tilting
      the phone up for the jump. */
+  /* ---- the loop ----
+     A full Hot Wheels loop-the-loop on the left straight (0.702-0.799), which
+     the last ring moving to the finish left empty. The car drives right round
+     it: the lap pauses at `loopAt` while the car covers the loop's length, then
+     carries on. It enters on the left of the road and leaves on the right so
+     the two ends of the loop don't meet. The wheel is the loop's for the whole
+     way round, and for the run-in to line the car up. */
+  loopEnabled: true,
+  loopAt: 0.75,
+  loopRadius: 6,
+  /** Road units either side of the centreline the loop enters and exits at. */
+  loopShift: 2.2,
+  /** Units of approach over which the car is lined up with the entry. */
+  loopLeadIn: 26,
+
   gateLanes: [
     [-1.8, 1.8],
     [0, 0],

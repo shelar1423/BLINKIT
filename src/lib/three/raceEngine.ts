@@ -159,17 +159,19 @@ const CINE_RATE_OUT = 5.5;
  *  the lift, so the jump itself is still judged from behind. */
 const CINE_AIR_H = 0.25;
 /** The run to the finish, from in front of the car looking back at it. */
-const FRONT_AHEAD = 13;
-const FRONT_HEIGHT = 2.4;
+const FRONT_AHEAD = 22;
+const FRONT_HEIGHT = 1.8;
 /** Swinging round to the front: slow, it is the last shot of the race. */
 const FRONT_RATE = 1.4;
 /** How fast the camera swings, in REAL seconds — the world may be in slow
  *  motion, but a camera move that slowed down with it would read as a stall. */
 const CINE_RATE = 4.2;
 /** The lap is done. Slower still, because nothing is being aimed at any more. */
-const SLOW_FINISH = 0.22;
+const SLOW_FINISH = 0.5;
 /** Real seconds between the last corner and the result screen. */
-const FINISH_OUTRO = 1.9;
+/* Real seconds between the line and the result screen. Long enough for the
+   car to be seen crossing the line and running on past the finish camera. */
+const FINISH_OUTRO = 4.2;
 
 /**
  * The fraction to move toward a target this frame, for an exponential chase.
@@ -1156,6 +1158,12 @@ export class RaceEngine {
   private roadVSpan_ = 1;
   /** Airborne state. `airT` counts 0..1 across the arc; -1 means on the road. */
   private airT = -1;
+  /** Which ring the current flight took off for, or -1. */
+  private airFromGate = -1;
+  /** Distance travelled round the loop, or -1 when not on it. */
+  private loopS = -1;
+  /** Where the finish camera stands, fixed in the world so the car passes it. */
+  private frontAnchor: THREE.Vector3 | null = null;
   /* The arc currently being flown. The ramp and the gates are the same flight
      with different numbers — the ramp leaves the road already at the lip's
      height, a gate leaves it from the floor — so the numbers live here rather
@@ -1543,6 +1551,7 @@ export class RaceEngine {
     this.root.add(this.finishGate);
     if (this.interactions && raceInteraction.boostEnabled) this.buildBoostGates();
     if (this.interactions && raceInteraction.jumpEnabled) this.buildRamp();
+    if (this.interactions && raceInteraction.loopEnabled) this.buildLoop();
     if (this.interactions && raceInteraction.launchEnabled) this.buildLauncher();
   }
 
@@ -1571,8 +1580,6 @@ export class RaceEngine {
    */
   private buildBoostGates() {
     const up = new THREE.Vector3(0, 1, 0);
-    const legGeo = new THREE.CylinderGeometry(0.22, 0.34, raceInteraction.gateRingY, 10).translate(0, raceInteraction.gateRingY / 2, 0);
-    const legMat = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.55, metalness: 0.05 });
     /* Built from the tuning file's own numbers, not from literals that happen
        to match them — the judge measures the car against this hoop, and two
        copies of its size is two hoops. */
@@ -1589,7 +1596,7 @@ export class RaceEngine {
       color: 0xE8391A, emissive: 0xB31A08, emissiveIntensity: 0.55, roughness: 0.45, metalness: 0.05, side: THREE.DoubleSide,
     });
     const lipMat = new THREE.MeshStandardMaterial({ color: 0xFF7A1A, emissive: 0xC23A00, emissiveIntensity: 0.5, roughness: 0.4 });
-    this.disposables.push(legGeo, legMat, ringGeo, bandGeo, lipGeo, loopMat, lipMat);
+    this.disposables.push(ringGeo, bandGeo, lipGeo, loopMat, lipMat);
 
     for (const [i, t] of raceInteraction.boostGates.entries()) {
       const g = new THREE.Group();
@@ -1604,14 +1611,6 @@ export class RaceEngine {
          straight where a shaded material would just be dark orange. */
       const lane = new THREE.Group();
       g.add(lane);
-      /* Stood on two slim struts from the road to the loop's sides, so the
-         loop reads as a piece of track set up on the table — no gantry beam
-         across the top of the shot. They travel with the loop to its lane. */
-      for (const sgn of [-1, 1]) {
-        const leg = new THREE.Mesh(legGeo, lipMat);
-        leg.position.set(sgn * (raceInteraction.gateRingRadius + 0.35), 0, 0);
-        lane.add(leg);
-      }
       const flameMat = new THREE.MeshBasicMaterial({ color: 0xFF6A00, transparent: true, opacity: 0.92 });
       this.disposables.push(flameMat);
       const ring = new THREE.Mesh(ringGeo, flameMat);
@@ -1722,6 +1721,7 @@ export class RaceEngine {
        ramp's own jump must not restart the arc mid-air. */
     if (this.airT < 0 && this.rampU < 0) {
       this.airT = 0;
+      this.airFromGate = i;
       this.airTime = raceInteraction.gateAirtime;
       this.airPeak = raceInteraction.gateRingY;
       this.airFrom = 0;
@@ -1756,6 +1756,82 @@ export class RaceEngine {
    * `done` is what stops one gate being judged twice on the way past it; it
    * has to be cleared somewhere or the second lap would have no gates at all.
    */
+  /** Length of the loop's centreline. */
+  private get loopLen() {
+    return Math.PI * 2 * raceInteraction.loopRadius;
+  }
+
+  /** Lateral on the loop: entry side to exit side as the car goes round. */
+  private loopLateral() {
+    const sh = raceInteraction.loopShift;
+    if (this.loopS < 0) return -sh;
+    return -sh + (2 * sh * this.loopS) / this.loopLen;
+  }
+
+  /** Where on the loop the car is, in world (track-local) space, for angle θ. */
+  private loopPoint(theta: number, lateral: number, out = new THREE.Vector3()) {
+    const t = raceInteraction.loopAt;
+    const up = new THREE.Vector3(0, 1, 0);
+    const p = this.curve.getPointAt(t);
+    const tan = this.curve.getTangentAt(t).setY(0).normalize();
+    const right = new THREE.Vector3().crossVectors(tan, up).normalize();
+    const R = raceInteraction.loopRadius;
+    return out
+      .copy(p)
+      .addScaledVector(right, lateral)
+      .addScaledVector(tan, R * Math.sin(theta))
+      .addScaledVector(up, R * (1 - Math.cos(theta)));
+  }
+
+  /**
+   * The loop-the-loop: a band of orange track laid along the loop's path with
+   * a raised lip on each edge, open-sided so the car can be seen inside it.
+   */
+  private buildLoop() {
+    const N = 120;
+    const W = 3.4;
+    const sh = raceInteraction.loopShift;
+    const up = new THREE.Vector3(0, 1, 0);
+    const tan = this.curve.getTangentAt(raceInteraction.loopAt).setY(0).normalize();
+    const right = new THREE.Vector3().crossVectors(tan, up).normalize();
+    const pos: number[] = [];
+    const idx: number[] = [];
+    const lipL: THREE.Vector3[] = [];
+    const lipR: THREE.Vector3[] = [];
+    const c = new THREE.Vector3();
+    for (let i = 0; i <= N; i++) {
+      const th = (i / N) * Math.PI * 2;
+      const lat = -sh + (2 * sh * i) / N;
+      this.loopPoint(th, lat, c);
+      // lift the surface a hair off the road where it touches down
+      const a = c.clone().addScaledVector(right, -W / 2);
+      const b = c.clone().addScaledVector(right, W / 2);
+      pos.push(a.x, a.y + 0.03, a.z, b.x, b.y + 0.03, b.z);
+      // the lips stand in towards the loop's centre
+      const inward = new THREE.Vector3().addScaledVector(tan, -Math.sin(th)).addScaledVector(up, Math.cos(th));
+      lipL.push(a.clone().addScaledVector(inward, 0.35));
+      lipR.push(b.clone().addScaledVector(inward, 0.35));
+      if (i < N) {
+        const o = i * 2;
+        idx.push(o, o + 1, o + 2, o + 1, o + 3, o + 2);
+      }
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setIndex(idx);
+    geo.computeVertexNormals();
+    const mat = new THREE.MeshStandardMaterial({
+      color: color.hwO.int, emissive: 0x7A2600, emissiveIntensity: 0.35, roughness: 0.5, side: THREE.DoubleSide,
+    });
+    const lipMat = new THREE.MeshStandardMaterial({ color: 0xE8391A, roughness: 0.45 });
+    const lipGeoL = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(lipL), N, 0.18, 6, false);
+    const lipGeoR = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(lipR), N, 0.18, 6, false);
+    this.disposables.push(geo, mat, lipMat, lipGeoL, lipGeoR);
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(geo, mat), new THREE.Mesh(lipGeoL, lipMat), new THREE.Mesh(lipGeoR, lipMat));
+    this.root.add(g);
+  }
+
   /** The lane gate i sits in on the current lap. */
   private gateLane(i: number) {
     const lanes = raceInteraction.gateLanes[i];
@@ -1764,11 +1840,27 @@ export class RaceEngine {
 
   /** On the last gate of the last lap the car is steered through the ring: from
    *  its gauge until it lands, the player's steering is set aside. */
-  private get steerLocked() {
-    const i = this.boostGates.length - 1;
-    const g = this.boostGates[i];
-    if (!g || !this.isFinalGate(i)) return false;
-    return (g.armed && !g.done) || this.finalPhase === 1 || this.finalPhase === 2;
+  /**
+   * The lane the car is being steered into, or null when the player steers.
+   *
+   * Every ring takes the wheel from its gauge until the car is back on the
+   * road: the lift happens in slow motion with the phone tipping up, which is
+   * exactly when a tilt can't also hold a line to a ring off to one side. The
+   * loop takes it too, for the whole way round.
+   */
+  private get laneLock(): number | null {
+    if (this.loopS >= 0) return this.loopLateral();
+    if (this.interactions && raceInteraction.loopEnabled) {
+      const ahead = ((raceInteraction.loopAt - this.t + 1) % 1) * this.curveLen;
+      if (ahead < raceInteraction.loopLeadIn) return -raceInteraction.loopShift;
+    }
+    const i = this.armedGate;
+    const g = i >= 0 ? this.boostGates[i] : undefined;
+    if (g && !g.done) return this.gateLane(i);
+    if (this.airFromGate >= 0 && this.airT >= 0) return this.gateLane(this.airFromGate);
+    const f = this.boostGates.length - 1;
+    if (this.isFinalGate(f) && (this.finalPhase === 1 || this.finalPhase === 2)) return this.gateLane(f);
+    return null;
   }
 
   private rearmGates() {
@@ -2330,6 +2422,12 @@ export class RaceEngine {
         return u > -(final ? 48 : 14) && u < 12;
       });
       if (nearGate) continue;
+      if (raceInteraction.loopEnabled) {
+        let dl = t - raceInteraction.loopAt;
+        dl -= Math.round(dl);
+        const ul = dl * this.curveLen;
+        if (ul > -(raceInteraction.loopLeadIn + 6) && ul < 14) continue;
+      }
       const lateral = [-2.6, 0, 2.6, -1.3, 1.3][i % 5];
       this.pickups.push({ sprite, t, lateral, points: def.points, name: def.name, alive: true, pop: 0 });
       this.root.add(sprite);
@@ -2406,6 +2504,9 @@ export class RaceEngine {
         after: at(12),
       })),
       { t: raceInteraction.jumpAt, before: at(10), after: at(34) },
+      ...(raceInteraction.loopEnabled
+        ? [{ t: raceInteraction.loopAt, before: at(raceInteraction.loopLeadIn + 6), after: at(14) }]
+        : []),
     ];
     for (let i = 0; i < COUNT; i++) {
       const t = ((i + 0.75) / COUNT) % 1;
@@ -2575,6 +2676,16 @@ export class RaceEngine {
     if (this.driftYaw !== 0) this.carTilt.rotateY(this.driftYaw);
     // Nose up the ramp and through the arc. Local X is the car's axle line.
     if (this.jumpPitch !== 0) this.carTilt.rotateX(this.jumpPitch);
+    /* Round the loop: placed on its path and turned nose-up by the angle, so
+       at the top the car is upside down with its wheels on the track. */
+    if (this.loopS >= 0) {
+      const th = (this.loopS / this.loopLen) * Math.PI * 2;
+      this.loopPoint(th, this.lateral, this.carTilt.position);
+      this.carTilt.position.y += 0.02;
+      const ltan = this.curve.getTangentAt(raceInteraction.loopAt).setY(0).normalize();
+      this.carTilt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), ltan);
+      this.carTilt.rotateX(th);
+    }
   }
 
   /** -1 (full left) .. 1 (full right) */
@@ -2744,6 +2855,16 @@ export class RaceEngine {
     out.look.copy(ahead).addScaledVector(right, this.lateral * 0.5);
     out.look.y = 0.8 + this.jumpHeightNow * 0.7;
 
+    /* On the loop, stand back and watch it go round: behind the loop's base,
+       raised, looking at the car wherever it is on the circle. */
+    if (this.loopS >= 0) {
+      const lt = this.curve.getTangentAt(raceInteraction.loopAt).setY(0).normalize();
+      const base = this.curve.getPointAt(raceInteraction.loopAt);
+      out.pos.copy(base).addScaledVector(lt, -16).setY(5.5);
+      out.look.copy(this.carTilt.position);
+      return out;
+    }
+
     /* ...and on the last gate, out to the car's right instead.
      *
      * Blended rather than cut, and blended HERE rather than in the scene: the
@@ -2764,8 +2885,18 @@ export class RaceEngine {
     }
     /* ...and for the run to the line, out in front, looking back at the car. */
     if (this.frontK > 0.001) {
-      const front = car.clone().addScaledVector(tan, FRONT_AHEAD);
-      front.y = FRONT_HEIGHT + this.jumpHeightNow * 0.4;
+      /* Planted a little way past the line and off to the right, and left
+         there: the car runs at it, passes it and carries on, and the camera
+         turns to follow it by — rather than backing away in front of it. */
+      if (!this.frontAnchor) {
+        const toLine = this.t > 0.5 ? (1 - this.t) * this.curveLen : 0;
+        const at = (this.t + (toLine + FRONT_AHEAD) / this.curveLen) % 1;
+        const ap = this.curve.getPointAt(at);
+        const at2 = this.curve.getTangentAt(at);
+        const ar = new THREE.Vector3().crossVectors(at2, up).normalize();
+        this.frontAnchor = ap.addScaledVector(ar, ROAD_W / 2 - 0.4).setY(FRONT_HEIGHT);
+      }
+      const front = this.frontAnchor.clone();
       out.pos.lerp(front, this.frontK);
       const at = car.clone();
       at.y = 0.9 + this.jumpHeightNow;
@@ -2911,6 +3042,19 @@ export class RaceEngine {
        which put `t` outside 0..1 and made every position on the lap wrong
        until the car had driven forward past the seam again. */
     this.t = ((((this.t + (this.speed * dt) / this.curveLen) % 1) + 1) % 1);
+    /* The loop holds the lap still while the car goes round it. */
+    if (this.loopS >= 0) {
+      this.t = raceInteraction.loopAt;
+      this.speed = Math.max(this.speed, 16);
+      this.loopS += this.speed * dt;
+      if (this.loopS >= this.loopLen) this.loopS = -1;
+    } else if (
+      this.interactions && raceInteraction.loopEnabled && this.speed > 0 && this.airT < 0 &&
+      prevT < raceInteraction.loopAt && this.t >= raceInteraction.loopAt && this.t - prevT < 0.2
+    ) {
+      this.t = raceInteraction.loopAt;
+      this.loopS = 0;
+    }
     if (prevT > 0.92 && this.t < 0.08 && this.speed > 0) {
       this.lap += 1;
       this.rearmGates();
@@ -2977,6 +3121,7 @@ export class RaceEngine {
       this.airT += dt / this.airTime;
       if (this.airT >= 1) {
         this.airT = -1;
+        this.airFromGate = -1;
         this.jumpHeightNow = 0;
         this.opts.onJumpLand?.();
       } else {
@@ -3067,7 +3212,6 @@ export class RaceEngine {
              where the hole is. Eased rather than snapped: the player may be
              mid-corner-exit when the gate arms, and yanking the car onto the
              centreline would read as the game taking the wheel. */
-          this.lateral += (this.gateLane(i) - this.lateral) * chase(this.isFinalGate(i) ? 7 : 4, dt);
         } else if (g.armed) {
           /* Lifted, still short of the hoop. Full speed from here: the lift IS
              the moment, and the world surging back up as the car leaves the
@@ -3076,7 +3220,6 @@ export class RaceEngine {
 
              The car stays lined up, though — the verdict is not in yet,
              because the verdict is where the car IS when it gets there. */
-          this.lateral += (this.gateLane(i) - this.lateral) * chase(this.isFinalGate(i) ? 7 : 4, dt);
           if (this.isFinalGate(i) && this.finalPhase < 1) this.finalPhase = 1;
         }
 
@@ -3160,9 +3303,11 @@ export class RaceEngine {
        to miss. The hazard moved onto the road instead of being the road. */
     const slide = 1 + (1 - this.grip) * 2.6;
     const bite = this.manual ? Math.min(1, 0.25 + this.speed / 18) : 1;
-    if (this.steerLocked) {
-      const i = this.boostGates.length - 1;
-      this.lateral += (this.gateLane(i) - this.lateral) * chase(7, dt);
+    const lock = this.laneLock;
+    if (lock !== null) {
+      // on the loop the car is ON the loop's path, not easing towards it
+      if (this.loopS >= 0) this.lateral = lock;
+      else this.lateral += (lock - this.lateral) * chase(6, dt);
     } else {
       this.lateral += this.steerSmooth * dt * 7 * slide * bite;
     }

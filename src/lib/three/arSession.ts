@@ -521,9 +521,11 @@ function makeGalaxyMoment(scene: THREE.Scene, camera: THREE.Camera, radius: numb
       if (!on) return;
       eye.getWorldPosition(at);
       sky.position.copy(at);
-      // the sky arrives a little ahead of the flash peak, so the flash hides the swap
-      skyMat.opacity = Math.min(1, k * 1.6);
-      flashMat.opacity = Math.pow(Math.sin(Math.PI * k), 6) * 0.95;
+      /* A fade, not a flash: the sky simply comes up over the room on an
+         ease-in-out as k rises, and goes back the same way. */
+      const e = k * k * (3 - 2 * k);
+      skyMat.opacity = e;
+      flashMat.opacity = 0;
     },
     dispose() {
       scene.remove(sky);
@@ -1762,7 +1764,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       const k = phase === 'racing' ? engine.finalMoment : 0;
       moment.update(k, camera);
       // the room itself goes, behind the sky
-      const vis = String(1 - Math.min(1, k * 1.6));
+      const vis = String(1 - k * k * (3 - 2 * k));
       if (video.style.opacity !== vis) video.style.opacity = vis;
     }
     renderer.render(scene, camera);

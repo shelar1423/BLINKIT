@@ -61,9 +61,12 @@ export function initialTiltState(): TiltState {
 }
 
 export function createTiltSteer(opts: Opts) {
-  const fullLock = opts.fullLockDeg ?? 22;
-  const dead = opts.deadZoneDeg ?? 2.5;
-  const smooth = opts.smoothing ?? 0.18;
+  /* Wider travel and a bigger dead zone than a flat phone needs: in AR the
+     phone is held up at arm's length, and a steady hand there still shakes a
+     few degrees — which at 22° full lock was a car twitching across lanes. */
+  const fullLock = opts.fullLockDeg ?? 28;
+  const dead = opts.deadZoneDeg ?? 4;
+  const smooth = opts.smoothing ?? 0.1;
 
   let state: TiltState = initialTiltState();
   let neutral: number | null = null;
@@ -147,7 +150,9 @@ export function createTiltSteer(opts: Opts) {
 
     const sign = Math.sign(delta);
     const mag = Math.max(0, Math.abs(delta) - dead);
-    const target = Math.max(-1, Math.min(1, (sign * mag) / (fullLock - dead)));
+    const lin = Math.min(1, mag / (fullLock - dead));
+    // a soft start: small tilts nudge, a committed tilt still reaches full lock
+    const target = sign * lin * (0.45 + 0.55 * lin);
 
     /* Smoothed on the clock, not per event: sensors fire at 30, 60 or 100Hz
        depending on the phone, and a fixed share per event made the same
