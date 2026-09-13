@@ -175,9 +175,7 @@ export function RaceResult({
             {won ? (
               <>
                 <p className="rwd__won">You Won</p>
-                <p className={'rwd__amt' + (won.head.length > 9 ? ' rwd__amt--sm' : '') + ('pass' in won ? ' rwd__amt--pass' : '')}>
-                  {won.head}
-                </p>
+                <p className={'rwd__amt' + ('pass' in won ? ' rwd__amt--pass' : '')}>{won.head}</p>
                 <p className="rwd__upto">
                   {won.sub === 'Blinkit Cash' ? (
                     <span className="rwd__brand">
@@ -191,16 +189,17 @@ export function RaceResult({
               </>
             ) : (
               <>
-                <p className="rwd__won">Next Reward</p>
-                {/* Purple here too when the next one up is the Pass — it is the
-                    same prize named, and it should not change colour on the way
-                    to being won. */}
-                <p className={'rwd__amt rwd__amt--sm' + (next?.perk ? ' rwd__amt--pass' : '')}>
-                  {next ? next.label : 'All unlocked'}
+                {/* Nothing was won, and this half of the ticket has to say so.
+                    It used to lead with the next tier's NAME, set big in the
+                    same green a prize is written in — "Free Delivery", which
+                    reads as free delivery you have got. What is big here now is
+                    the distance left, which is the one number that is actually
+                    yours, and it is in ink rather than in a prize colour. */}
+                <p className="rwd__won">{next ? 'No reward yet' : 'All unlocked'}</p>
+                <p className="rwd__amt rwd__amt--gap">
+                  {next ? (next.min - totalPoints).toLocaleString('en-IN') : 'Every Tier Cleared'}
                 </p>
-                <p className="rwd__upto">
-                  {next ? `${(next.min - totalPoints).toLocaleString('en-IN')} Points to Go` : 'Every Tier Cleared'}
-                </p>
+                <p className="rwd__upto">{next ? `Points to ${next.label}` : ''}</p>
                 <p className="rwd__fine">
                   {next
                     ? 'Keep racing. Every run adds to the same total.'

@@ -2406,23 +2406,33 @@ input, select, textarea { font: inherit; color: inherit; }
   overflow: hidden;
   background: var(--rwd-card);
   border: 3px solid #1766D6;
-  --n1: calc(100% - var(--stub) - 56px);
-  /* four notches: one mid-ticket and one on the perforation, each side */
+  /* Two notches, both on the perforation, and NOTHING at the top.
+   *
+   * There used to be a third pair, meant to sit mid-ticket, positioned from
+   * `--n1: calc(100% - var(--stub) - 56px)`. That 100% resolves against two
+   * different boxes: the card in mask-size, but the MASK LAYER inside the
+   * gradient that reads it. So the circle landed 99px above where it was
+   * written to, which on a 244px card is y=13 — a bite out of the top corners
+   * on ₹25 and ₹50, and off the top edge entirely on the shorter tiers. The
+   * same rule, drawing a different card each time.
+   *
+   * It is gone rather than corrected. A ticket is torn along one line, and
+   * that line already has its notches; the top corners are simply curved, on
+   * every tier. Everything below is stated in LENGTHS against a known edge,
+   * so nothing can resolve against the wrong box again.
+   *
+   * The flat layer covers the card from its top down to where the notched
+   * pair begins. Mask layers composite by addition and anything no layer
+   * covers is masked away, so that top band needs a layer of its own. */
   -webkit-mask:
-    radial-gradient(circle at 0 var(--n1), transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 0 / 51% calc(var(--n1) + 33px) no-repeat,
-    radial-gradient(circle at 100% var(--n1), transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 0 / 51% calc(var(--n1) + 33px) no-repeat,
+    linear-gradient(#000, #000) 0 0 / 100% calc(100% - var(--stub) - 33px) no-repeat,
     radial-gradient(circle at 0 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 100% / 51% calc(var(--stub) + 33px) no-repeat,
     radial-gradient(circle at 100% 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 100% / 51% calc(var(--stub) + 33px) no-repeat;
   mask:
-    radial-gradient(circle at 0 var(--n1), transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 0 / 51% calc(var(--n1) + 33px) no-repeat,
-    radial-gradient(circle at 100% var(--n1), transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 0 / 51% calc(var(--n1) + 33px) no-repeat,
+    linear-gradient(#000, #000) 0 0 / 100% calc(100% - var(--stub) - 33px) no-repeat,
     radial-gradient(circle at 0 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 100% / 51% calc(var(--stub) + 33px) no-repeat,
     radial-gradient(circle at 100% 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 100% / 51% calc(var(--stub) + 33px) no-repeat;
 }
-/* Black, not the rust it was. The one figure that is not black is the amount,
-   and the one word inside a black line that is not black is the "it" of
-   Blinkit Cash — both of those say their own thing, and everything else on the
-   ticket is just reading. */
 .rwd__body { padding: 18px 20px 14px; color: var(--ink); }
 .rwd__won {
   font-size: var(--f-md); font-weight: 800;
@@ -2435,8 +2445,13 @@ input, select, textarea { font: inherit; color: inherit; }
      in — on the ADD button, on every price, on the cash wallet this lands in. */
   color: var(--green); margin-top: 4px;
 }
-/* A tier name is words, not a figure — it cannot take the figure's size. */
-.rwd__amt--sm { font-size: clamp(24px, 7.5vw, 30px); }
+/* One size for every headline, whatever it says.
+   "District Pass" used to drop to a smaller step because it is longer than
+   nine characters, so the top of the ladder announced itself more quietly than
+   the ₹25 below it. It wraps instead, balanced across its two words. */
+.rwd__amt { text-wrap: balance; }
+/* The distance still to go, when nothing was won. Ink, not a prize colour. */
+.rwd__amt--gap { color: var(--ink); }
 /* District Pass, and only that: the one reward on the ladder that is not paid
    in Blinkit's own currency, so it is not written in Blinkit's own green. */
 .rwd__amt--pass { color: #8201FB; }
