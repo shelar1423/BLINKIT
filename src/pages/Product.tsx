@@ -121,6 +121,10 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
             <span>Material</span>
             <b>Diecast</b>
           </div>
+          <div className="chipbox">
+            <span>Scale</span>
+            <b>1:64</b>
+          </div>
           <span className="chipbox chipbox--cta">View details</span>
         </div>
         </div>
@@ -158,7 +162,7 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
 
         <div className="card rowcard rowcard--static">
           <span className="rowcard__brand">
-            <img src="/brand/hot-wheels.svg" alt="" />
+            <img src="/brand/hot-wheels-logo.webp" alt="" />
           </span>
           <span className="grow">
             <b>Hot Wheels</b>
@@ -621,6 +625,10 @@ export default function Product() {
               <span>Material</span>
               <b>Diecast</b>
             </div>
+            <div className="chipbox">
+              <span>Scale</span>
+              <b>1:64</b>
+            </div>
             <button
               className="chipbox chipbox--cta"
               type="button"
@@ -685,7 +693,7 @@ export default function Product() {
 
           <button className="card rowcard" type="button" onClick={() => nav('/hot-wheels')}>
             <span className="rowcard__brand">
-              <img src="/brand/hot-wheels.svg" alt="" />
+              <img src="/brand/hot-wheels-logo.webp" alt="" />
             </span>
             <span className="grow">
               <b>Hot Wheels</b>
