@@ -38,8 +38,13 @@ import { useToast } from '../App';
    so the number and the picture can never disagree.
    ============================================================ */
 
-/** Real seconds the six-second design timeline is stretched across. */
-const TRIP_S = 108;
+/** Real seconds the six-second design timeline is stretched across.
+ *
+ *  Half a minute quicker than it was: at 108s the car crawled between turns
+ *  and the drive read as idling rather than travelling. The whole timeline
+ *  moves with this number, so the ETA still counts the same seven minutes
+ *  down — it just counts them faster, which is the point. */
+const TRIP_S = 72;
 /** What the ETA reads at the start of the trip. */
 const TRIP_MIN = 7;
 
