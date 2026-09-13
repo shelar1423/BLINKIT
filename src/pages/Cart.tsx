@@ -81,7 +81,15 @@ export default function Cart() {
   const [busy, setBusy] = useState(false);
   /* Avoid calling, don't ring the bell and pet at home start ticked, as on the
      reference account; the rest start clear. */
-  const [instructions, setInstructions] = useState<string[]>(['call', 'bell', 'pet']);
+  /* One, not three.
+   *
+   * All three were ticked to begin with, which nothing on screen said while a
+   * tick was only a box changing its border colour. Now that ticked fills the
+   * whole tile, three pre-selected instructions announce themselves — and they
+   * are choices the checkout made on the player's behalf and waited to see
+   * whether they noticed. "Don't ring the bell" and "Pet at home" start where
+   * they should: offered, outlined in green, and off. */
+  const [instructions, setInstructions] = useState<string[]>(['call']);
   /* On by default, as the real sheet has it — but only ever ASKED once an
      instruction exists to save, which is why the row below is conditional. */
   const [saveAll, setSaveAll] = useState(true);

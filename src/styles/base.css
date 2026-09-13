@@ -4286,10 +4286,13 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckoins__c.is-on .glyph { color: var(--green); }
 .ckoins__top { display: flex; justify-content: space-between; align-items: flex-start; }
 .ckoins__top .glyph { width: 18px; height: 18px; color: var(--ink-2); }
+/* Unticked is a GREEN OUTLINE, not a grey one. The box is an invitation on
+   this row rather than a piece of chrome, and the grey read as disabled next
+   to tiles that are plainly tappable. */
 .ckoins__box {
   position: relative; flex: none;
   width: 20px; height: 20px; border-radius: 4px;
-  border: 1.5px solid #B8BCC6; background: none;
+  border: 1.5px solid var(--green); background: none;
 }
 /* The tick: two sides of a box, turned. Drawn rather than an asset, because a
    checkmark is two strokes and this one has to sit inside a 20px square. */
