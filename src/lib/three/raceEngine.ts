@@ -171,11 +171,11 @@ const FRONT_RATE = 1.4;
  *  motion, but a camera move that slowed down with it would read as a stall. */
 const CINE_RATE = 4.2;
 /** The lap is done. Slower still, because nothing is being aimed at any more. */
-const SLOW_FINISH = 0.5;
+const SLOW_FINISH = 0.35;
 /** Real seconds between the last corner and the result screen. */
 /* Real seconds between the line and the result screen. Long enough for the
    car to be seen crossing the line and running on past the finish camera. */
-const FINISH_OUTRO = 2.6;
+const FINISH_OUTRO = 1.8;
 
 /**
  * The fraction to move toward a target this frame, for an exponential chase.
@@ -1114,6 +1114,8 @@ export class RaceEngine {
     points: number;
     name: string;
     alive: boolean;
+    /** Only on the road from lap two, where the loop stood on lap one. */
+    lapTwo?: boolean;
     pop: number;
   }[] = [];
 
@@ -2412,7 +2414,10 @@ export class RaceEngine {
        to choose, because every line ran into one. Thinned out, reaching a
        grocery is a decision rather than a certainty, and the gaps are where
        the debris goes. */
-    const COUNT = 24;
+    /* 32, so a lap is never long without something to reach for — and all of
+       them come back on lap two (see the lap seam), rather than lap two
+       being the empty road lap one left behind. */
+    const COUNT = 32;
     const texCache = new Map<string, THREE.Texture>();
     for (let i = 0; i < COUNT; i++) {
       const def = PICKUPS[i % PICKUPS.length];
@@ -2448,17 +2453,22 @@ export class RaceEngine {
         d -= Math.round(d);
         const u = d * this.curveLen;
         const final = gi === raceInteraction.boostGates.length - 1;
-        return u > -(final ? 48 : 14) && u < 12;
+        return u > -(final ? 26 : 14) && u < 12;
       });
       if (nearGate) continue;
+      /* Round the loop there is nothing on lap one — the car is on rails — but
+         the loop is gone on lap two and that straight would be bare, so these
+         appear only from then. */
+      let lapTwo = false;
       if (raceInteraction.loopEnabled) {
         let dl = t - raceInteraction.loopAt;
         dl -= Math.round(dl);
         const ul = dl * this.curveLen;
-        if (ul > -(raceInteraction.loopLeadIn + 6) && ul < 14) continue;
+        if (ul > -(raceInteraction.loopLeadIn + 6) && ul < 14) lapTwo = true;
       }
       const lateral = [-2.6, 0, 2.6, -1.3, 1.3][i % 5];
-      this.pickups.push({ sprite, t, lateral, points: def.points, name: def.name, alive: true, pop: 0 });
+      this.pickups.push({ sprite, t, lateral, points: def.points, name: def.name, alive: !lapTwo, pop: 0, lapTwo });
+      if (lapTwo) sprite.visible = false;
       this.root.add(sprite);
     }
     this.layoutPickups();
@@ -3074,7 +3084,8 @@ export class RaceEngine {
        so taking a corner is now something you do rather than something you
        survive, and the gate's run-up covers less ground for the same warning. */
     const boosting = this.elapsed < this.boostUntil;
-    const vMax = boosting ? 29 : 22;
+    // eased back again: at 22 the race read as rushed on a phone
+    const vMax = boosting ? 25 : 19;
     if (this.manual) {
       // throttle accelerates, brake bites hard, everything else is drag
       const drag = 3.2 + this.speed * 0.12 + (this.drifting ? 5.5 : 0);
@@ -3092,7 +3103,7 @@ export class RaceEngine {
     /* The loop holds the lap still while the car goes round it. */
     if (this.loopS >= 0) {
       this.t = raceInteraction.loopAt;
-      this.speed = Math.max(this.speed, 19);
+      this.speed = Math.max(this.speed, 17);
       // a touch quicker round the loop than on the road, so it doesn't crawl
       this.loopS += this.speed * 1.18 * dt;
       if (this.loopS >= this.loopLen) this.loopS = -1;
@@ -3108,6 +3119,16 @@ export class RaceEngine {
       this.rearmGates();
       // the loop is driven once; on lap two the road runs clear
       if (this.loopGroup) this.loopGroup.visible = false;
+      /* Every grocery is back for lap two, including the ones on the loop's
+         straight. Lap two used to be the road lap one had already emptied. */
+      for (const p of this.pickups) {
+        p.alive = true;
+        p.pop = 0;
+        p.sprite.visible = true;
+        p.sprite.material.opacity = 1;
+        const sz = p.points >= 500 ? 2.6 : p.points >= 250 ? 2.2 : 1.9;
+        p.sprite.scale.set(sz, sz, 1);
+      }
     }
 
     /* Events only fire while the car is going FORWARDS.
@@ -3351,7 +3372,8 @@ export class RaceEngine {
     // moves the car much further across the road and swings the nose with it.
     const wantGrip = this.drifting && this.speed > 6 ? 0.32 : 1;
     this.grip += (wantGrip - this.grip) * chase(6, dt);
-    this.steerSmooth += (this.steer - this.steerSmooth) * chase(9, dt);
+    // steadier: a tilt signal is noisy, and at 9 the car followed every tremor
+    this.steerSmooth += (this.steer - this.steerSmooth) * chase(5, dt);
 
     /* Steering is a VELOCITY across the road, and the circuit takes its own
        corners.
@@ -3374,7 +3396,7 @@ export class RaceEngine {
       if (this.loopS >= 0) this.lateral = lock;
       else this.lateral += (lock - this.lateral) * chase(6, dt);
     } else {
-      this.lateral += this.steerSmooth * dt * 7 * slide * bite;
+      this.lateral += this.steerSmooth * dt * 5.5 * slide * bite;
     }
 
     const wantYaw = -this.steerSmooth * (1 - this.grip) * 0.85;
