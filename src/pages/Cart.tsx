@@ -82,6 +82,9 @@ export default function Cart() {
   /* Avoid calling, don't ring the bell and pet at home start ticked, as on the
      reference account; the rest start clear. */
   const [instructions, setInstructions] = useState<string[]>(['call', 'bell', 'pet']);
+  /* On by default, as the real sheet has it — but only ever ASKED once an
+     instruction exists to save, which is why the row below is conditional. */
+  const [saveAll, setSaveAll] = useState(true);
   const placeOrder = useStore((s) => s.placeOrder);
   /* Set before any navigation this page performs itself, so the empty-cart
      effect below cannot fire on the same tick and fight it. */
@@ -249,6 +252,17 @@ export default function Cart() {
               );
             })}
           </div>
+          {instructions.length > 0 && (
+            <button
+              type="button"
+              className={'ckoins__save' + (saveAll ? ' is-on' : '')}
+              aria-pressed={saveAll}
+              onClick={() => setSaveAll((v) => !v)}
+            >
+              <i className="ckoins__box" aria-hidden="true" />
+              Save for all orders at this address
+            </button>
+          )}
         </section>
 
         {/* Feeding India first, then the tip, then the three small rows. The

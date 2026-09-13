@@ -68,6 +68,14 @@
      — so they move together and stay the one size they are supposed to be. */
   --nav-title-size: calc(var(--f-lg) + 4px);
   --nav-title-weight: 700;
+
+  /* Section headings — "You might also like", "Bill details", "Your rewards".
+     One size and one weight for all of them, so a section reads as a section
+     wherever it appears rather than at whatever size its own screen happened
+     to set. A step lighter than a screen title, and two pixels up from where
+     the checkout's cards had them. */
+  --sec-title-size: calc(var(--f-lg) + 2px);
+  --sec-title-weight: 700;
   /* What shows behind the notch and at an overscroll bounce. Matches the
      campaign band so the status bar belongs to the app. */
   /* The race result screen: Hot Wheels blue ground, a cream ticket with a
