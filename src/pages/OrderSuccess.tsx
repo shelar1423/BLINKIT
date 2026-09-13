@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { ARRIVE_U, DeliveryMap, DONE_U } from '../design/components/DeliveryMap';
+import { BillRows } from '../design/components/BillDetails';
 import { rupees } from '../data/catalog';
 import { ADDRESSES } from '../data/addresses';
 import { useStore } from '../store/useStore';
@@ -302,29 +303,37 @@ export default function OrderSuccess() {
             ))}
           </div>
 
-          {summaryOpen && (
-            <div className="trkc__lines">
-              {order.lines.map((l) => (
-                <div className="trkc__ln" key={l.id}>
-                  <span className="grow">
-                    {l.name}
-                    <small>Qty {l.qty}</small>
-                  </span>
-                  <b>{rupees(l.price * l.qty)}</b>
-                </div>
-              ))}
-              <div className="trkc__ln trkc__ln--tot">
-                <span className="grow">Paid for {items} item{items > 1 ? 's' : ''}</span>
-                <b>{rupees(order.total)}</b>
+          {/* The checkout's bill, not a summary of it.
+              Same component, so the icons, the struck delivery fee, the dotted
+              underlines and the savings band are the ones you signed off on
+              rather than a second version that can drift. `ckobill` carries the
+              type and spacing; the heading stays behind, because this card has
+              already called itself Order summary.
+
+              Orders placed before the bill was recorded have none to show, so
+              they fall back to the line list they always had. */}
+          {summaryOpen &&
+            (order.bill ? (
+              <div className="trkc__bill ckobill">
+                <BillRows t={order.bill} />
               </div>
-              {order.savings > 0 && (
-                <div className="trkc__ln trkc__ln--save">
-                  <span className="grow">You saved</span>
-                  <b>{rupees(order.savings)}</b>
+            ) : (
+              <div className="trkc__lines">
+                {order.lines.map((l) => (
+                  <div className="trkc__ln" key={l.id}>
+                    <span className="grow">
+                      {l.name}
+                      <small>Qty {l.qty}</small>
+                    </span>
+                    <b>{rupees(l.price * l.qty)}</b>
+                  </div>
+                ))}
+                <div className="trkc__ln trkc__ln--tot">
+                  <span className="grow">Paid for {items} item{items > 1 ? 's' : ''}</span>
+                  <b>{rupees(order.total)}</b>
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            ))}
 
           <button className="trkc__foot" type="button" onClick={() => setSummaryOpen((v) => !v)}>
             {summaryOpen ? 'Hide order summary' : 'View order summary'}

@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AddControl, ProductCard } from '../design/components/ProductCard';
 import { Mark } from '../design/components/CheckoutSheets';
+import { BillRows, Glyph } from '../design/components/BillDetails';
 import { SHOP_CARS, rupees } from '../data/catalog';
 import { ADDRESSES, findMethod } from '../data/addresses';
-import { DELIVERY_FEE, useCartLines, useStore, useTotals } from '../store/useStore';
+import { useCartLines, useStore, useTotals } from '../store/useStore';
 import {
   IconCaretDown,
   IconCheck,
@@ -57,17 +58,6 @@ const INSTRUCTIONS: { id: string; icon: string; label: string }[] = [
   { id: 'door', icon: 'door-closed', label: 'Leave at door' },
   { id: 'pet', icon: 'dog-1', label: 'Pet at home' },
 ];
-
-/** A one-colour icon from public/checkout/icons, tinted by CSS `color`. */
-function Glyph({ name, className = '' }: { name: string; className?: string }) {
-  return (
-    <i
-      className={'glyph ' + className}
-      aria-hidden="true"
-      style={{ ['--glyph' as string]: `url(/checkout/icons/${name}.png)` }}
-    />
-  );
-}
 
 /** The small filled play-triangle Blinkit puts after a link. */
 const Tri = () => <i className="ckotri" aria-hidden="true" />;
@@ -219,49 +209,7 @@ export default function Cart() {
 
         <section className="ckocard ckobill">
           <h2>Bill details</h2>
-          <div className="ckobill__r">
-            <span className="ckobill__l">
-              <Glyph name="list-square-filled" />
-              Items total
-              {totals.mrp > totals.items && <em className="ckobill__saved">Saved {rupees(totals.mrp - totals.items)}</em>}
-            </span>
-            <b>
-              {totals.mrp > totals.items && <s>{rupees(totals.mrp)}</s>} {rupees(totals.items)}
-            </b>
-          </div>
-          <div className="ckobill__r">
-            <span className="ckobill__l">
-              <Glyph name="scooter-delivery-filled" />
-              <span className="ckobill__dot">Delivery charge</span>
-            </span>
-            <b>{totals.delivery === 0 ? <><s>{rupees(DELIVERY_FEE)}</s> <em className="ckobill__free">FREE</em></> : rupees(totals.delivery)}</b>
-          </div>
-          <div className="ckobill__r">
-            <span className="ckobill__l">
-              <Glyph name="shopping-bag-filled" />
-              <span className="ckobill__dot">Handling charge</span>
-            </span>
-            <b>{rupees(totals.handling)}</b>
-          </div>
-          {totals.tip > 0 && (
-            <div className="ckobill__r"><span className="ckobill__l ckobill__l--plain">Delivery tip</span><b>{rupees(totals.tip)}</b></div>
-          )}
-          {totals.donation > 0 && (
-            <div className="ckobill__r"><span className="ckobill__l ckobill__l--plain">Feeding India donation</span><b>{rupees(totals.donation)}</b></div>
-          )}
-          {totals.rewardValue > 0 && (
-            <div className="ckobill__r">
-              <span className="ckobill__l ckobill__l--plain">Racing reward</span>
-              <b><em className="ckobill__free">− {rupees(totals.rewardValue)}</em></b>
-            </div>
-          )}
-          <div className="ckobill__r ckobill__r--tot"><span className="ckobill__dot">Grand total</span><b>{rupees(totals.toPay)}</b></div>
-          {totals.savings > 0 && (
-            <div className="ckosave">
-              <p className="ckosave__r"><b>Your total savings</b><b>{rupees(totals.savings)}</b></p>
-              {totals.delivery === 0 && <p className="ckosave__s">Includes {rupees(DELIVERY_FEE)} savings through free delivery</p>}
-            </div>
-          )}
+          <BillRows t={totals} />
         </section>
 
         <button type="button" className="ckocard ckogst">

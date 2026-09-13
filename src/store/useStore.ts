@@ -58,6 +58,15 @@ export type Order = {
   savings: number;
   rewardValue: number;
   placedAt: number;
+  /**
+   * The bill exactly as it stood when the order was placed.
+   *
+   * Kept rather than recomputed, because by the time anyone looks at it the
+   * cart it came from is empty — and because a bill is a record of what was
+   * charged, not a sum that should be free to change its mind later. Optional
+   * only for orders persisted before this existed.
+   */
+  bill?: Totals;
 };
 
 /**
@@ -161,7 +170,10 @@ type State = {
   clearCart: () => void;
   cartCount: () => number;
   cartLines: () => { product: Product; qty: number }[];
-  totals: () => { items: number; mrp: number; savings: number; delivery: number; handling: number; rewardValue: number; toPay: number };
+  /* `Totals`, not a hand-written copy of it. The inline type here had drifted
+     — no tip, no donation, no free-delivery progress — so every caller saw a
+     narrower bill than the one computeTotals actually returns. */
+  totals: () => Totals;
 
   selectCar: (id: string) => void;
   finishRace: (r: Omit<RaceResult, 'rewardId' | 'at'>) => RaceResult;
@@ -273,6 +285,7 @@ export const useStore = create<State>()(
           savings: t.savings,
           rewardValue: t.rewardValue,
           placedAt: Date.now(),
+          bill: t,
         };
         set((s) => ({ order, cart: {}, claimedReward: null, totalPoints: s.totalPoints + 250 }));
         return order;
