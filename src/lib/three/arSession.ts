@@ -893,7 +893,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   let fpInited = false;
 
   function startRace() {
-    if (phase !== 'placed') return;
+    if (inspect || phase !== 'placed') return;
     startBanner.visible = false;
     setPhase('racing');
     engine.start();
@@ -904,12 +904,12 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
      are not a countdown — nothing is being timed — they are the gantry
      answering the hand on the launcher. */
   function armLaunch(drawn: boolean) {
-    if (phase !== 'placed') return;
+    if (inspect || phase !== 'placed') return;
     engine.setStartLights(drawn ? 2 : 1);
   }
 
   function launch(power: number) {
-    if (phase !== 'placed') return;
+    if (inspect || phase !== 'placed') return;
     engine.setStartLights(3);
     startBanner.visible = false;
     setPhase('racing');
@@ -1008,7 +1008,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   session.addEventListener('select', () => {
     if (phase === 'ready') place();
-    else if (phase === 'placed') startRace();
+    /* Never in inspect mode: a second select there is someone looking closer
+       at their car, not asking to race it. */
+    else if (phase === 'placed' && !inspect) startRace();
   });
   session.addEventListener('end', cleanup);
   opts.overlayRoot.addEventListener('beforexrselect', blockSelect);
@@ -1022,7 +1024,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     /* In headset AR the camera IS the phone, so there is no launcher framing
        to move to — you look at the lever yourself. The drag is identical. */
     makeLeverDrag(
-      engine, renderer.xr.getCamera(), () => phase === 'placed', armLaunch, launch,
+      engine, renderer.xr.getCamera(), () => !inspect && phase === 'placed', armLaunch, launch,
       (k) => opts.onPull?.(k), renderer.domElement,
     ),
   );
@@ -1460,7 +1462,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   /** Place using screen-space tap coordinates: raycast from the tap point
    *  through the camera to the ground plane, placing the track there. */
   function startRace() {
-    if (phase !== 'placed') return;
+    if (inspect || phase !== 'placed') return;
     startBanner.visible = false;
     setPhase('racing');
     engine.start();
@@ -1471,12 +1473,12 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      are not a countdown — nothing is being timed — they are the gantry
      answering the hand on the launcher. */
   function armLaunch(drawn: boolean) {
-    if (phase !== 'placed') return;
+    if (inspect || phase !== 'placed') return;
     engine.setStartLights(drawn ? 2 : 1);
   }
 
   function launch(power: number) {
-    if (phase !== 'placed') return;
+    if (inspect || phase !== 'placed') return;
     engine.setStartLights(3);
     startBanner.visible = false;
     setPhase('racing');
@@ -1489,8 +1491,21 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      stray tap during the race pinned an obstacle you did not ask for. Placement
      is now only ever the explicit button. */
 
+  /* Not in inspect mode.
+   *
+   * "View in your space" is for looking at the car, and there is no race in
+   * it — but the engine behind it is the same one, so its launcher still
+   * existed off-screen with a live hit test around it. `grab` accepts the
+   * lever, the whole launcher body, or anything within GRAB_SLOP_PX of where
+   * the lever projects, and in inspect mode that invisible zone sat right
+   * over the car you were being invited to tap and turn. Touching your own
+   * car started a race you were not in.
+   *
+   * The fix belongs HERE, in what viewing mode is allowed to reach, not in
+   * how the launcher reads a press — the race's launcher behaves exactly as
+   * it always has. */
   const leverDrag = makeLeverDrag(
-    engine, camera, () => phase === 'placed', armLaunch, launch,
+    engine, camera, () => !inspect && phase === 'placed', armLaunch, launch,
     (k) => opts.onPull?.(k), renderer.domElement,
   );
   const detachGestures = adjustGestures(

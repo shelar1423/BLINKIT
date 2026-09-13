@@ -435,8 +435,12 @@ export default function ARView() {
 
   /* The 3D race's HUD, from the moment the circuit is on the table. Before
      that the phase is still about finding a surface, which the chip bar and
-     the placement hints are for. */
-  const raceHud = phase === 'placed' || phase === 'racing';
+     the placement hints are for.
+
+     Never in inspect mode. "View in your space" has no score and no clock, so
+     a POINTS and TIME LEFT bar over a car you are only looking at was reading
+     out a race that was not being run. */
+  const raceHud = !inspect && (phase === 'placed' || phase === 'racing');
   const arLeft = stats?.timeLeft ?? 45;
   const arMM = Math.floor(arLeft / 60);
   const arSS = String(Math.floor(arLeft % 60)).padStart(2, '0');
