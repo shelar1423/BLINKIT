@@ -135,7 +135,10 @@
   /* The first tab's left edge sits on the gutter, under the search bar's
      start; the gap is the only space between tabs. */
   display: flex; gap: var(--crail-gap, 28px); margin-top: 10px;
-  padding: 0 var(--gut);
+  /* As the real header has it: the first word lines up with the search icon,
+     and the selected tab's underline — which runs 12px past its word — starts
+     just inside the search bar's edge. */
+  padding: 0 calc(var(--gut) + 14px);
   overflow-x: auto; scrollbar-width: none;
 }
 .crail::-webkit-scrollbar { display: none; }
@@ -163,7 +166,9 @@
    so "All" wore a bar three times the width of the label it was marking. */
 .crail__i.is-on .crail__l::after {
   content: ''; position: absolute;
-  left: 0; right: 0; bottom: -9px; height: 3px;
+  /* A little wider than the word, so a short label like "All" does not end
+     up with a stub. */
+  left: -12px; right: -12px; bottom: -9px; height: 4px;
   background: currentColor; border-radius: 3px 3px 0 0;
 }
 .crail__i.is-on { opacity: 1; font-weight: 800; }
