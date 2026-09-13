@@ -2095,13 +2095,6 @@ input, select, textarea { font: inherit; color: inherit; }
   .trkmap__store, .trkmap__flame { animation: none; }
 }
 
-.trkmap__zoom {
-  position: absolute; top: 10px; right: 10px;
-  width: 34px; height: 34px; border-radius: 50%;
-  display: grid; place-items: center;
-  background: #fff; color: var(--ink);
-  box-shadow: 0 2px 8px rgba(16, 20, 24, 0.18);
-}
 .trkmap__share {
   position: absolute; right: 10px; bottom: 10px;
   display: inline-flex; align-items: center; gap: 7px;
@@ -2110,19 +2103,6 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-sm); font-weight: 700;
   box-shadow: 0 2px 10px rgba(16, 20, 24, 0.18);
 }
-/* Shrinking the map does not shrink it — it puts it away, which is what the
-   real screen does once you stop caring where the car is. */
-.trk__showmap {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  /* A button does not fill its block parent on its own, and this one stands in
-     for the map, so it has to span exactly what the map spanned. */
-  width: calc(100% - 2 * var(--gut));
-  margin: 10px var(--gut) 0; padding: 12px;
-  background: #fff; border-radius: 14px;
-  font-size: var(--f-md); font-weight: 700; color: var(--green);
-  box-shadow: var(--sh-1);
-}
-
 /* ---------- the card stack ---------- */
 /* The column is pinned to the container, not left implicit: an `auto` track
    sizes to its widest child and would run the cards past the map's edge. */

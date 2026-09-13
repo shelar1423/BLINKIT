@@ -12,7 +12,6 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconCopy,
-  IconExpand,
   IconHeart,
   IconBag,
   IconLike,
@@ -63,7 +62,6 @@ export default function OrderSuccess() {
 
   /** Position on the design timeline, 0..1. Everything on this screen reads it. */
   const [u, setU] = useState(0);
-  const [mapOpen, setMapOpen] = useState(true);
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -127,19 +125,14 @@ export default function OrderSuccess() {
         </h1>
       </header>
 
-      {mapOpen ? (
-        <DeliveryMap
-          u={u}
-          onCollapse={() => setMapOpen(false)}
-          onShare={() => toast('Location sharing is out of scope for this prototype')}
-          label={done ? 'Your order has arrived' : `${PARTNER} is ${minsLeft} minutes away`}
-        />
-      ) : (
-        <button type="button" className="trk__showmap" onClick={() => setMapOpen(true)}>
-          <IconExpand size={17} />
-          Show live map
-        </button>
-      )}
+      {/* Always on screen. There is no collapsed state and no control to
+          restore one: where the order is, is what this screen is for, and
+          making that a thing you switch back on is a step nobody wants. */}
+      <DeliveryMap
+        u={u}
+        onShare={() => toast('Location sharing is out of scope for this prototype')}
+        label={done ? 'Your order has arrived' : `${PARTNER} is ${minsLeft} minutes away`}
+      />
 
       <div className="trk__body">
         {/* ---- who has the order ---- */}
