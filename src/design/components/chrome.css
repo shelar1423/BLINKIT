@@ -260,7 +260,12 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 5px 7px;
+  /* 5 all round, not 5/7. The active lozenge is a stadium and a stadium's
+     radius is always half its own height — there is no number to tune. What
+     decides whether its curve runs parallel to the bar's is sitting the SAME
+     distance inside on every edge, and 7px here put it 11px inside the left
+     against 6px inside the top. Equal padding makes the two concentric. */
+  padding: 5px;
   box-shadow: 0 6px 22px rgba(31, 31, 31, 0.14);
 }
 /* The lozenge sits behind the whole tab — icon and label together — not just
@@ -279,31 +284,22 @@
 .bnav__ic { display: grid; place-items: center; height: 24px; }
 .bnav__l { line-height: 1.2; text-align: center; white-space: nowrap; }
 
-/* The lozenge is the width of its own tab and no wider. It used to overhang
-   8px each side, which on the first tab pushed it past the bar's rounded edge
-   and towards its neighbour — measured on the real bar, the pill sits inside
-   the stadium with clear air before the next label. The bar's side padding
-   carries that air rather than the pill borrowing it. */
+/* An oval: a stadium, with no straight edge on its ends.
+
+   This went 999px -> 14 -> 22 chasing a shape that was never a rounded
+   rectangle. The radius was a red herring throughout — at 999px the shape was
+   already right and it still did not look like it belonged to the bar, because
+   it was 11px inside the bar's left edge and only 6px inside its top. Two
+   stadiums are concentric when their insets match, not when their radii do.
+
+   `inset: 0` rather than `0 3px`, with the bar's padding now equal on both
+   axes, puts it 6px inside everywhere. It stays the width of its own tab and
+   no wider — it used to overhang 8px each side, which on the first tab pushed
+   it past the bar's rounded edge and toward its neighbour. */
 .bnav__i.is-on::before {
   content: '';
-  position: absolute; inset: 0 3px;
-  /* Derived from the bar, not eyeballed, because eyeballing it missed twice.
-
-     The bar is 66.4 tall and a stadium, so its corner radius is 33.2. The
-     lozenge sits 6px inside the bar's top and bottom (1 border + 5 padding)
-     but 11px inside its LEFT edge (1 + 7 padding + this rule's own 3). For a
-     curve to run parallel to the one outside it, its radius is that radius
-     minus however far in it sits:
-
-       following the top/bottom inset   33.2 - 6  = 27.2   half the lozenge
-                                                           height, i.e. a
-                                                           stadium
-       following the LEFT inset         33.2 - 11 = 22.2
-
-     999px resolved to the first and was too round; a measured-by-eye 14 was
-     too square. 22 is the one that actually tracks the bar's left end, which
-     is the edge the lozenge is nested against on the first tab. */
-  border-radius: 22px;
+  position: absolute; inset: 0;
+  border-radius: 999px;
   background: rgba(31, 31, 31, 0.05);
 }
 .bnav__i > * { position: relative; z-index: 1; }
