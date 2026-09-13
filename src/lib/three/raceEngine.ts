@@ -3085,14 +3085,15 @@ export class RaceEngine {
        survive, and the gate's run-up covers less ground for the same warning. */
     const boosting = this.elapsed < this.boostUntil;
     // eased back again: at 22 the race read as rushed on a phone
-    const vMax = boosting ? 25 : 19;
+    const vMax = boosting ? 22 : 16.5;
     if (this.manual) {
       // throttle accelerates, brake bites hard, everything else is drag
       const drag = 3.2 + this.speed * 0.12 + (this.drifting ? 5.5 : 0);
       const a = this.throttle * 20 - this.braking * 30 - drag;
       this.speed = Math.max(0, Math.min(vMax, this.speed + a * dt));
     } else {
-      this.speed += ((boosting ? 29 : 20.5) - this.speed) * chase(1.8, dt);
+      // the self-driving pace — the one most races actually run at
+      this.speed += ((boosting ? 23 : 16.5) - this.speed) * chase(1.8, dt);
     }
     const prevT = this.t;
     /* Hitting debris sets a NEGATIVE speed — the car rebounds — so this has to
@@ -3103,7 +3104,7 @@ export class RaceEngine {
     /* The loop holds the lap still while the car goes round it. */
     if (this.loopS >= 0) {
       this.t = raceInteraction.loopAt;
-      this.speed = Math.max(this.speed, 17);
+      this.speed = Math.max(this.speed, 15);
       // a touch quicker round the loop than on the road, so it doesn't crawl
       this.loopS += this.speed * 1.18 * dt;
       if (this.loopS >= this.loopLen) this.loopS = -1;
