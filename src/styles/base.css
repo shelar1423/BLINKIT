@@ -2419,14 +2419,21 @@ input, select, textarea { font: inherit; color: inherit; }
     radial-gradient(circle at 0 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 100% / 51% calc(var(--stub) + 33px) no-repeat,
     radial-gradient(circle at 100% 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 100% / 51% calc(var(--stub) + 33px) no-repeat;
 }
-.rwd__body { padding: 18px 20px 14px; color: var(--rwd-ink); }
+/* Black, not the rust it was. The one figure that is not black is the amount,
+   and the one word inside a black line that is not black is the "it" of
+   Blinkit Cash — both of those say their own thing, and everything else on the
+   ticket is just reading. */
+.rwd__body { padding: 18px 20px 14px; color: var(--ink); }
 .rwd__won {
   font-size: var(--f-md); font-weight: 800;
 }
 .rwd__amt {
   font-size: clamp(38px, 12vw, 48px); font-weight: 900;
   letter-spacing: -0.03em; line-height: 1;
-  color: var(--rwd-red); margin-top: 4px;
+  /* Blinkit's green, not the coupon red it was. The figure is money you have
+     been given to spend on Blinkit, and green is the colour Blinkit says that
+     in — on the ADD button, on every price, on the cash wallet this lands in. */
+  color: var(--green); margin-top: 4px;
 }
 /* A tier name is words, not a figure — it cannot take the figure's size. */
 .rwd__amt--sm { font-size: clamp(24px, 7.5vw, 30px); }
@@ -2443,6 +2450,22 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--mut);
   text-wrap: balance;
 }
+/* ---- /preview/result only: the tier switcher ---- */
+.rprev {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  /* Over .rwd, which is 260 — this floats on top of the screen it previews. */
+  bottom: calc(var(--safe-b) + 8px); z-index: 300;
+  display: flex; gap: 6px; padding: 6px;
+  background: rgba(10, 12, 18, 0.82); border-radius: 999px;
+  backdrop-filter: blur(6px);
+}
+.rprev__b {
+  padding: 6px 11px; border-radius: 999px;
+  font-size: var(--f-2xs); font-weight: 700; color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+.rprev__b.is-on { background: var(--yellow); color: var(--ink); }
+
 .rwd__stub {
   position: relative;
   height: var(--stub);
