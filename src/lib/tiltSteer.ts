@@ -72,6 +72,7 @@ export function createTiltSteer(opts: Opts) {
   let neutral: number | null = null;
   let smoothed = 0;
   let lastAt = 0;
+  let lastOut = 0;
   let running = false;
   /** Samples collected right after start, averaged into the neutral point. */
   let calibration: number[] | null = null;
@@ -162,7 +163,13 @@ export function createTiltSteer(opts: Opts) {
     lastAt = now;
     const k = 1 - Math.pow(1 - smooth, dtMs / 16.7);
     smoothed += (target - smoothed) * k;
-    opts.onSteer(Math.abs(smoothed) < 0.01 ? 0 : smoothed);
+    /* Quantised to 1/50ths: sub-percent sensor noise re-sent every event kept
+       the car creeping, which reads as drift rather than control. */
+    const out = Math.abs(smoothed) < 0.03 ? 0 : Math.round(smoothed * 50) / 50;
+    if (out !== lastOut) {
+      lastOut = out;
+      opts.onSteer(out);
+    }
   };
 
   return {

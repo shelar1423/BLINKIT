@@ -3084,16 +3084,14 @@ export class RaceEngine {
        so taking a corner is now something you do rather than something you
        survive, and the gate's run-up covers less ground for the same warning. */
     const boosting = this.elapsed < this.boostUntil;
-    // eased back again: at 22 the race read as rushed on a phone
-    const vMax = boosting ? 22 : 16.5;
+    const vMax = boosting ? 29 : 22;
     if (this.manual) {
       // throttle accelerates, brake bites hard, everything else is drag
       const drag = 3.2 + this.speed * 0.12 + (this.drifting ? 5.5 : 0);
       const a = this.throttle * 20 - this.braking * 30 - drag;
       this.speed = Math.max(0, Math.min(vMax, this.speed + a * dt));
     } else {
-      // the self-driving pace — the one most races actually run at
-      this.speed += ((boosting ? 23 : 16.5) - this.speed) * chase(1.8, dt);
+      this.speed += ((boosting ? 29 : 20.5) - this.speed) * chase(1.8, dt);
     }
     const prevT = this.t;
     /* Hitting debris sets a NEGATIVE speed — the car rebounds — so this has to
@@ -3104,7 +3102,7 @@ export class RaceEngine {
     /* The loop holds the lap still while the car goes round it. */
     if (this.loopS >= 0) {
       this.t = raceInteraction.loopAt;
-      this.speed = Math.max(this.speed, 15);
+      this.speed = Math.max(this.speed, 19);
       // a touch quicker round the loop than on the road, so it doesn't crawl
       this.loopS += this.speed * 1.18 * dt;
       if (this.loopS >= this.loopLen) this.loopS = -1;
@@ -3283,10 +3281,11 @@ export class RaceEngine {
              never coming. */
           const errSec = ((ahead - ideal) * this.curveLen) / Math.max(1, this.speed);
           const stillOpen = errSec > -raceInteraction.gateAcceptSec;
-          /* Slow motion is the last ring's alone. On the others it slowed the
-             world just as the car was moving across to a ring off to one side,
-             so the move arrived late; they now run at full speed. */
-          if (stillOpen && k >= GATE_SLOW_FROM && this.isFinalGate(i)) gateArmed = true;
+          /* Slow motion on every ring's run-up. It was cut to the last ring
+             while rings sat off to the side and the car had to cross to them;
+             they are all centred and steered for you now, so the slow motion
+             is only there to give the lift time. */
+          if (stillOpen && k >= GATE_SLOW_FROM) gateArmed = true;
 
           /* Nothing is aimed at any more, but the car still has to arrive
              where the hole is. Eased rather than snapped: the player may be
