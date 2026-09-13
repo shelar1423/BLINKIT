@@ -175,7 +175,7 @@ const SLOW_FINISH = 0.35;
 /** Real seconds between the last corner and the result screen. */
 /* Real seconds between the line and the result screen. Long enough for the
    car to be seen crossing the line and running on past the finish camera. */
-const FINISH_OUTRO = 1.8;
+const FINISH_OUTRO = 2.8;
 
 /**
  * The fraction to move toward a target this frame, for an exponential chase.
@@ -3122,6 +3122,8 @@ export class RaceEngine {
       /* Every grocery is back for lap two, including the ones on the loop's
          straight. Lap two used to be the road lap one had already emptied. */
       for (const p of this.pickups) {
+        // not after the final line: the race is over, the road stays clear
+        if (this.lap >= this.laps) break;
         p.alive = true;
         p.pop = 0;
         p.sprite.visible = true;
@@ -3531,6 +3533,13 @@ export class RaceEngine {
    */
   private beginOutro(crossed: boolean) {
     this.outroAt = 0;
+    // nothing left to collect once the race is over
+    for (const p of this.pickups) {
+      if (p.alive) {
+        p.alive = false;
+        p.sprite.visible = false;
+      }
+    }
     this.outroCrossed = crossed;
     this.slowTarget = SLOW_FINISH;
     this.throttle = 0;

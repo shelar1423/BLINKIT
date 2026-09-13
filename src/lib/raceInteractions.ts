@@ -88,7 +88,7 @@ export const raceInteraction = {
   loopLeadIn: 26,
 
   gateLanes: [
-    [-1.8, 1.8],
+    [0, 0],
     [0, 0],
   ] as number[][],
 
