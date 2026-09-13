@@ -105,15 +105,15 @@ export function RaceCoach({
       glyph: <GlyphLift mode={mode} />,
       title: 'Jump the fire rings',
       body: ar
-        ? 'Rings hang over the track. As the closing ring meets the target, tilt your phone up — the car jumps through the middle and boosts.'
-        : 'Rings hang over the track. As the closing ring meets the target, swipe up — the car jumps through the middle and boosts.',
+        ? 'Rings hang over the track. As the closing ring meets the target, tilt your phone up. The car jumps through the middle and boosts.'
+        : 'Rings hang over the track. As the closing ring meets the target, swipe up. The car jumps through the middle and boosts.',
     },
     {
       glyph: <GlyphSteer mode={mode} />,
       title: 'Take the corners',
       body: ar
-        ? 'Tilt the phone left and right. The car does not turn on its own — a corner nobody takes ends at the barrier.'
-        : 'Hold either side of the screen. The car does not turn on its own — a corner nobody takes ends at the barrier.',
+        ? 'Tilt the phone left and right. The car does not turn on its own, and a corner nobody takes ends at the barrier.'
+        : 'Hold either side of the screen. The car does not turn on its own, and a corner nobody takes ends at the barrier.',
     },
   ];
 
@@ -146,7 +146,7 @@ export function RaceCoach({
           </button>
         )}
         <Button variant="hwBlue" block type="button" onClick={onDone}>
-          Got it — let’s race
+          Got it, let’s race
         </Button>
       </div>
     </div>

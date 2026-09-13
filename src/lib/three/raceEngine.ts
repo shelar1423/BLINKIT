@@ -113,7 +113,7 @@ export type EngineOpts = {
    motion, which stops reading as a moment and starts reading as the game
    being broken. Shallower, shorter, and released the instant the player
    acts. */
-const SLOW_BOOST = 0.4;
+const SLOW_BOOST = 0.5;
 /**
  * How far into the run-up the clock starts dropping, 0..1 of the gauge.
  *
@@ -370,6 +370,67 @@ function roadMesh(curve: THREE.Curve<THREE.Vector3>, segments: number) {
  * Orange plastic with the darker moulded side rails and the pale centre slot the
  * real toy track has — the grey asphalt never belonged in a Hot Wheels world.
  */
+/**
+ * The luminous centre chevrons, drawn into whichever canvas is passed.
+ *
+ * Called twice with different colours: once onto the road's own colour map,
+ * and once onto a black canvas that becomes the emissive map. That second pass
+ * is what makes them GLOW rather than merely be bright — a light colour on a
+ * colour map is still lit by the scene like everything else, and on a dark
+ * circuit it just goes grey with the rest of the road. Emissive is the only
+ * way a marking can look like it is carrying its own light.
+ */
+function paintChevrons(x: CanvasRenderingContext2D, halo: string, core: string) {
+  /* Sized in TRACK units, not in pixels that look right in the canvas. The
+     road's UVs run 0..1 across its 9 units and 0..16.47 along its 296, so one
+     128x256 tile covers the full width and 18 units of length — which makes
+     every pixel here 0.07 units across and 0.07 along.
+
+     The first pass was 38px wide and 64px apart: 2.7 units of chevron on a 9
+     unit road, every 4.5 units. On screen that is a marking as wide as a lane
+     and it read as chevrons painted ON the racing line rather than down the
+     middle of it. 24px and 40px apart is 1.7 units every 2.8, which is a
+     centre marking. */
+  const STEP = 40;
+  x.save();
+  x.lineCap = 'round';
+  x.lineJoin = 'round';
+  const stroke = (y: number) => {
+    x.beginPath();
+    x.moveTo(52, y + 27);
+    x.lineTo(64, y + 14);
+    x.lineTo(76, y + 27);
+    x.stroke();
+  };
+  for (let y = 0; y < 256; y += STEP) {
+    // the spread, wide and soft
+    x.strokeStyle = halo;
+    x.lineWidth = 6.5;
+    stroke(y);
+    // the filament inside it
+    x.strokeStyle = core;
+    x.lineWidth = 2.2;
+    stroke(y);
+  }
+  x.restore();
+}
+
+/** The same chevrons on black — everything else emits nothing. */
+function chevronGlowTexture() {
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 256;
+  const x = c.getContext('2d')!;
+  x.fillStyle = '#000';
+  x.fillRect(0, 0, 128, 256);
+  paintChevrons(x, 'rgba(140, 205, 35, 0.7)', 'rgba(226, 255, 175, 1)');
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 4;
+  return t;
+}
+
 function roadTexture() {
   const c = document.createElement('canvas');
   c.width = 128;
@@ -386,10 +447,6 @@ function roadTexture() {
   x.fillStyle = g;
   x.fillRect(0, 0, 128, 256);
 
-  // the pale centre slot
-  x.fillStyle = 'rgba(255, 214, 150, 0.20)';
-  x.fillRect(60, 0, 8, 256);
-
   // moulded rail highlight
   x.fillStyle = 'rgba(255, 255, 255, 0.14)';
   x.fillRect(12, 0, 3, 256);
@@ -398,6 +455,14 @@ function roadTexture() {
   // rungs across the track, the way the toy track is ribbed
   x.fillStyle = 'rgba(0, 0, 0, 0.18)';
   for (let y = 0; y < 256; y += 32) x.fillRect(16, y, 96, 5);
+
+  /* The centre markings, painted last so they sit over the rungs. This was a
+     pale stripe down the middle — a slot, which is what the toy has, and which
+     said nothing about which way the car was going. Chevrons do: they point
+     down the road, and on a circuit where the whole game is now taking corners
+     yourself, a marking that reads as direction is worth more than one that
+     reads as a groove. */
+  paintChevrons(x, 'rgba(214, 255, 92, 0.42)', 'rgba(244, 255, 214, 0.9)');
 
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
@@ -1131,6 +1196,15 @@ export class RaceEngine {
     const roadGeo = roadMesh(this.curve, 420);
     // glossy moulded plastic, not asphalt
     const roadMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.58, metalness: 0.0 });
+    /* The chevrons carry their own light. Same canvas size and same UVs as the
+       colour map, so the two line up exactly; everything that is black in the
+       glow map emits nothing, which is the whole road except the markings. */
+    const glow = chevronGlowTexture();
+    glow.repeat.copy(tex.repeat);
+    this.disposables.push(glow);
+    roadMat.emissiveMap = glow;
+    roadMat.emissive = new THREE.Color(0xffffff);
+    roadMat.emissiveIntensity = 0.9;
     // The studio IBL exists for the car's die-cast paint; left at full strength
     // it washes the track to pale peach. Damp it per-material, not scene-wide.
     roadMat.envMapIntensity = 0.22;
@@ -2432,7 +2506,11 @@ export class RaceEngine {
   }
 
   fpCameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3 }) {
-    const BEHIND = 2.5;   // much closer than the 3D chase cam
+    /* 3.0, not 2.5. The closer a camera sits to what it follows, the larger an
+       angle any given wobble of the car becomes — half a unit back is worth
+       more here than any amount of extra smoothing, because it reduces the
+       wobble at the source instead of lagging behind it. */
+    const BEHIND = 3.0;
     const HEIGHT = 0.9;   // just above the car roof
     const AHEAD  = 5.0;   // look-at well ahead for a sense of speed
     const up = new THREE.Vector3(0, 1, 0);
@@ -2493,15 +2571,23 @@ export class RaceEngine {
     this.elapsed += dt;
 
     // --- longitudinal ---
+    /* Top speeds, dropped about 15% from 26 and 34.
+
+       The circuit is 296 units round and the corners are radius 14, and at the
+       old pace a straight was gone before the eye had finished reading it —
+       there was no moment in a lap that was not an emergency. Slower, the same
+       track has room in it: the corner load falls with the square of the speed,
+       so taking a corner is now something you do rather than something you
+       survive, and the gate's run-up covers less ground for the same warning. */
     const boosting = this.elapsed < this.boostUntil;
-    const vMax = boosting ? 34 : 26;
+    const vMax = boosting ? 29 : 22;
     if (this.manual) {
       // throttle accelerates, brake bites hard, everything else is drag
       const drag = 3.2 + this.speed * 0.12 + (this.drifting ? 5.5 : 0);
       const a = this.throttle * 20 - this.braking * 30 - drag;
       this.speed = Math.max(0, Math.min(vMax, this.speed + a * dt));
     } else {
-      this.speed += ((boosting ? 34 : 24) - this.speed) * chase(1.8, dt);
+      this.speed += ((boosting ? 29 : 20.5) - this.speed) * chase(1.8, dt);
     }
     const prevT = this.t;
     /* Hitting debris sets a NEGATIVE speed — the car rebounds — so this has to

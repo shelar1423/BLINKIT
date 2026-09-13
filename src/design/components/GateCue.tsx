@@ -26,14 +26,17 @@ export function GateCue({ k, canLift }: { k: number; canLift: boolean }) {
      the window, so what it shows has to be the window's real width or it is
      lying about what a lift costs. Swept at 0.025 of k:
 
-       scores at all   k 0.85 .. 1.15   (the car clears the hoop)
-       scores perfect  k 0.95 .. 1.05   (and lands the beat)
+       scores at all   k 0.78 .. 1.22   (the car clears the hoop)
+       scores perfect  k 0.93 .. 1.06   (and lands the beat)
 
      Outside the wider band the car clips the ring, which is why past it the
-     gauge says late rather than merely dimming. */
-  const now = k >= 0.95 && k <= 1.05;
-  const near = !now && k >= 0.85 && k <= 1.15;
-  const late = k > 1.15;
+     gauge says late rather than merely dimming. Re-swept every time the run-up
+     changes length: the tolerances are fixed in seconds, so a shorter run-up
+     makes each of them a LARGER fraction of the gauge, and bands left at their
+     old numbers would quietly start lying. */
+  const now = k >= 0.93 && k <= 1.06;
+  const near = !now && k >= 0.78 && k <= 1.22;
+  const late = k > 1.22;
 
   /* Clamped at the bottom so an overdue ring keeps shrinking past the target
      instead of stopping on it and reading as still-good. */

@@ -63,7 +63,7 @@ export const raceInteraction = {
    * them more slow motion. The gauge now appears at full speed and the clock
    * dips later.
    */
-  boostWarnLead: 1.7,
+  boostWarnLead: 1.3,
 
   /**
    * Seconds the car spends in the air over a gate.

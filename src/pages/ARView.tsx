@@ -199,7 +199,7 @@ export default function ARView() {
            the same kind of news and belongs in the same place. */
         onCrash: (lost) => {
           pushPop(lost, 'down');
-          setLastHitMessage('Crashed — take the corner');
+          setLastHitMessage('Crashed. Take the corner');
           window.setTimeout(() => setLastHitMessage(null), 1400);
         },
         onBulletTime: setSlowmo,
@@ -467,7 +467,7 @@ export default function ARView() {
     return {
       cls: 'is-bad',
       title: 'This device does not support AR',
-      body: inspect ? 'Use the 3D viewer on the product page instead.' : 'Taking you to the 3D race — it is the same race.',
+      body: inspect ? 'Use the 3D viewer on the product page instead.' : 'Taking you to the 3D race. It is the same race.',
     };
   };
   const s = statusCard();
@@ -635,7 +635,7 @@ export default function ARView() {
                 {placing ? 'Building your track…' : inspect ? 'Point at a table or floor' : 'Point at the floor'}
                 <small>
                   {placing
-                    ? 'A moment — laying the circuit down'
+                    ? 'A moment, laying the circuit down'
                     : inspect
                       ? `Then press Place ${car.name.replace('Hot Wheels ', '')} here`
                       : 'Then press Place track here'}

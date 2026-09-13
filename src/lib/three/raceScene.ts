@@ -299,8 +299,8 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     engine.cameraTarget(target);
 
     // critically damped-ish follow so the camera never jitters
-    camPos.lerp(target.pos, chase(6.5, dt));
-    camLook.lerp(target.look, chase(8, dt));
+    camPos.lerp(target.pos, chase(5, dt));
+    camLook.lerp(target.look, chase(6.5, dt));
     camera.position.copy(camPos);
     camera.lookAt(camLook);
 

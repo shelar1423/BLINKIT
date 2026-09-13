@@ -1116,8 +1116,8 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
         fpCamLook.copy(fpTarget.look);
         fpInited = true;
       } else {
-        fpCamPos.lerp(fpTarget.pos, chase(7, dt));
-        fpCamLook.lerp(fpTarget.look, chase(9, dt));
+        fpCamPos.lerp(fpTarget.pos, chase(5, dt));
+        fpCamLook.lerp(fpTarget.look, chase(6.5, dt));
       }
 
       // Convert fp camera position from track-local to world:
@@ -1659,8 +1659,8 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
         fpCamLook.copy(worldFPLook);
         fpInited = true;
       } else {
-        fpCamPos.lerp(worldFPPos, chase(7, dt));
-        fpCamLook.lerp(worldFPLook, chase(9, dt));
+        fpCamPos.lerp(worldFPPos, chase(5, dt));
+        fpCamLook.lerp(worldFPLook, chase(6.5, dt));
       }
 
       camera.position.copy(fpCamPos);
