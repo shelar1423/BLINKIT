@@ -283,7 +283,7 @@ export default function Cart() {
             A checkout that adds money on your behalf and waits to see whether
             you notice is a dark pattern. */}
         <section className="ckocard ckotip">
-          <img className="ckotip__art" src="/checkout/feeding-india.png" alt="Join us at Feeding India" />
+          <img className="ckotip__art ckotip__art--feed" src="/checkout/feeding-india.png" alt="Join us at Feeding India" />
           <p className="ckotip__when">
             Donate with <button type="button" className="ckotip__sel">this order <IconCaretDown size={11} /></button>
           </p>

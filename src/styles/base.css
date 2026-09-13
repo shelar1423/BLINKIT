@@ -4318,7 +4318,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckoins__l { font-size: var(--f-sm); font-weight: 500; line-height: 1.3; }
 .ckoins__rec {
   display: inline-flex; align-items: center; gap: 4px;
-  font-size: var(--f-base); font-weight: 700; color: var(--green);
+  /* Medium, like every other label on this row. The green is what marks it as
+     the one tile that does something different; the weight was saying it
+     twice. */
+  font-size: var(--f-base); font-weight: 500; color: var(--green);
 }
 .ckoins__rec .glyph { width: 16px; height: 16px; }
 
@@ -4555,6 +4558,13 @@ input, select, textarea { font: inherit; color: inherit; }
      ratio so `cover` has nothing to crop. */
   aspect-ratio: 662 / 220;
   object-fit: cover;
+}
+/* Feeding India only — the tip banner beside it keeps its full height.
+   Thirty rows off a 220-tall source, taken with the framing biased upward so
+   the loss falls on grass rather than on the kite. */
+.ckotip__art--feed {
+  aspect-ratio: 662 / 190;
+  object-position: 50% 38%;
 }
 /* "Donate with this order", where "this order" is the part you can change. */
 .ckotip__when {
