@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
-import type { BoostQuality, JumpQuality } from '../lib/raceInteractions';
+import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconMute, IconRotate, IconSound } from '../design/elements/Icons';
@@ -53,7 +53,7 @@ export default function RacePlay() {
   const [err, setErr] = useState<string | null>(null);
   const [launched, setLaunched] = useState(false);
   const [stats, setStats] = useState<RaceStats>({
-    score: 0, groceries: 0, timeLeft: 45, lap: 1, laps: 2, progress: 0, speedKph: 0,
+    score: 0, groceries: 0, timeLeft: RACE_SECONDS, lap: 1, laps: 2, progress: 0, speedKph: 0,
   });
   const { pops, push: pushPop } = useScorePops();
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
@@ -134,7 +134,7 @@ export default function RacePlay() {
         window.setTimeout(() => setEventFlash(null), 1100);
       },
       glbUrl: car.glb,
-      duration: 45,
+      duration: RACE_SECONDS,
       laps: 2,
       onProgress: (p) => setPct(p < 0 ? 0 : p),
       /* Held to a floor of 1.8s. A cached model is ready inside a frame, and a

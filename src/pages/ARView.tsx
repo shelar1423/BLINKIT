@@ -25,7 +25,7 @@ import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
 import { RaceCoach } from '../design/components/RaceCoach';
 import { Poppers } from '../design/components/Poppers';
-import type { BoostQuality, JumpQuality } from '../lib/raceInteractions';
+import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
 import {
   engineStart,
   engineStop,
@@ -441,7 +441,7 @@ export default function ARView() {
      a POINTS and TIME LEFT bar over a car you are only looking at was reading
      out a race that was not being run. */
   const raceHud = !inspect && (phase === 'placed' || phase === 'racing');
-  const arLeft = stats?.timeLeft ?? 45;
+  const arLeft = stats?.timeLeft ?? RACE_SECONDS;
   const arMM = Math.floor(arLeft / 60);
   const arSS = String(Math.floor(arLeft % 60)).padStart(2, '0');
   const arLow = arLeft <= 10;

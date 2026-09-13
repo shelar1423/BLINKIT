@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { color } from '../../design/constants';
 import { chase, circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
-import { jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
+import { RACE_SECONDS, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
 import { cameraPitchDeg, makeDeviceAim, makeJumpInput, makeLeverDrag } from './raceInput';
 
 /** Scratch for the aim ray; one per frame would be litter. */
@@ -437,8 +437,8 @@ function create3DStartBanner() {
        is why placing a track close to you pushed the lap count off the top of
        the frame. What is left is the one thing you cannot read anywhere else. */
     ctx.fillStyle = '#FFC400';
-    ctx.font = `800 ${fitText(ctx, 'TWO LAPS · 45 SECONDS', inner, 46, 800)}px system-ui, -apple-system, sans-serif`;
-    ctx.fillText('TWO LAPS · 45 SECONDS', W / 2, 232);
+    ctx.font = `800 ${fitText(ctx, `TWO LAPS · ${RACE_SECONDS} SECONDS`, inner, 46, 800)}px system-ui, -apple-system, sans-serif`;
+    ctx.fillText(`TWO LAPS · ${RACE_SECONDS} SECONDS`, W / 2, 232);
 
     tex.needsUpdate = true;
   };
@@ -556,7 +556,7 @@ function makeEngine(
     interactions: true,
     cinematicCamera: cinematic,
     laps: 2,
-    duration: 45,
+    duration: RACE_SECONDS,
     onTick: opts.onTick,
     onPickup: opts.onPickup,
     onPenalty: opts.onPenalty,

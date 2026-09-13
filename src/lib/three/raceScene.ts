@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { starfieldTexture } from './starfield';
+import { RACE_SECONDS } from '../raceInteractions';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
 import { makeJumpInput, makeLeverDrag } from './raceInput';
@@ -102,7 +103,7 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     /* Only here. The AR paths share this engine but not its camera — theirs is
        the phone, and they move the track under it instead. */
     cinematicCamera: true,
-    duration: opts.duration ?? 45,
+    duration: opts.duration ?? RACE_SECONDS,
     laps: opts.laps ?? 2,
     onTick: opts.onTick,
     onPickup: opts.onPickup,

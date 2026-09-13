@@ -20,6 +20,9 @@ export type BoostQuality = 'perfect' | 'good' | 'miss';
    beat. Same gesture as the ramp (the top of the phone comes up), judged on
    when rather than on where. */
 
+/** Length of a race, in simulated seconds. */
+export const RACE_SECONDS = 60;
+
 export const raceInteraction = {
   launchEnabled: true,
   /**
@@ -57,7 +60,22 @@ export const raceInteraction = {
      These are the midpoints of the second and fourth straights, measured from
      that same map. At the boosted top speed of 34 the flight spans 0.205-0.296
      and 0.705-0.796, so ramp and landing are both still on tarmac. */
-  boostGates: [0.2505, 0.7505],
+  boostGates: [0.2505, 0.96],
+  /* The last ring moved from the middle of the fourth straight to the end of
+     the lap, ~12 units short of the finish line, so the jump is the last thing
+     the race asks of you. The start straight runs 0.928-1.073 and the launcher
+     that stands on it is gone once the car has launched; a takeoff at the
+     beat leaves the road at ~0.914, as the last corner straightens, and lands on the line.
+
+     Lanes, per gate per lap, in road units off the centreline. The first ring
+     sits left on lap one and right on lap two, so the rings are a line to
+     choose rather than a straight corridor; the last one is centred, and the
+     car is steered through it for you — nobody can hold a line while tilting
+     the phone up for the jump. */
+  gateLanes: [
+    [-1.8, 1.8],
+    [0, 0],
+  ] as number[][],
 
   /**
    * Seconds of warning before the IDEAL lift, not before the gate.

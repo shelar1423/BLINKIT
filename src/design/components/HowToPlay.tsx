@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { RACE_SECONDS } from '../../lib/raceInteractions';
 
 /* The three things you do, in the order you do them. */
 const HOW_TO: { t: string; icon: string; c: ReactNode }[] = [
@@ -13,7 +14,7 @@ export function HowToPlay() {
     <div className="howcard">
       <div className="howcard__hd">
         <h2>How to play</h2>
-        <b>Two laps &middot; 45 seconds</b>
+        <b>Two laps &middot; {RACE_SECONDS} seconds</b>
       </div>
       {/* The card is WHITE, and that is load-bearing: the supplied icons are
           opaque PNGs with a white ground baked in. */}

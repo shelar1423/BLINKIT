@@ -68,6 +68,7 @@ export function createTiltSteer(opts: Opts) {
   let state: TiltState = initialTiltState();
   let neutral: number | null = null;
   let smoothed = 0;
+  let lastAt = 0;
   let running = false;
   /** Samples collected right after start, averaged into the neutral point. */
   let calibration: number[] | null = null;
@@ -85,6 +86,20 @@ export function createTiltSteer(opts: Opts) {
    * gamma; rotate the screen and beta takes over, with the sign following the
    * direction of rotation.
    */
+  /* How far the phone's left-right axis is tipped from level, in degrees.
+
+     Raw gamma is only that when the phone is near flat. Held up in front of
+     you — which is how an AR race is played, and more so while tilting up for
+     a jump — gamma races towards ±90 and flips sign as the phone passes
+     upright, so the car jerked from lock to lock on a steady hand. The
+     device's x axis measured against gravity is the same angle flat, the right
+     angle upright, and has no flip anywhere in between. */
+  function portraitRoll(beta: number, gamma: number) {
+    const r = Math.PI / 180;
+    const x = Math.sin(gamma * r) * Math.cos(beta * r);
+    return Math.asin(Math.max(-1, Math.min(1, x))) / r;
+  }
+
   function lateralAngle(e: DeviceOrientationEvent): number | null {
     const { beta, gamma } = e;
     if (beta == null || gamma == null) return null;
@@ -96,9 +111,9 @@ export function createTiltSteer(opts: Opts) {
       case -90:
         return beta;
       case 180:
-        return -gamma;
+        return -portraitRoll(beta, gamma);
       default:
-        return gamma;
+        return portraitRoll(beta, gamma);
     }
   }
 
@@ -134,7 +149,14 @@ export function createTiltSteer(opts: Opts) {
     const mag = Math.max(0, Math.abs(delta) - dead);
     const target = Math.max(-1, Math.min(1, (sign * mag) / (fullLock - dead)));
 
-    smoothed += (target - smoothed) * smooth;
+    /* Smoothed on the clock, not per event: sensors fire at 30, 60 or 100Hz
+       depending on the phone, and a fixed share per event made the same
+       tilt feel sluggish on one and twitchy on another. */
+    const now = performance.now();
+    const dtMs = lastAt ? Math.min(100, now - lastAt) : 16;
+    lastAt = now;
+    const k = 1 - Math.pow(1 - smooth, dtMs / 16.7);
+    smoothed += (target - smoothed) * k;
     opts.onSteer(Math.abs(smoothed) < 0.01 ? 0 : smoothed);
   };
 

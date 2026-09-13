@@ -3,7 +3,7 @@ import { color, scene } from '../../design/constants';
 import { PICKUPS } from '../../data/catalog';
 import { haptic } from '../haptics';
 import { setAudioTimeScale } from '../raceAudio';
-import { gateBand, raceInteraction, type BoostQuality } from '../raceInteractions';
+import { RACE_SECONDS, gateBand, raceInteraction, type BoostQuality } from '../raceInteractions';
 
 /* ============================================================
    Race It Home — arcade race engine.
@@ -152,7 +152,7 @@ const CINE_HEIGHT = 2.0;
 /** Seconds the shot is held after the wheels are down again. */
 const CINE_TAIL = 0.45;
 /** How many gauge-lengths ahead of the last gate the AR galaxy moment begins. */
-const MOMENT_LEAD = 2.2;
+const MOMENT_LEAD = 1.4;
 /** Turning out to the side while the car is in the air. */
 const CINE_RATE_OUT = 5.5;
 /** Height the car must be off the road before the side shot starts — clear of
@@ -1134,6 +1134,8 @@ export class RaceEngine {
   private boostGates: {
     t: number;
     target: THREE.Object3D;
+    /** Hoop, fire and target together — slid across the road to the lap's lane. */
+    lane: THREE.Group;
     flame: THREE.MeshBasicMaterial;
     /** The two counter-rotating fire sheets, and the hoop they surround. */
     fire: THREE.Mesh[];
@@ -1228,7 +1230,7 @@ export class RaceEngine {
     this.interactions = opts.interactions ?? false;
     this.laps = opts.laps ?? 2;
     this.cinematic = opts.cinematicCamera ?? false;
-    this.duration = opts.duration ?? 45;
+    this.duration = opts.duration ?? RACE_SECONDS;
     this.curveLen = this.curve.getLength();
     const cb = new THREE.Box3().setFromPoints(this.curve.getSpacedPoints(96));
     this.trackExtent = Math.max(cb.max.x - cb.min.x, cb.max.z - cb.min.z) + ROAD_W;
@@ -1569,16 +1571,25 @@ export class RaceEngine {
    */
   private buildBoostGates() {
     const up = new THREE.Vector3(0, 1, 0);
-    const legGeo = new THREE.CylinderGeometry(0.5, 0.62, 11, 10);
+    const legGeo = new THREE.CylinderGeometry(0.22, 0.34, raceInteraction.gateRingY, 10).translate(0, raceInteraction.gateRingY / 2, 0);
     const legMat = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.55, metalness: 0.05 });
-    const beamGeo = new THREE.BoxGeometry(ROAD_W + 3.4, 1.5, 1.5);
     /* Built from the tuning file's own numbers, not from literals that happen
        to match them — the judge measures the car against this hoop, and two
        copies of its size is two hoops. */
-    const ringGeo = new THREE.TorusGeometry(
-      raceInteraction.gateRingRadius, raceInteraction.gateRingTube, 10, 30,
-    );
-    this.disposables.push(legGeo, legMat, beamGeo, ringGeo);
+    /* The hoop as a piece of Hot Wheels loop track rather than a tube: a flat
+       band the width of the track, facing the car, with a raised lip on each
+       edge — the orange loop from the box, lit red-hot. Its inner radius is
+       the tuning file's, so the hole the judge measures is the hole you see. */
+    const R = raceInteraction.gateRingRadius;
+    const BAND = 1.5;
+    const bandGeo = new THREE.CylinderGeometry(R + 0.12, R + 0.12, BAND, 48, 1, true).rotateX(Math.PI / 2);
+    const lipGeo = new THREE.TorusGeometry(R + 0.2, 0.16, 8, 48);
+    const ringGeo = new THREE.TorusGeometry(R, raceInteraction.gateRingTube * 0.55, 8, 48);
+    const loopMat = new THREE.MeshStandardMaterial({
+      color: 0xE8391A, emissive: 0xB31A08, emissiveIntensity: 0.55, roughness: 0.45, metalness: 0.05, side: THREE.DoubleSide,
+    });
+    const lipMat = new THREE.MeshStandardMaterial({ color: 0xFF7A1A, emissive: 0xC23A00, emissiveIntensity: 0.5, roughness: 0.4 });
+    this.disposables.push(legGeo, legMat, ringGeo, bandGeo, lipGeo, loopMat, lipMat);
 
     for (const [i, t] of raceInteraction.boostGates.entries()) {
       const g = new THREE.Group();
@@ -1588,22 +1599,32 @@ export class RaceEngine {
       g.position.copy(p);
       g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tan.clone().setY(0).normalize());
 
-      for (const sgn of [-1, 1]) {
-        const leg = new THREE.Mesh(legGeo, legMat);
-        leg.position.set(sgn * (ROAD_W / 2 + 1.3), 5.5, 0);
-        g.add(leg);
-      }
-      const beam = new THREE.Mesh(beamGeo, legMat);
-      beam.position.y = 11.6;
-      g.add(beam);
 
       /* The hoop: lit rather than shaded, so it reads at the far end of a
          straight where a shaded material would just be dark orange. */
+      const lane = new THREE.Group();
+      g.add(lane);
+      /* Stood on two slim struts from the road to the loop's sides, so the
+         loop reads as a piece of track set up on the table — no gantry beam
+         across the top of the shot. They travel with the loop to its lane. */
+      for (const sgn of [-1, 1]) {
+        const leg = new THREE.Mesh(legGeo, lipMat);
+        leg.position.set(sgn * (raceInteraction.gateRingRadius + 0.35), 0, 0);
+        lane.add(leg);
+      }
       const flameMat = new THREE.MeshBasicMaterial({ color: 0xFF6A00, transparent: true, opacity: 0.92 });
       this.disposables.push(flameMat);
       const ring = new THREE.Mesh(ringGeo, flameMat);
       ring.position.y = raceInteraction.gateRingY;
-      g.add(ring);
+      lane.add(ring);
+      const band = new THREE.Mesh(bandGeo, loopMat);
+      band.position.y = raceInteraction.gateRingY;
+      lane.add(band);
+      for (const z of [-BAND / 2, BAND / 2]) {
+        const lip = new THREE.Mesh(lipGeo, lipMat);
+        lip.position.set(0, raceInteraction.gateRingY, z);
+        lane.add(lip);
+      }
 
       /* And the fire around it. Two sheets of the same painting, counter-
          rotating at different rates, which is enough to stop the eye finding
@@ -1631,7 +1652,7 @@ export class RaceEngine {
         sheet.position.y = raceInteraction.gateRingY;
         sheet.position.z = layer ? 0.06 : -0.06;
         sheet.renderOrder = 3;
-        g.add(sheet);
+        lane.add(sheet);
         fire.push(sheet);
         fireMats.push(fmat);
       }
@@ -1640,10 +1661,11 @@ export class RaceEngine {
          the ring itself is a torus, so its own origin is a hole. */
       const target = new THREE.Object3D();
       target.position.copy(ring.position);
-      g.add(target);
+      lane.add(target);
+      lane.position.x = raceInteraction.gateLanes[i]?.[0] ?? 0;
 
       this.root.add(g);
-      this.boostGates.push({ t, target, flame: flameMat, fire, fireMats, stoke: 0, armed: false, done: false, lifted: false, liftErr: null });
+      this.boostGates.push({ t, target, lane, flame: flameMat, fire, fireMats, stoke: 0, armed: false, done: false, lifted: false, liftErr: null });
       void i;
       void right;
     }
@@ -1734,6 +1756,21 @@ export class RaceEngine {
    * `done` is what stops one gate being judged twice on the way past it; it
    * has to be cleared somewhere or the second lap would have no gates at all.
    */
+  /** The lane gate i sits in on the current lap. */
+  private gateLane(i: number) {
+    const lanes = raceInteraction.gateLanes[i];
+    return lanes ? (lanes[Math.min(this.lap, lanes.length - 1)] ?? 0) : 0;
+  }
+
+  /** On the last gate of the last lap the car is steered through the ring: from
+   *  its gauge until it lands, the player's steering is set aside. */
+  private get steerLocked() {
+    const i = this.boostGates.length - 1;
+    const g = this.boostGates[i];
+    if (!g || !this.isFinalGate(i)) return false;
+    return (g.armed && !g.done) || this.finalPhase === 1 || this.finalPhase === 2;
+  }
+
   private rearmGates() {
     for (const g of this.boostGates) {
       g.armed = false;
@@ -1742,6 +1779,10 @@ export class RaceEngine {
       g.lifted = false;
       g.liftErr = null;
     }
+    this.boostGates.forEach((g, i) => {
+      const lanes = raceInteraction.gateLanes[i];
+      if (lanes) g.lane.position.x = lanes[Math.min(this.lap, lanes.length - 1)] ?? 0;
+    });
     this.armedGate = -1;
   }
 
@@ -2067,6 +2108,7 @@ export class RaceEngine {
 
     this.root.add(this.launcher);
     this.launcher.visible = true;
+    this.syncStartGates();
     this.setLaunchPull(0);
   }
 
@@ -2192,6 +2234,18 @@ export class RaceEngine {
   private hideLauncher() {
     this.launcher.visible = false;
     this.launchPull = 0;
+    this.syncStartGates();
+  }
+
+  /* The last ring stands on the start straight, over the ground the launcher
+     occupies. While the launcher is up — the placed track in AR, the launch
+     view — the ring would straddle it and fill the top of the shot, so any
+     gate inside the launcher's footprint is hidden until the car has gone. */
+  private syncStartGates() {
+    for (const g of this.boostGates) {
+      const u = (g.t - Math.round(g.t)) * this.curveLen;
+      if (u > -(LAUNCH_TRAVEL + 12) && u < 4) (g.lane.parent as THREE.Object3D).visible = !this.launcher.visible;
+    }
   }
 
   private buildRamp() {
@@ -2265,6 +2319,17 @@ export class RaceEngine {
         const u = d * this.curveLen;
         if (u > -(LAUNCH_TRAVEL + 9) && u < 6) continue;
       }
+      /* Nothing on a ring's run-in or landing either, and the last ring's
+         whole approach is clear: the car is being steered through it, so a
+         grocery there would be collected or missed for you. */
+      const nearGate = raceInteraction.boostGates.some((gt, gi) => {
+        let d = t - gt;
+        d -= Math.round(d);
+        const u = d * this.curveLen;
+        const final = gi === raceInteraction.boostGates.length - 1;
+        return u > -(final ? 48 : 14) && u < 12;
+      });
+      if (nearGate) continue;
       const lateral = [-2.6, 0, 2.6, -1.3, 1.3][i % 5];
       this.pickups.push({ sprite, t, lateral, points: def.points, name: def.name, alive: true, pop: 0 });
       this.root.add(sprite);
@@ -2317,7 +2382,7 @@ export class RaceEngine {
        shows it: at 22 rocks the gaps fall to 0.6s AND a centre-line car still
        hits none, because what a passive driver runs into is decided by which
        lanes the rocks are in, not by how many there are. */
-    const COUNT = 16;
+    const COUNT = 8;
     /* Where a rock must never be, and the windows are asymmetric because the
        reasons are.
 
@@ -2331,13 +2396,13 @@ export class RaceEngine {
        image: a short run in, a long arc out, and nothing to land on. */
     const at = (u: number) => u / this.curveLen;
     const keepOut: { t: number; before: number; after: number }[] = [
-      ...raceInteraction.boostGates.map((g) => ({
+      ...raceInteraction.boostGates.map((g, gi) => ({
         t: g,
         /* The part of the run-up that is in slow motion, plus a margin. The
            full gauge is longer, but a rebound in its opening stretch happens
            at full speed with most of the window still to come, and the beat
            re-derives before it matters. */
-        before: at(18),
+        before: at(gi === raceInteraction.boostGates.length - 1 ? 48 : 18),
         after: at(12),
       })),
       { t: raceInteraction.jumpAt, before: at(10), after: at(34) },
@@ -2621,6 +2686,13 @@ export class RaceEngine {
    * stops gates and the ramp arming at all. It scrubs most of the speed off
    * instead, which is a real cost you drive out of rather than wait out.
    */
+  /** Take points off without touching the car. */
+  penalise(points = DEBRIS_PENALTY) {
+    const before = this.score;
+    this.score = Math.max(0, this.score - points);
+    if (before > this.score) this.opts.onPenalty?.(before - this.score);
+  }
+
   applyObstacleBounce(penaltyPoints = DEBRIS_PENALTY, fromLateral = 0) {
     this.speed = Math.max(3.5, this.speed * 0.42);
     const away = this.lateral >= fromLateral ? 1 : -1;
@@ -2995,7 +3067,7 @@ export class RaceEngine {
              where the hole is. Eased rather than snapped: the player may be
              mid-corner-exit when the gate arms, and yanking the car onto the
              centreline would read as the game taking the wheel. */
-          this.lateral -= this.lateral * chase(2.2, dt);
+          this.lateral += (this.gateLane(i) - this.lateral) * chase(this.isFinalGate(i) ? 7 : 4, dt);
         } else if (g.armed) {
           /* Lifted, still short of the hoop. Full speed from here: the lift IS
              the moment, and the world surging back up as the car leaves the
@@ -3004,7 +3076,7 @@ export class RaceEngine {
 
              The car stays lined up, though — the verdict is not in yet,
              because the verdict is where the car IS when it gets there. */
-          this.lateral -= this.lateral * chase(2.2, dt);
+          this.lateral += (this.gateLane(i) - this.lateral) * chase(this.isFinalGate(i) ? 7 : 4, dt);
           if (this.isFinalGate(i) && this.finalPhase < 1) this.finalPhase = 1;
         }
 
@@ -3044,7 +3116,7 @@ export class RaceEngine {
     if (this.finalPhase === 2) cineWant = true;
     if (cineWant || (this.cineTail > 0 && this.jumpHeightNow > 0.05)) this.cineTail = CINE_TAIL;
     else if (this.cineTail > 0) this.cineTail = Math.max(0, this.cineTail - dtReal);
-    const cineTo = this.cinematic && this.cineTail > 0 && this.outroAt < 0 ? 1 : 0;
+    const cineTo = this.cinematic && this.cineTail > 0 && (this.outroAt < 0 || this.finalPhase === 2) ? 1 : 0;
     // slow on the way out to the side, quicker coming back behind the car
     this.cineK += (cineTo - this.cineK) * chase(cineTo > this.cineK ? CINE_RATE_OUT : CINE_RATE, dtReal);
     if (Math.abs(this.cineK - cineTo) < 0.002) this.cineK = cineTo;
@@ -3088,7 +3160,12 @@ export class RaceEngine {
        to miss. The hazard moved onto the road instead of being the road. */
     const slide = 1 + (1 - this.grip) * 2.6;
     const bite = this.manual ? Math.min(1, 0.25 + this.speed / 18) : 1;
-    this.lateral += this.steerSmooth * dt * 7 * slide * bite;
+    if (this.steerLocked) {
+      const i = this.boostGates.length - 1;
+      this.lateral += (this.gateLane(i) - this.lateral) * chase(7, dt);
+    } else {
+      this.lateral += this.steerSmooth * dt * 7 * slide * bite;
+    }
 
     const wantYaw = -this.steerSmooth * (1 - this.grip) * 0.85;
     this.driftYaw += (wantYaw - this.driftYaw) * chase(7, dt);
@@ -3188,7 +3265,8 @@ export class RaceEngine {
            applyObstacleBounce does the rebound AND reports what was actually
            lost, which is what feeds the score pop. */
         this.shatter(c);
-        this.applyObstacleBounce(DEBRIS_PENALTY, c.lateral);
+        /* Points only: the car keeps its speed and its line. */
+        this.penalise(DEBRIS_PENALTY);
       }
     }
 
