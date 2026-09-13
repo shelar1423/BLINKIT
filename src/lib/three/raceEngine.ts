@@ -77,6 +77,8 @@ export type EngineOpts = {
   /** Points taken off for hitting something. Reported from the one place that
    *  deducts them, so every caller that bounces the car gets it for free. */
   onPenalty?: (points: number) => void;
+  /** The car hit a barrier hard enough to count as a crash. */
+  onCrash?: () => void;
   /**
    * The clock has dropped into bullet time, or come back out of it.
    *
@@ -133,6 +135,36 @@ export function chase(rate: number, dt: number) {
 }
 
 const ROAD_W = 9;
+
+/* ---- cornering ----
+
+   Sideways acceleration at full lock, and the drag that stands in for tyre
+   scrub. Their ratio is the top speed across the road: 26 / 3.1 is about 8.4
+   units a second, a shade more authority than the old velocity-based steering
+   gave, because the driver now has the corner to fight as well as the line. */
+const STEER_ACCEL = 26;
+const LATERAL_DRAG = 3.1;
+/**
+ * How much of the real centripetal demand the corner actually applies.
+ *
+ * All of it is unplayable — see the note at the call site. This is tuned so
+ * that a corner taken with no input runs the car into the barrier, and a
+ * corner taken with input is comfortably holdable.
+ */
+const CORNER_PULL = 0.22;
+/** Lateral speed into a barrier that counts as a crash rather than a scrape. */
+const CRASH_SPEED = 3.2;
+/**
+ * Seconds of unbroken barrier contact that also counts as a crash.
+ *
+ * Measured: a car given no steering does not slam into the wall, it CREEPS
+ * there — it arrives at 0.15 to 0.8 units a second and then rides it round the
+ * whole corner. Judging crashes on impact speed alone, the one thing the
+ * player most needs told about ("you did not take that corner") was the one
+ * thing that never triggered. Ploughing along a wall is a crash.
+ */
+const WALL_GRIND_SEC = 0.4;
+const CRASH_PENALTY = 150;
 
 /* The ramp, in one place: the mesh is built from these and so is the climb the
    car makes up it, so the car cannot ride a slope the wedge does not have. */
@@ -1018,6 +1050,10 @@ export class RaceEngine {
     /** Simulated seconds the lift was off the beat. Null if nobody lifted. */
     liftErr: number | null;
   }[] = [];
+  /** Speed across the road, units per second. Positive is toward `right`. */
+  private lateralVel = 0;
+  /** Unbroken seconds against a barrier. Reset the moment the car comes off. */
+  private wallTime = 0;
   /** Airborne state. `airT` counts 0..1 across the arc; -1 means on the road. */
   private airT = -1;
   /* The arc currently being flown. The ramp and the gates are the same flight
@@ -2368,6 +2404,26 @@ export class RaceEngine {
     return b.clone().sub(a).setY(0).normalize();
   }
 
+  /**
+   * Signed curvature of the road at `t`, in radians per unit of arc length.
+   *
+   * Positive means the road bends toward `right`, so a car that does nothing
+   * ends up to the LEFT of where the road went — which is why the corner load
+   * is subtracted rather than added.
+   *
+   * Measured off the same smoothed headings the camera uses, for the same
+   * reason: the raw tangent's rate of change steps at every control point, and
+   * a corner load built on it would kick the car sideways on the steps.
+   */
+  private curvatureAt(t: number) {
+    const d = 4 / this.curveLen;
+    const h0 = this.smoothTangent((t - d + 1) % 1);
+    const h1 = this.smoothTangent((t + d) % 1);
+    const cross = h0.x * h1.z - h0.z * h1.x;
+    const dot = Math.max(-1, Math.min(1, h0.dot(h1)));
+    return Math.atan2(-cross, dot) / 8;
+  }
+
   fpCameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3 }) {
     const BEHIND = 2.5;   // much closer than the 3D chase cam
     const HEIGHT = 0.9;   // just above the car roof
@@ -2588,12 +2644,14 @@ export class RaceEngine {
              mid-corner-exit when the gate arms, and yanking the car onto the
              centreline would read as the game taking the wheel. */
           this.lateral -= this.lateral * chase(2.2, dt);
+          this.lateralVel -= this.lateralVel * chase(2.2, dt);
         } else if (g.armed) {
           /* Lifted, still short of the hoop. The clock stays down and the car
              stays lined up — the verdict is not in yet, because the verdict is
              where the car IS when it gets there. */
           gateArmed = true;
           this.lateral -= this.lateral * chase(2.2, dt);
+          this.lateralVel -= this.lateralVel * chase(2.2, dt);
         }
 
         // crossing it: the wrapped gap jumps from nearly a lap to nearly zero
@@ -2622,20 +2680,73 @@ export class RaceEngine {
     this.grip += (wantGrip - this.grip) * chase(6, dt);
     this.steerSmooth += (this.steer - this.steerSmooth) * chase(9, dt);
 
-    // 7 m/s at full lock takes about a second to cross half the road, which is
-    // steerable. The old 15 crossed the whole road in under 0.6s — the car
-    // slammed barrier to barrier and no line could be held.
+    /* Steering is an ACCELERATION across the road, not a velocity.
+
+       It used to be a velocity: let go of the wheel and the car stopped moving
+       sideways that instant, which is what made the corners drive themselves.
+       Nothing pushed the car anywhere, so the road's own shape was the only
+       thing deciding where it went.
+
+       As an acceleration, with drag standing in for tyre scrub, full lock
+       settles at STEER_ACCEL / LATERAL_DRAG = about 7 units a second across
+       the road — the same authority the old velocity had, so the feel of
+       holding a line is unchanged. What is new is that letting go no longer
+       stops anything. */
     const slide = 1 + (1 - this.grip) * 2.6;
     const bite = this.manual ? Math.min(1, 0.25 + this.speed / 18) : 1;
-    this.lateral += this.steerSmooth * dt * 7 * slide * bite;
+    let lateralAccel = this.steerSmooth * STEER_ACCEL * slide * bite;
+
+    /* The corner load. A car pointed straight does not go round a bend, and
+       this is the engine finally admitting it: the road's curvature times the
+       square of the speed is the sideways acceleration the driver has to find
+       from somewhere, and if they do not find it the car runs wide.
+
+       CORNER_PULL is a fraction of the real thing and has to be. Measured, the
+       tightest corner here is radius 13.9 against a road 7.2 wide, so the true
+       demand at 26 units a second is 48.7 u/s^2 — unsteered, that is the
+       barrier in 0.38 seconds, which is less time than a phone tilt takes to
+       register. The fraction keeps the rule (corners are yours to take) while
+       leaving a human long enough to take them.
+
+       It still scales with v squared, so a boosted corner is genuinely harder
+       than a slow one, which is the part of the physics worth keeping. */
+    const k = this.curvatureAt(this.t);
+    lateralAccel -= k * this.speed * this.speed * CORNER_PULL;
+
+    this.lateralVel += lateralAccel * dt;
+    this.lateralVel -= this.lateralVel * chase(LATERAL_DRAG, dt);
+    this.lateral += this.lateralVel * dt;
 
     const wantYaw = -this.steerSmooth * (1 - this.grip) * 0.85;
     this.driftYaw += (wantYaw - this.driftYaw) * chase(7, dt);
+
     if (Math.abs(this.lateral) > LANE_LIMIT) {
-      this.lateral = Math.sign(this.lateral) * LANE_LIMIT;
-      // Scrubbing the barrier costs speed. Scale by dt, otherwise the penalty
-      // is applied per frame and a 120 Hz phone punishes twice as hard.
-      this.speed *= Math.pow(0.4, dt);
+      const side = Math.sign(this.lateral);
+      const into = Math.abs(this.lateralVel);
+      this.lateral = side * LANE_LIMIT;
+      this.wallTime += dt;
+      const ground = this.wallTime >= WALL_GRIND_SEC;
+      if (ground) this.wallTime = 0; // one crash per stretch of wall, not per frame
+      if (into > CRASH_SPEED || ground) {
+        /* A hit, not a scrape. The car is thrown back off the wall, loses most
+           of its speed and costs points — the brief's own "car can crash". The
+           rebound is inward rather than backward: reversing out of a barrier
+           strike reads as a bug, and the engine's own note on debris explains
+           what a negative speed does to the lap seam. */
+        this.lateralVel = -side * into * 0.3;
+        this.speed *= 0.42;
+        this.score = Math.max(0, this.score - CRASH_PENALTY);
+        haptic([30, 40, 60]);
+        this.opts.onPenalty?.(CRASH_PENALTY);
+        this.opts.onCrash?.();
+      } else {
+        // Scrubbing the barrier costs speed. Scale by dt, otherwise the penalty
+        // is applied per frame and a 120 Hz phone punishes twice as hard.
+        this.lateralVel = 0;
+        this.speed *= Math.pow(0.4, dt);
+      }
+    } else {
+      this.wallTime = 0;
     }
 
     // --- place car ---

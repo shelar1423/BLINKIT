@@ -24,6 +24,8 @@ type Opts = {
   onTick: (s: RaceStats) => void;
   onPickup: (points: number, name: string) => void;
   onPenalty?: (points: number) => void;
+  /** The car ploughed into a barrier. */
+  onCrash?: () => void;
   onFinish: (o: RaceOutcome) => void;
   onProgress?: (pct: number, mb: number) => void;
   duration?: number;
@@ -150,6 +152,7 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     onTick: opts.onTick,
     onPickup: opts.onPickup,
     onPenalty: opts.onPenalty,
+    onCrash: opts.onCrash,
     onGateCue: (index, k) => {
       if (!gateLift.isOpen) gateLift.arm();
       opts.onGateCue?.({ index, k });

@@ -188,6 +188,13 @@ export default function ARView() {
           window.setTimeout(() => setBoostFlash(null), 1100);
         },
         onPenalty: (points) => pushPop(points, 'down'),
+        /* The hint line already carries obstacle messages in red; a crash is
+           the same kind of news and belongs in the same place. */
+        onCrash: () => {
+          playHit();
+          setLastHitMessage('Crashed — take the corner');
+          window.setTimeout(() => setLastHitMessage(null), 1400);
+        },
         onBulletTime: setSlowmo,
         onFinishCue: () => setCheering(true),
         onFinish,

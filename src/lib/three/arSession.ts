@@ -94,6 +94,8 @@ type Opts = {
   onTick: (s: RaceStats) => void;
   onPickup: (points: number, name: string) => void;
   onPenalty?: (points: number) => void;
+  /** The car ploughed into a barrier. */
+  onCrash?: () => void;
   onFinish: (o: RaceOutcome) => void;
   onError: (msg: string) => void;
   onEnd: () => void;
@@ -490,6 +492,7 @@ function makeEngine(
     onTick: opts.onTick,
     onPickup: opts.onPickup,
     onPenalty: opts.onPenalty,
+    onCrash: opts.onCrash,
     onGateCue: (index, k) => {
       if (!gateLift.isOpen) {
         /* Rest pose captured at the moment the gate appears: the gesture is
