@@ -9,7 +9,7 @@ import {
   IconChevronLeft,
   IconFlag,
   IconBabyBottle,
-  IconFlightIntl,
+  IconImported,
   IconGift,
   IconLamp,
   IconHeadphones,
@@ -60,7 +60,7 @@ const RAIL = [
   { id: 'gift', label: 'Gifting', Icon: IconGift },
   { id: 'decor', label: 'Decor', Icon: IconLamp },
   { id: 'kids', label: 'Kids', Icon: IconBabyBottle },
-  { id: 'imported', label: 'Imported', Icon: IconFlightIntl },
+  { id: 'imported', label: 'Imported', Icon: IconImported },
 ];
 
 /**
