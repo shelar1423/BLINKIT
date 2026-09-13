@@ -25,11 +25,16 @@ export const raceInteraction = {
   /**
    * Debris on the track.
    *
-   * OFF while the launcher, gates and ramp are being tuned: a rebound off a
-   * rock is the one thing that can throw the car out of a jump or an aim run,
-   * and it makes those three impossible to judge. One word to put back.
+   * Back on. It was off while the launcher, gates and ramp were being tuned —
+   * a rebound off a rock is the one thing that can throw the car out of a jump
+   * — and with the corners driving themselves again there was nothing at all
+   * asking the player to choose a line. Groceries alone are a reason to move
+   * across the road; rocks are a reason not to.
+   *
+   * They are placed clear of the gates and the ramp, so the one thing that
+   * could still ruin a jump cannot.
    */
-  debrisEnabled: false,
+  debrisEnabled: true,
   boostEnabled: true,
   jumpEnabled: true,
 

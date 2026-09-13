@@ -45,7 +45,7 @@ export default function RacePlay() {
   const atGate = useRef(false);
   const [gateCue, setGateCue] = useState<{ index: number; k: number } | null>(null);
   const [jumpCue, setJumpCue] = useState(false);
-  const [eventFlash, setEventFlash] = useState<{ kind: 'boost' | 'jump' | 'crash'; quality: BoostQuality | JumpQuality; points: number } | null>(null);
+  const [eventFlash, setEventFlash] = useState<{ kind: 'boost' | 'jump'; quality: BoostQuality | JumpQuality; points: number } | null>(null);
   const tilt = useRef<TiltSteer | null>(null);
   const [tiltState, setTiltState] = useState<TiltState>(() => initialTiltState());
 
@@ -120,13 +120,6 @@ export default function RacePlay() {
         atGate.current = false;
         setGateCue(null);
         setEventFlash({ kind: 'boost', quality: r.quality, points: r.points });
-        window.setTimeout(() => setEventFlash(null), 1100);
-      },
-      /* No sample. `onPenalty` — the obstacle path — carries the hit sound,
-         and routing crashes through it made every corner a drum hit. */
-      onCrash: (lost) => {
-        pushPop(lost, 'down');
-        setEventFlash({ kind: 'crash', quality: 'miss', points: 0 });
         window.setTimeout(() => setEventFlash(null), 1100);
       },
       onBulletTime: setSlowmo,
@@ -392,9 +385,7 @@ export default function RacePlay() {
           )}
           {eventFlash && (
             <p className={'arboost__verdict is-' + eventFlash.quality} aria-live="polite">
-              {eventFlash.kind === 'crash'
-                ? 'Crashed'
-                : eventFlash.quality === 'miss'
+              {eventFlash.quality === 'miss'
                 ? eventFlash.kind === 'boost'
                   ? 'Missed the ring'
                   : 'No jump'

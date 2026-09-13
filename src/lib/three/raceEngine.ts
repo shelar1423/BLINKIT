@@ -77,8 +77,6 @@ export type EngineOpts = {
   /** Points taken off for hitting something. Reported from the one place that
    *  deducts them, so every caller that bounces the car gets it for free. */
   onPenalty?: (points: number) => void;
-  /** The car hit a barrier hard enough to count as a crash, and what it cost. */
-  onCrash?: (pointsLost: number) => void;
   /**
    * The clock has dropped into bullet time, or come back out of it.
    *
@@ -150,12 +148,6 @@ export function chase(rate: number, dt: number) {
 
 const ROAD_W = 9;
 
-/* ---- cornering ----
-
-   Sideways acceleration at full lock, and the drag that stands in for tyre
-   scrub. Their ratio is the top speed across the road: 26 / 3.1 is about 8.4
-   units a second, a shade more authority than the old velocity-based steering
-   gave, because the driver now has the corner to fight as well as the line. */
 /* How far the travelling pool of light reaches, in track units. Longer ahead
    than behind, the way headlights are, rather than a halo centred on the car. */
 const GLOW_AHEAD = 26;
@@ -163,29 +155,6 @@ const GLOW_BEHIND = 9;
 /** What a chevron emits where the car is nowhere near it. Nearly nothing. */
 const GLOW_REST = 0.07;
 
-const STEER_ACCEL = 26;
-const LATERAL_DRAG = 3.1;
-/**
- * How much of the real centripetal demand the corner actually applies.
- *
- * All of it is unplayable — see the note at the call site. This is tuned so
- * that a corner taken with no input runs the car into the barrier, and a
- * corner taken with input is comfortably holdable.
- */
-const CORNER_PULL = 0.22;
-/** Lateral speed into a barrier that counts as a crash rather than a scrape. */
-const CRASH_SPEED = 3.2;
-/**
- * Seconds of unbroken barrier contact that also counts as a crash.
- *
- * Measured: a car given no steering does not slam into the wall, it CREEPS
- * there — it arrives at 0.15 to 0.8 units a second and then rides it round the
- * whole corner. Judging crashes on impact speed alone, the one thing the
- * player most needs told about ("you did not take that corner") was the one
- * thing that never triggered. Ploughing along a wall is a crash.
- */
-const WALL_GRIND_SEC = 0.4;
-const CRASH_PENALTY = 150;
 
 /* The ramp, in one place: the mesh is built from these and so is the climb the
    car makes up it, so the car cannot ride a slope the wedge does not have. */
@@ -1140,10 +1109,6 @@ export class RaceEngine {
   private roadShader: { uniforms: Record<string, { value: number }> } | null = null;
   /** How far the road's v coordinate runs in one lap. */
   private roadVSpan_ = 1;
-  /** Speed across the road, units per second. Positive is toward `right`. */
-  private lateralVel = 0;
-  /** Unbroken seconds against a barrier. Reset the moment the car comes off. */
-  private wallTime = 0;
   /** Airborne state. `airT` counts 0..1 across the arc; -1 means on the road. */
   private airT = -1;
   /* The arc currently being flown. The ramp and the gates are the same flight
@@ -2177,7 +2142,12 @@ export class RaceEngine {
   }
 
   private buildPickups() {
-    const COUNT = 46;
+    /* 24, down from 46. At 46 they were 6 units apart on a 296 unit lap, which
+       is closer together than the car is long: there was no line through them
+       to choose, because every line ran into one. Thinned out, reaching a
+       grocery is a decision rather than a certainty, and the gaps are where
+       the debris goes. */
+    const COUNT = 24;
     const texCache = new Map<string, THREE.Texture>();
     for (let i = 0; i < COUNT; i++) {
       const def = PICKUPS[i % PICKUPS.length];
@@ -2192,8 +2162,10 @@ export class RaceEngine {
       const sprite = new THREE.Sprite(mat);
       const size = def.points >= 500 ? 2.6 : def.points >= 250 ? 2.2 : 1.9;
       sprite.scale.set(size, size, 1);
-      // spread along the loop, alternating across the road
-      const t = (i + 1.5) / (COUNT + 3);
+      /* Spread along the loop on the ODD half-steps, which is what leaves the
+         even ones free for debris — the two are laid against the same ruler so
+         they interleave rather than landing on top of each other. */
+      const t = (i + 0.25) / COUNT;
       const lateral = [-2.6, 0, 2.6, -1.3, 1.3][i % 5];
       this.pickups.push({ sprite, t, lateral, points: def.points, name: def.name, alive: true, pop: 0 });
       this.root.add(sprite);
@@ -2227,12 +2199,68 @@ export class RaceEngine {
     mat.envMapIntensity = 0.4;
     this.disposables.push(geo, mat);
     const up = new THREE.Vector3(0, 1, 0);
-    for (let i = 0; i < 14; i++) {
-      const t = (i + 0.5) / 14 + 0.021;
-      const lateral = i % 2 === 0 ? -3.3 : 3.3;
+    /* On the half-steps between the groceries, so the road alternates reward
+       and hazard instead of clustering both in the same stretch. */
+    const COUNT = 30;
+    /* Where a rock must never be, and the windows are asymmetric because the
+       reasons are.
+
+       A gate's run-up is the whole length of the gauge, and the beat is
+       derived from the car's CURRENT speed — so a rebound anywhere in the
+       approach does not merely jog the car sideways, it moves the beat while
+       the player is already reading the gauge. That window has to be clear all
+       the way back to where the cue appears: boostWarnLead seconds of track.
+
+       After a gate, only the landing needs protecting. The ramp is the mirror
+       image: a short run in, a long arc out, and nothing to land on. */
+    const at = (u: number) => u / this.curveLen;
+    const keepOut: { t: number; before: number; after: number }[] = [
+      ...raceInteraction.boostGates.map((g) => ({
+        t: g,
+        /* The part of the run-up that is in slow motion, plus a margin. The
+           full gauge is longer, but a rebound in its opening stretch happens
+           at full speed with most of the window still to come, and the beat
+           re-derives before it matters. */
+        before: at(18),
+        after: at(12),
+      })),
+      { t: raceInteraction.jumpAt, before: at(10), after: at(34) },
+    ];
+    for (let i = 0; i < COUNT; i++) {
+      const t = ((i + 0.75) / COUNT) % 1;
+      const tooClose = keepOut.some((k) => {
+        // signed distance from the zone's anchor, wrapped
+        let d = t - k.t;
+        d = d - Math.round(d);
+        return d < 0 ? -d < k.before : d < k.after;
+      });
+      if (tooClose) continue;
+      /* Across the whole road, not pinned to the two edges. Edge-only debris
+         is avoided by driving down the middle and never looking, which is not
+         a choice. These sit in five lanes, so the gap moves.
+
+         But never in a lane a nearby grocery is already in. Placed blind, five
+         pairs came out sharing a lane within three units of each other, two of
+         them close enough to occupy the same space — and a rock hidden under a
+         reward is not a decision, it is a trap. The lane is chosen against
+         what is already on that stretch of road, which is the whole reason
+         pickups are built first. */
+      const lanes = [-3.0, 1.6, -1.6, 3.0, 0];
+      const near = this.pickups.filter((q) => {
+        let d = Math.abs(q.t - t);
+        if (d > 0.5) d = 1 - d;
+        return d * this.curveLen < 5;
+      });
+      const clear = (l: number) => near.every((q) => Math.abs(q.lateral - l) > 2.4);
+      const lateral =
+        lanes.slice(i % 5).concat(lanes.slice(0, i % 5)).find(clear) ??
+        // nothing is clear: take whichever lane is furthest from the nearest
+        lanes.reduce((best, l) =>
+          Math.min(...near.map((q) => Math.abs(q.lateral - l))) >
+          Math.min(...near.map((q) => Math.abs(q.lateral - best))) ? l : best, lanes[0]);
       const mesh = new THREE.Mesh(geo, mat);
-      const pos = this.curve.getPointAt(t % 1);
-      const tan = this.curve.getTangentAt(t % 1);
+      const pos = this.curve.getPointAt(t);
+      const tan = this.curve.getTangentAt(t);
       const right = new THREE.Vector3().crossVectors(tan, up).normalize();
       mesh.position.copy(pos).addScaledVector(right, lateral).setY(0.62);
       mesh.rotation.set(i * 0.9, i * 1.3, i * 0.5);
@@ -2240,7 +2268,7 @@ export class RaceEngine {
       mesh.scale.set(s, s * 0.82, s);
       this.debris.push({
         mesh,
-        t: t % 1,
+        t,
         lateral,
         spin: new THREE.Vector3(0.25 + (i % 3) * 0.12, 0.4 + (i % 5) * 0.09, 0.18 + (i % 4) * 0.07),
         broken: 0,
@@ -2460,12 +2488,28 @@ export class RaceEngine {
     return this.speed;
   }
 
-  applyObstacleBounce(penaltyPoints = DEBRIS_PENALTY) {
-    // Rebound backward
-    this.speed = -Math.max(6, this.speed * 0.5);
-    // Deflect lateral
-    this.lateral += (Math.random() > 0.5 ? 1 : -1) * 0.8;
-    this.driftYaw = (Math.random() - 0.5) * 0.4;
+  /**
+   * Clipped something. Costs speed, points, and a shove off the line.
+   *
+   * `fromLateral` is where the thing was across the road, so the car is pushed
+   * AWAY from it. It used to be `Math.random() > 0.5 ? 1 : -1`, which is the
+   * one thing the tuning file says none of this may be: "the leaderboard is
+   * only meaningful if two players who drive the same line get the same
+   * score", and a coin flip at every rock means they do not. Now the same line
+   * produces the same shove, every time, for everyone.
+   *
+   * And the car no longer REVERSES. This was `-Math.max(6, speed * 0.5)`, a
+   * full stop and a throw backwards, which was survivable while debris was
+   * switched off and is not now that there are twenty rocks on the circuit:
+   * the engine's own note on `goingForward` explains that a negative speed
+   * stops gates and the ramp arming at all. It scrubs most of the speed off
+   * instead, which is a real cost you drive out of rather than wait out.
+   */
+  applyObstacleBounce(penaltyPoints = DEBRIS_PENALTY, fromLateral = 0) {
+    this.speed = Math.max(3.5, this.speed * 0.42);
+    const away = this.lateral >= fromLateral ? 1 : -1;
+    this.lateral = Math.max(-LANE_LIMIT, Math.min(LANE_LIMIT, this.lateral + away * 0.9));
+    this.driftYaw = away * 0.22;
     const before = this.score;
     this.score = Math.max(0, this.score - penaltyPoints);
     // report what was actually lost, not what was asked for: near zero the
@@ -2540,26 +2584,6 @@ export class RaceEngine {
     const a = this.curve.getPointAt((t - D + 1) % 1);
     const b = this.curve.getPointAt((t + D) % 1);
     return b.clone().sub(a).setY(0).normalize();
-  }
-
-  /**
-   * Signed curvature of the road at `t`, in radians per unit of arc length.
-   *
-   * Positive means the road bends toward `right`, so a car that does nothing
-   * ends up to the LEFT of where the road went — which is why the corner load
-   * is subtracted rather than added.
-   *
-   * Measured off the same smoothed headings the camera uses, for the same
-   * reason: the raw tangent's rate of change steps at every control point, and
-   * a corner load built on it would kick the car sideways on the steps.
-   */
-  private curvatureAt(t: number) {
-    const d = 4 / this.curveLen;
-    const h0 = this.smoothTangent((t - d + 1) % 1);
-    const h1 = this.smoothTangent((t + d) % 1);
-    const cross = h0.x * h1.z - h0.z * h1.x;
-    const dot = Math.max(-1, Math.min(1, h0.dot(h1)));
-    return Math.atan2(-cross, dot) / 8;
   }
 
   fpCameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3 }) {
@@ -2816,7 +2840,6 @@ export class RaceEngine {
              mid-corner-exit when the gate arms, and yanking the car onto the
              centreline would read as the game taking the wheel. */
           this.lateral -= this.lateral * chase(2.2, dt);
-          this.lateralVel -= this.lateralVel * chase(2.2, dt);
         } else if (g.armed) {
           /* Lifted, still short of the hoop. Full speed from here: the lift IS
              the moment, and the world surging back up as the car leaves the
@@ -2826,7 +2849,6 @@ export class RaceEngine {
              The car stays lined up, though — the verdict is not in yet,
              because the verdict is where the car IS when it gets there. */
           this.lateral -= this.lateral * chase(2.2, dt);
-          this.lateralVel -= this.lateralVel * chase(2.2, dt);
         }
 
         // crossing it: the wrapped gap jumps from nearly a lap to nearly zero
@@ -2854,78 +2876,30 @@ export class RaceEngine {
     this.grip += (wantGrip - this.grip) * chase(6, dt);
     this.steerSmooth += (this.steer - this.steerSmooth) * chase(9, dt);
 
-    /* Steering is an ACCELERATION across the road, not a velocity.
+    /* Steering is a VELOCITY across the road, and the circuit takes its own
+       corners.
 
-       It used to be a velocity: let go of the wheel and the car stopped moving
-       sideways that instant, which is what made the corners drive themselves.
-       Nothing pushed the car anywhere, so the road's own shape was the only
-       thing deciding where it went.
+       It was briefly an acceleration with the corner's load pulling against
+       it, so a bend nobody steered into ran the car to the barrier. That was
+       honest physics and the wrong game: on a phone, by tilt, holding a line
+       through four corners a lap took the whole of the player's attention and
+       left none for what this race is actually about, which is the rings and
+       the groceries. Hard is not the same as interesting.
 
-       As an acceleration, with drag standing in for tyre scrub, full lock
-       settles at STEER_ACCEL / LATERAL_DRAG = about 7 units a second across
-       the road — the same authority the old velocity had, so the feel of
-       holding a line is unchanged. What is new is that letting go no longer
-       stops anything. */
+       So the circuit drives its own corners again and the player drives the
+       LINE across it: which lane to be in, which pickup to reach, which rock
+       to miss. The hazard moved onto the road instead of being the road. */
     const slide = 1 + (1 - this.grip) * 2.6;
     const bite = this.manual ? Math.min(1, 0.25 + this.speed / 18) : 1;
-    let lateralAccel = this.steerSmooth * STEER_ACCEL * slide * bite;
-
-    /* The corner load. A car pointed straight does not go round a bend, and
-       this is the engine finally admitting it: the road's curvature times the
-       square of the speed is the sideways acceleration the driver has to find
-       from somewhere, and if they do not find it the car runs wide.
-
-       CORNER_PULL is a fraction of the real thing and has to be. Measured, the
-       tightest corner here is radius 13.9 against a road 7.2 wide, so the true
-       demand at 26 units a second is 48.7 u/s^2 — unsteered, that is the
-       barrier in 0.38 seconds, which is less time than a phone tilt takes to
-       register. The fraction keeps the rule (corners are yours to take) while
-       leaving a human long enough to take them.
-
-       It still scales with v squared, so a boosted corner is genuinely harder
-       than a slow one, which is the part of the physics worth keeping. */
-    const k = this.curvatureAt(this.t);
-    lateralAccel -= k * this.speed * this.speed * CORNER_PULL;
-
-    this.lateralVel += lateralAccel * dt;
-    this.lateralVel -= this.lateralVel * chase(LATERAL_DRAG, dt);
-    this.lateral += this.lateralVel * dt;
+    this.lateral += this.steerSmooth * dt * 7 * slide * bite;
 
     const wantYaw = -this.steerSmooth * (1 - this.grip) * 0.85;
     this.driftYaw += (wantYaw - this.driftYaw) * chase(7, dt);
-
     if (Math.abs(this.lateral) > LANE_LIMIT) {
-      const side = Math.sign(this.lateral);
-      const into = Math.abs(this.lateralVel);
-      this.lateral = side * LANE_LIMIT;
-      this.wallTime += dt;
-      const ground = this.wallTime >= WALL_GRIND_SEC;
-      if (ground) this.wallTime = 0; // one crash per stretch of wall, not per frame
-      if (into > CRASH_SPEED || ground) {
-        /* A hit, not a scrape. The car is thrown back off the wall, loses most
-           of its speed and costs points — the brief's own "car can crash". The
-           rebound is inward rather than backward: reversing out of a barrier
-           strike reads as a bug, and the engine's own note on debris explains
-           what a negative speed does to the lap seam. */
-        this.lateralVel = -side * into * 0.3;
-        this.speed *= 0.42;
-        this.score = Math.max(0, this.score - CRASH_PENALTY);
-        haptic([30, 40, 60]);
-        /* Reported through `onCrash` and NOT through `onPenalty`, which is the
-           obstacle path and carries the hit sample with it. Corners are the
-           mistake a player makes most often, and a sample on every one of them
-           turned the race into a percussion piece. The deduction still shows,
-           the phone still buzzes, and the car still visibly ploughs the wall —
-           that is enough to know what happened. */
-        this.opts.onCrash?.(CRASH_PENALTY);
-      } else {
-        // Scrubbing the barrier costs speed. Scale by dt, otherwise the penalty
-        // is applied per frame and a 120 Hz phone punishes twice as hard.
-        this.lateralVel = 0;
-        this.speed *= Math.pow(0.4, dt);
-      }
-    } else {
-      this.wallTime = 0;
+      this.lateral = Math.sign(this.lateral) * LANE_LIMIT;
+      // Scrubbing the barrier costs speed. Scale by dt, otherwise the penalty
+      // is applied per frame and a 120 Hz phone punishes twice as hard.
+      this.speed *= Math.pow(0.4, dt);
     }
 
     // --- place car ---
@@ -3017,7 +2991,7 @@ export class RaceEngine {
            applyObstacleBounce does the rebound AND reports what was actually
            lost, which is what feeds the score pop. */
         this.shatter(c);
-        this.applyObstacleBounce(DEBRIS_PENALTY);
+        this.applyObstacleBounce(DEBRIS_PENALTY, c.lateral);
       }
     }
 
