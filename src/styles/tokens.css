@@ -63,7 +63,10 @@
   /* the ground every product photo sits on: listing cards, the PDP hero */
   --product-bg: #F8F9FD;
   /* every top-nav title: page headers, Checkout, the PDP bar */
-  --nav-title-size: var(--f-lg);
+  /* Four pixels up, in one place. Every screen title already reads this — the
+     checkout's h1, PageHeader's, and the sticky title that fades in on scroll
+     — so they move together and stay the one size they are supposed to be. */
+  --nav-title-size: calc(var(--f-lg) + 4px);
   --nav-title-weight: 700;
   /* What shows behind the notch and at an overscroll bounce. Matches the
      campaign band so the status bar belongs to the app. */

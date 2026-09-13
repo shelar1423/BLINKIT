@@ -2257,10 +2257,6 @@ input, select, textarea { font: inherit; color: inherit; }
      which left them hanging from the top of it. */
   align-items: center;
 }
-/* The amount is the answer the whole card is building to, so it is set in the
-   heaviest weight the bill uses. `.ckobill__r b` sets 500 for every ordinary
-   row and, coming later in the file, was winning over the total's own 800. */
-.trkc__bill .ckobill__r--tot b { font-weight: 800; }
 
 .trkc__lines { border-top: 1px solid var(--line); padding: 12px 16px; display: grid; gap: 10px; }
 .trkc__ln { display: flex; align-items: baseline; gap: 12px; font-size: var(--f-md); }
@@ -4161,7 +4157,9 @@ input, select, textarea { font: inherit; color: inherit; }
   margin: 8px -14px 0; padding: 14px 14px 4px; border-top: 1px solid var(--line);
   font-size: var(--f-lg);
 }
-.ckobill__r--tot span, .ckobill__r--tot b { color: var(--ink); font-weight: 800; }
+/* The label steps back so the amount carries the row. */
+.ckobill__r--tot span { color: var(--ink); font-weight: 700; }
+.ckobill__r--tot b { color: var(--ink); }
 /* charges that carry an explanation, and the total, are dotted-underlined */
 .ckobill__dot { text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; }
 
@@ -4225,6 +4223,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckobill__l .glyph { color: var(--ink); width: 16px; height: 16px; }
 .ckobill__l--plain { padding-left: 26px; color: var(--mut); }
 .ckobill__r b { font-weight: 500; }
+/* After the 500 above, not before it. Both selectors weigh the same, so the
+   total's own weight only wins by coming later — which is why the grand total
+   was rendering at 500 while its own rule claimed 800. */
+.ckobill__r--tot b { font-weight: 800; }
 .ckobill__r s { color: var(--mut); font-weight: 400; margin-right: 2px; }
 .ckobill__r .ckobill__saved {
   font-style: normal; font-size: var(--f-xs); font-weight: 600;
