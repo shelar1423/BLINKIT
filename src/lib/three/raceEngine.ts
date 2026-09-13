@@ -175,7 +175,7 @@ const SLOW_FINISH = 0.5;
 /** Real seconds between the last corner and the result screen. */
 /* Real seconds between the line and the result screen. Long enough for the
    car to be seen crossing the line and running on past the finish camera. */
-const FINISH_OUTRO = 4.2;
+const FINISH_OUTRO = 2.6;
 
 /**
  * The fraction to move toward a target this frame, for an exponential chase.
