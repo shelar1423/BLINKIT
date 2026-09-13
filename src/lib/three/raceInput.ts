@@ -190,6 +190,8 @@ export function makeLeverDrag(
   let fromY = 0;
   let fromPull = 0;
   let held = false;
+  /** Whether this grab ever became a drag. A press that does not is a tap. */
+  let moved = false;
 
   return {
     grab(x: number, y: number) {
@@ -230,6 +232,7 @@ export function makeLeverDrag(
       }
       if (!ok) return false;
       held = true;
+      moved = false;
       fromY = y;
       fromPull = engine.pull;
       onArm(false);
@@ -238,6 +241,7 @@ export function makeLeverDrag(
     },
     move(y: number) {
       if (!held) return;
+      if (Math.abs(y - fromY) > 6) moved = true;
       const k = fromPull + (y - fromY) / raceInteraction.launchMaxPull;
       engine.setLaunchPull(k);
       onArm(engine.pull > 0.5);
@@ -247,22 +251,15 @@ export function makeLeverDrag(
       if (!held) return;
       held = false;
       const k = engine.pull;
-      /* A TAP IS NOT A LAUNCH.
-       *
-       * It used to be: a press that never became a drag fired at a middling
-       * 55%, on the reasoning that pressing a control and getting nothing is
-       * how a lever reads as broken. The cost was worse than the problem it
-       * solved. The launcher sits in the middle of the view the instant the
-       * track lands, and `grab` is generous on purpose — the lever mesh, the
-       * whole launcher body, or anywhere within GRAB_SLOP_PX of the lever —
-       * so the first innocent tap after placing, to look around or to dismiss
-       * the briefing, started the race. The player had not asked to go, and
-       * the race they got was one they were not holding the launcher for.
-       *
-       * A tap still ANSWERS: `grab` has already put the gantry on red and
-       * reported the pull, so the machine visibly wakes under the finger. It
-       * just does not fire. Launching stays what the briefing and the hint
-       * both say it is — draw the lever back and let go. */
+      /* A TAP IS A LAUNCH. Pressing a thing that looks like a control and
+         getting nothing is how the old screen lever read as broken; a press
+         that never became a drag fires at a middling 55%, and pulling is how
+         you earn more than that. A brush mid-drag still springs back. */
+      if (!moved && k < 0.1) {
+        onPull(0);
+        onLaunch(0.55);
+        return;
+      }
       if (k < 0.1) {
         engine.setLaunchPull(0);
         onArm(false);
