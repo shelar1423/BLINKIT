@@ -2482,22 +2482,6 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--mut);
   text-wrap: balance;
 }
-/* ---- /preview/result only: the tier switcher ---- */
-.rprev {
-  position: fixed; left: 50%; transform: translateX(-50%);
-  /* Over .rwd, which is 260 — this floats on top of the screen it previews. */
-  bottom: calc(var(--safe-b) + 8px); z-index: 300;
-  display: flex; gap: 6px; padding: 6px;
-  background: rgba(10, 12, 18, 0.82); border-radius: 999px;
-  backdrop-filter: blur(6px);
-}
-.rprev__b {
-  padding: 6px 11px; border-radius: 999px;
-  font-size: var(--f-2xs); font-weight: 700; color: #fff;
-  background: rgba(255, 255, 255, 0.12);
-}
-.rprev__b.is-on { background: var(--yellow); color: var(--ink); }
-
 .rwd__stub {
   position: relative;
   height: var(--stub);
