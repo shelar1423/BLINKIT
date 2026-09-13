@@ -200,8 +200,84 @@ input, select, textarea { font: inherit; color: inherit; }
   overflow: hidden;
   box-shadow: var(--sh-1);
 }
-.stepper button { width: 24px; height: 100%; display: grid; place-items: center; color: #fff; }
-.stepper__q { flex: 1; text-align: center; font-size: var(--f-md); font-weight: 700; font-variant-numeric: tabular-nums; }
+.stepper button { width: 24px; height: 100%; display: grid; place-items: center; color: #fff; position: relative; z-index: 1; }
+
+/* ---------- the stepper as a rocker ----------
+   Pressing an end tips that end AWAY and brings the other one up, the way a
+   physical rocker switch does, and the light slides across to whichever end
+   rose. Nothing here changes the control at rest: the geometry, the ground and
+   the gloss are all untouched, and every rule below only runs while a press is
+   settling. */
+.stepper { position: relative; transform-style: preserve-3d; }
+/* The travelling highlight. Absolute, because a ::before on a flex container
+   would otherwise be laid out as a flex item and move the glyphs. It is
+   invisible at rest, so the button anyone is looking at is the one that was
+   signed off. */
+.stepper::before {
+  content: '';
+  position: absolute; inset: 0; pointer-events: none; opacity: 0;
+  border-radius: inherit;
+  background: radial-gradient(70% 150% at 50% -25%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 65%);
+}
+.stepper.is-rock-r { animation: rockR var(--rock, 440ms) cubic-bezier(0.22, 1, 0.36, 1); }
+.stepper.is-rock-l { animation: rockL var(--rock, 440ms) cubic-bezier(0.22, 1, 0.36, 1); }
+/* The light is fixed in the room; the button turns under it. Pressing + puts
+   the right end down, so the left comes up to meet the light and the highlight
+   slides that way. */
+.stepper.is-rock-r::before { animation: sheenL var(--rock, 440ms) ease-out; }
+.stepper.is-rock-l::before { animation: sheenR var(--rock, 440ms) ease-out; }
+
+@keyframes rockR {
+  0% { transform: perspective(420px) rotateY(0) rotate(0) scale(1); }
+  30% { transform: perspective(420px) rotateY(9deg) rotate(0.7deg) scale(0.985); }
+  100% { transform: perspective(420px) rotateY(0) rotate(0) scale(1); }
+}
+@keyframes rockL {
+  0% { transform: perspective(420px) rotateY(0) rotate(0) scale(1); }
+  30% { transform: perspective(420px) rotateY(-9deg) rotate(-0.7deg) scale(0.985); }
+  100% { transform: perspective(420px) rotateY(0) rotate(0) scale(1); }
+}
+@keyframes sheenL {
+  0% { opacity: 0; transform: translateX(0); }
+  30% { opacity: 1; transform: translateX(-26%); }
+  100% { opacity: 0; transform: translateX(0); }
+}
+@keyframes sheenR {
+  0% { opacity: 0; transform: translateX(0); }
+  30% { opacity: 1; transform: translateX(26%); }
+  100% { opacity: 0; transform: translateX(0); }
+}
+
+/* ---------- the digit, on a wheel ----------
+   The new number rises into place from below and the old one leaves through
+   the top, both clipped to the slot — a locker counter rather than a value
+   being swapped out. It reads the same in both directions, which is what the
+   reference does: what changed is that it changed. */
+.stepper__q {
+  flex: 1; min-width: 0; text-align: center;
+  font-size: var(--f-md); font-weight: 700; font-variant-numeric: tabular-nums;
+  position: relative; z-index: 1;
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.stepper__n { grid-area: 1 / 1; }
+.stepper__n--in { animation: qtyIn 300ms cubic-bezier(0.22, 1, 0.36, 1); }
+.stepper__n--out { animation: qtyOut 300ms cubic-bezier(0.4, 0, 0.5, 1) forwards; }
+@keyframes qtyIn {
+  from { transform: translateY(105%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes qtyOut {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(-105%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stepper.is-rock-r, .stepper.is-rock-l,
+  .stepper.is-rock-r::before, .stepper.is-rock-l::before,
+  .stepper__n--in, .stepper__n--out { animation: none; }
+  .stepper__n--out { display: none; }
+}
 .stepper--lg { height: var(--ctl-h-lg); min-width: 104px; border-radius: var(--r); }
 /* In the sheet's bar the stepper stands in for the Add-to-cart button, so it
    takes that button's slot rather than a narrow one of its own. */
