@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 
 /* The three things you do, in the order you do them. */
 const HOW_TO: { t: string; icon: string; c: ReactNode }[] = [
-  { t: 'point', icon: '/howto/point.png', c: <>Point your camera at a table or floor</> },
-  { t: 'tilt', icon: '/howto/tilt.png', c: <>Hold <b>GO</b> and tilt to steer</> },
-  { t: 'grab', icon: '/howto/grab.png', c: <>Grab groceries on the way. Each bag is worth 500.</> },
+  { t: 'point', icon: '/howto/point.svg', c: <>Point your camera at a table or floor</> },
+  { t: 'tilt', icon: '/howto/tilt.svg', c: <>Tilt to steer</> },
+  { t: 'grab', icon: '/howto/grab.svg', c: <>Grab groceries on the way</> },
 ];
 
 /** How to play. Opened from the campaign hub's "How it works" pill. */

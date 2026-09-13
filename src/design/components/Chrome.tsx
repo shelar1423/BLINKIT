@@ -3,23 +3,17 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { DELIVERY_ADDRESS } from '../../data/catalog';
 import {
-  IconBasket,
   IconCaretDown,
   IconChevronDown,
   IconChevronLeft,
   IconFlag,
-  IconBabyBottle,
-  IconImported,
-  IconGift,
-  IconLamp,
-  IconHeadphones,
-  IconLipstick,
   IconVoiceBars,
   IconRupeeWallet,
   IconStore,
   IconSearch,
   IconUser,
 } from '../elements/Icons';
+import { RailIcon, type RailIconName } from '../elements/RailIcons';
 import './chrome.css';
 
 /**
@@ -52,15 +46,22 @@ export function DistrictMark() {
  *
  *  Eight of them, which is more than fits: the rail scrolls, and a tab cut off
  *  at the right edge is what says so. */
+/* The rail's icons, from the Figma frame, as one-colour masks tinted by the
+   tab's own text colour. Hot Wheels keeps its flag. */
+const railIcon = (name: RailIconName) =>
+  function Rail({ filled }: { size?: number; filled?: boolean }) {
+    return <RailIcon name={name} filled={filled} />;
+  };
+
 const RAIL = [
-  { id: 'all', label: 'All', Icon: IconBasket },
+  { id: 'all', label: 'All', Icon: railIcon('all') },
   { id: 'hw', label: 'Hot Wheels', Icon: IconFlag, badge: 'New', to: '/hot-wheels' },
-  { id: 'elec', label: 'Electronics', Icon: IconHeadphones },
-  { id: 'beauty', label: 'Beauty', Icon: IconLipstick },
-  { id: 'gift', label: 'Gifting', Icon: IconGift },
-  { id: 'decor', label: 'Decor', Icon: IconLamp },
-  { id: 'kids', label: 'Kids', Icon: IconBabyBottle },
-  { id: 'imported', label: 'Imported', Icon: IconImported },
+  { id: 'elec', label: 'Electronics', Icon: railIcon('electronics') },
+  { id: 'beauty', label: 'Beauty', Icon: railIcon('beauty') },
+  { id: 'gift', label: 'Gifting', Icon: railIcon('gifting') },
+  { id: 'decor', label: 'Decor', Icon: railIcon('decor') },
+  { id: 'kids', label: 'Kids', Icon: railIcon('kids') },
+  { id: 'imported', label: 'Imported', Icon: railIcon('imported') },
 ];
 
 /**
@@ -72,6 +73,28 @@ const RAIL = [
  * Hot Wheels legible: the campaign never has to compete with Blinkit's yellow.
  */
 export function AppHeader({ onSearch }: { onSearch?: () => void }) {
+  /* Five tabs across the screen — All to Gifting, gutter to gutter — and the
+     sixth starting just past the edge, on any phone width. The gap is what
+     gives: it is worked out from the real label widths, never a fixed number. */
+  const rail = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = rail.current;
+    if (!el) return;
+    const fit = () => {
+      const items = [...el.children].slice(0, 5) as HTMLElement[];
+      if (items.length < 5) return;
+      const pad = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+      const used = items.reduce((a, it) => a + it.offsetWidth, 0);
+      const gap = Math.max(12, (el.clientWidth - pad * 2 - used) / 4);
+      el.style.setProperty('--crail-gap', `${gap}px`);
+    };
+    fit();
+    // label widths change once the web font lands
+    void document.fonts?.ready.then(fit);
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const nav = useNavigate();
   const points = useStore((s) => s.totalPoints);
 
@@ -125,7 +148,7 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
         </button>
       </div>
 
-      <nav className="crail" aria-label="Categories">
+      <nav className="crail" aria-label="Categories" ref={rail}>
         {RAIL.map((r) =>
           r.to ? (
             <NavLink key={r.id} to={r.to} className={({ isActive }) => 'crail__i' + (isActive ? ' is-on' : '')}>
@@ -138,7 +161,8 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
           ) : (
             <span key={r.id} className={'crail__i' + (r.id === 'all' ? ' is-on' : ' is-inert')} aria-disabled={r.id !== 'all'}>
               <span className="crail__ic" aria-hidden="true">
-                <r.Icon size={23} />
+                {/* the selected tab's icon is the filled version */}
+                <r.Icon size={23} {...(r.id === 'all' ? { filled: true } : {})} />
               </span>
               <span className="crail__l">{r.label}</span>
             </span>

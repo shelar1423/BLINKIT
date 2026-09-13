@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from 'react';
+import { useEffect } from 'react';
 import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
@@ -9,24 +9,6 @@ import { IconAR, IconCheck, IconFlag } from '../design/elements/Icons';
 import { useARSupport } from '../lib/useARSupport';
 
 /** Race preparation: pick the car, then choose 3D or AR. */
-/* A word and a colour for each car.
-
-   The colours are sampled off the product shots rather than picked — the most
-   saturated pixel in each, brightened enough to hold a 2px outline on white:
-   #315710, #032A8E, #CB9E4A, #B2001D. K.I.T.T. sampled #691723, which is its
-   scanner light rather than its paint; the car is black, so it wears graphite
-   and Hollowback keeps the red.
-
-   The WORDS are character, not statistics. Every car drives identically —
-   `raceInteraction` is explicit that two players on the same line must score
-   the same, and per-car handling is the one change that would break it. */
-const CAR_TRAIT: Record<string, { accent: string }> = {
-  ballistik: { accent: '#5FA31E' },
-  battlespec: { accent: '#2757C9' },
-  jackhammer: { accent: '#C08A2A' },
-  hollowback: { accent: '#CF1027' },
-  kitt: { accent: '#2E3138' },
-};
 
 export default function Race() {
   const nav = useNavigate();
@@ -55,7 +37,6 @@ export default function Race() {
               className={'carpick__i' + (c.id === car.id ? ' is-on' : '')}
               onClick={() => selectCar(c.id)}
               aria-pressed={c.id === car.id}
-              style={{ '--car': CAR_TRAIT[c.id]?.accent } as CSSProperties}
             >
               <span className="carpick__im">
                 <img src={c.image} alt="" loading="lazy" />

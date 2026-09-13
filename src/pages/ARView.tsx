@@ -616,7 +616,9 @@ export default function ARView() {
                 overlapped. A column cannot collide with itself. */}
             <div className="arov__bottom">
             {/* Track size controls when placed */}
-            {phase === 'placed' && (
+            {/* Race: once the track is down, the lever is the only thing on
+                screen. Size, move and hint are kept for the car viewer. */}
+            {phase === 'placed' && inspect && (
               <div className="arov__size">
                 <button type="button" onClick={() => handle.current?.nudgeScale(1 / 1.25)} aria-label="Smaller">
                   <IconMinus size={16} />
@@ -643,7 +645,7 @@ export default function ARView() {
                 </small>
               </p>
             )}
-            {phase === 'placed' && (
+            {phase === 'placed' && inspect && (
               <p className="arov__hint">
                 {inspect ? `${car.name.replace('Hot Wheels ', '')} in your space` : 'Your track is ready'}
                 <small>
@@ -747,7 +749,7 @@ export default function ARView() {
                   {placing ? 'Placing…' : inspect ? 'Place car here' : 'Place track here'}
                 </Button>
               )}
-              {phase === 'placed' && (
+              {phase === 'placed' && inspect && (
                 <>
                   <Button variant="ghostDark" block type="button" onClick={() => handle.current?.reset()}>
                     <IconRotate size={15} /> Reposition track

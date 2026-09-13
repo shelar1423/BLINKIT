@@ -132,7 +132,9 @@
 
 /* ---------- category rail ---------- */
 .crail {
-  display: flex; gap: 2px; margin-top: 10px;
+  /* The first tab's left edge sits on the gutter, under the search bar's
+     start; the gap is the only space between tabs. */
+  display: flex; gap: var(--crail-gap, 28px); margin-top: 10px;
   padding: 0 var(--gut);
   overflow-x: auto; scrollbar-width: none;
 }
@@ -146,13 +148,16 @@
      fixed set of options. Blinkit's is a scrolling rail: the tabs sit at their
      natural width from the left edge, and the fact that one is half cut off at
      the right is what tells you there are more. */
-  flex: 0 0 auto; min-width: 74px;
+  flex: 0 0 auto;
   display: grid; justify-items: center; gap: 3px;
-  padding: 4px 6px 12px;
+  padding: 4px 0 12px;
   color: inherit; opacity: 0.74;
   font-size: var(--f-sm); font-weight: 600;
 }
 .crail__ic { position: relative; display: grid; place-items: center; height: 25px; }
+/* 48-unit artwork whose drawing fills the middle ~28 units, so the box is
+   drawn larger than the row and allowed to overhang it. */
+.crail__g { display: block; margin: -9px; flex: 0 0 auto; }
 .crail__l { white-space: nowrap; position: relative; }
 /* The underline belongs to the WORD. On the item it spanned the whole column,
    so "All" wore a bar three times the width of the label it was marking. */

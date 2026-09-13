@@ -61,11 +61,6 @@ export default function Rewards() {
      come off in the order they were won. */
   const claimable = REWARD_TIERS.find((t) => isUnlocked(t) && claimedReward?.id !== t.id);
 
-  /* What a tier gives you, in a phrase. Money off, a partner's perk, or the
-     free delivery that every tier carries. */
-  const benefit = (t: (typeof REWARD_TIERS)[number]) =>
-    t.value > 0 ? `${rupees(t.value)} off your next order` : t.perk ?? 'Free delivery, applied at checkout';
-
   const earned = REWARD_TIERS.filter((t) => isUnlocked(t)).length;
 
 
@@ -169,8 +164,8 @@ export default function Rewards() {
               </p>
             </div>
           ) : (
-            <p className="rwhero__s">
-              <IconTrophy size={13} /> Every tier unlocked
+            <p className="rwhero__s rwhero__s--done">
+              <IconTrophy size={16} /> Every tier unlocked
             </p>
           )}
         </div>
@@ -185,7 +180,6 @@ export default function Rewards() {
                 <div className="grow">
                   <p className="coupon__k">Ready to claim</p>
                   <b className="coupon__v">{claimable.label}</b>
-                  <span className="coupon__s">{benefit(claimable)}</span>
                 </div>
               </div>
               <span className="coupon__tear" aria-hidden="true" />

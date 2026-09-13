@@ -6,6 +6,7 @@ import { cameraPitchDeg, makeDeviceAim, makeJumpInput, makeLeverDrag } from './r
 
 /** Scratch for the aim ray; one per frame would be litter. */
 import { loadCar } from './modelLoader';
+import { starfieldTexture } from './starfield';
 import { primeAudio, skid } from '../horn';
 
 /* ============================================================
@@ -470,6 +471,72 @@ function lights(scene: THREE.Scene) {
   scene.add(dir);
 }
 
+/**
+ * The last gate, out of the room.
+ *
+ * AR cannot film the final hoop from the side the way the 3D race does — the
+ * phone IS the camera. So for that one moment the room goes: a white flash
+ * covers the cut, the galaxy from the 3D race closes in around the track, and
+ * a second flash brings the room back as the car lands. `k` is the engine's
+ * finalMoment, 0..1, and both flashes fall out of it — they peak as it passes
+ * the middle, once on the way in and once on the way out.
+ *
+ * Built for both sessions. The camera session also fades its video and moves
+ * the camera; under WebXR the room is the system's, so the sky simply covers
+ * it and the view stays the player's own.
+ */
+function makeGalaxyMoment(scene: THREE.Scene, camera: THREE.Camera, radius: number) {
+  const tex = starfieldTexture();
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const skyMat = new THREE.MeshBasicMaterial({
+    /* depth-tested, so the track (drawn first, opaque) stays in front of it;
+       renderOrder puts it before the grocery sprites in the transparent pass */
+    map: tex, side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false, fog: false,
+  });
+  const skyGeo = new THREE.SphereGeometry(radius, 48, 24);
+  const sky = new THREE.Mesh(skyGeo, skyMat);
+  sky.renderOrder = -10;
+  sky.frustumCulled = false;
+  sky.visible = false;
+  scene.add(sky);
+
+  const flashMat = new THREE.MeshBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, depthTest: false, fog: false,
+  });
+  const flashGeo = new THREE.PlaneGeometry(4, 4);
+  const flash = new THREE.Mesh(flashGeo, flashMat);
+  flash.position.set(0, 0, -0.2);
+  flash.renderOrder = 10;
+  flash.frustumCulled = false;
+  flash.visible = false;
+  camera.add(flash);
+  if (!camera.parent) scene.add(camera);
+
+  const at = new THREE.Vector3();
+  return {
+    update(k: number, eye: THREE.Object3D) {
+      const on = k > 0.001;
+      sky.visible = on;
+      flash.visible = on && k < 0.999;
+      if (!on) return;
+      eye.getWorldPosition(at);
+      sky.position.copy(at);
+      // the sky arrives a little ahead of the flash peak, so the flash hides the swap
+      skyMat.opacity = Math.min(1, k * 1.6);
+      flashMat.opacity = Math.pow(Math.sin(Math.PI * k), 6) * 0.95;
+    },
+    dispose() {
+      scene.remove(sky);
+      camera.remove(flash);
+      skyGeo.dispose();
+      skyMat.dispose();
+      tex.dispose();
+      flashGeo.dispose();
+      flashMat.dispose();
+    },
+  };
+}
+
 function makeEngine(
   opts: Opts,
   onDone: () => void,
@@ -481,10 +548,13 @@ function makeEngine(
   pitchDeg: () => number | null,
   /** Take the current pose as the rest position for a fresh gesture. */
   recentre: () => void,
+  /** Whether this session can move its own camera for the last gate's side shot. */
+  cinematic = false,
 ) {
   const engine: RaceEngine = new RaceEngine({
     /* The AR session is the caller that has the aim, the lift and the cues. */
     interactions: true,
+    cinematicCamera: cinematic,
     laps: 2,
     duration: 45,
     onTick: opts.onTick,
@@ -807,6 +877,8 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   const anchor = new THREE.Group();
   anchor.visible = false;
   scene.add(anchor);
+  /* Galaxy for the last gate. Under WebXR the view stays the player's own. */
+  const moment = makeGalaxyMoment(scene, camera, 20);
 
   let phase: ARPhase = 'searching';
   const setPhase = (p: ARPhase) => {
@@ -961,6 +1033,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     }
     hitSource = null;
     transientHitSource = null;
+    moment.dispose();
     engine.dispose();
     renderer.dispose();
     renderer.domElement.remove();
@@ -1125,6 +1198,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       // anchorWorldPos = camWorldPos - fpCamPos * anchorScale
       anchor.position.copy(camWorldPos).addScaledVector(fpCamPos, -scale);
     }
+    moment.update(phase === 'racing' ? engine.finalMoment : 0, renderer.xr.isPresenting ? renderer.xr.getCamera() : camera);
 
     /* The launcher's own animation — the chevrons over the lever. The engine
        is not ticked until the lever goes, so this is the only thing keeping
@@ -1282,6 +1356,8 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const anchor = new THREE.Group();
   anchor.visible = false;
   scene.add(anchor);
+  /* Galaxy for the last gate; this session also films it from the side. */
+  const moment = makeGalaxyMoment(scene, camera, 30);
 
   let phase: ARPhase = 'ready';
   const setPhase = (p: ARPhase) => {
@@ -1309,6 +1385,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     () => {
       deviceAim.recentre();
     },
+    /* This session draws the camera feed itself, so it can let go of the room
+       for the last gate and film it from the side, as the 3D race does. */
+    true,
   );
   const engine = race.engine;
   /* True 1:64 is 7.4cm, and at the half-metre this places at that is a
@@ -1543,6 +1622,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     video.pause();
     video.srcObject = null;
     video.remove();
+    moment.dispose();
     engine.dispose();
     renderer.dispose();
     renderer.domElement.remove();
@@ -1677,6 +1757,13 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
       camera.position.copy(fpCamPos);
       camera.lookAt(fpCamLook);
+    }
+    {
+      const k = phase === 'racing' ? engine.finalMoment : 0;
+      moment.update(k, camera);
+      // the room itself goes, behind the sky
+      const vis = String(1 - Math.min(1, k * 1.6));
+      if (video.style.opacity !== vis) video.style.opacity = vis;
     }
     renderer.render(scene, camera);
   });

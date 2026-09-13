@@ -13,7 +13,6 @@ import {
   IconCube,
   IconFlag,
   IconHeart,
-  IconReplace,
   IconRotate,
   IconSearch,
   IconShare,
@@ -216,7 +215,6 @@ export default function Product() {
   const arOk = useARSupport() !== false;
   const mysteryUnlocked = useStore((s) => s.mysteryUnlocked);
   const selectCar = useStore((s) => s.selectCar);
-  const racesLeft = useStore((s) => s.racesLeft);
   const add = useStore((s) => s.add);
   const setQty = useStore((s) => s.setQty);
   const qty = useStore((s) => s.cart[id] ?? 0);
@@ -714,7 +712,7 @@ export default function Product() {
               </span>
               <span className="grow">
                 <b>Race this car</b>
-                <small>{racesLeft} races left today · win Blinkit Cash</small>
+                <small>Win rewards</small>
               </span>
               <IconChevronRight size={18} />
             </button>
@@ -729,7 +727,7 @@ export default function Product() {
             onClick={() => toast('Replacement details are out of scope for this prototype')}
           >
             <span className="rowcard__glyph">
-              <IconReplace size={22} />
+              <img src="/brand/replacement.svg" alt="" width={26} height={26} />
             </span>
             <span className="grow">
               <b>72 hours only replacement</b>

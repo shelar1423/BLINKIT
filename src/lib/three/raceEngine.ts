@@ -1155,6 +1155,14 @@ export class RaceEngine {
   private cineK = 0;
   /** Seconds of tracking shot still owed, counted in real time. */
   private cineTail = 0;
+  /**
+   * 0..1, the final-gate moment on its own, whether or not this engine moves
+   * a camera for it. AR reads it to swap the room for the galaxy.
+   */
+  private momentK = 0;
+  get finalMoment() {
+    return this.momentK;
+  }
   private readonly cinematic: boolean;
   /** 0..1 up the ramp's face; -1 when not on it. */
   private rampU = -1;
@@ -2203,6 +2211,15 @@ export class RaceEngine {
          even ones free for debris — the two are laid against the same ruler so
          they interleave rather than landing on top of each other. */
       const t = (i + 0.25) / COUNT;
+      /* Nothing on the launcher. It stands at t=0 and its bed runs back
+         LAUNCH_TRAVEL + 7 units behind the line, so a grocery in that stretch —
+         or just ahead of the line, where the car sits — lands on the sled,
+         floating over the lever the player has to grab. */
+      if (this.interactions && raceInteraction.launchEnabled) {
+        const d = t - Math.round(t); // signed distance from the start line, wrapped
+        const u = d * this.curveLen;
+        if (u > -(LAUNCH_TRAVEL + 9) && u < 6) continue;
+      }
       const lateral = [-2.6, 0, 2.6, -1.3, 1.3][i % 5];
       this.pickups.push({ sprite, t, lateral, points: def.points, name: def.name, alive: true, pop: 0 });
       this.root.add(sprite);
@@ -2633,7 +2650,7 @@ export class RaceEngine {
 
   /** The last gate of the last lap — the one the tracking shot is for. */
   private isFinalGate(i: number) {
-    return this.cinematic && this.lap >= this.laps - 1 && i === this.boostGates.length - 1;
+    return this.lap >= this.laps - 1 && i === this.boostGates.length - 1;
   }
 
   /**
@@ -2966,6 +2983,9 @@ export class RaceEngine {
     const cineTo = this.cinematic && this.cineTail > 0 && this.outroAt < 0 ? 1 : 0;
     this.cineK += (cineTo - this.cineK) * chase(CINE_RATE, dtReal);
     if (Math.abs(this.cineK - cineTo) < 0.002) this.cineK = cineTo;
+    const momentTo = this.cineTail > 0 && this.outroAt < 0 ? 1 : 0;
+    this.momentK += (momentTo - this.momentK) * chase(CINE_RATE, dtReal);
+    if (Math.abs(this.momentK - momentTo) < 0.002) this.momentK = momentTo;
 
     // --- lateral ---
     // Grip falls away while the handbrake is down, so the same steering input

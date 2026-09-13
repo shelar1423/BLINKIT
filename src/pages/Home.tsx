@@ -247,10 +247,10 @@ export default function Home() {
             nav bar and the shelf read as an unrelated section that happened to
             contain cars. */}
         <section className="dpicks">
-          <SectionHeader
-            title="Drop Picks"
-            subtitle="Delivered in 8 minutes, like everything else"
-          />
+          <h2 className="dpicks__t">
+            Drop Picks
+            <img src="/brand/drop-flag.png" alt="" />
+          </h2>
           <div className="prail">
             {HERO_CARS.map((p) => (
               <ProductCard key={p.id} product={p} />

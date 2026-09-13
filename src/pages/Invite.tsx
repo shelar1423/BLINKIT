@@ -12,7 +12,7 @@ const INVITE_GOAL = 5;
 export default function Invite() {
   const nav = useNavigate();
   const { toast } = useToast();
-  const { referralCode, invitedCount, racesLeft, bestScore } = useStore();
+  const { referralCode, invitedCount, bestScore } = useStore();
   /** Held for a couple of seconds so the button itself confirms, rather than
    *  leaving the toast to be the only sign anything happened. */
   const [copied, setCopied] = useState(false);
@@ -60,14 +60,14 @@ export default function Invite() {
 
   return (
     <>
-      <PageHeader title="Race your friends" subtitle={`${racesLeft} races left today`} onBack={() => nav('/campaign')} />
+      <PageHeader title="Race your friends" onBack={() => nav('/campaign')} />
       <main className="page">
         <div className="heroart">
           <img src="/campaign/banner-invite.webp" alt="" />
         </div>
 
         <div className="shell" style={{ paddingTop: 14, display: 'grid', gap: 12 }}>
-          <h2 className="t-h2">Invite a friend, get +1 race</h2>
+          <h2 className="seccount__t">Invite a friend, get +1 race</h2>
 
           {/* "how it works first". The deal came before the explanation only in
               the sense that a paragraph of prose sat above the code — which
@@ -90,7 +90,7 @@ export default function Invite() {
               <li>
                 <img src="/icons/step-unlock.webp" alt="" />
                 <b>You get +1 race</b>
-                <small>Same day, one more</small>
+                <small>Extra chance</small>
               </li>
             </ol>
           </div>
