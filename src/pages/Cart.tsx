@@ -147,7 +147,7 @@ export default function Cart() {
       </header>
 
       <main className="cko__scroll">
-        <section className="ckocard">
+        <section className="ckocard ckoship">
           <div className="ckoeta">
             <span className="ckoeta__ic" aria-hidden="true">
               <IconClock size={19} />

@@ -4114,11 +4114,22 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckoeta b { display: block; font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
 .ckoeta p { margin: 1px 0 0; font-size: var(--f-sm); color: var(--mut); }
 
+/* Padded top AND bottom.
+ *
+ * It was padding-top only, which put 14px under every divider and nothing
+ * above the next one — so each rule hugged the text it followed, and the last
+ * row had no air of its own at all. With one item the card's own padding hid
+ * that; with three it reads as the bottom of the card being cut off.
+ *
+ * Now every row carries the same 14px on both sides, so the dividers sit
+ * centred in the gaps and the last row's own padding closes the card — which
+ * is why .ckoship drops the card's bottom padding rather than adding to it. */
 .ckoline {
   display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 12px;
   align-items: start;
-  padding-top: 14px; border-top: 1px solid var(--line);
+  padding: 14px 0; border-top: 1px solid var(--line);
 }
+.ckoship { padding-bottom: 0; }
 .ckoline__im {
   width: 72px; height: 72px; border-radius: 12px; overflow: hidden;
   border: 1px solid var(--line); background: #fff;
