@@ -1,6 +1,8 @@
 node_modules
 dist
 .vercel
+# wrangler's local build/upload scratch
+.wrangler
 .DS_Store
 *.log
 # untouched source GLBs (101 MB) — the app loads optimised copies in public/models
