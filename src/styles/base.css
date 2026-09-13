@@ -2708,6 +2708,56 @@ input, select, textarea { font: inherit; color: inherit; }
    offset. Absolutely positioned it sat in the same band as the racing hint,
    so "Hold GO · Arrows steer · Tap screen to drop hazard" printed straight
    across the steering pads and the GO button. */
+/* ---------- boost gate aim ----------
+   Dead centre, because the aim IS the phone: you point the device at the
+   flame, so the crosshair belongs where the device points and not where a
+   thumb happens to be. */
+.arboost {
+  position: fixed; left: 50%; top: 44%;
+  transform: translate(-50%, -50%);
+  display: grid; justify-items: center; gap: 10px;
+  pointer-events: none; z-index: 210;
+}
+.arboost__ring {
+  width: 92px; height: 92px; border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  /* Contracts as the aim closes, so the ring reports the angle rather than
+     merely sitting there — locked is the smallest it gets. */
+  transition: width 140ms ease, height 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+.arboost.is-good .arboost__ring { width: 74px; height: 74px; border-color: rgba(255, 196, 0, 0.9); }
+.arboost.is-perfect .arboost__ring { width: 58px; height: 58px; border-color: #FFC400; }
+.arboost.is-locked .arboost__ring {
+  width: 48px; height: 48px;
+  border-color: #FFD400; border-width: 3px;
+  box-shadow: 0 0 0 4px rgba(255, 212, 0, 0.22), 0 0 22px rgba(255, 160, 0, 0.7);
+}
+.arboost__cue {
+  font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.04em;
+  color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+.arboost.is-locked .arboost__cue { color: #FFD400; }
+
+/* The verdict, once the gate is behind you. Above the reticle's place so it
+   does not sit on the road the car is still driving. */
+.arboost__verdict {
+  position: fixed; left: 0; right: 0; top: 28%;
+  text-align: center; z-index: 211; pointer-events: none;
+  font-size: var(--f-xl); font-weight: 800; color: #fff;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.85);
+  animation: arboostIn 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.arboost__verdict b { display: block; font-size: 30px; color: #FFD400; letter-spacing: -0.5px; }
+.arboost__verdict.is-miss { color: rgba(255, 255, 255, 0.75); font-size: var(--f-base); }
+@keyframes arboostIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arboost__ring { transition: none; }
+  .arboost__verdict { animation: none; }
+}
+
 /* ---------- the launcher ----------
    A sled on a rail. The rail fills as it is drawn back, the sled travels down
    with the finger, and letting go fires it — so the control does on screen the

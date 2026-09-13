@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { color, scene } from '../../design/constants';
 import { PICKUPS } from '../../data/catalog';
 import { haptic } from '../haptics';
+import { raceInteraction } from '../raceInteractions';
 
 /* ============================================================
    Race It Home — arcade race engine.
@@ -38,6 +39,10 @@ export type EngineOpts = {
   duration?: number; // seconds
   onTick?: (s: RaceStats) => void;
   onPickup?: (points: number, name: string) => void;
+  /** A boost gate has come into view — `world` is the flame to aim at. */
+  onBoostArm?: (index: number, world: THREE.Vector3) => void;
+  /** The car is at the gate. Whatever the aim was worth, it is worth now. */
+  onBoostCross?: (index: number) => void;
   /** Points taken off for hitting something. Reported from the one place that
    *  deducts them, so every caller that bounces the car gets it for free. */
   onPenalty?: (points: number) => void;
@@ -45,6 +50,9 @@ export type EngineOpts = {
 };
 
 const ROAD_W = 9;
+
+/** Scratch for gate world positions — allocating one per frame is litter. */
+const boostWorld = new THREE.Vector3();
 const LANE_LIMIT = ROAD_W / 2 - 0.9;
 /**
  * Side-rail height. Measured off real Hot Wheels track, whose walls are ~6 mm
@@ -474,6 +482,8 @@ export class RaceEngine {
   private finishGate = new THREE.Group();
   /** The three lamps on the start gantry, in order: red, amber, green. */
   private startLamps: THREE.MeshBasicMaterial[] = [];
+  /** The two gates, in lap order, with the flame each one is aimed at. */
+  private boostGates: { t: number; target: THREE.Object3D; flame: THREE.MeshBasicMaterial; armed: boolean }[] = [];
 
   constructor(opts: EngineOpts = {}) {
     this.opts = opts;
@@ -715,6 +725,7 @@ export class RaceEngine {
     this.setStartLights(0);
 
     this.root.add(this.finishGate);
+    if (raceInteraction.boostEnabled) this.buildBoostGates();
   }
 
   /**
@@ -730,6 +741,74 @@ export class RaceEngine {
       m.color.setHex(hexes[i]);
       if (!on[i]) m.color.multiplyScalar(0.14);
     });
+  }
+
+  /**
+   * Two arches over the track with a flame in the middle of each.
+   *
+   * Track hardware, not a portal: an orange plastic arch of the same hue as
+   * the rails, standing on the road it spans, with the target reading as a
+   * hot ring rather than a sci-fi gate. It has to belong to a toy set that
+   * also contains the car.
+   */
+  private buildBoostGates() {
+    const up = new THREE.Vector3(0, 1, 0);
+    const legGeo = new THREE.CylinderGeometry(0.5, 0.62, 11, 10);
+    const legMat = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.55, metalness: 0.05 });
+    const beamGeo = new THREE.BoxGeometry(ROAD_W + 3.4, 1.5, 1.5);
+    const ringGeo = new THREE.TorusGeometry(2.9, 0.42, 10, 30);
+    this.disposables.push(legGeo, legMat, beamGeo, ringGeo);
+
+    for (const [i, t] of raceInteraction.boostGates.entries()) {
+      const g = new THREE.Group();
+      const p = this.curve.getPointAt(t);
+      const tan = this.curve.getTangentAt(t);
+      const right = new THREE.Vector3().crossVectors(tan, up).normalize();
+      g.position.copy(p);
+      g.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tan.clone().setY(0).normalize());
+
+      for (const sgn of [-1, 1]) {
+        const leg = new THREE.Mesh(legGeo, legMat);
+        leg.position.set(sgn * (ROAD_W / 2 + 1.3), 5.5, 0);
+        g.add(leg);
+      }
+      const beam = new THREE.Mesh(beamGeo, legMat);
+      beam.position.y = 11.6;
+      g.add(beam);
+
+      /* The flame: a ring, lit rather than shaded, so it reads at the far end
+         of a straight where a shaded material would just be dark orange. */
+      const flameMat = new THREE.MeshBasicMaterial({ color: 0xFF6A00, transparent: true, opacity: 0.92 });
+      this.disposables.push(flameMat);
+      const ring = new THREE.Mesh(ringGeo, flameMat);
+      ring.position.y = 5.4;
+      g.add(ring);
+
+      /* An empty at the ring's centre is what the aim is measured against —
+         the ring itself is a torus, so its own origin is a hole. */
+      const target = new THREE.Object3D();
+      target.position.copy(ring.position);
+      g.add(target);
+
+      this.root.add(g);
+      this.boostGates.push({ t, target, flame: flameMat, armed: false });
+      void i;
+      void right;
+    }
+  }
+
+  /** Dim or light a gate's flame — the session brightens the one being aimed at. */
+  setBoostGlow(index: number, k: number) {
+    const gate = this.boostGates[index];
+    if (!gate) return;
+    gate.flame.opacity = 0.55 + Math.max(0, Math.min(1, k)) * 0.45;
+    gate.flame.color.setHex(k > 0.99 ? 0xFFD400 : 0xFF6A00);
+  }
+
+  /** Award a boost the session has judged. */
+  awardBoost(points: number, speedUp: boolean) {
+    this.score += points;
+    if (speedUp) this.boost();
   }
 
   private buildPickups() {
@@ -1080,6 +1159,31 @@ export class RaceEngine {
     const prevT = this.t;
     this.t = (this.t + (this.speed * dt) / this.curveLen) % 1;
     if (prevT > 0.92 && this.t < 0.08) this.lap += 1;
+
+    /* Boost gates. Armed by DISTANCE rather than by a fixed lead in `t`,
+       because `t` per second depends on how fast the car happens to be going
+       — a lead measured in curve units would give a flying car half the
+       warning of a slow one, and the warning is the thing being scored. */
+    if (raceInteraction.boostEnabled) {
+      const lead = (this.speed * raceInteraction.boostWarnLead) / this.curveLen;
+      for (let i = 0; i < this.boostGates.length; i++) {
+        const g = this.boostGates[i];
+        // forward distance to the gate, wrapped
+        const ahead = (g.t - this.t + 1) % 1;
+        if (!g.armed && ahead < lead) {
+          g.armed = true;
+          g.target.getWorldPosition(boostWorld);
+          this.opts.onBoostArm?.(i, boostWorld.clone());
+        }
+        // crossing it: the wrapped gap jumps from nearly a lap to nearly zero
+        const crossed = prevT <= g.t && this.t > g.t;
+        const wrapped = prevT > this.t && (g.t > prevT || g.t <= this.t);
+        if (g.armed && (crossed || wrapped)) {
+          g.armed = false;
+          this.opts.onBoostCross?.(i);
+        }
+      }
+    }
 
     // --- lateral ---
     // Grip falls away while the handbrake is down, so the same steering input

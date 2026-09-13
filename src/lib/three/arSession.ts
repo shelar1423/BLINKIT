@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { color } from '../../design/constants';
 import { circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
+import { boostBand, boostPoints, raceInteraction, type BoostQuality } from '../raceInteractions';
 import { loadCar } from './modelLoader';
 import { primeAudio, skid } from '../horn';
 
@@ -90,6 +91,10 @@ type Opts = {
   onError: (msg: string) => void;
   onEnd: () => void;
   onObstacleHit?: (info: { type: string; pointsLost: number }) => void;
+  /** Aim state for the boost gate the car is approaching, or null between them. */
+  onBoostAim?: (a: { index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null) => void;
+  /** What the gate was worth once the car was through it. */
+  onBoostResult?: (r: { index: number; quality: BoostQuality; points: number }) => void;
   onObstacleCountChange?: (count: number) => void;
   onProximityAlert?: (alert: boolean) => void;
   /** Surface mapping progress while the circuit sits on the table. */
@@ -436,20 +441,107 @@ function lights(scene: THREE.Scene) {
   scene.add(dir);
 }
 
-function makeEngine(opts: Opts, onDone: () => void) {
-  const engine = new RaceEngine({
+/**
+ * Aiming at a boost gate.
+ *
+ * The measurement is the angle between where the phone is pointed and the
+ * flame — not a screen-space distance, which would make the gate easier the
+ * further away it is and easier again on a wider phone. Degrees are degrees on
+ * every device, which is what makes the leaderboard mean anything.
+ *
+ * A perfect boost needs the aim HELD inside the cone, not flicked through it:
+ * without the hold, sweeping the phone across the gate scores the same as
+ * aiming at it.
+ */
+function makeBoostAim() {
+  let index = -1;
+  let world: THREE.Vector3 | null = null;
+  let lockedFor = 0;
+  /* The best band reached anywhere in the approach, not the band at the
+     instant of crossing. At the gate the flame is directly overhead and the
+     angle to it swings through ninety degrees in a frame — judging there
+     scored a held, well-aimed approach as a miss. */
+  let best: BoostQuality = 'miss';
+  const toTarget = new THREE.Vector3();
+  const fwd = new THREE.Vector3();
+
+  return {
+    arm(i: number, p: THREE.Vector3) {
+      index = i;
+      world = p;
+      lockedFor = 0;
+      best = 'miss';
+    },
+    clear() {
+      index = -1;
+      world = null;
+      lockedFor = 0;
+      best = 'miss';
+    },
+    get active() {
+      return index >= 0 && !!world;
+    },
+    /** Returns the live aim, or null when no gate is armed. */
+    sample(camera: THREE.Camera, dtMs: number) {
+      if (index < 0 || !world) return null;
+      camera.getWorldDirection(fwd);
+      toTarget.copy(world).sub(camera.getWorldPosition(new THREE.Vector3())).normalize();
+      const errorDeg = THREE.MathUtils.radToDeg(Math.acos(Math.max(-1, Math.min(1, fwd.dot(toTarget)))));
+      const band = boostBand(errorDeg);
+      lockedFor = band === 'perfect' ? lockedFor + dtMs : 0;
+      if (band === 'perfect' || (band === 'good' && best === 'miss')) best = band;
+      return {
+        index,
+        errorDeg,
+        quality: band,
+        locked: lockedFor >= raceInteraction.boostLockMs,
+      };
+    },
+    /* A perfect band that was never HELD is a good boost, not a perfect one —
+       the player did point at it, they just swept through. */
+    resolve(): BoostQuality {
+      if (index < 0 || !world) return 'miss';
+      if (lockedFor >= raceInteraction.boostLockMs) return 'perfect';
+      return best === 'miss' ? 'miss' : 'good';
+    },
+  };
+}
+
+function makeEngine(opts: Opts, onDone: () => void, aim: ReturnType<typeof makeBoostAim>) {
+  const engine: RaceEngine = new RaceEngine({
     laps: 2,
     duration: 45,
     onTick: opts.onTick,
     onPickup: opts.onPickup,
     onPenalty: opts.onPenalty,
+    onBoostArm: (i, world) => aim.arm(i, world),
+    onBoostCross: (i) => {
+      /* Judged on the last aim sampled before the car reached the gate, so a
+         phone whipped away on the line does not undo a held lock. */
+      const quality = aim.resolve();
+      const points = boostPoints(quality);
+      engine.awardBoost(points, quality !== 'miss');
+      engine.setBoostGlow(i, 0);
+      aim.clear();
+      opts.onBoostResult?.({ index: i, quality, points });
+      opts.onBoostAim?.(null);
+    },
     onFinish: (o) => {
       onDone();
       opts.onFinish(o);
     },
   });
   engine.setPresentation('ar');
-  return engine;
+  return {
+    engine,
+    /** Call every frame while racing; drives the reticle and the gate's glow. */
+    tickAim(camera: THREE.Camera, dtMs: number) {
+      const a = aim.sample(camera, dtMs);
+      if (!a) return;
+      engine.setBoostGlow(a.index, a.locked ? 1 : a.quality === 'good' ? 0.5 : 0.1);
+      opts.onBoostAim?.(a);
+    },
+  };
 }
 
 /** Wire drag-to-move / pinch-to-size / twist-to-turn onto the DOM overlay. */
@@ -669,7 +761,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   const inspect = opts.mode === 'inspect';
 
-  const engine = makeEngine(opts, () => setPhase('placed'));
+  const boostAim = makeBoostAim();
+  const race = makeEngine(opts, () => setPhase('placed'), boostAim);
+  const engine = race.engine;
   /* In inspect mode the car is shown at true 1:64 scale — a real Hot Wheels
      car is about 7.4 cm long — so what lands on the table is the size of the
      thing in the box. The circuit's 2.4 m footprint is meaningless here. */
@@ -920,6 +1014,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
     if (phase === 'racing') {
       engine.update(dt);
+      /* After the engine, so a gate armed on this frame is aimed at on this
+         frame rather than one behind. */
+      race.tickAim(renderer.xr.isPresenting ? renderer.xr.getCamera() : camera, dt * 1000);
 
       // Vision & Pinned Obstacle Collision Check
       const localCarPos = new THREE.Vector3();
@@ -1113,7 +1210,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
   const inspect = opts.mode === 'inspect';
   const ground = inspect ? GROUND_INSPECT : GROUND;
-  const engine = makeEngine(opts, () => setPhase('placed'));
+  const boostAim = makeBoostAim();
+  const race = makeEngine(opts, () => setPhase('placed'), boostAim);
+  const engine = race.engine;
   /* True 1:64 is 7.4cm, and at the half-metre this places at that is a
      thumbnail you cannot see the details of — which is the whole point of
      standing it in front of you. It opens at about 2.5x life size instead;
@@ -1357,6 +1456,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     }
     if (phase === 'racing') {
       engine.update(dt);
+      race.tickAim(camera, dt * 1000);
 
 
       const scale = engine.root.scale.x || (sizeM / engine.trackExtent);
