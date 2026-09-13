@@ -2437,6 +2437,9 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 /* A tier name is words, not a figure — it cannot take the figure's size. */
 .rwd__amt--sm { font-size: clamp(24px, 7.5vw, 30px); }
+/* District Pass, and only that: the one reward on the ladder that is not paid
+   in Blinkit's own currency, so it is not written in Blinkit's own green. */
+.rwd__amt--pass { color: #8201FB; }
 .rwd__upto {
   font-size: var(--f-lg); font-weight: 800;
   margin-top: 4px;

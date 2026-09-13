@@ -21,7 +21,15 @@ function prize(tier: RewardTier) {
      below would otherwise swallow it and announce the top reward of the drop
      as "FREE DELIVERY". */
   if (tier.perk) {
-    return { head: 'District Pass', sub: '1 Month', fine: `${tier.perk}, plus free delivery on Blinkit for a month` };
+    /* The one prize that is not Blinkit's. District is its own brand with its
+       own colour, so the headline wears that instead of the action green every
+       other tier is paid in. */
+    return {
+      head: 'District Pass',
+      sub: '1 Month',
+      fine: `${tier.perk}, plus free delivery on Blinkit for a month`,
+      pass: true,
+    };
   }
   if (tier.freeDelivery && tier.value === 0) {
     return { head: 'Free', sub: 'Delivery', fine: 'Applied automatically on your next Blinkit order' };
@@ -167,7 +175,9 @@ export function RaceResult({
             {won ? (
               <>
                 <p className="rwd__won">You Won</p>
-                <p className={'rwd__amt' + (won.head.length > 9 ? ' rwd__amt--sm' : '')}>{won.head}</p>
+                <p className={'rwd__amt' + (won.head.length > 9 ? ' rwd__amt--sm' : '') + ('pass' in won ? ' rwd__amt--pass' : '')}>
+                  {won.head}
+                </p>
                 <p className="rwd__upto">
                   {won.sub === 'Blinkit Cash' ? (
                     <span className="rwd__brand">
@@ -182,7 +192,12 @@ export function RaceResult({
             ) : (
               <>
                 <p className="rwd__won">Next Reward</p>
-                <p className="rwd__amt rwd__amt--sm">{next ? next.label : 'All unlocked'}</p>
+                {/* Purple here too when the next one up is the Pass — it is the
+                    same prize named, and it should not change colour on the way
+                    to being won. */}
+                <p className={'rwd__amt rwd__amt--sm' + (next?.perk ? ' rwd__amt--pass' : '')}>
+                  {next ? next.label : 'All unlocked'}
+                </p>
                 <p className="rwd__upto">
                   {next ? `${(next.min - totalPoints).toLocaleString('en-IN')} Points to Go` : 'Every Tier Cleared'}
                 </p>
