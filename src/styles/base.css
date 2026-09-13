@@ -1663,7 +1663,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .shdr.is-solid .shdr__ic { background: none; box-shadow: none; }
 .shdr__t {
   flex: 0 1 auto; min-width: 0;
-  font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.3px;
+  font-size: var(--nav-title-size); font-weight: var(--nav-title-weight); letter-spacing: -0.2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   opacity: 0; transition: opacity 130ms ease;
 }
@@ -3960,7 +3960,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .cko__bar h1 {
   flex: 1 1 auto; min-width: 0;
-  margin: 0; font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.02em;
+  margin: 0; font-size: var(--nav-title-size); font-weight: var(--nav-title-weight); letter-spacing: -0.2px;
   color: var(--ink);
 }
 .cko__ic {
@@ -4308,7 +4308,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckochip {
   position: relative;
   display: flex; align-items: center; justify-content: center;
-  min-width: 0; height: 46px; padding: 0 3px;
+  min-width: 0; height: 42px; padding: 0 3px;
   border: 1px solid var(--line-2); border-radius: 12px;
   background: #fff; color: var(--ink);
   /* One step down from the body size. At --f-base the tip row's widest chip,
@@ -4335,7 +4335,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckochip.has-flag .ckochip__v { margin-top: 14px; }
 /* The tip row sits tight under its banner, in slightly shorter pills. */
 .ckotip--tip .ckochips { padding-top: 0; margin-top: -10px; }
-.ckotip--tip .ckochip { height: 42px; }
+.ckotip--tip .ckochip { height: 38px; }
 /* The donation amounts sit 6px under "Donate with this order". */
 .ckotip__when + .ckochips { padding-top: 6px; }
 
