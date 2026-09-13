@@ -2380,6 +2380,9 @@ input, select, textarea { font: inherit; color: inherit; }
   font-weight: 900; line-height: 0.95; letter-spacing: -0.04em;
   margin-top: 2px;
 }
+/* Hidden, not removed: it keeps its 8px and its own height so nothing below
+   it moves between a best and an ordinary run. */
+.rwd__pb.is-ghost { visibility: hidden; }
 .rwd__pb {
   margin-top: 8px;
   font-size: var(--f-xs); font-weight: 800;

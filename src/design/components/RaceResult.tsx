@@ -167,7 +167,18 @@ export function RaceResult({
       <p className="rwd__kick">Your score</p>
       <p className="rwd__score t-num">{shown.toLocaleString('en-IN')}</p>
 
-      {isBest && outcome.score > 0 && <p className="rwd__pb">New Personal Best</p>}
+      {/* Always in the flow, even when there is nothing to boast about.
+          Rendered only on a personal best, it took its height with it when it
+          went — so the ticket, the stub and everything under them sat higher on
+          any run that was not a best, including every run that won nothing. The
+          screen has one layout, and the pill is either in it or invisible in
+          it. */}
+      <p
+        className={'rwd__pb' + (isBest && outcome.score > 0 ? '' : ' is-ghost')}
+        aria-hidden={!(isBest && outcome.score > 0)}
+      >
+        New Personal Best
+      </p>
 
       <div className="rwd__ticket">
         <div className="rwd__card">
