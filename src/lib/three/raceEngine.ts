@@ -75,6 +75,9 @@ const RAMP_LEN = 13;
 const RAMP_RISE = 2.6;
 const RAMP_ANGLE = Math.atan2(RAMP_RISE, RAMP_LEN);
 
+/** How far the launcher's sled travels when drawn fully back. */
+const LAUNCH_TRAVEL = 9;
+
 /** Scratch for gate world positions — allocating one per frame is litter. */
 const boostWorld = new THREE.Vector3();
 const LANE_LIMIT = ROAD_W / 2 - 0.9;
@@ -515,6 +518,11 @@ export class RaceEngine {
   private jumpHeightNow = 0;
   /** 0..1 up the ramp's face; -1 when not on it. */
   private rampU = -1;
+  private launcher = new THREE.Group();
+  private launchSled = new THREE.Group();
+  private launchCoils: THREE.Mesh[] = [];
+  /** 0..1 — how far the sled is drawn back. */
+  private launchPull = 0;
   /** Nose angle, radians. Positive is nose up. */
   private jumpPitch = 0;
 
@@ -761,6 +769,7 @@ export class RaceEngine {
     this.root.add(this.finishGate);
     if (this.interactions && raceInteraction.boostEnabled) this.buildBoostGates();
     if (this.interactions && raceInteraction.jumpEnabled) this.buildRamp();
+    if (this.interactions && raceInteraction.launchEnabled) this.buildLauncher();
   }
 
   /**
@@ -866,6 +875,105 @@ export class RaceEngine {
    * player was asked for. The brief is explicit: a deterministic base jump the
    * input decorates rather than decides.
    */
+  /**
+   * The launcher: a sled on two rails with a spring behind it, at the line.
+   *
+   * The control used to be a red rectangle in the overlay that happened to be
+   * labelled "pull" — which is a button pretending to be a launcher, and the
+   * reason people pressed it. This is the launcher: it stands on the track in
+   * world space with the car sitting against it, and the sled travels back
+   * under the finger with the spring closing up behind it. The tension you can
+   * see is the tension you are about to get.
+   */
+  private buildLauncher() {
+    const up = new THREE.Vector3(0, 1, 0);
+    const p = this.curve.getPointAt(0);
+    const tan = this.curve.getTangentAt(0);
+    this.launcher.position.copy(p);
+    this.launcher.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), tan.clone().setY(0).normalize());
+
+    const plastic = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.5, metalness: 0.05 });
+    const dark = new THREE.MeshStandardMaterial({ color: 0x15171D, roughness: 0.7 });
+    const red = new THREE.MeshStandardMaterial({ color: 0xE01B22, roughness: 0.42, metalness: 0.08 });
+    const steel = new THREE.MeshStandardMaterial({ color: 0xB9C2CC, roughness: 0.35, metalness: 0.7 });
+    this.disposables.push(plastic, dark, red, steel);
+
+    /* Two guide rails running BACK from the line — local +Z, since the car's
+       own -Z is the way it faces. */
+    const railGeo = new THREE.BoxGeometry(0.7, 0.7, LAUNCH_TRAVEL + 7);
+    this.disposables.push(railGeo);
+    for (const sgn of [-1, 1]) {
+      const rail = new THREE.Mesh(railGeo, plastic);
+      rail.position.set(sgn * (ROAD_W / 2 - 0.9), 0.35, (LAUNCH_TRAVEL + 7) / 2 - 1);
+      this.launcher.add(rail);
+    }
+
+    // the back stop the spring pushes off
+    const stopGeo = new THREE.BoxGeometry(ROAD_W - 1.2, 2.6, 1.1);
+    this.disposables.push(stopGeo);
+    const stop = new THREE.Mesh(stopGeo, dark);
+    stop.position.set(0, 1.3, LAUNCH_TRAVEL + 5.4);
+    this.launcher.add(stop);
+
+    /* The sled: a plate the car rests against, with a grip standing up behind
+       it so there is something that visibly reads as the thing being pulled. */
+    const plateGeo = new THREE.BoxGeometry(ROAD_W - 2.4, 1.5, 1.2);
+    const gripGeo = new THREE.BoxGeometry(ROAD_W - 3.6, 2.2, 0.8);
+    this.disposables.push(plateGeo, gripGeo);
+    const plate = new THREE.Mesh(plateGeo, red);
+    plate.position.y = 0.75;
+    this.launchSled.add(plate);
+    const grip = new THREE.Mesh(gripGeo, red);
+    grip.position.set(0, 1.9, 0.5);
+    this.launchSled.add(grip);
+    this.launchSled.position.z = 3.2;
+    this.launcher.add(this.launchSled);
+
+    /* A coil spring between sled and stop. Five rings that bunch up as the
+       sled comes back — a spring that does not close is a spring nobody
+       believes is loaded. */
+    const coilGeo = new THREE.TorusGeometry(1.5, 0.26, 8, 18);
+    this.disposables.push(coilGeo);
+    for (let i = 0; i < 5; i++) {
+      const coil = new THREE.Mesh(coilGeo, steel);
+      coil.position.y = 1.15;
+      this.launcher.add(coil);
+      this.launchCoils.push(coil);
+    }
+
+    this.root.add(this.launcher);
+    this.setLaunchPull(0);
+    void up;
+  }
+
+  /**
+   * Draw the sled back. `k` is 0..1 of full travel.
+   *
+   * The CAR comes back with it — it is resting against the plate — which is
+   * what makes the pull read as loading a launcher rather than as sliding a
+   * part around behind a car that is ignoring it.
+   */
+  setLaunchPull(k: number) {
+    this.launchPull = Math.max(0, Math.min(1, k));
+    if (!this.launchCoils.length) return;
+    const back = this.launchPull * LAUNCH_TRAVEL;
+    this.launchSled.position.z = 3.2 + back;
+    const from = this.launchSled.position.z + 1.1;
+    const to = LAUNCH_TRAVEL + 4.8;
+    for (const [i, coil] of this.launchCoils.entries()) {
+      coil.position.z = from + ((to - from) * (i + 0.5)) / this.launchCoils.length;
+      // flatten as they bunch, so the spring reads as compressing
+      coil.scale.z = Math.max(0.35, 1 - this.launchPull * 0.55);
+    }
+    this.layoutCar();
+  }
+
+  /** Off the track once the car has gone. */
+  private hideLauncher() {
+    this.launcher.visible = false;
+    this.launchPull = 0;
+  }
+
   private buildRamp() {
     const up = new THREE.Vector3(0, 1, 0);
     const t = raceInteraction.jumpAt;
@@ -1085,6 +1193,8 @@ export class RaceEngine {
     const tan = this.curve.getTangentAt(this.t);
     const right = new THREE.Vector3().crossVectors(tan, up).normalize();
     this.carTilt.position.copy(pos).addScaledVector(right, this.lateral);
+    // held back against the launcher's plate while the sled is drawn
+    if (this.launchPull > 0) this.carTilt.position.addScaledVector(tan, -this.launchPull * LAUNCH_TRAVEL);
     if (this.jumpHeightNow > 0) this.carTilt.position.y += this.jumpHeightNow;
     this.carTilt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), tan.clone().setY(0).normalize());
     // A drifting car points where it *was* going, not where it is sliding to.
@@ -1149,6 +1259,7 @@ export class RaceEngine {
    */
   launch(power: number) {
     const p = Math.max(0, Math.min(1, power));
+    this.hideLauncher();
     this.running = true;
     this.speed = 5 + p * 19;
     if (p > 0.85) this.boost();

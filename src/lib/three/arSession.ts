@@ -60,6 +60,8 @@ export type ARHandle = {
   launch: (power: number) => void;
   /** Hold the start lights while the launcher is being drawn back. */
   armLaunch: (drawn: boolean) => void;
+  /** Draw the sled back, 0..1 of its travel — the pull, shown in the world. */
+  setLaunchPull: (k: number) => void;
   /** Swipe-up / key fallback for the jump. */
   jumpNow: () => void;
   setSteer: (v: number) => void;
@@ -1043,6 +1045,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     startRace,
     launch,
     armLaunch,
+    setLaunchPull: (k) => engine.setLaunchPull(k),
     jumpNow: () => race.jumpNow(),
     nudgeScale: (f) => setSize(sizeM * f),
     setSize,
@@ -1476,6 +1479,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     startRace,
     launch,
     armLaunch,
+    setLaunchPull: (k) => engine.setLaunchPull(k),
     jumpNow: () => race.jumpNow(),
     nudgeScale: (f) => setSize(sizeM * f),
     setSize,

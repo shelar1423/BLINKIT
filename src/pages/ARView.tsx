@@ -358,6 +358,7 @@ export default function ARView() {
     pullFrom.current = e.clientY;
     pullNow.current = 0;
     armed.current = false;
+    handle.current?.setLaunchPull(0);
     /* Capture keeps the pull alive when the finger leaves the control, which
        it will — the sled travels with it. Synthetic pointers have no id to
        capture, so this is allowed to fail. */
@@ -377,6 +378,9 @@ export default function ARView() {
     const v = Math.max(0, Math.min(1, (e.clientY - pullFrom.current) / PULL_TRAVEL));
     pullNow.current = v;
     setPull(v);
+    /* The sled, the spring and the car all move with the finger — this is the
+       pull, and the overlay is only the handle you happen to be touching. */
+    handle.current?.setLaunchPull(v);
     const want = v > 0.5;
     if (want !== armed.current) {
       armed.current = want;
@@ -391,6 +395,7 @@ export default function ARView() {
     pullNow.current = 0;
     armed.current = false;
     setPull(0);
+    handle.current?.setLaunchPull(0);
     /* A TAP LAUNCHES TOO.
        This used to treat anything under a tenth as a slip and snap the sled
        back, which made the one control on the screen do nothing at all for
@@ -544,6 +549,39 @@ export default function ARView() {
               </p>
             )}
 
+            {/* The launcher's lever, down the left edge.
+
+                The launcher itself is IN the scene, on the track, with the car
+                against its plate — this is the handle you put a thumb on. It
+                holds the left side rather than spanning the bottom because the
+                bottom is where the track is: a full-width control sat directly
+                on the start line it was supposed to be launching from.
+
+                The whole lever is the grab rather than the 3cm sled in the
+                scene: a small plastic part seen at whatever angle the phone
+                happens to be at is not a reliable target, and missing the only
+                control on screen is the failure this is fixing. The sled still
+                follows the thumb, so it reads as pulling the launcher. */}
+            {phase === 'placed' && !inspect && (
+              <div
+                className={'arlever' + (pull > 0.02 ? ' is-drawn' : '')}
+                style={{ '--pull': pull } as CSSProperties}
+                onPointerDown={beginPull}
+                onPointerMove={movePull}
+                onPointerUp={endPull}
+                onPointerCancel={endPull}
+                role="button"
+                tabIndex={0}
+                aria-label="Pull the launcher lever down and release to start"
+              >
+                <span className="arlever__slot" aria-hidden="true">
+                  <i className="arlever__fill" />
+                  <i className="arlever__knob" />
+                </span>
+                <b>{pull > 0.02 ? `${Math.round(pull * 100)}%` : 'PULL'}</b>
+              </div>
+            )}
+
             {/* One column anchored to the bottom, rather than three bands
                 positioned by hand-tuned `bottom` offsets. Those were fine
                 until a phase showed two action buttons instead of one: the
@@ -684,38 +722,6 @@ export default function ARView() {
               )}
               {phase === 'placed' && (
                 <>
-                  {/* Pull back and let go, rather than press Start.
-
-                      A launcher is the one control every Hot Wheels set has
-                      and no racing game does, and it is the moment the toy
-                      makes on a carpet: the tension you wind up is the speed
-                      you get out. Pressing a button gives the same race every
-                      time; drawing the sled back means leaving the line is
-                      something you did rather than something that happened. */}
-                  {!inspect && (
-                    <div
-                      className={'arlaunch' + (pull > 0.02 ? ' is-drawn' : '')}
-                      style={{ '--pull': pull } as CSSProperties}
-                      onPointerDown={beginPull}
-                      onPointerMove={movePull}
-                      onPointerUp={endPull}
-                      onPointerCancel={endPull}
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Pull the launcher back and release to start"
-                    >
-                      <span className="arlaunch__track" aria-hidden="true">
-                        <i />
-                      </span>
-                      <span className="arlaunch__sled">
-                        <IconFlag size={16} />
-                        {pull > 0.02 ? `${Math.round(pull * 100)}%` : 'Pull to launch'}
-                      </span>
-                      <small>
-                        {pull > 0.85 ? 'Perfect launch — let go' : 'Drag down for more speed · or just tap'}
-                      </small>
-                    </div>
-                  )}
                   <Button variant="ghostDark" block type="button" onClick={() => handle.current?.reset()}>
                     <IconRotate size={15} /> Reposition track
                   </Button>
