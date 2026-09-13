@@ -2119,7 +2119,6 @@ input, select, textarea { font: inherit; color: inherit; }
   background: #F0F1F5; color: var(--ink);
 }
 .trkc__ic--sm { flex-basis: 40px; width: 40px; height: 40px; }
-.trkc__ic--pts { background: var(--green-tint); color: var(--green); font-weight: 800; font-size: var(--f-sm); }
 .trkc__t { flex: 1; min-width: 0; }
 .trkc__t b { display: block; font-size: var(--f-lg); font-weight: 700; line-height: 1.28; letter-spacing: -0.2px; }
 .trkc__t small { display: block; font-size: var(--f-md); color: var(--mut); line-height: 1.35; margin-top: 2px; }

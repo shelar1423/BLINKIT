@@ -321,16 +321,6 @@ export default function OrderSuccess() {
           </button>
         </section>
 
-        {/* ---- the campaign's own payoff, in the tracking screen's idiom ---- */}
-        <button className="trkc trkc__hd trkc--link" type="button" onClick={() => nav('/campaign')}>
-          <span className="trkc__ic trkc__ic--pts">+250</span>
-          <span className="trkc__t">
-            <b>You earned 250 campaign points</b>
-            <small>Buying a drop car adds to your race total</small>
-          </span>
-          <IconChevronRight size={18} />
-        </button>
-
         {/* ---- rate ---- */}
         <section className="trkc">
           <div className="trkc__hd">
