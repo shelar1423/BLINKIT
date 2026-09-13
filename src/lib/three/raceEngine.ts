@@ -159,8 +159,8 @@ const CINE_RATE_OUT = 5.5;
  *  the lift, so the jump itself is still judged from behind. */
 const CINE_AIR_H = 0.25;
 /** The run to the finish, from in front of the car looking back at it. */
-/** How far past the loop's far side the loop camera stands. */
-const LOOP_CAM_AHEAD = 20;
+/** How far out to the right of the loop the loop camera stands. */
+const LOOP_CAM_SIDE = 24;
 const FRONT_AHEAD = 30;
 /** The closest the finish camera lets the car come before it backs away. */
 const FRONT_MIN = 8;
@@ -2865,9 +2865,10 @@ export class RaceEngine {
 
     /* On the loop, stand back and watch it go round: behind the loop's base,
        raised, looking at the car wherever it is on the circle. */
-    /* The loop, watched from in front: the camera eases out to a spot up the
-       track past the loop, raised to its middle, and looks back at it — far
-       enough that the whole loop and the car going round it are in frame.
+    /* The loop, watched side-on from its right: the camera eases out to a spot
+       level with the loop's middle, off to the side, and looks across at it —
+       far enough that the whole loop is in frame and the car can be seen
+       going right round it in profile.
        It blends in over the run-in and back out as the car rolls away, so
        the chase view returns calmly rather than cutting. */
     if (this.loopK > 0.001) {
@@ -2875,7 +2876,8 @@ export class RaceEngine {
       const base = this.curve.getPointAt(raceInteraction.loopAt);
       const R = raceInteraction.loopRadius;
       const centre = base.clone().setY(R);
-      const lpos = base.clone().addScaledVector(lt, R + LOOP_CAM_AHEAD).setY(R * 1.15);
+      const lr = new THREE.Vector3().crossVectors(lt, up).normalize();
+      const lpos = base.clone().addScaledVector(lr, LOOP_CAM_SIDE).addScaledVector(lt, 2).setY(R * 1.1);
       const llook = centre.lerp(this.carTilt.position, 0.35);
       out.pos.lerp(lpos, this.loopK);
       out.look.lerp(llook, this.loopK);
