@@ -1483,6 +1483,22 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize, inspect, leverDrag,
   );
 
+  /* The launcher framing, shared with the 3D race.
+
+     `engine.launcherCameraTarget` is the SAME call `raceScene` makes — one
+     definition of where the shot stands, so the two races cannot drift apart.
+     AR simply never called it, which is the whole reason 3D zoomed to the
+     launcher and AR did not. */
+  const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const camHome = new THREE.Vector3(0, 0, 0);
+  const lookM = new THREE.Matrix4();
+  const qBase = new THREE.Quaternion();
+  const qDelta = new THREE.Quaternion();
+  const qWant = new THREE.Quaternion();
+  const gyroRef = new THREE.Quaternion();
+  const UP = new THREE.Vector3(0, 1, 0);
+  let gyroRefSet = false;
+
   // FPP chase-cam state for camera mode
   const fpTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   const fpCamPos = new THREE.Vector3();
@@ -1525,7 +1541,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
        did not, so the circuit slid around with the handset instead of staying
        on the table it had just been placed on. A pretty shot of the launcher
        is not worth a track that will not stay put. */
-    if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
+    /* `placed` composes its own orientation below — the framing plus the turn
+       the phone has made since — so it is excluded here rather than fought. */
+    if (haveOrientation && phase !== 'racing' && phase !== 'placed') camera.quaternion.copy(q);
     if (phase === 'ready' || phase === 'searching') {
       const a = aim();
       reticle.visible = true;
@@ -1563,6 +1581,47 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       const bo = reticle.getObjectByName('burnout');
       if (bo) bo.rotation.y = -now * 0.00035;
     }
+    /* Placed: stand where the 3D race stands.
+
+       Position AND orientation, taken from the same target — moving the camera
+       to the launcher without looking at it gets you the right spot still
+       pointing at the floor, which is where the phone was aimed a moment
+       earlier to place the track.
+
+       The framing is the BASE orientation and the phone turns you away from
+       it. Taking rotation outright is what unstuck the circuit from the floor
+       before: the video behind the scene keeps turning with the phone while
+       the render camera does not, so the track slides around with the handset.
+       Here the pose at the moment the track landed is kept, and every frame
+       after applies the turn SINCE then on top of the shot. Hold the phone
+       still and you are looking down the lane; turn it thirty degrees and you
+       turn thirty degrees. */
+    if (phase === 'placed' && !inspect) {
+      engine.launcherCameraTarget(lnTarget);
+      const wp = engine.root.localToWorld(lnTarget.pos.clone());
+      const wl = engine.root.localToWorld(lnTarget.look.clone());
+      camera.position.lerp(wp, Math.min(1, dt * 2.4));
+
+      lookM.lookAt(camera.position, wl, UP);
+      qBase.setFromRotationMatrix(lookM);
+      if (haveOrientation) {
+        if (!gyroRefSet) {
+          gyroRef.copy(q);
+          gyroRefSet = true;
+        }
+        qDelta.copy(gyroRef).invert().multiply(q);
+        qWant.copy(qBase).multiply(qDelta);
+      } else {
+        qWant.copy(qBase);
+      }
+      camera.quaternion.slerp(qWant, Math.min(1, dt * 4));
+    } else if (phase !== 'racing') {
+      /* Back to the player's own eye, or the placement reticle would be cast
+         from wherever the last launcher view left the camera. */
+      gyroRefSet = false;
+      camera.position.lerp(camHome, Math.min(1, dt * 3.5));
+    }
+
     if (phase === 'racing') {
       engine.update(dt);
       race.tickAim(camera, dt * 1000);
