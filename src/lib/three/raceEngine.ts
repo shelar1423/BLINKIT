@@ -1407,6 +1407,12 @@ export class RaceEngine {
   }
 
   start() {
+    /* The launcher is scenery the moment the race is running, and it sits ON
+       the track at t=0 — so a car that does not leave from it drives back
+       through it on the next lap. `launch()` always cleared it; `start()` did
+       not, which left a launcher and its lever standing in the road for the
+       whole of the 3D race and for any AR start that skipped the pull. */
+    this.hideLauncher();
     this.running = true;
   }
 

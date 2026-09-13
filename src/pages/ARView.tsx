@@ -375,7 +375,48 @@ export default function ARView() {
      either works or does not, and "No lift" with nothing else on screen is
      indistinguishable from a broken control — which is exactly how it read. */
   const [liftK, setLiftK] = useState(0);
-  const jumpHow = canLift ? 'Lift the phone' : 'Swipe up';
+  /* Both, when the phone can report pitch — naming only the tilt left anyone
+     whose gyro was quiet with no stated way to jump at all. */
+  const jumpHow = canLift ? 'Lift phone or swipe up' : 'Swipe up';
+
+  /* A lift is also a swipe, and the swipe is the WHOLE screen.
+
+     It used to be the cue band only — a strip at 22% of the height, which is
+     a hard target with a thumb already on the drive controls, and the only
+     target at all on a phone whose gyro never reports. Between a tilt that
+     may not arrive and a 40-pixel band that has to be hit mid-corner, there
+     were devices where the jump could not be made at all.
+
+     The cue keeps its own handler; `manual()` ignores a second call inside
+     one window, so the overlap is harmless. */
+  useEffect(() => {
+    if (phase !== 'racing' || !jumpCue) return;
+    let from: number | null = null;
+    const down = (e: PointerEvent) => {
+      from = e.clientY;
+    };
+    const move = (e: PointerEvent) => {
+      if (from === null) return;
+      if (from - e.clientY > 42) {
+        from = null;
+        handle.current?.jumpNow();
+      }
+    };
+    const up = () => {
+      from = null;
+    };
+    window.addEventListener('pointerdown', down);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    return () => {
+      window.removeEventListener('pointerdown', down);
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+    };
+  }, [phase, jumpCue]);
+
 
   const tier = outcome ? tierFor(outcome.score) : null;
 
