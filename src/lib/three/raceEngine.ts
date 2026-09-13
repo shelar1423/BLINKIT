@@ -69,6 +69,12 @@ export type EngineOpts = {
 
 const ROAD_W = 9;
 
+/* The ramp, in one place: the mesh is built from these and so is the climb the
+   car makes up it, so the car cannot ride a slope the wedge does not have. */
+const RAMP_LEN = 13;
+const RAMP_RISE = 2.6;
+const RAMP_ANGLE = Math.atan2(RAMP_RISE, RAMP_LEN);
+
 /** Scratch for gate world positions — allocating one per frame is litter. */
 const boostWorld = new THREE.Vector3();
 const LANE_LIMIT = ROAD_W / 2 - 0.9;
@@ -507,6 +513,10 @@ export class RaceEngine {
   private airT = -1;
   private jumpArmed = false;
   private jumpHeightNow = 0;
+  /** 0..1 up the ramp's face; -1 when not on it. */
+  private rampU = -1;
+  /** Nose angle, radians. Positive is nose up. */
+  private jumpPitch = 0;
 
   constructor(opts: EngineOpts = {}) {
     this.opts = opts;
@@ -868,13 +878,13 @@ export class RaceEngine {
 
     /* A wedge: a box tipped up about its trailing edge, so the road rises to a
        takeoff lip rather than a block appearing in the way. */
-    const len = 13;
-    const rise = 2.6;
+    const len = RAMP_LEN;
+    const rise = RAMP_RISE;
     const geo = new THREE.BoxGeometry(ROAD_W, 0.7, len);
     const mat = new THREE.MeshStandardMaterial({ color: color.hwO.int, roughness: 0.5, metalness: 0.05 });
     this.disposables.push(geo, mat);
     const wedge = new THREE.Mesh(geo, mat);
-    wedge.rotation.x = -Math.atan2(rise, len);
+    wedge.rotation.x = -RAMP_ANGLE;
     wedge.position.set(0, rise / 2, len / 2);
     g.add(wedge);
 
@@ -886,7 +896,7 @@ export class RaceEngine {
       const c = new THREE.Mesh(chevGeo, chevMat);
       const z = 2.5 + i * 3.4;
       c.position.set(0, (rise * z) / len + 0.42, z);
-      c.rotation.x = -Math.atan2(rise, len);
+      c.rotation.x = -RAMP_ANGLE;
       g.add(c);
     }
     this.root.add(g);
@@ -1079,6 +1089,8 @@ export class RaceEngine {
     this.carTilt.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, -1), tan.clone().setY(0).normalize());
     // A drifting car points where it *was* going, not where it is sliding to.
     if (this.driftYaw !== 0) this.carTilt.rotateY(this.driftYaw);
+    // Nose up the ramp and through the arc. Local X is the car's axle line.
+    if (this.jumpPitch !== 0) this.carTilt.rotateX(this.jumpPitch);
   }
 
   /** -1 (full left) .. 1 (full right) */
@@ -1243,6 +1255,13 @@ export class RaceEngine {
     this.t = (this.t + (this.speed * dt) / this.curveLen) % 1;
     if (prevT > 0.92 && this.t < 0.08) this.lap += 1;
 
+    /* Where the nose wants to be this frame. Chased rather than assigned: the
+       arc's slope at the lip is far steeper than the ramp that launched the
+       car, so setting it directly snapped the nose from 11 degrees to 34 in a
+       single frame. It rises into the arc now, and settles back to level after
+       the landing instead of dropping flat. */
+    let pitchTarget = 0;
+
     /* The ramp. Armed the same way as the gates, and for the same reason. */
     if (this.interactions && raceInteraction.jumpEnabled && this.airT < 0) {
       const jLead = (this.speed * raceInteraction.jumpWarnLead) / this.curveLen;
@@ -1255,6 +1274,22 @@ export class RaceEngine {
       const wrapped = prevT > this.t && (raceInteraction.jumpAt > prevT || raceInteraction.jumpAt <= this.t);
       if (this.jumpArmed && (crossed || wrapped)) {
         this.jumpArmed = false;
+        this.rampU = 0;
+      }
+    }
+
+    /* On the ramp. The car CLIMBS it — rising along the wedge's face with its
+       nose at the wedge's own angle — and only leaves the ground at the lip.
+       It used to pop vertically off the road at the ramp's base, which read as
+       the car bouncing rather than as the car taking a jump. */
+    if (this.rampU >= 0) {
+      const span = RAMP_LEN / this.curveLen;
+      const along = (this.t - raceInteraction.jumpAt + 1) % 1;
+      this.rampU = Math.min(1, along / span);
+      this.jumpHeightNow = RAMP_RISE * this.rampU;
+      pitchTarget = RAMP_ANGLE;
+      if (this.rampU >= 1) {
+        this.rampU = -1;
         this.airT = 0;
         this.opts.onJumpTakeoff?.();
       }
@@ -1272,10 +1307,23 @@ export class RaceEngine {
         this.jumpHeightNow = 0;
         this.opts.onJumpLand?.();
       } else {
-        // a parabola: up fast, over, down — 4h(1-h) peaks at 1 halfway across
-        this.jumpHeightNow = raceInteraction.jumpHeight * 4 * this.airT * (1 - this.airT);
+        /* Leaves the lip at the ramp's height and comes down to road level, so
+           the arc starts where the ramp ended instead of teleporting to zero.
+           The parabola on top peaks halfway across. */
+        const a = this.airT;
+        const h = raceInteraction.jumpHeight;
+        this.jumpHeightNow = RAMP_RISE * (1 - a) + h * 4 * a * (1 - a);
+        /* The nose follows the arc rather than staying level: up on the way
+           out, through flat at the apex, down on the way in. dy/da divided by
+           the distance covered in that time IS the slope the car is on. */
+        const dyda = -RAMP_RISE + h * 4 * (1 - 2 * a);
+        const run = Math.max(1, this.speed * raceInteraction.jumpAirtime);
+        pitchTarget = Math.max(-0.6, Math.min(0.6, Math.atan2(dyda, run)));
       }
     }
+
+    this.jumpPitch += (pitchTarget - this.jumpPitch) * Math.min(1, dt * 9);
+    if (Math.abs(this.jumpPitch) < 0.002) this.jumpPitch = 0;
 
     /* Boost gates. Armed by DISTANCE rather than by a fixed lead in `t`,
        because `t` per second depends on how fast the car happens to be going

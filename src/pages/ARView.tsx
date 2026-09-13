@@ -391,10 +391,14 @@ export default function ARView() {
     pullNow.current = 0;
     armed.current = false;
     setPull(0);
-    /* Under a tenth is a tap or a slip, not a launch: the sled snaps back and
-       the gantry goes to red rather than starting a race nobody asked for. */
-    if (v < 0.1) handle.current?.armLaunch(false);
-    else handle.current?.launch(v);
+    /* A TAP LAUNCHES TOO.
+       This used to treat anything under a tenth as a slip and snap the sled
+       back, which made the one control on the screen do nothing at all for
+       anyone who pressed it rather than dragging it — and pressing a thing
+       that looks like a button is what people do. A tap is a real launch at
+       a middling 55%, and the pull is how you earn more than that. The
+       control is never a dead end. */
+    handle.current?.launch(v < 0.1 ? 0.55 : v);
   }, []);
 
   /* The gate being approached, and the verdict once it is behind us. */
@@ -707,7 +711,9 @@ export default function ARView() {
                         <IconFlag size={16} />
                         {pull > 0.02 ? `${Math.round(pull * 100)}%` : 'Pull to launch'}
                       </span>
-                      <small>{pull > 0.85 ? 'Perfect launch — let go' : 'Drag down, then release'}</small>
+                      <small>
+                        {pull > 0.85 ? 'Perfect launch — let go' : 'Drag down for more speed · or just tap'}
+                      </small>
                     </div>
                   )}
                   <Button variant="ghostDark" block type="button" onClick={() => handle.current?.reset()}>
