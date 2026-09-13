@@ -69,8 +69,10 @@ const UNLIMITED_RACES = true;
 
 const MAX_RACES = 3;
 
-/** Order value that earns free delivery, matching Blinkit's own threshold copy. */
-export const FREE_DELIVERY_MIN = 199;
+/** Items total that earns free delivery: anything ₹150 and above ships free. */
+export const FREE_DELIVERY_MIN = 150;
+/** The delivery charge below that — shown struck through as FREE above it. */
+export const DELIVERY_FEE = 30;
 
 export type Totals = {
   items: number; mrp: number; savings: number; delivery: number;
@@ -96,9 +98,9 @@ export function computeTotals(
   const mrp = lines.reduce((a, l) => a + (l.product.mrp ?? l.product.price) * l.qty, 0);
   const rewardValue = claimed?.value ?? 0;
   const freeDel = Boolean(claimed?.freeDelivery) || items >= FREE_DELIVERY_MIN;
-  const delivery = items === 0 ? 0 : freeDel ? 0 : 25;
+  const delivery = items === 0 ? 0 : freeDel ? 0 : DELIVERY_FEE;
   const handling = items === 0 ? 0 : 9;
-  const savings = mrp - items + (freeDel && items > 0 ? 25 : 0) + rewardValue;
+  const savings = mrp - items + (freeDel && items > 0 ? DELIVERY_FEE : 0) + rewardValue;
   /* An empty cart carries neither. They are things you add to an order, and
      there is no order to add them to. */
   const tipDue = items === 0 ? 0 : tip;

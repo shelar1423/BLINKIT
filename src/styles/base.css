@@ -3982,6 +3982,9 @@ input, select, textarea { font: inherit; color: inherit; }
   overflow-y: auto; -webkit-overflow-scrolling: touch;
   padding: 4px 12px 18px;
   display: grid; grid-template-columns: minmax(0, 1fr);
+  /* max-content, so a card that clips its own corners (overflow: hidden)
+     is not squeezed to nothing when the column overflows */
+  grid-auto-rows: max-content;
   gap: 12px; align-content: start;
 }
 
@@ -4045,12 +4048,132 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckobill__r b { font-weight: 700; color: var(--ink); }
 .ckobill__r em { font-style: normal; color: var(--green); }
 .ckobill__r--tot {
-  margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--line);
-  font-size: var(--f-base);
+  margin: 8px -14px 0; padding: 14px 14px 4px; border-top: 1px solid var(--line);
+  font-size: var(--f-lg);
 }
 .ckobill__r--tot span, .ckobill__r--tot b { color: var(--ink); font-weight: 800; }
 /* charges that carry an explanation, and the total, are dotted-underlined */
 .ckobill__dot { text-decoration: underline dotted; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+/* ---- one-colour PNG icons, tinted with `color` ---- */
+.glyph {
+  display: inline-block; flex: 0 0 auto;
+  width: 18px; height: 18px;
+  background-color: currentColor;
+  -webkit-mask: var(--glyph) center / contain no-repeat;
+  mask: var(--glyph) center / contain no-repeat;
+}
+.ckotri {
+  display: inline-block; width: 0; height: 0; margin-left: 6px;
+  border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+  border-left: 6px solid currentColor;
+}
+
+/* ---- See all products, at the foot of the suggestion shelf ---- */
+.ckoall {
+  width: 100%; margin-top: 16px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 12px; border-radius: 14px;
+  background: #F6F7FA; border: 1px solid #E3E6EE;
+  font-size: var(--f-base); font-weight: 600; color: #34438F;
+}
+.ckoall__stack { display: inline-flex; }
+.ckoall__stack img {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #fff; border: 1.5px solid #E3E6EE; object-fit: contain; padding: 2px;
+}
+.ckoall__stack img + img { margin-left: -10px; }
+
+/* ---- coupons ---- */
+.ckocoup { padding: 0; overflow: hidden; }
+.ckocoup__main {
+  display: flex; align-items: center; gap: 12px;
+  margin: 4px 4px 0; padding: 10px; border-radius: 14px;
+  background: #EEF3FD;
+}
+.ckocoup__ic {
+  flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px;
+  display: grid; place-items: center;
+  background: #E3EBFC;
+}
+.ckocoup__ic svg {
+  width: 32px; height: 32px; padding: 7px; border-radius: 50%;
+  background: #2F62E0; color: #fff; stroke-width: 3;
+}
+.ckocoup__t { display: grid; gap: 2px; }
+.ckocoup__t b { font-size: var(--f-base); font-weight: 700; color: #2F62E0; }
+.ckocoup__t span { display: inline-flex; align-items: center; font-size: var(--f-sm); color: var(--mut); }
+.ckocoup__all {
+  width: 100%; padding: 12px 0 13px; border: 0; background: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--f-base); font-weight: 500; color: var(--ink);
+}
+
+/* ---- bill rows with their icons ---- */
+.ckobill { padding-bottom: 0; overflow: hidden; }
+.ckobill__l { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); }
+.ckobill__l .glyph { color: var(--ink); width: 16px; height: 16px; }
+.ckobill__l--plain { padding-left: 26px; color: var(--mut); }
+.ckobill__r b { font-weight: 500; }
+.ckobill__r s { color: var(--mut); font-weight: 400; margin-right: 2px; }
+.ckobill__r .ckobill__saved {
+  font-style: normal; font-size: var(--f-xs); font-weight: 600;
+  color: #4A6EE0; background: #E8EEFD; padding: 2px 7px; border-radius: 6px;
+}
+.ckobill__r em.ckobill__free { color: #2F62E0; }
+/* the savings band hangs off the bottom of the card with a scalloped top edge */
+.ckosave {
+  margin: 12px -14px 0; padding: 18px 14px 14px;
+  background: #EEF3FD;
+  -webkit-mask: radial-gradient(7px at 7px 0, transparent 98%, #000) -7px 0 / 14px 100% repeat-x;
+  mask: radial-gradient(7px at 7px 0, transparent 98%, #000) -7px 0 / 14px 100% repeat-x;
+}
+.ckosave__r { margin: 0; display: flex; justify-content: space-between; }
+.ckosave__r b { font-size: var(--f-base); font-weight: 700; color: #4F7EEA; }
+.ckosave__s { margin: 4px 0 0; font-size: var(--f-sm); color: var(--ink-2); }
+
+/* ---- Add GSTIN ---- */
+.ckogst {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  border: 0; text-align: left; color: var(--mut);
+}
+.ckogst__ic {
+  flex: 0 0 44px; width: 44px; height: 44px; border-radius: 10px;
+  display: grid; place-items: center;
+  background: linear-gradient(90deg, #E3EBFC, #F4F7FE 30%, #F4F7FE 70%, #E3EBFC);
+}
+.ckogst__ic .glyph { width: 22px; height: 22px; color: #2F62E0; }
+.ckogst__t { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.ckogst__t b { font-size: var(--f-base); font-weight: 700; color: var(--ink); }
+.ckogst__t span { font-size: var(--f-sm); color: #5B6475; }
+
+/* ---- delivery instructions ---- */
+.ckoins { padding-right: 0; }
+.ckoins__row {
+  display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none;
+  padding-right: 14px;
+}
+.ckoins__row::-webkit-scrollbar { display: none; }
+.ckoins__c {
+  flex: 0 0 104px; height: 104px;
+  display: flex; flex-direction: column; justify-content: space-between; align-items: stretch;
+  padding: 12px; border: 0; border-radius: 12px;
+  background: #F6F7FA; text-align: left; color: var(--ink-2);
+}
+.ckoins__top { display: flex; justify-content: space-between; align-items: flex-start; }
+.ckoins__top .glyph { width: 18px; height: 18px; color: var(--ink-2); }
+.ckoins__box {
+  width: 20px; height: 20px; border-radius: 4px;
+  border: 1.5px solid #B8BCC6; background: none;
+}
+/* ticked is an outline in the action green, not a filled box */
+.ckoins__c.is-on .ckoins__box { border-color: var(--green); }
+.ckoins__l { font-size: var(--f-sm); font-weight: 500; line-height: 1.3; }
+.ckoins__rec {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: var(--f-base); font-weight: 700; color: var(--green);
+}
+.ckoins__rec .glyph { width: 16px; height: 16px; }
 
 /* ---- the foot ---- */
 .ckofoot {
