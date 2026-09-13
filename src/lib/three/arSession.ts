@@ -1257,15 +1257,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   scene.add(anchor);
 
   let phase: ARPhase = 'ready';
-  /* Launcher framing. Separate lerp state from the chase cam so the move from
-     one to the other is a continuation rather than a snap: the chase cam
-     seeds itself from wherever this left the camera. */
-  const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
-  const lnLook = new THREE.Vector3();
-  let lnInited = false;
-
   const setPhase = (p: ARPhase) => {
-    if (p !== 'placed') lnInited = false;
     phase = p;
     opts.onPhase(p);
   };
@@ -1525,7 +1517,15 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   renderer.setAnimationLoop((now) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (haveOrientation && phase !== 'racing' && phase !== 'placed') camera.quaternion.copy(q);
+    /* The phone's pose drives the camera for every phase except the race.
+
+       It briefly did not during `placed`, so the launcher could be framed
+       cinematically — and that broke the one promise AR makes. The video
+       behind the scene still turned with the phone while the render camera
+       did not, so the circuit slid around with the handset instead of staying
+       on the table it had just been placed on. A pretty shot of the launcher
+       is not worth a track that will not stay put. */
+    if (haveOrientation && phase !== 'racing') camera.quaternion.copy(q);
     if (phase === 'ready' || phase === 'searching') {
       const a = aim();
       reticle.visible = true;
@@ -1563,34 +1563,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       const bo = reticle.getObjectByName('burnout');
       if (bo) bo.rotation.y = -now * 0.00035;
     }
-    /* Placed, lever not yet released: sit behind the launcher looking down
-       the lane. This drops the video alignment, which is deliberate and is
-       what the racing branch below already does — once the track is down the
-       camera is a camera in the scene, not a window onto the room. */
-    if (phase === 'placed' && !inspect) {
-      engine.launcherCameraTarget(lnTarget);
-      /* Through root rather than by scaling and adding the anchor's position:
-         root carries the anchor's rotation too, and the track can be twisted
-         while it is being placed. */
-      const wp = engine.root.localToWorld(lnTarget.pos.clone());
-      const wl = engine.root.localToWorld(lnTarget.look.clone());
-      if (!lnInited) {
-        /* Seeded from where the phone is actually looking, so the move to the
-           launcher is a glide from the framing the player just placed in.
-           Copying the target outright cut straight there and lost the
-           connection between the tap and the shot. */
-        lnLook.copy(camera.position).addScaledVector(
-          new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion), 4,
-        );
-        lnInited = true;
-      }
-      camera.position.lerp(wp, Math.min(1, dt * 3.5));
-      lnLook.lerp(wl, Math.min(1, dt * 4));
-      camera.lookAt(lnLook);
-      // hand the chase cam a seed so the launch does not jump-cut
-      fpInited = false;
-    }
-
     if (phase === 'racing') {
       engine.update(dt);
       race.tickAim(camera, dt * 1000);
