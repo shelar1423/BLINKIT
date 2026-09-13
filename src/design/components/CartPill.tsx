@@ -47,8 +47,6 @@ const CLOSE_FURL = 0.55;
 const SEED_PX = 60;
 /** How far below its resting place the circle starts and ends. */
 const DROP_PX = 150;
-/** Reflow of the bar when a thumbnail joins or leaves an open pill. */
-const RESIZE_MS = 300;
 
 /** Left edge of slot i: 44px wide with 24px of overlap, so each is 20px on. */
 const SLOT_PX = 20;
@@ -193,33 +191,32 @@ export function CartPill() {
     }
   }, [live, mounted]);
 
-  /* A thumbnail joining or leaving changes the bar's resting width, and left
-     alone that is a snap. Tween from the width it had to the width it now
-     has — but not while the open is still running, which is already animating
-     the same property. */
-  useLayoutEffect(() => {
-    const el = pill.current;
-    if (!el || !mounted || !isOpen.current || reduceMotion()) return;
-    if (openAnim.current?.playState === 'running') return;
-    const w = el.getBoundingClientRect().width;
-    const was = restW.current;
-    restW.current = w;
-    if (!was || Math.abs(w - was) < 2) return;
-    el.animate([{ width: `${Math.round(was)}px` }, { width: `${Math.round(w)}px` }], {
-      duration: RESIZE_MS,
-      easing: EASE_OUT,
-    });
-  }, [view.thumbs.join(','), view.count, mounted]);
+  /* A thumbnail joining or leaving changes the bar's width through CSS now —
+     the strip's width and its reserved margin transition together (see
+     .cartpill__thumbs) — so there is no width tween here to fight it. */
 
   if (!mounted) return null;
 
   return (
     <div className="cartbar">
 
-          <button className="cartpill" ref={pill} type="button" onClick={() => nav('/cart')}>
+          <button
+            className="cartpill"
+            ref={pill}
+            type="button"
+            style={{ ['--n' as string]: Math.max(1, view.thumbs.length) }}
+            onClick={() => nav('/cart')}
+          >
             <span className="cartpill__thumbs">
-              {view.thumbs.map((id) => (
-                <img key={id} className="cartpill__th" src={productById(id)?.image} alt="" />
+              {view.thumbs.map((id, i) => (
+                <img
+                  key={id}
+                  className="cartpill__th"
+                  style={{ left: i * SLOT_PX }}
+                  src={productById(id)?.image}
+                  alt=""
+                  decoding="sync"
+                />
               ))}
               {/* After the survivors, not before. These are out of flow, so
                   where they sit is set by `left` and not by document order —

@@ -961,7 +961,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   let detachGestures: (() => void) | null = null;
 
   // FPP chase-cam state: smooth follow targets
-  const fpTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const fpTarget: { pos: THREE.Vector3; look: THREE.Vector3; up: THREE.Vector3; snap?: boolean } = {
+    pos: new THREE.Vector3(), look: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0),
+  };
   const fpCamPos = new THREE.Vector3();
   const fpCamLook = new THREE.Vector3();
   let fpInited = false;
@@ -1610,7 +1612,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   let gyroRefSet = false;
 
   // FPP chase-cam state for camera mode
-  const fpTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const fpTarget: { pos: THREE.Vector3; look: THREE.Vector3; up: THREE.Vector3; snap?: boolean } = {
+    pos: new THREE.Vector3(), look: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0),
+  };
   const fpCamPos = new THREE.Vector3();
   const fpCamLook = new THREE.Vector3();
   let fpInited = false;
@@ -1748,13 +1752,15 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       const worldFPPos = fpTarget.pos.clone().multiplyScalar(scale).add(anchor.position);
       const worldFPLook = fpTarget.look.clone().multiplyScalar(scale).add(anchor.position);
 
-      if (!fpInited) {
+      if (!fpInited || fpTarget.snap) {
         fpCamPos.copy(worldFPPos);
         fpCamLook.copy(worldFPLook);
         fpInited = true;
+        camera.up.copy(fpTarget.up);
       } else {
         fpCamPos.lerp(worldFPPos, chase(5, dt));
         fpCamLook.lerp(worldFPLook, chase(6.5, dt));
+        camera.up.lerp(fpTarget.up, chase(6, dt)).normalize();
       }
 
       camera.position.copy(fpCamPos);

@@ -159,8 +159,10 @@ const CINE_RATE_OUT = 5.5;
  *  the lift, so the jump itself is still judged from behind. */
 const CINE_AIR_H = 0.25;
 /** The run to the finish, from in front of the car looking back at it. */
-const FRONT_AHEAD = 22;
-const FRONT_HEIGHT = 1.8;
+const FRONT_AHEAD = 30;
+/** The closest the finish camera lets the car come before it backs away. */
+const FRONT_MIN = 8;
+const FRONT_HEIGHT = 1.4;
 /** Swinging round to the front: slow, it is the last shot of the race. */
 const FRONT_RATE = 1.4;
 /** How fast the camera swings, in REAL seconds — the world may be in slow
@@ -1162,7 +1164,7 @@ export class RaceEngine {
   private airFromGate = -1;
   /** Distance travelled round the loop, or -1 when not on it. */
   private loopS = -1;
-  /** Where the finish camera stands, fixed in the world so the car passes it. */
+  /** Where the finish camera stands, as a lap position in x (fixed, so the car closes on it). */
   private frontAnchor: THREE.Vector3 | null = null;
   /* The arc currently being flown. The ramp and the gates are the same flight
      with different numbers — the ramp leaves the road already at the lip's
@@ -2836,7 +2838,9 @@ export class RaceEngine {
    * along the curve so the camera leads into the bend instead of staring at
    * the apex barrier.
    */
-  cameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3 }) {
+  cameraTarget(out: { pos: THREE.Vector3; look: THREE.Vector3; up?: THREE.Vector3; snap?: boolean }) {
+    out.snap = false;
+    out.up?.set(0, 1, 0);
     const BEHIND = 9.5;
     const HEIGHT = 3.4;
     const AHEAD = 9.0;
@@ -2857,11 +2861,19 @@ export class RaceEngine {
 
     /* On the loop, stand back and watch it go round: behind the loop's base,
        raised, looking at the car wherever it is on the circle. */
+    /* On the loop, from the driver's seat: the camera rides in the car, just
+       above the roof line, looking the way the car is pointing, with the car's
+       own up as its up — so the track rolls over the top of the screen and the
+       world turns upside down with you. Snapped, not eased: a camera lagging
+       behind a car going round a loop ends up outside it. */
     if (this.loopS >= 0) {
-      const lt = this.curve.getTangentAt(raceInteraction.loopAt).setY(0).normalize();
-      const base = this.curve.getPointAt(raceInteraction.loopAt);
-      out.pos.copy(base).addScaledVector(lt, -16).setY(5.5);
-      out.look.copy(this.carTilt.position);
+      const q = this.carTilt.quaternion;
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(q);
+      const cup = new THREE.Vector3(0, 1, 0).applyQuaternion(q);
+      out.pos.copy(this.carTilt.position).addScaledVector(cup, 1.05).addScaledVector(fwd, 0.4);
+      out.look.copy(out.pos).addScaledVector(fwd, 10).addScaledVector(cup, -0.6);
+      out.up?.copy(cup);
+      out.snap = true;
       return out;
     }
 
@@ -2888,15 +2900,21 @@ export class RaceEngine {
       /* Planted a little way past the line and off to the right, and left
          there: the car runs at it, passes it and carries on, and the camera
          turns to follow it by — rather than backing away in front of it. */
+      /* Standing in the road past the line, the car driving straight at you.
+         The spot is fixed so the car closes on it; if it gets within a few
+         car-lengths the camera backs away ahead of it, so the race always
+         ends on the car coming towards you rather than on it passing. */
       if (!this.frontAnchor) {
         const toLine = this.t > 0.5 ? (1 - this.t) * this.curveLen : 0;
-        const at = (this.t + (toLine + FRONT_AHEAD) / this.curveLen) % 1;
-        const ap = this.curve.getPointAt(at);
-        const at2 = this.curve.getTangentAt(at);
-        const ar = new THREE.Vector3().crossVectors(at2, up).normalize();
-        this.frontAnchor = ap.addScaledVector(ar, ROAD_W / 2 - 0.4).setY(FRONT_HEIGHT);
+        this.frontAnchor = new THREE.Vector3((this.t + (toLine + FRONT_AHEAD) / this.curveLen) % 1, 0, 0);
       }
-      const front = this.frontAnchor.clone();
+      let ahead = ((this.frontAnchor.x - this.t + 1) % 1) * this.curveLen;
+      if (ahead > this.curveLen / 2) ahead = 0;
+      const standT = (this.t + Math.max(ahead, FRONT_MIN) / this.curveLen) % 1;
+      const sp = this.curve.getPointAt(standT);
+      const st = this.curve.getTangentAt(standT);
+      const sr = new THREE.Vector3().crossVectors(st, up).normalize();
+      const front = sp.addScaledVector(sr, this.lateral * 0.6).setY(FRONT_HEIGHT);
       out.pos.lerp(front, this.frontK);
       const at = car.clone();
       at.y = 0.9 + this.jumpHeightNow;

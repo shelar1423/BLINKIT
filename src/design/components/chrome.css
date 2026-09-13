@@ -371,6 +371,12 @@
   padding: 8px 8px 8px 10px;
   box-shadow: 0 8px 24px rgba(72, 165, 65, 0.34);
   max-width: 100%;
+  /* Room held outside the pill for the thumbnail slots that are empty. The
+     bar is centred in its row, so pill + this margin is what gets centred:
+     that sum never changes, which pins the pill's LEFT edge — and every
+     thumbnail on it — while the bar grows or shrinks to the right. */
+  margin-right: calc((3 - var(--n, 1)) * 20px);
+  transition: margin-right 300ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* Clipping belongs to the unfurl and the furl ONLY, and is switched on for the
    length of those animations from BottomNav.tsx. Left on permanently it also
@@ -378,7 +384,16 @@
    and rises 30px, so the pill's own edge sliced away more than half of it on
    the way out, which is what made a deliberate lift read as a wisp. */
 .cartpill.is-morphing { overflow: hidden; }
-.cartpill__thumbs { display: flex; align-items: center; flex: 0 0 auto; position: relative; }
+.cartpill.is-morphing, .cartpill.is-morphing .cartpill__thumbs { transition: none; }
+.cartpill__thumbs {
+  /* Each thumbnail is placed by its slot, not by the flow, and the strip's
+     width is set from the count — both on the same transition. A thumbnail
+     joining or leaving then moves nothing else by a pixel except the ones that
+     genuinely change slot, and those glide. */
+  display: block; flex: 0 0 auto; position: relative; height: 44px;
+  width: calc(44px + (var(--n, 1) - 1) * 20px);
+  transition: width 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
 .cartpill__th {
   width: 44px; height: 44px; flex: 0 0 44px;
   object-fit: contain; background: #fff; border-radius: 50%;
@@ -389,19 +404,16 @@
      per thumbnail against a 42pt thumbnail, so a little over half of each one
      is covered. At -16px only a third was, and the row read as three separate
      badges rather than a shingled stack. */
-  margin-left: -24px;
-  animation: thumbIn 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  position: absolute; top: 0;
+  transition: left 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: thumbIn 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.cartpill__th:first-child { margin-left: 0; }
-/* Arriving, as the recording has it: a white disc drops in from above and to
-   the right — the shelf the item came from — lands in its slot still white,
-   and only then does the picture come up through it. The white is the image
-   itself pushed to white, so the disc is exactly the thumbnail's shape. */
+/* Arriving: the thumbnail drops in from above and to the right — the shelf
+   the item came from — already showing its picture. */
 @keyframes thumbIn {
-  0%   { transform: translate(10px, -36px) scale(0.8); opacity: 0; filter: brightness(0) invert(1); }
-  38%  { transform: none; opacity: 1; filter: brightness(0) invert(1); }
-  58%  { filter: brightness(0) invert(1); }
-  100% { transform: none; opacity: 1; filter: none; }
+  0%   { transform: translate(10px, -36px) scale(0.8); opacity: 0; }
+  45%  { opacity: 1; }
+  100% { transform: none; opacity: 1; }
 }
 /* A thumbnail leaves in one of two ways, and in the recording they are not
    the same move. Deleting the item lifts it up out of the bar and dissolves
@@ -417,7 +429,7 @@
    up and the ones under it stay put; the only thing that shifts them is the
    bar narrowing by one slot and re-centring, about half a slot each. */
 .cartpill__th.is-out {
-  position: absolute; top: 0; margin: 0;
+  position: absolute; top: 0; margin: 0; transition: none;
   pointer-events: none;
 }
 /* Removing an item, frame by frame off the recording (about 50ms a frame):

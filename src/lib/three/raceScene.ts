@@ -170,7 +170,9 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     (window as unknown as Record<string, unknown>).__race = { scene, camera, engine, renderer };
   }
 
-  const target = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const target: { pos: THREE.Vector3; look: THREE.Vector3; up: THREE.Vector3; snap?: boolean } = {
+    pos: new THREE.Vector3(), look: new THREE.Vector3(), up: new THREE.Vector3(0, 1, 0),
+  };
   // Frame the camera correctly for the very first painted frame, so the
   // scene never appears from the middle of the circuit.
   engine.cameraTarget(target);
@@ -253,9 +255,17 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     engine.update(dt);
     engine.cameraTarget(target);
 
-    // critically damped-ish follow so the camera never jitters
-    camPos.lerp(target.pos, chase(5, dt));
-    camLook.lerp(target.look, chase(6.5, dt));
+    // critically damped-ish follow so the camera never jitters — except in
+    // the driver's seat on the loop, which has to be exactly where the car is
+    if (target.snap) {
+      camPos.copy(target.pos);
+      camLook.copy(target.look);
+      camera.up.copy(target.up);
+    } else {
+      camPos.lerp(target.pos, chase(5, dt));
+      camLook.lerp(target.look, chase(6.5, dt));
+      camera.up.lerp(target.up, chase(6, dt)).normalize();
+    }
     camera.position.copy(camPos);
     camera.lookAt(camLook);
 
