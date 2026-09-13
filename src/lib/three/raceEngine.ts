@@ -153,6 +153,16 @@ const CINE_HEIGHT = 2.0;
 const CINE_TAIL = 0.45;
 /** How many gauge-lengths ahead of the last gate the AR galaxy moment begins. */
 const MOMENT_LEAD = 2.2;
+/** Turning out to the side while the car is in the air. */
+const CINE_RATE_OUT = 3.2;
+/** Height the car must be off the road before the side shot starts — clear of
+ *  the lift, so the jump itself is still judged from behind. */
+const CINE_AIR_H = 0.6;
+/** The run to the finish, from in front of the car looking back at it. */
+const FRONT_AHEAD = 13;
+const FRONT_HEIGHT = 2.4;
+/** Swinging round to the front: slow, it is the last shot of the race. */
+const FRONT_RATE = 1.4;
 /** How fast the camera swings, in REAL seconds — the world may be in slow
  *  motion, but a camera move that slowed down with it would read as a stall. */
 const CINE_RATE = 4.2;
@@ -1162,6 +1172,14 @@ export class RaceEngine {
    * a camera for it. AR reads it to swap the room for the galaxy.
    */
   private momentK = 0;
+  /**
+   * Where the last gate's shots have got to on the final lap.
+   * 0 not reached · 1 lifted, still on the road · 2 in the air · 3 landed
+   * (or never lifted) and running to the finish.
+   */
+  private finalPhase = 0;
+  /** 0 = chase, 1 = in front of the car looking back at it. */
+  private frontK = 0;
   /** The hole cut in the rails for the side shot, in track-local units. */
   private readonly railCut = {
     center: { value: new THREE.Vector3() },
@@ -2672,6 +2690,15 @@ export class RaceEngine {
       on2.y = 0.9 + this.jumpHeightNow * 0.95;
       out.look.lerp(on2, this.cineK);
     }
+    /* ...and for the run to the line, out in front, looking back at the car. */
+    if (this.frontK > 0.001) {
+      const front = car.clone().addScaledVector(tan, FRONT_AHEAD);
+      front.y = FRONT_HEIGHT + this.jumpHeightNow * 0.4;
+      out.pos.lerp(front, this.frontK);
+      const at = car.clone();
+      at.y = 0.9 + this.jumpHeightNow;
+      out.look.lerp(at, this.frontK);
+    }
     return out;
   }
 
@@ -2963,7 +2990,6 @@ export class RaceEngine {
           const errSec = ((ahead - ideal) * this.curveLen) / Math.max(1, this.speed);
           const stillOpen = errSec > -raceInteraction.gateAcceptSec;
           if (stillOpen && k >= GATE_SLOW_FROM) gateArmed = true;
-          if (this.isFinalGate(i) && k >= GATE_SLOW_FROM) cineWant = true;
 
           /* Nothing is aimed at any more, but the car still has to arrive
              where the hole is. Eased rather than snapped: the player may be
@@ -2979,9 +3005,7 @@ export class RaceEngine {
              The car stays lined up, though — the verdict is not in yet,
              because the verdict is where the car IS when it gets there. */
           this.lateral -= this.lateral * chase(2.2, dt);
-          /* Lifted but still short of the hoop — the part of the shot the
-             whole thing exists for. */
-          if (this.isFinalGate(i)) cineWant = true;
+          if (this.isFinalGate(i) && this.finalPhase < 1) this.finalPhase = 1;
         }
 
         // crossing it: the wrapped gap jumps from nearly a lap to nearly zero
@@ -2992,6 +3016,7 @@ export class RaceEngine {
              where the phone was, but where the CAR was when it reached the
              hoop. Everything the player can see is in this one number. */
           this.closeGate(i, gateBand(this.jumpHeightNow, g.liftErr), g.liftErr);
+          if (this.isFinalGate(i) && !g.lifted) this.finalPhase = 3;
         }
       }
     }
@@ -3009,12 +3034,28 @@ export class RaceEngine {
        and the tail holds it a beat longer so the camera is not already leaving
        as the wheels touch. Real seconds throughout — the tail is a length of
        film, not a length of race. */
+    /* The last gate is filmed in three shots. The approach and the lift stay
+       behind the car, where the jump is judged. Once the car is clearly in the
+       air the camera swings out to its right for the flight through the ring;
+       once the wheels are down it comes round in front, so the car runs at
+       the camera to the line. */
+    if (this.finalPhase === 1 && this.jumpHeightNow > CINE_AIR_H) this.finalPhase = 2;
+    if (this.finalPhase === 2 && this.jumpHeightNow < 0.05) this.finalPhase = 3;
+    if (this.finalPhase === 2) cineWant = true;
     if (cineWant || (this.cineTail > 0 && this.jumpHeightNow > 0.05)) this.cineTail = CINE_TAIL;
     else if (this.cineTail > 0) this.cineTail = Math.max(0, this.cineTail - dtReal);
     const cineTo = this.cinematic && this.cineTail > 0 && this.outroAt < 0 ? 1 : 0;
-    this.cineK += (cineTo - this.cineK) * chase(CINE_RATE, dtReal);
+    // slow on the way out to the side, quicker coming back behind the car
+    this.cineK += (cineTo - this.cineK) * chase(cineTo > this.cineK ? CINE_RATE_OUT : CINE_RATE, dtReal);
     if (Math.abs(this.cineK - cineTo) < 0.002) this.cineK = cineTo;
-    const momentTo = (momentWant || this.cineTail > 0) && this.outroAt < 0 ? 1 : 0;
+    const frontTo = this.cinematic && this.finalPhase === 3 && this.cineTail <= 0 ? 1 : 0;
+    this.frontK += (frontTo - this.frontK) * chase(frontTo > this.frontK ? FRONT_RATE : CINE_RATE, dtReal);
+    if (Math.abs(this.frontK - frontTo) < 0.002) this.frontK = frontTo;
+    /* The galaxy holds from the straight before the gate to the result: in the
+       camera session the front shot is part of the same film, and dropping the
+       room back in behind it would undo it. */
+    const momentTo =
+      ((momentWant || this.cineTail > 0) && this.outroAt < 0) || (this.cinematic && this.finalPhase >= 2) ? 1 : 0;
     this.momentK += (momentTo - this.momentK) * chase(CINE_RATE, dtReal);
     if (Math.abs(this.momentK - momentTo) < 0.002) this.momentK = momentTo;
     // open the rail cut with the side shot, around wherever the car is now

@@ -18,8 +18,8 @@ import { IconChevronRight } from '../elements/Icons';
  */
 /** Thumbnails the pill shows at once. The fourth add drops the oldest. */
 const MAX_THUMBS = 3;
-/** Must outlast .cartpill__th's leave animations and the cloud that follows. */
-const LEAVE_MS = 940;
+/** Must outlast .cartpill__th's leave animation and the bubble that follows (70ms + 460ms). */
+const LEAVE_MS = 580;
 
 /* Shapes traced off a screen recording of the real app, frame by frame at
    60fps, by tracking the green pill's bounding box — then deliberately slowed.
@@ -50,25 +50,8 @@ const DROP_PX = 150;
 /** Reflow of the bar when a thumbnail joins or leaves an open pill. */
 const RESIZE_MS = 300;
 
-/* The cloud a removed item bursts into: angle in degrees, distance as a share
-   of the throw, and the lump's own diameter. Irregular on purpose — evenly
-   spaced identical dots read as a loading spinner, not a puff. */
 /** Left edge of slot i: 44px wide with 24px of overlap, so each is 20px on. */
 const SLOT_PX = 20;
-
-const PUFF_BITS = [
-  [-92, 1.0, 26],
-  [-40, 0.92, 20],
-  [14, 1.06, 24],
-  [66, 0.88, 17],
-  [128, 1.0, 23],
-  [176, 0.94, 19],
-  [230, 1.04, 25],
-].map(([deg, dist, size]) => ({
-  '--tx': `${(Math.cos((deg * Math.PI) / 180) * dist * 34).toFixed(1)}px`,
-  '--ty': `${(Math.sin((deg * Math.PI) / 180) * dist * 34).toFixed(1)}px`,
-  '--s': `${size}px`,
-}));
 
 const EASE_OUT = 'cubic-bezier(0.22, 1, 0.36, 1)';
 const EASE_IN = 'cubic-bezier(0.5, 0, 0.75, 0)';
@@ -254,9 +237,9 @@ export function CartPill() {
                   />
                   {t.how === 'removed' && (
                     <i className="cartpill__puff" aria-hidden="true" style={{ left: t.slot * SLOT_PX }}>
-                      {PUFF_BITS.map((bit, k) => (
-                        <i key={k} style={bit as React.CSSProperties} />
-                      ))}
+                      <i className="bub-fill" />
+                      <i className="bub-ring" />
+                      <i className="bub-arcs" />
                     </i>
                   )}
                 </Fragment>
