@@ -137,6 +137,11 @@ function buildCurve() {
   const straight = (x0: number, z0: number, x1: number, z1: number, n: number) => {
     for (let i = 0; i <= n; i++) at(x0 + ((x1 - x0) * i) / n, z0 + ((z1 - z0) * i) / n);
   };
+  /** Like `straight`, but stops short of its last point — for the run that
+   *  closes the loop, whose end IS the first point already emitted. */
+  const straightOpen = (x0: number, z0: number, x1: number, z1: number, n: number) => {
+    for (let i = 0; i < n; i++) at(x0 + ((x1 - x0) * i) / n, z0 + ((z1 - z0) * i) / n);
+  };
   /** Interior arc points only, so the joins are not doubled up. */
   const corner = (cx: number, cz: number, from: number, to: number, n = 3) => {
     for (let i = 1; i < n; i++) {
@@ -145,8 +150,18 @@ function buildCurve() {
     }
   };
 
-  // bottom straight, +x — the start line and the launcher live here
-  straight(-(a - r), -b, a - r, -b, 8);
+  /* The lap starts HALFWAY along the bottom straight, not at its left end.
+
+     The launcher stands at t=0 and is built backwards from it — sixteen units
+     of bed, feet and back stop running against the direction of travel. Begun
+     at the end of the straight, all of that lay in the corner behind it: the
+     left side of the launcher hung off the road with nothing under it. From
+     the middle there are twenty-nine units of straight behind t=0, which the
+     whole launcher fits inside with room to spare.
+
+     It also puts the start line where a start line belongs, on a straight
+     rather than on the exit of a bend. */
+  straight(0, -b, a - r, -b, 4);
   corner(a - r, -(b - r), -90, 0);
   // right straight, +z
   straight(a, -(b - r), a, b - r, 6);
@@ -157,6 +172,8 @@ function buildCurve() {
   // left straight, -z
   straight(-a, b - r, -a, -(b - r), 6);
   corner(-(a - r), -(b - r), 180, 270);
+  // and back up the bottom straight to where the lap began
+  straightOpen(-(a - r), -b, 0, -b, 4);
 
   return new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.5);
 }
@@ -704,6 +721,60 @@ function flameRingTexture(seed: number): THREE.CanvasTexture {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
   return tex;
+}
+
+
+/**
+ * A box with its edges taken off.
+ *
+ * Everything the launcher is made of was a `BoxGeometry`, which has twelve
+ * perfectly sharp arrises and reads as raw geometry rather than as a moulded
+ * part — the closer the launch camera got, the more obvious it was. A real
+ * die-cast accessory has a radius on every edge, because it came out of a
+ * tool.
+ *
+ * An extruded rounded rectangle gets all twelve at once: the profile rounds
+ * the four running edges and the bevel rounds the eight at the ends. Roughly
+ * three hundred triangles a part against twelve, which for a dozen parts seen
+ * this close is a trade worth making.
+ */
+function roundedBox(w: number, h: number, d: number, r: number, seg = 4): THREE.ExtrudeGeometry {
+  // a radius can never exceed the half-thickness of the thinnest axis
+  const rr = Math.max(0.001, Math.min(r, w / 2 - 0.002, h / 2 - 0.002, d / 2 - 0.002));
+  /* The PROFILE is inset by the bevel on every side, because `bevelSize`
+     grows the outline outward rather than eating into it — extruded at face
+     value, a part came out 2r wider and taller than asked for, which is how a
+     2.7-wide paddle measured 3.46 and hung over the edge of the road. */
+  const w2 = w - rr * 2;
+  const h2 = h - rr * 2;
+  const x = Math.max(0.001, w2 / 2 - rr);
+  const y = Math.max(0.001, h2 / 2 - rr);
+  const hw = w2 / 2;
+  const hh = h2 / 2;
+  const shape = new THREE.Shape();
+  shape.moveTo(-x, -hh);
+  shape.lineTo(x, -hh);
+  shape.quadraticCurveTo(hw, -hh, hw, -y);
+  shape.lineTo(hw, y);
+  shape.quadraticCurveTo(hw, hh, x, hh);
+  shape.lineTo(-x, hh);
+  shape.quadraticCurveTo(-hw, hh, -hw, y);
+  shape.lineTo(-hw, -y);
+  shape.quadraticCurveTo(-hw, -hh, -x, -hh);
+
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth: d - rr * 2,
+    bevelEnabled: true,
+    bevelThickness: rr,
+    bevelSize: rr,
+    bevelSegments: seg,
+    curveSegments: seg + 2,
+  });
+  /* Extrusion runs from -bevelThickness to depth+bevelThickness, so the part
+     sits off-centre by half its depth until this is put right — every mesh
+     built from one is positioned as though it were a centred box. */
+  geo.translate(0, 0, -(d / 2 - rr));
+  return geo;
 }
 
 /**
@@ -1306,7 +1377,7 @@ export class RaceEngine {
     /* The bed the sled runs along, and the two guide rails standing off it.
        Local +Z runs BACK from the line, since the car's own -Z is the way it
        faces. */
-    const bedGeo = new THREE.BoxGeometry(ROAD_W - 1.4, 0.45, BED);
+    const bedGeo = roundedBox(ROAD_W - 1.4, 0.45, BED, 0.16);
     this.disposables.push(bedGeo);
     const bed = new THREE.Mesh(bedGeo, plastic);
     bed.position.set(0, 0.22, midZ);
@@ -1328,13 +1399,13 @@ export class RaceEngine {
       this.launcher.add(strip);
     }
 
-    const railGeo = new THREE.BoxGeometry(0.7, 0.95, BED);
+    const railGeo = roundedBox(0.7, 0.95, BED, 0.22);
     /* A Blinkit-yellow cap along the top of each rail. The rails are Hot
        Wheels orange and the track they join is the same orange, so the
        partner's colour needs a surface of its own rather than a tint of
        theirs — and the cap is the one face of the rail the launch camera
        looks straight down onto. */
-    const capGeo = new THREE.BoxGeometry(0.72, 0.16, BED);
+    const capGeo = roundedBox(0.72, 0.16, BED, 0.065);
     const capMat = new THREE.MeshStandardMaterial({ color: 0xF8CB46, roughness: 0.45 });
     this.disposables.push(railGeo, capGeo, capMat);
     for (const sgn of [-1, 1]) {
@@ -1350,19 +1421,18 @@ export class RaceEngine {
        carries the toy-set read in the concept art: the launcher is not a
        block, it is a bed propped up on moulded feet. A four-sided cylinder IS
        a truncated pyramid, so one geometry does all four. */
-    const footGeo = new THREE.CylinderGeometry(1.05, 1.75, 1.9, 4);
+    const footGeo = new THREE.CylinderGeometry(0.7, 1.12, 1.9, 12);
     this.disposables.push(footGeo);
     for (const sgn of [-1, 1]) {
       for (const z of [1.4, BED - 3.2]) {
         const foot = new THREE.Mesh(footGeo, dark);
-        foot.position.set(sgn * (ROAD_W / 2 - 0.5), 0.95, z);
-        foot.rotation.y = Math.PI / 4;
+        foot.position.set(sgn * (ROAD_W / 2 - 1.25), 0.95, z);
         this.launcher.add(foot);
       }
     }
 
     // the back stop the spring pushes off
-    const stopGeo = new THREE.BoxGeometry(ROAD_W - 1.2, 2.6, 1.1);
+    const stopGeo = roundedBox(ROAD_W - 1.2, 2.6, 1.1, 0.3);
     this.disposables.push(stopGeo);
     const stop = new THREE.Mesh(stopGeo, dark);
     stop.position.set(0, 1.3, LAUNCH_TRAVEL + 5.4);
@@ -1389,8 +1459,8 @@ export class RaceEngine {
 
     /* The sled: a plate the car rests against, with a grip standing up behind
        it so there is something that visibly reads as the thing being pulled. */
-    const plateGeo = new THREE.BoxGeometry(ROAD_W - 2.4, 1.5, 1.2);
-    const gripGeo = new THREE.BoxGeometry(ROAD_W - 3.6, 2.2, 0.8);
+    const plateGeo = roundedBox(ROAD_W - 2.4, 1.5, 1.2, 0.3);
+    const gripGeo = roundedBox(ROAD_W - 3.6, 2.2, 0.8, 0.26);
     this.disposables.push(plateGeo, gripGeo);
     const plate = new THREE.Mesh(plateGeo, red);
     plate.position.y = 0.75;
@@ -1432,8 +1502,8 @@ export class RaceEngine {
     this.launchLever.position.set(-3.0, 1.05, 4.2);
     this.launcher.add(this.launchLever);
 
-    const armGeo = new THREE.BoxGeometry(1.15, 4.3, 0.95);
-    const padGeo = new THREE.BoxGeometry(2.7, 1.6, 1.6);
+    const armGeo = roundedBox(1.15, 4.3, 0.95, 0.3);
+    const padGeo = roundedBox(2.7, 1.6, 1.6, 0.38);
     const hubGeo = new THREE.CylinderGeometry(0.75, 0.75, 1.5, 14);
     this.disposables.push(armGeo, padGeo, hubGeo);
 
