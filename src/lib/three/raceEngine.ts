@@ -154,10 +154,10 @@ const CINE_TAIL = 0.45;
 /** How many gauge-lengths ahead of the last gate the AR galaxy moment begins. */
 const MOMENT_LEAD = 2.2;
 /** Turning out to the side while the car is in the air. */
-const CINE_RATE_OUT = 3.2;
+const CINE_RATE_OUT = 5.5;
 /** Height the car must be off the road before the side shot starts — clear of
  *  the lift, so the jump itself is still judged from behind. */
-const CINE_AIR_H = 0.6;
+const CINE_AIR_H = 0.25;
 /** The run to the finish, from in front of the car looking back at it. */
 const FRONT_AHEAD = 13;
 const FRONT_HEIGHT = 2.4;
@@ -3039,7 +3039,7 @@ export class RaceEngine {
        air the camera swings out to its right for the flight through the ring;
        once the wheels are down it comes round in front, so the car runs at
        the camera to the line. */
-    if (this.finalPhase === 1 && this.jumpHeightNow > CINE_AIR_H) this.finalPhase = 2;
+    if (this.finalPhase === 1 && this.airT >= 0 && this.jumpHeightNow > CINE_AIR_H) this.finalPhase = 2;
     if (this.finalPhase === 2 && this.jumpHeightNow < 0.05) this.finalPhase = 3;
     if (this.finalPhase === 2) cineWant = true;
     if (cineWant || (this.cineTail > 0 && this.jumpHeightNow > 0.05)) this.cineTail = CINE_TAIL;
