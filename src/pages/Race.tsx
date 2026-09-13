@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
@@ -9,6 +9,33 @@ import { IconAR, IconCheck, IconFlag } from '../design/elements/Icons';
 import { useARSupport } from '../lib/useARSupport';
 
 /** Race preparation: pick the car, then choose 3D or AR. */
+/* The three things you do, in the order you do them. Four words each: the
+   pictures carry the instruction and the text only names it. */
+const HOW_TO = [
+  { icon: '/howto/point.png', t: 'Point', s: 'At a table or floor' },
+  { icon: '/howto/tilt.png', t: 'Tilt', s: 'To steer through corners' },
+  { icon: '/howto/grab.png', t: 'Grab', s: 'Groceries on the way' },
+];
+
+/* A word and a colour for each car.
+
+   The colours are sampled off the product shots rather than picked — the most
+   saturated pixel in each, brightened enough to hold a 2px outline on white:
+   #315710, #032A8E, #CB9E4A, #B2001D. K.I.T.T. sampled #691723, which is its
+   scanner light rather than its paint; the car is black, so it wears graphite
+   and Hollowback keeps the red.
+
+   The WORDS are character, not statistics. Every car drives identically —
+   `raceInteraction` is explicit that two players on the same line must score
+   the same, and per-car handling is the one change that would break it. */
+const CAR_TRAIT: Record<string, { trait: string; accent: string }> = {
+  ballistik: { trait: 'Speed', accent: '#5FA31E' },
+  battlespec: { trait: 'Control', accent: '#2757C9' },
+  jackhammer: { trait: 'Grip', accent: '#C08A2A' },
+  hollowback: { trait: 'Drift', accent: '#CF1027' },
+  kitt: { trait: 'Balance', accent: '#2E3138' },
+};
+
 export default function Race() {
   const nav = useNavigate();
   const { selectedCarId, selectCar, racesLeft, bestScore } = useStore();
@@ -31,36 +58,26 @@ export default function Race() {
             thing that makes the picker mean something, so it goes above it. */}
         <div className="shell" style={{ paddingTop: 12 }}>
           <div className="howcard">
-            <p className="howcard__hd">How it works</p>
+            <div className="howcard__hd">
+              <span>How to play</span>
+              <b>Two laps &middot; 45 seconds</b>
+            </div>
             <div className="howcard__art">
               <img src="/campaign/how-ar-placement.webp" alt="A Hot Wheels car placed on a real table through the camera" />
             </div>
-            {/* The copy is wrapped rather than sitting loose beside the
-                number: the row is a flex container, so bare text nodes and a
-                <b> each become flex items and every one of them picks up the
-                row gap — which is why "Hold GO and tilt" had holes punched
-                through it. */}
-            <ol className="howsteps">
-              <li>
-                <span className="howsteps__n">1</span>
-                <span className="howsteps__t">Point your camera at a table or floor</span>
-              </li>
-              {/* Tilt is how this is actually driven now; the old copy still
-                  described on-screen arrows and a handbrake as the primary
-                  controls, which stopped being true when tilt steering landed. */}
-              <li>
-                <span className="howsteps__n">2</span>
-                <span className="howsteps__t">Hold <b>GO</b> and tilt the phone to steer</span>
-              </li>
-              <li>
-                <span className="howsteps__n">3</span>
-                <span className="howsteps__t">Grab groceries on the way. The bag is worth 500</span>
-              </li>
-            </ol>
-            <p className="howcard__foot">
-              <span className="howcard__line">Two laps &middot; 45 seconds</span>
-              <span className="howcard__tip"><b>Pro tip:</b> a clear table works best</span>
-            </p>
+            {/* Three columns, not three stacked lines. The same shape the hub's
+                Blinkit Cash / Rewards / Leaderboard strip uses, because it is
+                the same job: three peers you scan rather than a list you read
+                top to bottom. Each one is a picture and four words. */}
+            <div className="howgrid">
+              {HOW_TO.map((h) => (
+                <div key={h.t}>
+                  <img src={h.icon} alt="" />
+                  <b>{h.t}</b>
+                  <span>{h.s}</span>
+                </div>
+              ))}
+            </div>
             {bestScore > 0 && (
               <p className="howcard__best">
                 Your best so far: <b className="t-num">{bestScore.toLocaleString('en-IN')} pts</b>
@@ -84,6 +101,7 @@ export default function Race() {
               className={'carpick__i' + (c.id === car.id ? ' is-on' : '')}
               onClick={() => selectCar(c.id)}
               aria-pressed={c.id === car.id}
+              style={{ '--car': CAR_TRAIT[c.id]?.accent } as CSSProperties}
             >
               <span className="carpick__im">
                 <img src={c.image} alt="" loading="lazy" />
@@ -96,6 +114,7 @@ export default function Race() {
               {/* Name only. You are picking a car to drive, not to buy — a price
                   here turned the starting grid into a second shelf. */}
               <span className="carpick__n">{c.name.replace('Hot Wheels ', '').replace(' Die Cast Car', '')}</span>
+              <span className="carpick__trait">{CAR_TRAIT[c.id]?.trait}</span>
             </button>
           ))}
         </div>
