@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AddControl, ProductCard } from '../design/components/ProductCard';
-import { AddressSheet, PaymentSheet } from '../design/components/CheckoutSheets';
+import { AddressSheet, Mark, PaymentSheet } from '../design/components/CheckoutSheets';
 import { SHOP_CARS, rupees } from '../data/catalog';
 import { ADDRESSES, findMethod } from '../data/addresses';
 import { useCartLines, useStore, useTotals } from '../store/useStore';
 import {
   IconCaretDown,
   IconChevronLeft,
-  IconChevronRight,
   IconClock,
   IconPin,
   IconSearch,
@@ -244,7 +243,10 @@ export default function Cart() {
 
         <div className="ckopay">
           <button type="button" className="ckopay__m" onClick={() => setPayOpen(true)}>
-            <span className="ckopay__k">PAY USING <IconCaretDown size={11} /></span>
+            <span className="ckopay__k">
+              <span className="ckopay__mark"><Mark mark={pay.mark} /></span>
+              PAY USING <IconCaretDown size={11} />
+            </span>
             <span className="ckopay__v">{pay.label}</span>
           </button>
           <button
@@ -264,7 +266,8 @@ export default function Cart() {
               <small>TOTAL</small>
             </span>
             <span className="ckopay__cta">
-              {busy ? 'Placing…' : 'Place Order'} <IconChevronRight size={17} />
+              {busy ? 'Placing…' : 'Place Order'}
+              <i className="ckopay__tri" aria-hidden="true" />
             </span>
           </button>
         </div>

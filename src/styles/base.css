@@ -3942,9 +3942,19 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; gap: 2px;
 }
 .ckopay__k {
-  display: flex; align-items: center; gap: 3px;
+  display: flex; align-items: center; gap: 4px;
   font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.04em; color: var(--mut);
 }
+/* The chosen method's own mark, beside the label. It is the sheet's tile at a
+   third of the size: same drawing, so the foot and the sheet agree about what
+   you picked, and it is what makes this block wide enough that the button
+   beside it stops running the whole width of the phone. */
+.ckopay__mark { display: inline-flex; width: 26px; height: 15px; }
+.ckopay__mark .paymark {
+  width: 100%; height: 100%; border-radius: 3px; min-width: 0;
+}
+.ckopay__mark .paymark svg { width: 11px; height: 11px; }
+.ckopay__mark .paymark--word { font-size: 5px; }
 .ckopay__v { font-size: var(--f-sm); font-weight: 700; color: var(--ink); }
 .ckopay__go {
   flex: 1 1 auto; min-width: 0;
@@ -3955,7 +3965,22 @@ input, select, textarea { font: inherit; color: inherit; }
 .ckopay__amt { display: grid; justify-items: start; line-height: 1.05; }
 .ckopay__amt b { font-size: var(--f-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
 .ckopay__amt small { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.08em; opacity: 0.85; }
-.ckopay__cta { display: flex; align-items: center; gap: 2px; font-size: var(--f-base); font-weight: 800; }
+/* Not bold. The real button sets this at a regular weight and a size close to
+   the amount beside it — at 800 it shouted over the total, which is the number
+   the button actually commits you to. */
+.ckopay__cta {
+  display: flex; align-items: center; gap: 7px;
+  font-size: var(--f-lg); font-weight: 500; letter-spacing: -0.01em;
+}
+/* A solid triangle, not a chevron. Two strokes meeting at a point is a "next"
+   affordance; this is the little filled play mark the real button carries, and
+   drawn in CSS it stays crisp at a size where an icon font would not. */
+.ckopay__tri {
+  width: 0; height: 0; flex: 0 0 auto;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 6px solid currentColor;
+}
 
 /* ================= the two sheets ================= */
 .sheet__panel--tall { max-height: 92vh; height: 92vh; }

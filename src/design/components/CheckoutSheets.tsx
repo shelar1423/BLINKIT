@@ -17,7 +17,7 @@ import { IconChevronDown, IconChevronRight, IconClose, IconHome, IconPin, IconSh
    ============================================================ */
 
 /** The little rounded tile each payment row wears. */
-function Mark({ mark }: { mark: string }) {
+export function Mark({ mark }: { mark: string }) {
   if (mark === 'gpay') {
     return (
       <span className="paymark">
