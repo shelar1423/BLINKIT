@@ -595,6 +595,117 @@ function bedLiveryTexture(): THREE.CanvasTexture {
   return tex;
 }
 
+
+/**
+ * A ring of fire, painted once and animated by turning it.
+ *
+ * The boost gate was a flat orange torus, which at the far end of a straight
+ * is an orange circle and nothing else — and the thing the player is asked to
+ * aim a phone at should look worth aiming at.
+ *
+ * Three passes of tongues rather than one ring of spikes. A single pass at
+ * even spacing and even length is a starburst, which is exactly what the first
+ * attempt produced: the read comes from lengths that vary by a factor of four,
+ * from tips swept sideways so nothing is purely radial, and from layering
+ * short flames over long ones so the base is dense and the tips are sparse.
+ *
+ * Every tip stays inside `TIP_MAX` of the centre. The first version let them
+ * reach 0.64 of the canvas from the middle, against a half-width of 0.5, so
+ * the longest flames were sliced off square by the edge of the bitmap — which
+ * is the other half of why they looked like spokes.
+ *
+ * Two copies counter-rotating is what makes it move. Repainting a canvas this
+ * size every frame, twice a gate, is the kind of thing that quietly costs a
+ * phone its frame rate; turning a static texture costs nothing.
+ */
+function flameRingTexture(seed: number): THREE.CanvasTexture {
+  const S = 512;
+  const c = document.createElement('canvas');
+  c.width = S;
+  c.height = S;
+  const ctx = c.getContext('2d')!;
+  const mid = S / 2;
+  /** The hoop's own radius on this canvas — flames start here. */
+  const R0 = S * 0.25;
+  /** Nothing may be drawn beyond this, or the bitmap crops it flat. */
+  const TIP_MAX = S * 0.465;
+
+  let n = seed * 9301 + 49297;
+  const rnd = () => {
+    n = (n * 9301 + 49297) % 233280;
+    return n / 233280;
+  };
+
+  ctx.clearRect(0, 0, S, S);
+  ctx.globalCompositeOperation = 'lighter';
+
+  /** One lick of flame: wide at the root, swept sideways, pointed at the tip. */
+  const tongue = (a: number, len: number, wide: number, sweep: number, alpha: number) => {
+    const tip = Math.min(TIP_MAX, R0 + len);
+    const ta = a + sweep;
+    const g = ctx.createLinearGradient(
+      mid + Math.cos(a) * R0 * 0.9, mid + Math.sin(a) * R0 * 0.9,
+      mid + Math.cos(ta) * tip, mid + Math.sin(ta) * tip,
+    );
+    g.addColorStop(0, `rgba(255, 242, 198, ${0.9 * alpha})`);
+    g.addColorStop(0.22, `rgba(255, 186, 64, ${0.72 * alpha})`);
+    g.addColorStop(0.55, `rgba(238, 104, 16, ${0.36 * alpha})`);
+    g.addColorStop(0.82, `rgba(186, 44, 4, ${0.12 * alpha})`);
+    g.addColorStop(1, 'rgba(140, 20, 0, 0)');
+    ctx.fillStyle = g;
+
+    const rootIn = R0 * 0.82;
+    const midR = R0 + (tip - R0) * 0.55;
+    ctx.beginPath();
+    ctx.moveTo(mid + Math.cos(a - wide) * rootIn, mid + Math.sin(a - wide) * rootIn);
+    ctx.quadraticCurveTo(
+      mid + Math.cos(a - wide * 0.35 + sweep * 0.4) * midR,
+      mid + Math.sin(a - wide * 0.35 + sweep * 0.4) * midR,
+      mid + Math.cos(ta) * tip, mid + Math.sin(ta) * tip,
+    );
+    ctx.quadraticCurveTo(
+      mid + Math.cos(a + wide * 0.35 + sweep * 0.4) * midR,
+      mid + Math.sin(a + wide * 0.35 + sweep * 0.4) * midR,
+      mid + Math.cos(a + wide) * rootIn, mid + Math.sin(a + wide) * rootIn,
+    );
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  /* Long and sparse, then medium, then a dense skirt of short ones. Fire is
+     mostly base with a few licks reaching; the reverse looks like a sun. */
+  const passes = [
+    { count: 15, lo: 0.55, hi: 0.95, wide: 0.075, sweep: 0.30, alpha: 0.85 },
+    { count: 26, lo: 0.28, hi: 0.58, wide: 0.090, sweep: 0.22, alpha: 0.70 },
+    { count: 46, lo: 0.10, hi: 0.26, wide: 0.115, sweep: 0.14, alpha: 0.60 },
+  ];
+  for (const pass of passes) {
+    for (let i = 0; i < pass.count; i++) {
+      const a = (i / pass.count) * Math.PI * 2 + rnd() * 0.5;
+      const len = R0 * (pass.lo + rnd() * (pass.hi - pass.lo));
+      // sweep the same way around the ring, so the fire reads as turning
+      const sweep = pass.sweep * (0.35 + rnd() * 0.65);
+      tongue(a, len, pass.wide * (0.7 + rnd() * 0.6), sweep, pass.alpha);
+    }
+  }
+
+  /* The hot band the tongues come off. Kept low — it sits under two additive
+     layers, and at full strength the pair went solid yellow the moment the
+     player aimed at it. The middle stays open so the track shows through. */
+  const core = ctx.createRadialGradient(mid, mid, R0 * 0.74, mid, mid, R0 * 1.3);
+  core.addColorStop(0, 'rgba(255, 196, 80, 0)');
+  core.addColorStop(0.4, 'rgba(255, 206, 110, 0.20)');
+  core.addColorStop(0.72, 'rgba(255, 132, 22, 0.12)');
+  core.addColorStop(1, 'rgba(255, 80, 0, 0)');
+  ctx.fillStyle = core;
+  ctx.fillRect(0, 0, S, S);
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 /**
  * The raised orange side rails. Built as two vertical ribbons along the road
  * edges — the single detail that makes the circuit read as Hot Wheels track
@@ -741,7 +852,17 @@ export class RaceEngine {
   /** The three lamps on the start gantry, in order: red, amber, green. */
   private startLamps: THREE.MeshBasicMaterial[] = [];
   /** The two gates, in lap order, with the flame each one is aimed at. */
-  private boostGates: { t: number; target: THREE.Object3D; flame: THREE.MeshBasicMaterial; armed: boolean }[] = [];
+  private boostGates: {
+    t: number;
+    target: THREE.Object3D;
+    flame: THREE.MeshBasicMaterial;
+    /** The two counter-rotating fire sheets, and the hoop they surround. */
+    fire: THREE.Mesh[];
+    fireMats: THREE.MeshBasicMaterial[];
+    /** 0..1, how hard the player is aiming at this one. Drives how it burns. */
+    stoke: number;
+    armed: boolean;
+  }[] = [];
   /** Airborne state. `airT` counts 0..1 across the arc; -1 means on the road. */
   private airT = -1;
   private jumpArmed = false;
@@ -758,6 +879,8 @@ export class RaceEngine {
   private launchPull = 0;
   /** Nose angle, radians. Positive is nose up. */
   private jumpPitch = 0;
+  /** Seconds of fire, for the boost gates. Never reset — it only ever turns. */
+  private fireT = 0;
 
   constructor(opts: EngineOpts = {}) {
     this.opts = opts;
@@ -1053,13 +1176,44 @@ export class RaceEngine {
       beam.position.y = 11.6;
       g.add(beam);
 
-      /* The flame: a ring, lit rather than shaded, so it reads at the far end
-         of a straight where a shaded material would just be dark orange. */
+      /* The hoop: lit rather than shaded, so it reads at the far end of a
+         straight where a shaded material would just be dark orange. */
       const flameMat = new THREE.MeshBasicMaterial({ color: 0xFF6A00, transparent: true, opacity: 0.92 });
       this.disposables.push(flameMat);
       const ring = new THREE.Mesh(ringGeo, flameMat);
       ring.position.y = 5.4;
       g.add(ring);
+
+      /* And the fire around it. Two sheets of the same painting, counter-
+         rotating at different rates, which is enough to stop the eye finding
+         the loop. Additive, because fire adds light to what is behind it
+         rather than hiding it; depthWrite off so the two sheets and the hoop
+         do not punch holes in one another. DoubleSide, because a gate is
+         approached from one end of a straight and seen again from the other. */
+      const fire: THREE.Mesh[] = [];
+      const fireMats: THREE.MeshBasicMaterial[] = [];
+      const fireGeo = new THREE.PlaneGeometry(11.6, 11.6);
+      this.disposables.push(fireGeo);
+      for (const layer of [0, 1]) {
+        const ftex = flameRingTexture(i * 2 + layer + 1);
+        const fmat = new THREE.MeshBasicMaterial({
+          map: ftex,
+          transparent: true,
+          opacity: layer ? 0.34 : 0.5,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+          toneMapped: false,
+        });
+        this.disposables.push(ftex, fmat);
+        const sheet = new THREE.Mesh(fireGeo, fmat);
+        sheet.position.y = 5.4;
+        sheet.position.z = layer ? 0.06 : -0.06;
+        sheet.renderOrder = 3;
+        g.add(sheet);
+        fire.push(sheet);
+        fireMats.push(fmat);
+      }
 
       /* An empty at the ring's centre is what the aim is measured against —
          the ring itself is a torus, so its own origin is a hole. */
@@ -1068,7 +1222,7 @@ export class RaceEngine {
       g.add(target);
 
       this.root.add(g);
-      this.boostGates.push({ t, target, flame: flameMat, armed: false });
+      this.boostGates.push({ t, target, flame: flameMat, fire, fireMats, stoke: 0, armed: false });
       void i;
       void right;
     }
@@ -1078,8 +1232,24 @@ export class RaceEngine {
   setBoostGlow(index: number, k: number) {
     const gate = this.boostGates[index];
     if (!gate) return;
-    gate.flame.opacity = 0.55 + Math.max(0, Math.min(1, k)) * 0.45;
-    gate.flame.color.setHex(k > 0.99 ? 0xFFD400 : 0xFF6A00);
+    const v = Math.max(0, Math.min(1, k));
+    /* The hoop warms; it does not become a light. Driven to full yellow at
+       full opacity it swallowed the fire around it and the gate read as a
+       plain yellow doughnut again — brighter, and back where this started.
+       Intensity belongs to the flames; the hoop only says which gate. */
+    gate.flame.opacity = 0.55 + v * 0.3;
+    gate.flame.color.setHex(k > 0.99 ? 0xFFAE2A : 0xFF6A00);
+    /* Aiming at a gate stokes it: the fire brightens and stands further out,
+       so a locked gate looks like it is roaring rather than merely turning a
+       different colour. */
+    gate.fireMats.forEach((m, j) => {
+      /* Two additive layers over a core gradient reach white fast. The aimed
+         state adds a third of its own brightness, not half again, and the
+         locked tint is a warm cream rather than a step toward white. */
+      m.opacity = (j ? 0.34 : 0.5) + v * 0.22;
+      m.color.setHex(k > 0.99 ? 0xFFE9B8 : 0xFFFFFF);
+    });
+    gate.stoke = v;
   }
 
   /** True while the wheels are off the road. */
@@ -1899,8 +2069,22 @@ export class RaceEngine {
        warning of a slow one, and the warning is the thing being scored. */
     if (this.interactions && raceInteraction.boostEnabled && goingForward) {
       const lead = (this.speed * raceInteraction.boostWarnLead) / this.curveLen;
+      this.fireT += dt;
       for (let i = 0; i < this.boostGates.length; i++) {
         const g = this.boostGates[i];
+
+        /* Turn the two sheets against each other and breathe the whole thing.
+           Two incommensurable rates rather than one, so the eye never catches
+           the texture repeating — one painting, turned, is what sells this as
+           fire rather than as a picture of fire. */
+        g.fire[0].rotation.z = this.fireT * 0.85 + i;
+        g.fire[1].rotation.z = -this.fireT * 0.52 - i;
+        const flick =
+          1 + Math.sin(this.fireT * 12.3 + i * 2.1) * 0.035 + Math.sin(this.fireT * 6.7 + i) * 0.028;
+        const sc = (1 + g.stoke * 0.12) * flick;
+        g.fire[0].scale.setScalar(sc);
+        g.fire[1].scale.setScalar(sc * 0.92);
+
         // forward distance to the gate, wrapped
         const ahead = (g.t - this.t + 1) % 1;
         if (!g.armed && ahead < lead) {
