@@ -35,7 +35,7 @@ import {
   stopRaceAudio,
 } from '../lib/raceAudio';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
-import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
+import { AR_LOADER_LINES, DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 /** Coverage at which the surface is considered read well enough to brief on. */
@@ -47,7 +47,6 @@ export default function ARView() {
   const selectedCarId = useStore((s) => s.selectedCarId);
   const selectCar = useStore((s) => s.selectCar);
   const finishRace = useStore((s) => s.finishRace);
-  const claimReward = useStore((s) => s.claimReward);
   const racesLeft = useStore((s) => s.racesLeft);
 
   const car = HERO_CARS.find((c) => c.id === (id ?? selectedCarId)) ?? HERO_CARS[0];
@@ -467,7 +466,7 @@ export default function ARView() {
     <>
       {/* The wait, with something in it. Sits above everything, including the
           AR overlay, because it is covering the moment that overlay appears. */}
-      {busy && <DriftLoader glbUrl={car.glb} label={inspect ? 'Getting your car ready' : 'Building your track'} />}
+      {busy && <DriftLoader lines={inspect ? ['Getting your car ready', 'Opening your camera'] : AR_LOADER_LINES} />}
 
       {/* the DOM overlay lives outside the page so WebXR & Camera mode can adopt it */}
       {/* `outcome` forces idle as well as `phase`. Relying on phase alone left
@@ -861,15 +860,12 @@ export default function ARView() {
           inviteUrl={`${window.location.origin}/?ref=${useStore.getState().referralCode}`}
           racesLeft={racesLeft}
           toast={toast}
-          onClaim={(t) => {
-            claimReward(t.id);
-            toast(`${t.label} applied to your cart`);
-            nav('/cart');
-          }}
           onRaceAgain={() => {
             setOutcome(null);
             void launch();
           }}
+          onRewards={() => nav('/rewards')}
+          onViewCar={() => nav(`/hot-wheels/${car.id}`)}
           onLeaderboard={() => nav('/leaderboard')}
           onExit={() => nav('/hot-wheels')}
           exitLabel="Shop cars"

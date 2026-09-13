@@ -87,7 +87,7 @@ export default function Home() {
 
   return (
     <>
-      {launching && <DriftLoader glbUrl={HERO_CARS[0]?.glb} label="Starting Race It Home" />}
+      {launching && <DriftLoader />}
 
       <AppHeader onSearch={() => nav('/hot-wheels')} />
       <main className="page">

@@ -63,7 +63,7 @@ export const raceInteraction = {
    * Seconds of warning before the IDEAL lift, not before the gate.
    *
    * This is the run-up the gauge fills across. It is NOT the window bullet
-   * time is held open for, which is the last 45% of it — the two were the same
+   * time is held open for, which is the last 70% of it — the two were the same
    * number once, and the only way to give the player more warning was to give
    * them more slow motion. The gauge now appears at full speed and the clock
    * dips later.

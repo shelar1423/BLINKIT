@@ -1,51 +1,59 @@
-/* The drift loader: a full-bleed hold over whatever launched it. */
+/* The race loader: a full-bleed hold over whatever launched it. */
 .driftload {
   position: fixed; inset: 0; z-index: 400;
-  display: grid; align-content: center; justify-items: center; gap: 14px;
+  display: grid; align-content: center; justify-items: center; gap: 18px;
   background: radial-gradient(120% 80% at 50% 40%, #16305E 0%, #0B1836 60%, #070E1E 100%);
   padding: 0 var(--gut);
 }
-/* The co-brand, sized so it leads without competing with the car below it. */
+/* The co-brand, up in the top of the screen rather than stacked on the ring.
+   On a white pill so both marks can wear their own colours: Hot Wheels red,
+   blink in black, it in Blinkit green. */
 .driftload__mast {
+  position: absolute; left: 50%; top: calc(var(--safe-t) + 12vh);
+  transform: translateX(-50%);
   display: flex; align-items: center; gap: 10px;
-  margin-bottom: 4px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
-.driftload__mast img { height: 26px; width: auto; filter: brightness(0) invert(1); }
-.driftload__mast i { font-style: normal; font-size: 13px; color: rgba(255,255,255,0.5); font-weight: 600; }
+.driftload__mast img { height: 22px; width: auto; }
+.driftload__mast i { font-style: normal; font-size: 13px; color: var(--mut); font-weight: 600; }
 .driftload__mast b {
-  font-size: 22px; font-weight: 800; letter-spacing: -0.8px; color: #fff;
+  font-size: 20px; font-weight: 800; letter-spacing: -0.8px; color: var(--ink);
 }
-.driftload__mast b em { font-style: normal; color: var(--yellow); }
+.driftload__mast b em { font-style: normal; color: var(--green); }
 
-/* Wider than tall, because the subject is. The burnout is a circle seen from
-   27° above, so it projects as an ellipse about two-fifths as tall as it is
-   wide; in a square stage the top and bottom thirds were empty and pushed the
-   lockup and the label far apart. The camera fits itself to whatever box it is
-   given, so shaping the box to the ellipse both closes those gaps and lets the
-   car come up larger. */
-.driftload__stage {
-  width: min(92vw, 380px); aspect-ratio: 1.55;
+.trackload {
+  width: min(34vw, 128px); height: auto; display: block;
+  overflow: visible;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
 }
-.driftload__stage canvas { width: 100%; height: 100%; display: block; }
+/* Lays the track from the start line all the way round, then picks it up
+   from the start line behind itself, and goes again. */
+.trackload__draw {
+  stroke-dasharray: 100 100;
+  animation: trackload-lay 2.2s cubic-bezier(0.55, 0.1, 0.45, 0.9) infinite;
+}
+@keyframes trackload-lay {
+  0%   { stroke-dashoffset: 100; }
+  50%  { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100; }
+}
+
 .driftload__t {
   font-size: var(--f-lg); font-weight: 800; color: #fff;
   letter-spacing: -0.2px; text-align: center;
+  animation: driftload-line 1100ms ease both;
 }
-/* An indeterminate sweep, not a percentage — we do not know how long a camera
-   takes to open, and inventing a number would be worse than not showing one. */
-.driftload__bar {
-  width: 132px; height: 4px; border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16); overflow: hidden;
-}
-.driftload__bar i {
-  display: block; width: 42%; height: 100%; border-radius: 999px;
-  background: var(--hw-o);
-  animation: driftsweep 1.15s ease-in-out infinite;
-}
-@keyframes driftsweep {
-  0% { transform: translateX(-110%); }
-  100% { transform: translateX(345%); }
+/* each line rises in, holds, and fades as the next arrives */
+@keyframes driftload-line {
+  0%   { opacity: 0; transform: translateY(6px); }
+  18%  { opacity: 1; transform: none; }
+  82%  { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-4px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .driftload__bar i { animation: none; width: 100%; }
+  .trackload__draw { animation: none; stroke-dashoffset: 0; }
+  .driftload__t { animation: none; }
 }

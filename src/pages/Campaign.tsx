@@ -1,14 +1,16 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Sheet } from '../design/components/Sheet';
+import { HowToPlay } from '../design/components/HowToPlay';
 import { PageHeader } from '../design/components/Chrome';
 import { LEADERBOARD, rupees } from '../data/catalog';
 import { hasReached, MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
 import { IconChevronRight, IconFlag, IconInfo } from '../design/elements/Icons';
-import { useToast } from '../App';
 
 export default function Campaign() {
   const nav = useNavigate();
-  const { toast } = useToast();
-  const { racesLeft, totalPoints, unlockedRewards } = useStore();
+  const [howOpen, setHowOpen] = useState(false);
+  const { racesLeft, totalPoints, unlockedRewards, bestScore } = useStore();
 
   const next = REWARD_TIERS.find((t) => totalPoints < t.min);
   const cashEarned = REWARD_TIERS.filter((t) => unlockedRewards.includes(t.id)).reduce((a, t) => a + t.value, 0);
@@ -27,11 +29,8 @@ export default function Campaign() {
       <PageHeader
         title="Race It Home"
         onBack={() => nav('/')}
-        /* Annotated on the target but with nowhere to go yet: the step
-           illustrations for the explainer are still to come, so the pill is
-           built and says so rather than opening an empty sheet. */
         right={
-          <button className="hdrpill" type="button" onClick={() => toast('The how-it-works walkthrough is coming')}>
+          <button className="hdrpill" type="button" onClick={() => setHowOpen(true)}>
             <IconInfo size={14} />
             <span>How it works</span>
           </button>
@@ -153,11 +152,7 @@ export default function Campaign() {
               {/* Every tier carries free delivery, so that is what the truck
                   is standing for once they are all cleared. */}
               <p className="nrw__t">{next ? next.label : 'Free Delivery'}</p>
-              <p className="nrw__s">
-                {next
-                  ? `Collect ${next.min.toLocaleString('en-IN')} points`
-                  : 'On every Blinkit order this drop'}
-              </p>
+              {next && <p className="nrw__s">Collect {next.min.toLocaleString('en-IN')} points</p>}
               <div className="nrw__row">
                 <div className="bar">
                   <i style={{ width: next ? `${Math.min(100, (totalPoints / next.min) * 100)}%` : '100%' }} />
@@ -172,6 +167,9 @@ export default function Campaign() {
           </div>
         </div>
       </main>
+      <Sheet open={howOpen} onClose={() => setHowOpen(false)}>
+        <HowToPlay bestScore={bestScore} />
+      </Sheet>
     </>
   );
 }

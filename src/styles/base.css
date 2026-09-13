@@ -147,6 +147,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn--hwTrack:not(:disabled):active { background: #E35D00; }
 .btn--hwBlue:not(:disabled):active { background: #094FAD; }
 .btn--hwBlue:disabled { background: #A7BEDC; }
+.btn--yellow { background: var(--rwd-code); color: var(--ink); font-weight: 800; }
+.btn--yellow:not(:disabled):active { background: #F2D200; }
 .btn--outline { border: 1px solid var(--line); background: #fff; color: var(--ink); font-weight: 600; }
 .btn--outline:not(:disabled):active { background: var(--surface-2); }
 .btn--ghostDark { border: 1px solid var(--tk-line); background: rgba(255,255,255,0.08); color: #fff; font-weight: 600; }
@@ -2201,21 +2203,15 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd {
   /* above .arov (200): the AR overlay must never stack over the result */
   position: fixed; inset: 0; z-index: 260;
-  overflow-y: auto; overscroll-behavior: contain;
+  /* x hidden: nothing here should ever make the screen draggable sideways. */
+  overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
   display: flex; flex-direction: column; align-items: center;
-  padding: calc(var(--safe-t) + 10px) var(--gut) calc(18px + var(--safe-b));
+  padding: calc(var(--safe-t) + 10px) var(--gut) calc(14px + var(--safe-b));
   text-align: center;
-  /* Blinkit's own reward ground: warm yellow with the rays thrown from behind
-     the number. The campaign's blue belongs to the race; the prize belongs to
-     Blinkit, and this is the screen where you are being paid. */
-  background:
-    repeating-conic-gradient(from 0deg at 50% 26%,
-      rgba(255, 255, 255, 0.30) 0deg 5deg, rgba(255, 255, 255, 0) 5deg 11deg),
-    radial-gradient(115% 75% at 50% 26%, #FFD95A 0%, #F9C63E 52%, #EFB12A 100%);
-  color: var(--rwd-ink);
+  background: linear-gradient(180deg, var(--rwd-bg-top) 0%, #0062B8 45%, var(--rwd-bg-bot) 100%);
+  color: #fff;
   /* It arrives under the last of the confetti rather than cutting in over the
-     race. The race itself is still running behind this for the length of the
-     engine's outro, so anything but an opaque, moving entrance shows it. */
+     race, which is still running behind this for the engine's outro. */
   animation: rwd-in 420ms cubic-bezier(0.16, 0.84, 0.36, 1) both;
 }
 @keyframes rwd-in {
@@ -2229,137 +2225,180 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__ic {
   width: 40px; height: 40px; flex: 0 0 40px;
   border-radius: 50%; border: 0;
-  background: #fff; color: var(--rwd-ink);
+  background: rgba(255, 255, 255, 0.16); color: #fff;
   display: grid; place-items: center;
-  box-shadow: 0 2px 8px rgba(93, 43, 10, 0.16);
 }
 .rwd__ic:disabled { opacity: 0.5; }
 
-.rwd__kick {
-  margin-top: 18px;
-  font-size: var(--f-md); font-weight: 800;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--rwd-ink-2);
+/* ---- share hint: a speech bubble hanging off the share button ---- */
+.rwd__sharewrap { position: relative; display: inline-flex; }
+.rwd__tip {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 2;
+  white-space: nowrap;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #fff; color: var(--ink);
+  font-size: var(--f-sm); font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0, 20, 60, 0.3);
+  transform-origin: calc(100% - 20px) -8px;
+  animation: rwd-tip 4s ease both;
 }
-/* The one thing on the screen allowed to be loud. Clamped rather than fixed so
-   a five-figure score still fits the frame it is set in. */
+.rwd__tip b { font-weight: 800; color: var(--green); }
+/* the tail, pointing up at the button's centre */
+.rwd__tip::before {
+  content: ''; position: absolute; top: -5px; right: 15px;
+  width: 10px; height: 10px; background: #fff;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+@keyframes rwd-tip {
+  0%   { opacity: 0; transform: scale(0.6); }
+  8%   { opacity: 1; transform: scale(1.04); }
+  12%  { transform: scale(1); }
+  88%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.9); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rwd__tip { animation: none; }
+}
+
+.rwd__kick {
+  margin-top: 4px;
+  font-size: var(--f-2xl); font-weight: 700;
+}
+/* The one thing on the screen allowed to be loud. Clamped so a five-figure
+   score still fits. */
 .rwd__score {
-  font-size: clamp(76px, 27vw, 128px);
-  font-weight: 900; line-height: 0.92; letter-spacing: -0.04em;
-  color: var(--rwd-ink);
+  font-size: clamp(64px, min(22vw, 11vh), 112px);
+  font-weight: 900; line-height: 0.95; letter-spacing: -0.04em;
   margin-top: 2px;
 }
-.rwd__stats {
-  display: flex; align-items: center; justify-content: center; gap: 9px;
-  margin-top: 10px;
-  font-size: var(--f-sm); font-weight: 700; color: var(--rwd-ink-2);
-}
-.rwd__stats span { display: inline-flex; align-items: center; gap: 5px; }
-.rwd__stats > i { width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.45; }
 .rwd__pb {
-  margin-top: 7px;
-  font-size: var(--f-xs); font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
-  color: #fff; background: var(--rwd-ink);
+  margin-top: 8px;
+  font-size: var(--f-xs); font-weight: 800;
+  color: var(--rwd-code-ink); background: var(--rwd-code);
   border-radius: 999px; padding: 4px 11px;
 }
 
-/* ---- the prize, as a ticket ----
-   The scallops are painted ON the ticket's own edges in the ground's colour,
-   rather than masked out of it. A mask would be truer over a gradient, but it
-   is one unsupported property away from hiding the whole coupon; this cannot
-   fail worse than a slightly flat notch. */
+/* ---- the prize, as a Hot Wheels ticket ----
+   The notches are cut out with a mask, so the blue ground shows through them
+   whatever the gradient is doing at that height. The mask sits on the card
+   and not on the wrapper, because the flame logo breaks out of the card's top
+   edge and a mask on the wrapper would clip it. */
 .rwd__ticket {
+  --stub: 76px;       /* height of the stats stub */
+  --notch: 10px;
   position: relative;
-  width: 100%; max-width: 340px;
-  margin-top: 20px;
-  padding: 20px 26px 18px;
+  width: 100%; max-width: 290px;
+  margin-top: 30px;
+  filter: drop-shadow(0 10px 18px rgba(0, 30, 80, 0.35));
+}
+.rwd__card {
+  display: flex; flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
   background: var(--rwd-card);
-  border-radius: 14px;
-  /* a solid offset shadow, the way a printed voucher is drawn */
-  box-shadow: -6px 9px 0 var(--rwd-ink);
+  border: 3px solid #1766D6;
+  --n1: calc(100% - var(--stub) - 56px);
+  /* four notches: one mid-ticket and one on the perforation, each side */
+  -webkit-mask:
+    radial-gradient(circle at 0 var(--n1), transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 0 / 51% calc(var(--n1) + 33px) no-repeat,
+    radial-gradient(circle at 100% var(--n1), transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 0 / 51% calc(var(--n1) + 33px) no-repeat,
+    radial-gradient(circle at 0 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 100% / 51% calc(var(--stub) + 33px) no-repeat,
+    radial-gradient(circle at 100% 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 100% / 51% calc(var(--stub) + 33px) no-repeat;
+  mask:
+    radial-gradient(circle at 0 var(--n1), transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 0 / 51% calc(var(--n1) + 33px) no-repeat,
+    radial-gradient(circle at 100% var(--n1), transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 0 / 51% calc(var(--n1) + 33px) no-repeat,
+    radial-gradient(circle at 0 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 100% / 51% calc(var(--stub) + 33px) no-repeat,
+    radial-gradient(circle at 100% 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 100% / 51% calc(var(--stub) + 33px) no-repeat;
 }
-.rwd__ticket::before, .rwd__ticket::after {
-  content: ''; position: absolute; top: 6px; bottom: 6px; width: 15px;
-  background-size: 15px 21px; background-repeat: repeat-y;
-}
-.rwd__ticket::before {
-  left: 0;
-  background-image: radial-gradient(circle at 0 50%, var(--rwd-notch) 0 6.5px, transparent 7px);
-}
-.rwd__ticket::after {
-  right: 0;
-  background-image: radial-gradient(circle at 100% 50%, var(--rwd-notch) 0 6.5px, transparent 7px);
-}
+.rwd__body { padding: 18px 20px 14px; color: var(--rwd-ink); }
 .rwd__won {
   font-size: var(--f-md); font-weight: 800;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--rwd-ink-2);
 }
 .rwd__amt {
-  font-size: clamp(40px, 13vw, 56px); font-weight: 900;
-  letter-spacing: -0.03em; line-height: 1.02;
-  color: var(--rwd-ink); margin-top: 4px;
+  font-size: clamp(38px, 12vw, 48px); font-weight: 900;
+  letter-spacing: -0.03em; line-height: 1;
+  color: var(--rwd-red); margin-top: 4px;
 }
 /* A tier name is words, not a figure — it cannot take the figure's size. */
-.rwd__amt--sm { font-size: clamp(24px, 8vw, 34px); letter-spacing: -0.02em; }
+.rwd__amt--sm { font-size: clamp(24px, 7.5vw, 30px); }
 .rwd__upto {
   font-size: var(--f-lg); font-weight: 800;
-  letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--rwd-ink); margin-top: 2px;
+  margin-top: 4px;
 }
-.rwd__perf {
-  display: block; height: 1px; margin: 14px 0 12px;
-  background-image: linear-gradient(90deg, var(--rwd-ink-2) 0 6px, transparent 6px 12px);
-  background-size: 12px 1px;
-  opacity: 0.5;
-}
+/* "Blinkit" as the wordmark sets it: blink in ink, it in the action green */
+.rwd__brand { color: var(--ink); }
+.rwd__brand em { font-style: normal; color: var(--green); }
 .rwd__fine {
-  font-size: var(--f-sm); font-weight: 600; line-height: 1.38;
-  color: var(--rwd-ink-2);
+  margin-top: 8px;
+  font-size: var(--f-xs); font-weight: 500; line-height: 1.4;
+  color: var(--mut);
   text-wrap: balance;
 }
-
-/* ---- the goods the prize is good on ----
-   Tilted and overlapping, running past both edges: the reference lets them
-   break the frame, which is what stops the lower half reading as empty. */
-.rwd__goods {
-  display: flex; align-items: flex-end; justify-content: center;
-  /* Wider than the screen on purpose: the outer two are meant to run off the
-     edges. `auto` above pushes this and the button down together, so the slack
-     on a tall phone falls between the ticket and the goods — which is where
-     the reference puts it too. */
-  width: calc(100% + var(--gut) * 2 + 36px);
-  margin: auto calc(var(--gut) * -1 - 18px) 0;
-  pointer-events: none;
+.rwd__stub {
+  position: relative;
+  height: var(--stub);
+  display: grid; grid-template-columns: repeat(3, 1fr); align-items: center;
+  color: #fff;
+  background:
+    /* Two wave bands, each drawn to start and end at the same height and slope
+       so the 160px tile repeats as one continuous flow. */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='76' viewBox='0 0 160 76'%3E%3Cpath d='M0 20 C40 12 40 12 80 20 S120 28 160 20 L160 30 C120 38 120 38 80 30 S40 22 0 30 Z' fill='%23ffffff' fill-opacity='0.09'/%3E%3Cpath d='M0 54 C40 62 40 62 80 54 S120 46 160 54 L160 63 C120 55 120 55 80 63 S40 71 0 63 Z' fill='%23ffffff' fill-opacity='0.07'/%3E%3C/svg%3E") 0 0 / 160px 100% repeat-x,
+    linear-gradient(180deg, var(--rwd-stub), var(--rwd-stub-dk));
 }
-.rwd__goods img {
-  width: 40%; max-width: 172px; height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 12px 16px rgba(93, 43, 10, 0.28));
+/* the perforation */
+.rwd__stub::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background-image: linear-gradient(90deg, var(--rwd-card) 0 5px, transparent 5px 9px);
+  background-size: 9px 3px;
 }
-.rwd__goods img:nth-child(1) { transform: rotate(-12deg) translateY(10px); margin-right: -7%; }
-.rwd__goods img:nth-child(2) { transform: scale(1.1); position: relative; z-index: 1; }
-.rwd__goods img:nth-child(3) { transform: rotate(11deg) translateY(10px); margin-left: -7%; }
+.rwd__stat {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  line-height: 1.15;
+}
+.rwd__stat + .rwd__stat { border-left: 1px solid rgba(255, 255, 255, 0.22); }
+.rwd__stat svg { margin-bottom: 3px; opacity: 0.9; }
+.rwd__stat b { font-size: var(--f-lg); font-weight: 800; }
+.rwd__stat span { font-size: var(--f-2xs); font-weight: 600; opacity: 0.8; }
 
 /* ---- one loud action ---- */
-.rwd__foot { width: 100%; max-width: 340px; padding-top: 16px; }
-.rwd__cta {
-  width: 100%; height: 56px; border: 0;
-  border-radius: 999px;
-  background: var(--rwd-ink); color: #fff;
-  font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.1px;
-  box-shadow: 0 8px 20px rgba(93, 43, 10, 0.3);
-}
-.rwd__cta:disabled { opacity: 0.5; box-shadow: none; }
-.rwd__cta:not(:disabled):active { transform: scale(0.985); }
-.rwd__minor {
-  display: flex; justify-content: center; gap: 18px;
+/* ---- the car you raced, on the shelf ----
+   One quiet row under the ticket. The cash has just landed in the wallet, and
+   the car you spent the race in is the obvious thing to spend it on, so the
+   row does the sum rather than the selling. */
+.rwd__own {
+  width: 100%; max-width: 290px;
   margin-top: 14px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px 6px 6px;
+  border: 0; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff; text-align: left;
+}
+.rwd__own:active { background: rgba(255, 255, 255, 0.2); }
+.rwd__ownim {
+  flex: 0 0 52px; width: 52px; height: 52px;
+  border-radius: 10px;
+  background: #fff url('/campaign/car-bg.webp') center / cover no-repeat;
+  object-fit: contain; padding: 3px;
+}
+.rwd__ownt { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.rwd__ownt b { font-size: var(--f-md); font-weight: 700; }
+.rwd__ownt span { font-size: var(--f-xs); font-weight: 500; color: rgba(255, 255, 255, 0.8); }
+.rwd__ownt em { font-style: normal; font-weight: 700; color: var(--rwd-code); }
+.rwd__own > svg { flex: 0 0 auto; opacity: 0.8; }
+
+/* the ticket's width, and lifted 24px off the bottom */
+.rwd__foot { width: 100%; max-width: 290px; margin-top: auto; padding-top: 12px; margin-bottom: 24px; }
+.rwd__minor {
+  display: flex; justify-content: center; gap: 28px;
+  margin-top: 30px;
 }
 .rwd__minor button {
   background: none; border: 0;
-  font-size: var(--f-base); font-weight: 700;
-  color: var(--rwd-ink-2);
+  font-size: var(--f-lg); font-weight: 700;
+  color: #fff;
   text-decoration: underline; text-underline-offset: 3px;
 }
 
@@ -2652,26 +2691,19 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ---------- car picker ---------- */
-/* Five cars in a scrolling row rather than a 3x2 grid. The grid cost two full
-   rows plus an empty sixth cell and pushed both CTAs off the fold — on a
-   screen whose whole job is "read this, pick one, start", the start button has
-   to be reachable without scrolling past the picker. */
+/* Four cars, two by two. With the how-to card gone from this screen the grid
+   fits above both CTAs. */
 .carpick {
-  display: grid; grid-auto-flow: column; grid-auto-columns: 29%;
-  gap: 10px; padding: 12px var(--gut) 6px;
-  overflow-x: auto; scrollbar-width: none;
-  scroll-snap-type: x proximity; scroll-padding-inline: var(--gut);
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; padding: 12px var(--gut) 6px;
 }
-.carpick::-webkit-scrollbar { display: none; }
-.carpick > * { scroll-snap-align: start; }
 .carpick__i { display: grid; gap: 5px; text-align: left; }
-.carpick__im { position: relative; border: 1px solid var(--line); border-radius: var(--r-md); background: #fff; aspect-ratio: 1; overflow: hidden; }
+.carpick__im { position: relative; border: 1px solid var(--line); border-radius: var(--r-md); background: #fff url('/campaign/car-bg.webp') center / cover no-repeat; aspect-ratio: 1; overflow: hidden; }
 .carpick__im img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
 .carpick__i.is-on .carpick__im { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
 .carpick__tick { position: absolute; top: 5px; right: 5px; width: 20px; height: 20px; border-radius: 50%;
   background: var(--green); color: #fff; display: grid; place-items: center; }
-.carpick__n { font-size: var(--f-xs); font-weight: 700; line-height: 1.25; }
-.carpick__p { font-size: var(--f-2xs); color: var(--mut); font-variant-numeric: tabular-nums; }
+.carpick__n { font-size: 12px; font-weight: 600; line-height: 1.25; }
 
 /* ---------- how-to list ---------- */
 .howto { margin: 8px 0 0; padding-left: 16px; display: grid; gap: 5px; }
@@ -3745,8 +3777,8 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .coach__dim {
   position: absolute; inset: 0;
-  background: rgba(4, 7, 16, 0.78);
-  backdrop-filter: blur(3px);
+  /* Light enough that the car and the launcher stay visible behind. */
+  background: rgba(4, 7, 16, 0.35);
 }
 .coach__panel {
   position: relative;
@@ -3759,16 +3791,17 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; gap: 14px;
   padding: 18px 16px 16px;
   border-radius: var(--r-lg);
-  background: linear-gradient(180deg, #141A28, #0C1120);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  background: rgba(12, 17, 32, 0.55);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  backdrop-filter: blur(14px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   color: #fff;
 }
 .coach__kick {
-  margin: 0; text-align: center;
-  font-size: var(--f-xs); font-weight: 800;
-  letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--hw-o);
+  margin: 0;
+  font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.01em;
+  color: #fff;
 }
 
 .coach__steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
@@ -3777,19 +3810,18 @@ input, select, textarea { font: inherit; color: inherit; }
   align-items: center;
 }
 .coach__glyph {
-  width: 56px; height: 56px; border-radius: 14px;
+  width: 56px; height: 56px; border-radius: var(--r-md);
   display: grid; place-items: center;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
 }
-.coach__txt { display: grid; gap: 3px; min-width: 0; }
+.coach__txt { display: grid; gap: 2px; min-width: 0; }
 .coach__txt b {
   display: flex; align-items: center; gap: 7px;
-  font-size: var(--f-base); font-weight: 800; letter-spacing: -0.01em;
+  font-size: var(--f-lg); font-weight: 700;
 }
 .coach__txt small {
-  font-size: var(--f-xs); font-weight: 600; line-height: 1.45;
-  color: rgba(255, 255, 255, 0.72);
+  font-size: var(--f-md); font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
 }
 /* Numbered, and here the numbers are honest: this IS the order you do them
    in, and the rows run down the panel in that order. The annotated version
@@ -3798,15 +3830,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .coach__n {
   flex: 0 0 auto;
   width: 19px; height: 19px; border-radius: 50%;
-  background: var(--hw-o); color: #fff;
+  background: rgba(255, 255, 255, 0.2); color: #fff;
   font-style: normal; font-size: var(--f-2xs); font-weight: 800;
   display: grid; place-items: center;
-}
-.coach__note {
-  margin: 0; padding-top: 2px;
-  text-align: center;
-  font-size: var(--f-xs); font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
 }
 .coach__alt {
   justify-self: center;
@@ -4308,8 +4334,3 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: inset 0 0 0 1px var(--car, var(--green));
 }
 .carpick__i.is-on .carpick__tick { background: var(--car, var(--green)); }
-.carpick__trait {
-  font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--mut);
-}
-.carpick__i.is-on .carpick__trait { color: var(--car, var(--green)); }

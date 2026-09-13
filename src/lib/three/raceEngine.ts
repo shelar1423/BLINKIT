@@ -122,7 +122,7 @@ const SLOW_BOOST = 0.5;
  * clock only dips for the last part, which is the part where the timing
  * actually has to be judged.
  */
-const GATE_SLOW_FROM = 0.55;
+const GATE_SLOW_FROM = 0.3;
 /** The lap is done. Slower still, because nothing is being aimed at any more. */
 const SLOW_FINISH = 0.22;
 /** Real seconds between the last corner and the result screen. */
