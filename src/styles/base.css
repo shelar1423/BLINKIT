@@ -311,6 +311,16 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Not white. The band under the shot is a shade cooler than the panel it
      sits in, which is what separates the two without a second rule. */
   background: #F8F9FD;
+  /* And it has to carry the panel's own bottom corners.
+
+     The panel is rounded 12 and is `overflow: visible` — it has to be, because
+     the ADD button deliberately hangs out of it. So a square-cornered child
+     with a background of its own paints straight THROUGH the rounded corner
+     and out past the border. It was invisible for as long as this band had no
+     background; giving it one is what made it show. Minus the panel's 1px
+     border, so the two curves sit concentric instead of the child's arc
+     cutting across its parent's. */
+  border-radius: 0 0 calc(var(--r-md) - 1px) calc(var(--r-md) - 1px);
   font-size: var(--f-base); font-weight: 700; color: var(--ink);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
