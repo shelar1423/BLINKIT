@@ -254,11 +254,19 @@ input, select, textarea { font: inherit; color: inherit; }
    being swapped out. It reads the same in both directions, which is what the
    reference does: what changed is that it changed. */
 .stepper__q {
-  flex: 1; min-width: 0; text-align: center;
+  flex: 1; text-align: center;
   font-size: var(--f-md); font-weight: 700; font-variant-numeric: tabular-nums;
   position: relative; z-index: 1;
   display: grid; place-items: center;
-  overflow: hidden;
+  /* CLIP DOWN THE PAGE ONLY, and never across it.
+     This box is 2px wide: the stepper is 66 with 8px of padding a side and two
+     24px buttons, so the digit has always overflowed it and been perfectly
+     visible doing so. `overflow: hidden` clipped both axes and cut the 8px
+     glyph down to a 2px sliver. `clip` on one axis alone does not force the
+     other to auto the way `hidden` does, so the wheel gets its top and bottom
+     edge and the digit keeps the room it always had. */
+  overflow-x: visible;
+  overflow-y: clip;
 }
 .stepper__n { grid-area: 1 / 1; }
 .stepper__n--in { animation: qtyIn 300ms cubic-bezier(0.22, 1, 0.36, 1); }
