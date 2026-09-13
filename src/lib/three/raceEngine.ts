@@ -3224,7 +3224,10 @@ export class RaceEngine {
              never coming. */
           const errSec = ((ahead - ideal) * this.curveLen) / Math.max(1, this.speed);
           const stillOpen = errSec > -raceInteraction.gateAcceptSec;
-          if (stillOpen && k >= GATE_SLOW_FROM) gateArmed = true;
+          /* Slow motion is the last ring's alone. On the others it slowed the
+             world just as the car was moving across to a ring off to one side,
+             so the move arrived late; they now run at full speed. */
+          if (stillOpen && k >= GATE_SLOW_FROM && this.isFinalGate(i)) gateArmed = true;
 
           /* Nothing is aimed at any more, but the car still has to arrive
              where the hole is. Eased rather than snapped: the player may be
