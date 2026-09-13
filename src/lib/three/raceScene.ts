@@ -1,10 +1,19 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
+import { makeBoostAim, makeDragAim, makeJumpInput } from './raceInput';
 import { RaceEngine, type EngineOpts, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
 
+/** Scratch for the aim ray. */
+const aimFrom = new THREE.Vector3();
+
 export type RaceHandle = {
   engine: RaceEngine;
+  /** Steer the boost aim — a drag, in pixels. */
+  aimBy: (dxPx: number, dyPx: number) => void;
+  /** Swipe-up or key: the jump, for a race with no phone to lift. */
+  jumpNow: () => void;
   start: () => void;
   pause: () => void;
   dispose: () => void;
@@ -21,6 +30,10 @@ type Opts = {
   onProgress?: (pct: number, mb: number) => void;
   duration?: number;
   laps?: number;
+  onBoostAim?: (a: { index: number; errorDeg: number; quality: BoostQuality; locked: boolean } | null) => void;
+  onBoostResult?: (r: { index: number; quality: BoostQuality; points: number }) => void;
+  onJumpCue?: (open: boolean) => void;
+  onJumpResult?: (r: { quality: JumpQuality; points: number }) => void;
 };
 
 /**
@@ -117,15 +130,50 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
   cool.position.set(6, -14, -26);
   scene.add(cool);
 
+  /* The same judge the AR race uses. What differs is only where the aim comes
+     from: there it is the phone's pose, here it is an offset the player drags
+     away from a chase camera they do not otherwise control. */
+  const boostAim = makeBoostAim();
+  const dragAim = makeDragAim();
+  const jumpInput = makeJumpInput();
+
   const engineOpts: EngineOpts = {
+    interactions: true,
     duration: opts.duration ?? 45,
     laps: opts.laps ?? 2,
     onTick: opts.onTick,
     onPickup: opts.onPickup,
     onPenalty: opts.onPenalty,
+    onBoostArm: (i, world) => {
+      boostAim.arm(i, world);
+      dragAim.reset();
+    },
+    onBoostCross: (i) => {
+      const quality = boostAim.resolve();
+      const points = boostPoints(quality);
+      engine.awardBoost(points, quality !== 'miss');
+      engine.setBoostGlow(i, 0);
+      boostAim.clear();
+      opts.onBoostAim?.(null);
+      opts.onBoostResult?.({ index: i, quality, points });
+    },
+    onJumpArm: () => {
+      jumpInput.arm();
+      opts.onJumpCue?.(true);
+      window.setTimeout(() => {
+        if (jumpInput.isOpen) opts.onJumpCue?.(false);
+      }, raceInteraction.jumpWindowMs);
+    },
+    onJumpTakeoff: () => {
+      const quality = jumpInput.resolve();
+      const points = jumpPoints(quality);
+      engine.awardJump(points);
+      opts.onJumpCue?.(false);
+      opts.onJumpResult?.({ quality, points });
+    },
     onFinish: opts.onFinish,
   };
-  const engine = new RaceEngine(engineOpts);
+  const engine: RaceEngine = new RaceEngine(engineOpts);
   scene.add(engine.root);
 
   let disposed = false;
@@ -173,6 +221,20 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     engine.update(dt);
     engine.cameraTarget(target);
 
+    /* Aim, judged against the same cone in degrees as the AR race. The offset
+       relaxes back to centre when nothing is armed, so a gate you gave up on
+       does not leave the next one skewed. */
+    if (boostAim.active) {
+      camera.getWorldPosition(aimFrom);
+      const a = boostAim.sample(aimFrom, dragAim.direction(camera), dt * 1000);
+      if (a) {
+        engine.setBoostGlow(a.index, a.locked ? 1 : a.quality === 'good' ? 0.5 : 0.1);
+        opts.onBoostAim?.(a);
+      }
+    } else {
+      dragAim.settle(dt);
+    }
+
     // critically damped-ish follow so the camera never jitters
     camPos.lerp(target.pos, Math.min(1, dt * 6.5));
     camLook.lerp(target.look, Math.min(1, dt * 8));
@@ -184,6 +246,8 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
 
   return {
     engine,
+    aimBy: (dx, dy) => dragAim.nudge(dx, dy),
+    jumpNow: () => jumpInput.manual(),
     start: () => engine.start(),
     pause: () => engine.pause(),
     dispose() {

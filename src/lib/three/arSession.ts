@@ -1,7 +1,12 @@
 import * as THREE from 'three';
 import { color } from '../../design/constants';
 import { circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
-import { boostBand, boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
+import { boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
+import { cameraPitchDeg, makeBoostAim, makeJumpInput } from './raceInput';
+
+/** Scratch for the aim ray; one per frame would be litter. */
+const aimFrom = new THREE.Vector3();
+const aimDir = new THREE.Vector3();
 import { loadCar } from './modelLoader';
 import { primeAudio, skid } from '../horn';
 
@@ -446,124 +451,6 @@ function lights(scene: THREE.Scene) {
   scene.add(dir);
 }
 
-/**
- * Aiming at a boost gate.
- *
- * The measurement is the angle between where the phone is pointed and the
- * flame — not a screen-space distance, which would make the gate easier the
- * further away it is and easier again on a wider phone. Degrees are degrees on
- * every device, which is what makes the leaderboard mean anything.
- *
- * A perfect boost needs the aim HELD inside the cone, not flicked through it:
- * without the hold, sweeping the phone across the gate scores the same as
- * aiming at it.
- */
-const jumpFwd = new THREE.Vector3();
-
-function makeBoostAim() {
-  let index = -1;
-  let world: THREE.Vector3 | null = null;
-  let lockedFor = 0;
-  /* The best band reached anywhere in the approach, not the band at the
-     instant of crossing. At the gate the flame is directly overhead and the
-     angle to it swings through ninety degrees in a frame — judging there
-     scored a held, well-aimed approach as a miss. */
-  let best: BoostQuality = 'miss';
-  const toTarget = new THREE.Vector3();
-  const fwd = new THREE.Vector3();
-
-  return {
-    arm(i: number, p: THREE.Vector3) {
-      index = i;
-      world = p;
-      lockedFor = 0;
-      best = 'miss';
-    },
-    clear() {
-      index = -1;
-      world = null;
-      lockedFor = 0;
-      best = 'miss';
-    },
-    get active() {
-      return index >= 0 && !!world;
-    },
-    /** Returns the live aim, or null when no gate is armed. */
-    sample(camera: THREE.Camera, dtMs: number) {
-      if (index < 0 || !world) return null;
-      camera.getWorldDirection(fwd);
-      toTarget.copy(world).sub(camera.getWorldPosition(new THREE.Vector3())).normalize();
-      const errorDeg = THREE.MathUtils.radToDeg(Math.acos(Math.max(-1, Math.min(1, fwd.dot(toTarget)))));
-      const band = boostBand(errorDeg);
-      lockedFor = band === 'perfect' ? lockedFor + dtMs : 0;
-      if (band === 'perfect' || (band === 'good' && best === 'miss')) best = band;
-      return {
-        index,
-        errorDeg,
-        quality: band,
-        locked: lockedFor >= raceInteraction.boostLockMs,
-      };
-    },
-    /* A perfect band that was never HELD is a good boost, not a perfect one —
-       the player did point at it, they just swept through. */
-    resolve(): BoostQuality {
-      if (index < 0 || !world) return 'miss';
-      if (lockedFor >= raceInteraction.boostLockMs) return 'perfect';
-      return best === 'miss' ? 'miss' : 'good';
-    },
-  };
-}
-
-/**
- * The lift.
- *
- * Pitch is read off the CAMERA rather than from a DeviceOrientationEvent, so
- * one implementation covers WebXR — where there is no orientation event, only
- * a head pose — and the camera fallback, where the pose is derived from one.
- * It is the same physical gesture either way: the top of the phone comes up.
- *
- * The brief is firm that this must not try to measure vertical displacement.
- * Browser IMUs cannot do centimetres, and a jump that fails on sensor noise is
- * a race lost to hardware. A pitch delta is something a phone can actually
- * report.
- */
-function makeJumpInput() {
-  let open = false;
-  let liftAt = 0;
-  let base: number | null = null;
-
-  return {
-    get isOpen() {
-      return open;
-    },
-    arm() {
-      open = true;
-      liftAt = 0;
-      base = null;
-    },
-    /** Camera pitch in degrees, positive = nose up. */
-    feed(pitchDeg: number) {
-      if (!open || liftAt) return;
-      // first sample after arming is the baseline, whatever the phone was at
-      if (base === null) base = pitchDeg;
-      if (pitchDeg - base >= raceInteraction.jumpPitchDeg) liftAt = performance.now();
-    },
-    /** Swipe or key, for devices that cannot report pitch. */
-    manual() {
-      if (open && !liftAt) liftAt = performance.now();
-    },
-    /* Lifting AS the ramp arrives is the skill; lifting the moment the cue
-       appears is merely obeying it. */
-    resolve(): JumpQuality {
-      open = false;
-      if (!liftAt) return 'miss';
-      const since = performance.now() - liftAt;
-      liftAt = 0;
-      return since <= raceInteraction.jumpPerfectMs ? 'perfect' : 'good';
-    },
-  };
-}
-
 function makeEngine(
   opts: Opts,
   onDone: () => void,
@@ -614,11 +501,10 @@ function makeEngine(
     engine,
     /** Call every frame while racing; drives the reticle, the glow and the lift. */
     tickAim(camera: THREE.Camera, dtMs: number) {
-      if (jump.isOpen) {
-        camera.getWorldDirection(jumpFwd);
-        jump.feed(THREE.MathUtils.radToDeg(Math.asin(Math.max(-1, Math.min(1, -jumpFwd.y)))));
-      }
-      const a = aim.sample(camera, dtMs);
+      if (jump.isOpen) jump.feed(cameraPitchDeg(camera));
+      camera.getWorldPosition(aimFrom);
+      camera.getWorldDirection(aimDir);
+      const a = aim.sample(aimFrom, aimDir, dtMs);
       if (!a) return;
       engine.setBoostGlow(a.index, a.locked ? 1 : a.quality === 'good' ? 0.5 : 0.1);
       opts.onBoostAim?.(a);
