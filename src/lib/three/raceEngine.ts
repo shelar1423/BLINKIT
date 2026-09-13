@@ -418,6 +418,91 @@ function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasText
   return tex;
 }
 
+
+/**
+ * The co-brand plate on the back of the launcher.
+ *
+ * The launcher is the one piece of the set the player holds still and looks
+ * at — they are standing behind it deciding how hard to pull — so it is the
+ * one piece that should say whose collaboration this is. The plate goes on
+ * the back stop's rear face, which is the surface square-on to the launch
+ * camera and the nearest thing to it.
+ *
+ * Blinkit's yellow carries the panel and Hot Wheels' red carries the mark,
+ * with a chequered strip top and bottom doing the work both brands share.
+ * Painted rather than imported: the shipped blinkit SVG sets its wordmark in
+ * a font it expects the page to have, which an <img> drawn into a canvas does
+ * not get — the same reason the track banners letter that mark by hand.
+ */
+function coBrandTexture(): THREE.CanvasTexture {
+  const W = 768;
+  const H = 256;
+  const c = document.createElement('canvas');
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext('2d')!;
+  const CHEQ = 26;
+
+  const paint = (logo?: HTMLImageElement) => {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#FBD65E');
+    g.addColorStop(0.5, '#F8CB46');
+    g.addColorStop(1, '#E0B02E');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // chequer, top and bottom — the one motif both marks already own
+    for (let i = 0; i * CHEQ < W; i++) {
+      for (const [row, y] of [[0, 0], [1, H - CHEQ]] as const) {
+        ctx.fillStyle = (i + row) % 2 ? '#1F1F1F' : '#FFFFFF';
+        ctx.fillRect(i * CHEQ, y, CHEQ, CHEQ);
+      }
+    }
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const midY = H / 2 + 2;
+
+    // blinkit, lettered — left of the cross
+    ctx.fillStyle = '#1F1F1F';
+    ctx.font = "800 92px system-ui, -apple-system, 'Figtree', sans-serif";
+    ctx.fillText('blinkit', W * 0.27, midY);
+
+    // the cross
+    ctx.fillStyle = 'rgba(31,31,31,0.55)';
+    ctx.font = '700 54px system-ui, -apple-system, sans-serif';
+    ctx.fillText('\u00D7', W * 0.5, midY);
+
+    // Hot Wheels, right of it — the real mark when it arrives
+    if (logo) {
+      const lw = W * 0.38;
+      const lh = lw * (logo.height / logo.width);
+      ctx.drawImage(logo, W * 0.555, midY - lh / 2, lw, lh);
+    } else {
+      ctx.fillStyle = '#ED1C24';
+      ctx.font = "italic 900 62px system-ui, -apple-system, sans-serif";
+      ctx.fillText('HOT WHEELS', W * 0.745, midY);
+    }
+  };
+
+  /* Painted once before the texture exists, so nothing can reach `tex` while
+     it is still in its temporal dead zone — the trap the banner textures
+     document, which took the whole scene down with it. The logo's callback
+     runs long after, when there is a texture to invalidate. */
+  paint();
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+
+  const img = new Image();
+  img.onload = () => {
+    paint(img);
+    tex.needsUpdate = true;
+  };
+  img.src = '/brand/hot-wheels.svg';
+  return tex;
+}
+
 /**
  * The raised orange side rails. Built as two vertical ribbons along the road
  * edges — the single detail that makes the circuit read as Hot Wheels track
@@ -966,11 +1051,21 @@ export class RaceEngine {
     this.launcher.add(bed);
 
     const railGeo = new THREE.BoxGeometry(0.7, 0.95, BED);
-    this.disposables.push(railGeo);
+    /* A Blinkit-yellow cap along the top of each rail. The rails are Hot
+       Wheels orange and the track they join is the same orange, so the
+       partner's colour needs a surface of its own rather than a tint of
+       theirs — and the cap is the one face of the rail the launch camera
+       looks straight down onto. */
+    const capGeo = new THREE.BoxGeometry(0.72, 0.16, BED);
+    const capMat = new THREE.MeshStandardMaterial({ color: 0xF8CB46, roughness: 0.45 });
+    this.disposables.push(railGeo, capGeo, capMat);
     for (const sgn of [-1, 1]) {
       const rail = new THREE.Mesh(railGeo, plastic);
       rail.position.set(sgn * (ROAD_W / 2 - 0.9), 0.5, midZ);
       this.launcher.add(rail);
+      const cap = new THREE.Mesh(capGeo, capMat);
+      cap.position.set(sgn * (ROAD_W / 2 - 0.9), 1.02, midZ);
+      this.launcher.add(cap);
     }
 
     /* Buttresses. Four tapered blocks outboard of the rails, which is what
@@ -994,6 +1089,25 @@ export class RaceEngine {
     const stop = new THREE.Mesh(stopGeo, dark);
     stop.position.set(0, 1.3, LAUNCH_TRAVEL + 5.4);
     this.launcher.add(stop);
+
+    /* The co-brand plate, square-on to the launch camera.
+
+       `MeshBasicMaterial`, not standard: this is printed livery on a plastic
+       part, and it has to read at the same strength whichever way the player
+       has turned the track in their room. Lit, it went the colour of whatever
+       the key light happened to be doing to the back of the launcher. */
+    const plateTex = coBrandTexture();
+    const plateMat = new THREE.MeshBasicMaterial({ map: plateTex, toneMapped: false });
+    const brandGeo = new THREE.PlaneGeometry(ROAD_W - 1.8, (ROAD_W - 1.8) / 3);
+    this.disposables.push(plateTex, plateMat, brandGeo);
+    const brandPlate = new THREE.Mesh(brandGeo, plateMat);
+    /* Just proud of the stop's rear face so it cannot z-fight with it, and
+       tipped back to meet the camera. The launch view looks down at about 31
+       degrees; a plate standing vertical presents almost none of itself to
+       that and read as a yellow line along the bottom of the frame. */
+    brandPlate.position.set(0, 2.15, LAUNCH_TRAVEL + 5.4 + 0.62);
+    brandPlate.rotation.x = -0.5;
+    this.launcher.add(brandPlate);
 
     /* The sled: a plate the car rests against, with a grip standing up behind
        it so there is something that visibly reads as the thing being pulled. */

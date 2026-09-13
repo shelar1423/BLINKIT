@@ -493,9 +493,14 @@ export default function RacePlay() {
               <IconDrift size={22} />
             </button>
           </div>
-          <p className="steer__hint">
-            {tiltDriving ? 'Tilt your phone to steer' : 'Hold either side to steer'} · handbrake to drift · {stats.groceries} collected
-          </p>
+          {/* Not before the car has left the line. It is advice about driving,
+              and until the lever goes there is nothing to drive — it only sat
+              across the co-brand plate on the back of the launcher. */}
+          {launched && (
+            <p className="steer__hint">
+              {tiltDriving ? 'Tilt your phone to steer' : 'Hold either side to steer'} · handbrake to drift · {stats.groceries} collected
+            </p>
+          )}
         </div>
       )}
 
