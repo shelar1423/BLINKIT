@@ -240,14 +240,20 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     (drawn) => engine.setStartLights(drawn ? 2 : 1),
     fireLauncher,
     (k) => opts.onPull?.(k),
+    renderer.domElement,
   );
 
-  /* On the canvas rather than the window: the page above it owns steering and
-     the boost aim, and both are drags too. */
-  const el = renderer.domElement;
+  /* On the canvas's PARENT, not the canvas. Anything the page lays over the
+     scene — a hint, a stepper, a badge — is a pointer target in front of the
+     canvas, and a press that lands on one never reaches it. The stage is an
+     ancestor of all of them, so it sees every press either way; presses on
+     real controls are filtered out below. */
+  const el = (renderer.domElement.parentElement ?? renderer.domElement) as HTMLElement;
+  const onControl = (e: PointerEvent) =>
+    !!(e.target as HTMLElement | null)?.closest?.('button,a,input,select,[role="button"]');
   let leverId: number | null = null;
   const onDown = (e: PointerEvent) => {
-    if (!launching || leverId !== null) return;
+    if (!launching || leverId !== null || onControl(e)) return;
     if (leverDrag.grab(e.clientX, e.clientY)) leverId = e.pointerId;
   };
   const onMove = (e: PointerEvent) => {

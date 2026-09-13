@@ -275,9 +275,14 @@ export function makeDeviceAim() {
  */
 export type LeverTarget = {
   hitLever(ray: THREE.Raycaster): boolean;
+  hitLauncher(ray: THREE.Raycaster): boolean;
+  leverWorld(out: THREE.Vector3): THREE.Vector3;
   setLaunchPull(k: number): void;
   readonly pull: number;
 };
+
+/** How far off the lever a press may land and still take hold, in CSS pixels. */
+const GRAB_SLOP_PX = 70;
 
 export function makeLeverDrag(
   engine: LeverTarget,
@@ -287,9 +292,13 @@ export function makeLeverDrag(
   onArm: (drawn: boolean) => void,
   onLaunch: (power: number) => void,
   onPull: (k: number) => void,
+  /** The canvas the scene is drawn on. Taps are measured against THIS, not the
+   *  window — see `grab`. */
+  canvas?: HTMLCanvasElement,
 ) {
   const ray = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
+  const lw = new THREE.Vector3();
   let fromY = 0;
   let fromPull = 0;
   let held = false;
@@ -299,9 +308,41 @@ export function makeLeverDrag(
   return {
     grab(x: number, y: number) {
       if (!canPull()) return false;
-      ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
+
+      /* Against the CANVAS's own box, not the window's.
+
+         This was `x / window.innerWidth`, and the canvas is sized to its
+         container — which is not the window on any phone whose browser keeps a
+         URL bar, and is not the window on a desktop where the scene sits in a
+         panel. Every pixel of difference tilts the ray away from the finger,
+         so the lever could only be grabbed by pressing some distance off it,
+         and on a tall enough mismatch not at all. It worked on the machines it
+         was written on, which is exactly how a bug like this survives. */
+      const r = canvas
+        ? canvas.getBoundingClientRect()
+        : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+      if (r.width < 1 || r.height < 1) return false;
+      const px = x - r.left;
+      const py = y - r.top;
+      ndc.set((px / r.width) * 2 - 1, -(py / r.height) * 2 + 1);
       ray.setFromCamera(ndc, camera);
-      if (!engine.hitLever(ray)) return false;
+
+      /* The lever, or the launcher it belongs to, or near enough to either.
+         Three chances, because this is the only control on the screen and
+         missing it is not a skill test: people press the machine, not the
+         handle, and the handle is the smallest part of it. */
+      let ok = engine.hitLever(ray) || engine.hitLauncher(ray);
+      if (!ok) {
+        engine.leverWorld(lw);
+        const p = lw.clone().project(camera);
+        // behind the camera projects to nonsense; only trust what is in front
+        if (p.z < 1) {
+          const sx = ((p.x + 1) / 2) * r.width;
+          const sy = ((1 - p.y) / 2) * r.height;
+          ok = Math.hypot(sx - px, sy - py) <= GRAB_SLOP_PX;
+        }
+      }
+      if (!ok) return false;
       held = true;
       moved = false;
       fromY = y;

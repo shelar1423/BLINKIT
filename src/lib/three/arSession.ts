@@ -704,7 +704,21 @@ function adjustGestures(
     fn(e);
   };
   const dOn = guard(onDown);
-  const mOn = guard(onMove);
+  /* The MOVE guard has to let a pull through.
+
+     `fromControl` tests whatever is under the pointer, and during a drag that
+     changes: sweep the finger down across the size stepper or a button and
+     every move from there on was dropped, so the pull stalled halfway with
+     the lever stuck wherever the finger happened to cross. A gesture that has
+     already taken hold of the lever owns the pointer until it is released. */
+  const mOn = (e: PointerEvent) => {
+    if (leverId === e.pointerId) {
+      onMove(e);
+      return;
+    }
+    if (fromControl(e)) return;
+    onMove(e);
+  };
 
   window.addEventListener('pointerdown', dOn);
   window.addEventListener('pointermove', mOn);
@@ -987,7 +1001,10 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     opts.overlayRoot, anchor, renderer.xr.getCamera(), () => ({ phase, size: sizeM }), setSize, inspect,
     /* In headset AR the camera IS the phone, so there is no launcher framing
        to move to — you look at the lever yourself. The drag is identical. */
-    makeLeverDrag(engine, renderer.xr.getCamera(), () => phase === 'placed', armLaunch, launch, (k) => opts.onPull?.(k)),
+    makeLeverDrag(
+      engine, renderer.xr.getCamera(), () => phase === 'placed', armLaunch, launch,
+      (k) => opts.onPull?.(k), renderer.domElement,
+    ),
   );
 
   /* ---- where the track goes ----
@@ -1466,7 +1483,10 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      stray tap during the race pinned an obstacle you did not ask for. Placement
      is now only ever the explicit button. */
 
-  const leverDrag = makeLeverDrag(engine, camera, () => phase === 'placed', armLaunch, launch, (k) => opts.onPull?.(k));
+  const leverDrag = makeLeverDrag(
+    engine, camera, () => phase === 'placed', armLaunch, launch,
+    (k) => opts.onPull?.(k), renderer.domElement,
+  );
   const detachGestures = adjustGestures(
     opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize, inspect, leverDrag,
   );

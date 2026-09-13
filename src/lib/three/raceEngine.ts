@@ -1592,9 +1592,28 @@ export class RaceEngine {
    * rotation — a caller testing world coordinates against local geometry gets
    * it wrong in exactly the way that is hard to see.
    */
+  /** Where the lever is in the world — for a screen-space near-miss test. */
+  leverWorld(out: THREE.Vector3) {
+    if (this.leverHit) this.leverHit.getWorldPosition(out);
+    return out;
+  }
+
   hitLever(ray: THREE.Raycaster) {
     if (!this.leverHit || !this.launcher.visible) return false;
     return ray.intersectObject(this.leverHit, false).length > 0;
+  }
+
+  /**
+   * True when `ray` hits ANY of the launcher — bed, rails, sled, spring, stop.
+   *
+   * Because "pull the launcher" is what people actually do: they put a thumb
+   * on the machine and drag. Insisting on the lever itself made a control out
+   * of the smallest part of the biggest object on screen, and a press that
+   * landed on the bed an inch below it did nothing at all.
+   */
+  hitLauncher(ray: THREE.Raycaster) {
+    if (!this.launcher.visible) return false;
+    return ray.intersectObject(this.launcher, true).length > 0;
   }
 
   /**
