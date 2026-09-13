@@ -50,7 +50,8 @@ export default function RacePlay() {
   const [loaded, setLoaded] = useState(false);
   const mountedAt = useRef(performance.now());
   const [err, setErr] = useState<string | null>(null);
-  const [count, setCount] = useState<number | null>(null);
+  const [pull, setPull] = useState(0);
+  const [launched, setLaunched] = useState(false);
   const [stats, setStats] = useState<RaceStats>({
     score: 0, groceries: 0, timeLeft: 45, lap: 1, laps: 2, progress: 0, speedKph: 0,
   });
@@ -111,6 +112,11 @@ export default function RacePlay() {
         setEventFlash({ kind: 'boost', quality: r.quality, points: r.points });
         window.setTimeout(() => setEventFlash(null), 1100);
       },
+      onPull: setPull,
+      onLaunched: () => {
+        setLaunched(true);
+        engineStart();
+      },
       onJumpCue: setJumpCue,
       onJumpResult: (r) => {
         setJumpCue(false);
@@ -152,24 +158,27 @@ export default function RacePlay() {
     };
   }, [car.glb, onPickup, onPenalty, onFinish]);
 
-  // 3 · 2 · 1 · GO, then start
+  /* No countdown. The race starts when the lever does.
+
+     3-2-1-GO asked nothing of the player and left the launcher built into the
+     track with no job — the same launcher the AR race is now started from. One
+     way into a race, both routes. `engineStart` moves to the release, so the
+     engine note lands with the car leaving the line rather than with a number
+     hitting zero. */
+  /* Keyboard and accessibility fallback: not every player can drag a small
+     part in a 3D scene, and the lever must never be the only way in. */
   useEffect(() => {
-    if (!loaded || err) return;
-    let n = 3;
-    setCount(n);
-    const t = window.setInterval(() => {
-      n -= 1;
-      if (n > 0) setCount(n);
-      else if (n === 0) setCount(0);
-      else {
-        window.clearInterval(t);
-        setCount(null);
-        handle.current?.start();
-        engineStart();
+    if (launched) return;
+    const key = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        handle.current?.launch(0.75);
       }
-    }, 700);
-    return () => window.clearInterval(t);
-  }, [loaded, err]);
+    };
+    window.addEventListener('keydown', key);
+    return () => window.removeEventListener('keydown', key);
+  }, [launched]);
 
   /* ---------- steering ---------- */
   const steerTo = useCallback((clientX: number) => {
@@ -490,10 +499,15 @@ export default function RacePlay() {
         </div>
       )}
 
-      {count !== null && (
-        <div className="cdown">
-          <b>{count === 0 ? 'GO' : count}</b>
-        </div>
+      {!launched && loaded && !err && (
+        <p className="arov__hint lnhint">
+          {pull > 0.02 ? `Launcher drawn ${Math.round(pull * 100)}%` : 'Pull the launcher'}
+          <small>
+            {pull > 0.02
+              ? 'Let go to fire'
+              : 'Drag the red lever back and release · or press Space'}
+          </small>
+        </p>
       )}
 
       {outcome && (

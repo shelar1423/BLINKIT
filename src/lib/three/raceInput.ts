@@ -258,3 +258,91 @@ export function makeDeviceAim() {
     },
   };
 }
+
+/**
+ * Dragging the launcher lever that is actually in the scene.
+ *
+ * The pull used to be a widget pinned to the left of the screen. It worked,
+ * but it asked the player to operate a picture of a lever while looking at the
+ * real one — and the whole point of putting the track in the room is that the
+ * thing you touch is the thing you see move.
+ *
+ * Down the screen is back on the launcher whatever angle the phone is held at,
+ * so the gesture is measured in screen pixels rather than projected onto the
+ * track. Projecting it was the first attempt: near-vertical framings made the
+ * lever almost impossible to move, because the travel that reads as a long
+ * pull on screen is a few millimetres in the track's own plane.
+ */
+export type LeverTarget = {
+  hitLever(ray: THREE.Raycaster): boolean;
+  setLaunchPull(k: number): void;
+  readonly pull: number;
+};
+
+export function makeLeverDrag(
+  engine: LeverTarget,
+  camera: THREE.Camera,
+  /** The drag is live only while this returns true. */
+  canPull: () => boolean,
+  onArm: (drawn: boolean) => void,
+  onLaunch: (power: number) => void,
+  onPull: (k: number) => void,
+) {
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  let fromY = 0;
+  let fromPull = 0;
+  let held = false;
+  /** Whether this grab ever became a drag. A press that does not is a tap. */
+  let moved = false;
+
+  return {
+    grab(x: number, y: number) {
+      if (!canPull()) return false;
+      ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      if (!engine.hitLever(ray)) return false;
+      held = true;
+      moved = false;
+      fromY = y;
+      fromPull = engine.pull;
+      onArm(false);
+      onPull(engine.pull);
+      return true;
+    },
+    move(y: number) {
+      if (!held) return;
+      if (Math.abs(y - fromY) > 6) moved = true;
+      const k = fromPull + (y - fromY) / raceInteraction.launchMaxPull;
+      engine.setLaunchPull(k);
+      onArm(engine.pull > 0.5);
+      onPull(engine.pull);
+    },
+    release() {
+      if (!held) return;
+      held = false;
+      const k = engine.pull;
+      /* A TAP IS A LAUNCH. Pressing a thing that looks like a control and
+         getting nothing is how the old screen lever read as broken; a press
+         that never became a drag fires at a middling 55%, and pulling is how
+         you earn more than that. A brush mid-drag still springs back. */
+      if (!moved && k < 0.1) {
+        onPull(0);
+        onLaunch(0.55);
+        return;
+      }
+      if (k < 0.1) {
+        engine.setLaunchPull(0);
+        onArm(false);
+        onPull(0);
+        return;
+      }
+      onPull(0);
+      onLaunch(k);
+    },
+    get held() {
+      return held;
+    },
+  };
+}
+

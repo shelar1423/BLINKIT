@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
-import { makeBoostAim, makeDragAim, makeJumpInput } from './raceInput';
+import { makeBoostAim, makeDragAim, makeJumpInput, makeLeverDrag } from './raceInput';
 import { RaceEngine, type EngineOpts, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
 
@@ -14,6 +14,8 @@ export type RaceHandle = {
   aimBy: (dxPx: number, dyPx: number) => void;
   /** Swipe-up or key: the jump, for a race with no phone to lift. */
   jumpNow: () => void;
+  /** Fire the launcher without touching the lever — the keyboard's way in. */
+  launch: (power: number) => void;
   start: () => void;
   pause: () => void;
   dispose: () => void;
@@ -34,6 +36,10 @@ type Opts = {
   onBoostResult?: (r: { index: number; quality: BoostQuality; points: number }) => void;
   onJumpCue?: (open: boolean) => void;
   onJumpResult?: (r: { quality: JumpQuality; points: number }) => void;
+  /** How far the launcher lever is drawn, 0..1, while it is being pulled. */
+  onPull?: (k: number) => void;
+  /** The lever was released and the car is away. */
+  onLaunched?: () => void;
 };
 
 /**
@@ -212,11 +218,68 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
   camera.position.copy(camPos);
   camera.lookAt(camLook);
   renderer.render(scene, camera);
+  /* The race opens on the launcher, exactly as the AR one does — the same
+     lever, the same judge, the same points for a full pull. It replaced a
+     3-2-1 countdown, which asked nothing of the player and gave the launcher
+     built into the track nothing to do. */
+  let launching = true;
+  const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+
+  const fireLauncher = (power: number) => {
+    if (!launching) return;
+    launching = false;
+    engine.setStartLights(3);
+    engine.launch(power);
+    opts.onLaunched?.();
+  };
+
+  const leverDrag = makeLeverDrag(
+    engine,
+    camera,
+    () => launching,
+    (drawn) => engine.setStartLights(drawn ? 2 : 1),
+    fireLauncher,
+    (k) => opts.onPull?.(k),
+  );
+
+  /* On the canvas rather than the window: the page above it owns steering and
+     the boost aim, and both are drags too. */
+  const el = renderer.domElement;
+  let leverId: number | null = null;
+  const onDown = (e: PointerEvent) => {
+    if (!launching || leverId !== null) return;
+    if (leverDrag.grab(e.clientX, e.clientY)) leverId = e.pointerId;
+  };
+  const onMove = (e: PointerEvent) => {
+    if (leverId === e.pointerId) leverDrag.move(e.clientY);
+  };
+  const onUp = (e: PointerEvent) => {
+    if (leverId !== e.pointerId) return;
+    leverId = null;
+    leverDrag.release();
+  };
+  el.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onUp);
+
   let last = performance.now();
 
   renderer.setAnimationLoop((now) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
+
+    if (launching) {
+      /* The engine is NOT ticked: no clock, no pickups, nothing moving until
+         the lever is let go. Only the launcher framing. */
+      engine.launcherCameraTarget(lnTarget);
+      camPos.lerp(lnTarget.pos, Math.min(1, dt * 4));
+      camLook.lerp(lnTarget.look, Math.min(1, dt * 5));
+      camera.position.copy(camPos);
+      camera.lookAt(camLook);
+      renderer.render(scene, camera);
+      return;
+    }
 
     engine.update(dt);
     engine.cameraTarget(target);
@@ -248,11 +311,21 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     engine,
     aimBy: (dx, dy) => dragAim.nudge(dx, dy),
     jumpNow: () => jumpInput.manual(),
-    start: () => engine.start(),
+    /* Kept for the fallback path. It clears the launcher on the way through,
+       so a race started this way does not leave one standing on the track. */
+    start: () => {
+      launching = false;
+      engine.start();
+    },
+    launch: (power: number) => fireLauncher(power),
     pause: () => engine.pause(),
     dispose() {
       disposed = true;
       renderer.setAnimationLoop(null);
+      el.removeEventListener('pointerdown', onDown);
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
       ro.disconnect();
       engine.dispose();
       sky.dispose();

@@ -3439,3 +3439,12 @@ input, select, textarea { font: inherit; color: inherit; }
   object-fit: cover;
   border-radius: var(--r-lg);
 }
+
+/* The launcher prompt in the 3D race. The AR hint is fixed to the bottom of a
+   camera view; this one sits over a canvas that fills the page, so it needs its
+   own placement rather than inheriting one meant for an overlay. */
+.lnhint {
+  position: fixed; left: 50%; bottom: 19%;
+  transform: translateX(-50%);
+  z-index: 8; text-align: center; pointer-events: none;
+}

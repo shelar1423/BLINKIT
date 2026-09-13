@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { color } from '../../design/constants';
 import { circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
-import { cameraPitchDeg, makeBoostAim, makeDeviceAim, makeDragAim, makeJumpInput } from './raceInput';
+import { cameraPitchDeg, makeBoostAim, makeDeviceAim, makeDragAim, makeJumpInput, makeLeverDrag } from './raceInput';
 
 /** Scratch for the aim ray; one per frame would be litter. */
 const aimFrom = new THREE.Vector3();
@@ -610,75 +610,6 @@ function floorAim(
   return { dist, depression: Math.atan(drop / Math.max(0.01, run)) };
 }
 
-/**
- * Dragging the launcher lever that is actually in the scene.
- *
- * The pull used to be a widget pinned to the left of the screen. It worked,
- * but it asked the player to operate a picture of a lever while looking at the
- * real one — and the whole point of putting the track in the room is that the
- * thing you touch is the thing you see move.
- *
- * Down the screen is back on the launcher whatever angle the phone is held at,
- * so the gesture is measured in screen pixels rather than projected onto the
- * track. Projecting it was the first attempt: near-vertical framings made the
- * lever almost impossible to move, because the travel that reads as a long
- * pull on screen is a few millimetres in the track's own plane.
- */
-function makeLeverDrag(
-  engine: RaceEngine,
-  camera: THREE.Camera,
-  getPhase: () => ARPhase,
-  onArm: (drawn: boolean) => void,
-  onLaunch: (power: number) => void,
-  onPull: (k: number) => void,
-) {
-  const ray = new THREE.Raycaster();
-  const ndc = new THREE.Vector2();
-  let fromY = 0;
-  let fromPull = 0;
-  let held = false;
-
-  return {
-    grab(x: number, y: number) {
-      if (getPhase() !== 'placed') return false;
-      ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
-      ray.setFromCamera(ndc, camera);
-      if (!engine.hitLever(ray)) return false;
-      held = true;
-      fromY = y;
-      fromPull = engine.pull;
-      onArm(false);
-      onPull(engine.pull);
-      return true;
-    },
-    move(y: number) {
-      if (!held) return;
-      const k = fromPull + (y - fromY) / raceInteraction.launchMaxPull;
-      engine.setLaunchPull(k);
-      onArm(engine.pull > 0.5);
-      onPull(engine.pull);
-    },
-    release() {
-      if (!held) return;
-      held = false;
-      const k = engine.pull;
-      /* A brush against the lever is not a launch. Anything under a tenth
-         springs back rather than dribbling the car off the line. */
-      if (k < 0.1) {
-        engine.setLaunchPull(0);
-        onArm(false);
-        onPull(0);
-        return;
-      }
-      onPull(0);
-      onLaunch(k);
-    },
-    get held() {
-      return held;
-    },
-  };
-}
-
 function adjustGestures(
   _ov: HTMLElement,
   anchor: THREE.Object3D,
@@ -1056,7 +987,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     opts.overlayRoot, anchor, renderer.xr.getCamera(), () => ({ phase, size: sizeM }), setSize, inspect,
     /* In headset AR the camera IS the phone, so there is no launcher framing
        to move to — you look at the lever yourself. The drag is identical. */
-    makeLeverDrag(engine, renderer.xr.getCamera(), () => phase, armLaunch, launch, (k) => opts.onPull?.(k)),
+    makeLeverDrag(engine, renderer.xr.getCamera(), () => phase === 'placed', armLaunch, launch, (k) => opts.onPull?.(k)),
   );
 
   /* ---- where the track goes ----
@@ -1535,7 +1466,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      stray tap during the race pinned an obstacle you did not ask for. Placement
      is now only ever the explicit button. */
 
-  const leverDrag = makeLeverDrag(engine, camera, () => phase, armLaunch, launch, (k) => opts.onPull?.(k));
+  const leverDrag = makeLeverDrag(engine, camera, () => phase === 'placed', armLaunch, launch, (k) => opts.onPull?.(k));
   const detachGestures = adjustGestures(
     opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize, inspect, leverDrag,
   );
