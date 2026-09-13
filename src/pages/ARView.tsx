@@ -158,7 +158,9 @@ export default function ARView() {
         onJumpCue: (open, canLift) => {
           setJumpCue(open);
           setCanLift(canLift);
+          if (!open) setLiftK(0);
         },
+        onJumpLift: setLiftK,
         onJumpResult: (r) => {
           setJumpCue(false);
           setJumpFlash(r);
@@ -424,6 +426,10 @@ export default function ARView() {
      session now reports whether pitch is actually arriving, and the cue only
      asks for a lift when a lift can be seen. */
   const [canLift, setCanLift] = useState(false);
+  /* The tilt, as it happens. Without this the gesture is invisible until it
+     either works or does not, and "No lift" with nothing else on screen is
+     indistinguishable from a broken control — which is exactly how it read. */
+  const [liftK, setLiftK] = useState(0);
   const jumpHow = canLift ? 'Lift the phone' : 'Swipe up';
 
   const tier = outcome ? tierFor(outcome.score) : null;
@@ -515,7 +521,8 @@ export default function ARView() {
                 the whole cue IS the control, so it has to be touchable. */}
             {phase === 'racing' && jumpCue && (
               <div
-                className="arjump"
+                className={'arjump' + (liftK >= 1 ? ' is-lifted' : '')}
+                style={{ '--lift': liftK } as CSSProperties}
                 onPointerDown={(e) => {
                   jumpSwipeFrom.current = e.clientY;
                 }}
@@ -538,7 +545,8 @@ export default function ARView() {
                   <i /><i /><i />
                 </span>
                 <span className="arjump__k">Jump ahead</span>
-                <b>{jumpHow}</b>
+                <b>{liftK >= 1 ? 'Ready!' : jumpHow}</b>
+                {canLift && <span className="arjump__bar" aria-hidden="true"><i /></span>}
               </div>
             )}
             {phase === 'racing' && jumpFlash && (

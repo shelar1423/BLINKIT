@@ -2749,6 +2749,19 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--yellow);
 }
 .arjump b { font-size: var(--f-lg); font-weight: 800; color: #fff; }
+.arjump.is-lifted b { color: var(--yellow); }
+.arjump.is-lifted .arjump__arrows i { opacity: 1; animation: none; }
+/* The tilt, as a bar that fills. Shown only where a tilt can actually be
+   measured — on a phone that is swiping, a meter with nothing feeding it is
+   worse than no meter. */
+.arjump__bar {
+  display: block; width: 96px; height: 4px; margin-top: 6px;
+  border-radius: 999px; background: rgba(255, 255, 255, 0.2); overflow: hidden;
+}
+.arjump__bar i {
+  display: block; height: 100%; width: calc(var(--lift, 0) * 100%);
+  border-radius: 999px; background: var(--yellow);
+}
 
 /* ---------- boost gate aim ----------
    Dead centre, because the aim IS the phone: you point the device at the

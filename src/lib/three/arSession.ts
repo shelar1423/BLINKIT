@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { color } from '../../design/constants';
 import { circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { boostPoints, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
-import { cameraPitchDeg, makeBoostAim, makeJumpInput } from './raceInput';
+import { cameraPitchDeg, makeBoostAim, makeDeviceAim, makeDragAim, makeJumpInput } from './raceInput';
 
 /** Scratch for the aim ray; one per frame would be litter. */
 const aimFrom = new THREE.Vector3();
@@ -112,6 +112,8 @@ type Opts = {
    * them to do something that cannot work.
    */
   onJumpCue?: (open: boolean, canLift: boolean) => void;
+  /** How far the tilt has come toward counting, 0..1 — so it can be SEEN. */
+  onJumpLift?: (k: number) => void;
   onJumpResult?: (r: { quality: JumpQuality; points: number }) => void;
   onObstacleCountChange?: (count: number) => void;
   onProximityAlert?: (alert: boolean) => void;
@@ -465,6 +467,12 @@ function makeEngine(
   aim: ReturnType<typeof makeBoostAim>,
   jump: ReturnType<typeof makeJumpInput>,
   canLift: () => boolean,
+  /** Nose-up angle of the PHONE, or null where that cannot be known. */
+  pitchDeg: () => number | null,
+  /** Where the player is pointing — not necessarily where the camera looks. */
+  aimDirection: (camera: THREE.Camera) => THREE.Vector3,
+  /** Take the current pose as the rest position for a fresh gesture. */
+  recentre: () => void,
 ) {
   const engine: RaceEngine = new RaceEngine({
     /* The AR session is the caller that has the aim, the lift and the cues. */
@@ -474,7 +482,12 @@ function makeEngine(
     onTick: opts.onTick,
     onPickup: opts.onPickup,
     onPenalty: opts.onPenalty,
-    onBoostArm: (i, world) => aim.arm(i, world),
+    onBoostArm: (i, world) => {
+      /* Rest pose captured at the moment the gate appears: the gesture is
+         "tilt from where you are holding it", not "hold it at some angle". */
+      recentre();
+      aim.arm(i, world);
+    },
     onBoostCross: (i) => {
       /* Judged on the last aim sampled before the car reached the gate, so a
          phone whipped away on the line does not undo a held lock. */
@@ -487,6 +500,7 @@ function makeEngine(
       opts.onBoostAim?.(null);
     },
     onJumpArm: () => {
+      recentre();
       jump.arm();
       opts.onJumpCue?.(true, canLift());
       window.setTimeout(() => {
@@ -510,9 +524,13 @@ function makeEngine(
     engine,
     /** Call every frame while racing; drives the reticle, the glow and the lift. */
     tickAim(camera: THREE.Camera, dtMs: number) {
-      if (jump.isOpen) jump.feed(cameraPitchDeg(camera));
+      if (jump.isOpen) {
+        const p = pitchDeg();
+        if (p !== null) jump.feed(p);
+        opts.onJumpLift?.(jump.progress);
+      }
       camera.getWorldPosition(aimFrom);
-      camera.getWorldDirection(aimDir);
+      aimDir.copy(aimDirection(camera));
       const a = aim.sample(aimFrom, aimDir, dtMs);
       if (!a) return;
       engine.setBoostGlow(a.index, a.locked ? 1 : a.quality === 'good' ? 0.5 : 0.1);
@@ -744,7 +762,16 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   const boostAim = makeBoostAim();
   const jumpInput = makeJumpInput();
-  const race = makeEngine(opts, () => setPhase('placed'), boostAim, jumpInput, () => true);
+  const race = makeEngine(
+    opts,
+    () => setPhase('placed'),
+    boostAim,
+    jumpInput,
+    () => true,
+    () => cameraPitchDeg(renderer.xr.isPresenting ? renderer.xr.getCamera() : camera),
+    (cam) => cam.getWorldDirection(new THREE.Vector3()),
+    () => {},
+  );
   const engine = race.engine;
   /* In inspect mode the car is shown at true 1:64 scale — a real Hot Wheels
      car is about 7.4 cm long — so what lands on the table is the size of the
@@ -1196,7 +1223,34 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const ground = inspect ? GROUND_INSPECT : GROUND;
   const boostAim = makeBoostAim();
   const jumpInput = makeJumpInput();
-  const race = makeEngine(opts, () => setPhase('placed'), boostAim, jumpInput, () => haveOrientation);
+  /* The phone, read straight off the orientation event rather than off the
+     render camera — which, during the race, is the chase camera and knows
+     nothing about how the phone is being held. The aim is that pose applied as
+     an OFFSET to the chase camera's forward, so tilting the phone swings where
+     you are pointing without taking the car out of shot. */
+  const deviceAim = makeDeviceAim();
+  const aimOffset = makeDragAim();
+  const race = makeEngine(
+    opts,
+    () => setPhase('placed'),
+    boostAim,
+    jumpInput,
+    () => deviceAim.live,
+    () => (deviceAim.live ? deviceAim.pitchDeg : null),
+    (cam) => {
+      if (deviceAim.live) {
+        aimOffset.set(
+          THREE.MathUtils.degToRad(-deviceAim.yawDeg),
+          THREE.MathUtils.degToRad(deviceAim.pitchDeg),
+        );
+      }
+      return aimOffset.direction(cam);
+    },
+    () => {
+      deviceAim.recentre();
+      aimOffset.reset();
+    },
+  );
   const engine = race.engine;
   /* True 1:64 is 7.4cm, and at the half-metre this places at that is a
      thumbnail you cannot see the details of — which is the whole point of
@@ -1274,13 +1328,26 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const onOrient = (e: DeviceOrientationEvent) => {
     if (e.alpha == null) return;
     haveOrientation = true;
+    /* Kept as raw degrees as well as a quaternion: the quaternion is for
+       framing the scene before the race, these are the gesture input during
+       it, and the two are wanted at different moments. */
+    deviceAim.feed(e.alpha, e.beta ?? 0);
     const d = THREE.MathUtils.degToRad;
     euler.set(d(e.beta ?? 0), d(e.alpha), -d(e.gamma ?? 0), 'YXZ');
     q.setFromEuler(euler);
     q.multiply(q1);
     q.multiply(q0.setFromAxisAngle(zee, -d(screenAngle())));
   };
-  if (gyro) window.addEventListener('deviceorientation', onOrient, true);
+  /* Listen unconditionally, whatever `requestPermission` said.
+     The permission call is not the same question as "are events arriving".
+     Browsers that have no permission API simply deliver events; ones that do
+     can report `denied` and still deliver nothing, in which case listening
+     costs nothing. Gating on the reply meant a single denied — or flaky —
+     permission call silently disabled the gyro for the whole session, so the
+     phone could be tilted all it liked and the lift was never seen. What
+     decides now is whether an event actually turns up. */
+  window.addEventListener('deviceorientation', onOrient, true);
+  void gyro;
 
   // Where the phone points, meeting the assumed surface plane. Null when the
   // phone is level or pointing up — used for the reticle only.

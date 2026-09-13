@@ -104,26 +104,37 @@ export function makeJumpInput() {
   let open = false;
   let liftAt = 0;
   let base: number | null = null;
+  /** How far toward the threshold the tilt has come, 0..1. */
+  let progress = 0;
 
   return {
     get isOpen() {
       return open;
     },
+    get progress() {
+      return liftAt ? 1 : progress;
+    },
     arm() {
       open = true;
       liftAt = 0;
       base = null;
+      progress = 0;
     },
     /** Camera pitch in degrees, positive = nose up. */
     feed(pitchDeg: number) {
       if (!open || liftAt) return;
       // first sample after arming is the baseline, whatever the phone was at
       if (base === null) base = pitchDeg;
-      if (pitchDeg - base >= raceInteraction.jumpPitchDeg) liftAt = performance.now();
+      const d = pitchDeg - base;
+      progress = Math.max(0, Math.min(1, d / raceInteraction.jumpPitchDeg));
+      if (d >= raceInteraction.jumpPitchDeg) liftAt = performance.now();
     },
     /** Swipe or key, for devices that cannot report pitch. */
     manual() {
-      if (open && !liftAt) liftAt = performance.now();
+      if (open && !liftAt) {
+        liftAt = performance.now();
+        progress = 1;
+      }
     },
     /* Lifting AS the ramp arrives is the skill; lifting the moment the cue
        appears is merely obeying it. */
@@ -164,6 +175,11 @@ export function makeDragAim() {
   const e = new THREE.Euler();
 
   return {
+    /** Set the offset outright — for a gyro, which reports an angle already. */
+    set(yawRad: number, pitchRad: number) {
+      yaw = Math.max(-MAX, Math.min(MAX, yawRad));
+      pitch = Math.max(-MAX, Math.min(MAX, pitchRad));
+    },
     nudge(dxPx: number, dyPx: number) {
       yaw = Math.max(-MAX, Math.min(MAX, yaw - dxPx * PER_PX));
       pitch = Math.max(-MAX, Math.min(MAX, pitch - dyPx * PER_PX));
@@ -186,6 +202,59 @@ export function makeDragAim() {
     },
     get offset() {
       return { yaw, pitch };
+    },
+  };
+}
+
+/**
+ * The phone itself, as an aim.
+ *
+ * In camera-fallback AR the renderer's camera is the CHASE camera while the
+ * race runs — it has to be, or the car drives out of shot the moment you look
+ * away. So the phone's pose is not the camera's pose, and reading the camera
+ * to find out how the phone is being held returns the game's own framing.
+ * That is why every lift came back "No lift": the number being watched could
+ * not move however the phone was tilted.
+ *
+ * This reads the device directly and reports it as an offset from wherever the
+ * phone was when the gate or the ramp armed. Relative, not absolute, because
+ * nobody holds a phone at a known angle — the gesture is "tilt from here".
+ */
+export function makeDeviceAim() {
+  let baseYaw: number | null = null;
+  let basePitch: number | null = null;
+  let yawDeg = 0;
+  let pitchDeg = 0;
+  let live = false;
+
+  /** Shortest way round the circle: alpha wraps at 360. */
+  const wrap = (d: number) => ((d + 540) % 360) - 180;
+
+  return {
+    get live() {
+      return live;
+    },
+    get pitchDeg() {
+      return pitchDeg;
+    },
+    get yawDeg() {
+      return yawDeg;
+    },
+    feed(alpha: number, beta: number) {
+      live = true;
+      if (baseYaw === null) {
+        baseYaw = alpha;
+        basePitch = beta;
+      }
+      yawDeg = wrap(alpha - baseYaw);
+      pitchDeg = beta - (basePitch as number);
+    },
+    /** Take the phone's current pose as the new rest position. */
+    recentre() {
+      baseYaw = null;
+      basePitch = null;
+      yawDeg = 0;
+      pitchDeg = 0;
     },
   };
 }
