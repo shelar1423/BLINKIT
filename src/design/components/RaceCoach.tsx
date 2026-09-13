@@ -3,66 +3,85 @@ import { Button } from '../elements';
 /* ============================================================
    The briefing, shown once at the top of every race.
 
-   This exists so that the race itself can be silent. Every instruction used to
-   live on the racing screen as a floating line of text — "Pull the launcher",
-   "Hold either side to steer", "Groceries add points, debris takes them" — and
-   they were permanent, because there was never a moment at which the game knew
-   you had read them. Stacked over a launcher that fills the lower half of the
-   frame, they sat on the one object they were telling you to touch.
+   This was an ANNOTATED overlay first — notes pinned over the frame with
+   leaders down to dots, each pointing at the thing it described. On a phone,
+   in AR, it fell apart, and the reason is worth writing down: at briefing time
+   the only thing on screen is the launcher. There are no fire rings yet, no
+   corner, no score. Three of the four dots landed on the player's own living
+   room — one on a chair, one on the edge of a table — and pointed at them with
+   complete confidence.
 
-   So they move here, all of them, said once against the screen they refer to,
-   and after this the only text in a race is the score and the clock.
+   Annotation only works when its subject is on screen. Here it is not, so the
+   briefing has to CARRY its subjects instead of pointing at them.
 
-   Annotated rather than listed: each note sits over the part of the frame it
-   is about, with a leader down to a dot, so the mapping from instruction to
-   thing is made by position instead of by the reader.
+   Each control is drawn, as a small animation of the gesture itself: a lever
+   pulled back, a phone tipping up, a phone rocking side to side. Motion is the
+   right medium because every one of these instructions IS a motion — "tilt up"
+   in words is a sentence you have to picture, and the same thing shown as a
+   phone tipping back is understood before you have finished the line beside
+   it.
    ============================================================ */
 
-type Note = {
-  /** Where the dot goes, in viewport percent. */
-  x: number;
-  y: number;
-  /** Which way the label sits from the dot. */
-  side: 'left' | 'right';
-  title: string;
-  body: string;
-};
+/** The launcher: a lever drawn back, and the arrow saying which way. */
+function GlyphPull() {
+  return (
+    <svg className="cg" viewBox="0 0 48 48" aria-hidden="true">
+      <rect className="cg-deck" x="4" y="35" width="40" height="6" rx="3" />
+      <g className="cg-lever">
+        <rect className="cg-red" x="14" y="15" width="6" height="22" rx="3" />
+        <rect className="cg-red" x="9" y="7" width="16" height="11" rx="5" />
+      </g>
+      <path className="cg-arrow" d="M34 16 L34 30" />
+      <path className="cg-arrow" d="M30 26 L34 31 L38 26" />
+    </svg>
+  );
+}
 
-function notes(mode: 'ar' | '3d'): Note[] {
-  const lift = mode === 'ar' ? 'tilt the phone up' : 'swipe up';
-  const steer = mode === 'ar' ? 'Tilt left and right' : 'Hold either side of the screen';
-  /* Positions are the DOT's, and they are staggered down the frame on
-     alternating sides — four cards of this width on a 375pt screen will
-     collide if any two share a band. Measured against the narrowest phone the
-     campaign targets: the widest row is 247px, so a dot at 12% still leaves
-     the card inside the glass. */
-  /* Deliberately unnumbered. These were 1, 2, 3 and they read down the page
-     as 2, 3, 1 — because the launcher, which you use first, sits at the bottom
-     of the frame, which is where its note has to point. A sequence the layout
-     cannot honour is worse than no sequence: each note is independently
-     actionable, and its position already says what it is about. */
-  return [
-    {
-      x: 14, y: 13, side: 'right',
-      title: 'Score and clock',
-      body: 'Groceries add points. Hitting things takes them away.',
-    },
-    {
-      x: 84, y: 36, side: 'left',
-      title: 'Jump the rings',
-      body: `Two fire rings hang over the track. As the closing ring meets the target, ${lift} — the car jumps through the middle and boosts.`,
-    },
-    {
-      x: 12, y: 58, side: 'right',
-      title: 'Take the corners',
-      body: `${steer}. The car does not turn on its own, and a corner nobody takes ends at the barrier.`,
-    },
-    {
-      x: 82, y: 76, side: 'left',
-      title: 'Pull the launcher',
-      body: 'Drag the red lever back and let go. The harder the pull, the faster you leave the line.',
-    },
-  ];
+/**
+ * The gate: the hoop, and the gesture that gets you through it.
+ *
+ * In AR the phone is drawn EDGE-ON — a narrow bar rotating about its foot —
+ * because tipping a phone away from you is a rotation in depth, and a face-on
+ * phone rotating in the plane of the screen reads as turning it sideways
+ * instead. In profile the same rotation is unambiguous.
+ *
+ * In the 3D race there is no phone to tip: the gesture is a thumb, so it is
+ * drawn as one, with a trail behind it.
+ */
+function GlyphLift({ mode }: { mode: 'ar' | '3d' }) {
+  return (
+    <svg className="cg" viewBox="0 0 48 48" aria-hidden="true">
+      <circle className="cg-ring" cx="24" cy="13" r="9.5" />
+      <path className="cg-arrow" d="M24 31 L24 21" />
+      <path className="cg-arrow" d="M20 25 L24 20 L28 25" />
+      {mode === 'ar' ? (
+        <g className="cg-tip">
+          <rect className="cg-phone" x="21" y="31" width="6" height="15" rx="2" />
+        </g>
+      ) : (
+        <g className="cg-swipe">
+          <path className="cg-trail" d="M24 46 L24 38" />
+          <circle className="cg-dot" cx="24" cy="38" r="4" />
+        </g>
+      )}
+    </svg>
+  );
+}
+
+/** Steering: the phone rocks left and right. */
+function GlyphSteer({ mode }: { mode: 'ar' | '3d' }) {
+  return (
+    <svg className="cg" viewBox="0 0 48 48" aria-hidden="true">
+      <path className="cg-arrow" d="M10 24 L4 24" />
+      <path className="cg-arrow" d="M7 21 L4 24 L7 27" />
+      <path className="cg-arrow" d="M38 24 L44 24" />
+      <path className="cg-arrow" d="M41 21 L44 24 L41 27" />
+      <g className="cg-rock">
+        <rect className="cg-phone" x="17" y="12" width="14" height="24" rx="3" />
+        {mode === '3d' && <circle className="cg-dot" cx="24" cy="30" r="3.6" />}
+      </g>
+    </svg>
+  );
 }
 
 export function RaceCoach({
@@ -75,30 +94,52 @@ export function RaceCoach({
   /** Offered here rather than as its own strip over the race. */
   tilt?: { offer: boolean; onEnable: () => void };
 }) {
+  const ar = mode === 'ar';
+  const steps = [
+    {
+      glyph: <GlyphPull />,
+      title: 'Pull the launcher',
+      body: 'Drag the red lever back and let go. The harder the pull, the faster you leave the line.',
+    },
+    {
+      glyph: <GlyphLift mode={mode} />,
+      title: 'Jump the fire rings',
+      body: ar
+        ? 'Rings hang over the track. As the closing ring meets the target, tilt your phone up — the car jumps through the middle and boosts.'
+        : 'Rings hang over the track. As the closing ring meets the target, swipe up — the car jumps through the middle and boosts.',
+    },
+    {
+      glyph: <GlyphSteer mode={mode} />,
+      title: 'Take the corners',
+      body: ar
+        ? 'Tilt the phone left and right. The car does not turn on its own — a corner nobody takes ends at the barrier.'
+        : 'Hold either side of the screen. The car does not turn on its own — a corner nobody takes ends at the barrier.',
+    },
+  ];
+
   return (
-    <div className="coach">
+    <div className="coach" role="dialog" aria-label="How to race">
       <div className="coach__dim" />
+      <div className="coach__panel">
+        <p className="coach__kick">How to race</p>
 
-      {notes(mode).map((n) => (
-        <div
-          key={n.title}
-          className={'coach__note coach__note--' + n.side}
-          /* The DOT is what sits on the coordinate, not the middle of the row.
-             Anchored by the row's centre — which is what `translate(-50%)`
-             does — a card's edge moves whenever its text length changes, and
-             two of these ran 50px off the left of the screen. */
-          style={n.side === 'right' ? { left: `${n.x}%`, top: `${n.y}%` } : { right: `${100 - n.x}%`, top: `${n.y}%` }}
-        >
-          <span className="coach__dot" aria-hidden="true" />
-          <span className="coach__line" aria-hidden="true" />
-          <span className="coach__card">
-            <b>{n.title}</b>
-            <small>{n.body}</small>
-          </span>
-        </div>
-      ))}
+        <ol className="coach__steps">
+          {steps.map((s, i) => (
+            <li key={s.title} className="coach__step">
+              <span className="coach__glyph">{s.glyph}</span>
+              <span className="coach__txt">
+                <b>
+                  <i className="coach__n">{i + 1}</i>
+                  {s.title}
+                </b>
+                <small>{s.body}</small>
+              </span>
+            </li>
+          ))}
+        </ol>
 
-      <div className="coach__foot">
+        <p className="coach__note">Groceries add points. Hitting things takes them away.</p>
+
         {tilt?.offer && (
           <button type="button" className="coach__alt" onClick={tilt.onEnable}>
             Steer by tilting instead
