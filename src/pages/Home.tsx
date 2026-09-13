@@ -285,9 +285,16 @@ export default function Home() {
             a rule, then the wordmark. It is the end-of-scroll marker, which is
             why it is the thing that belongs here rather than a disclaimer. */}
         <footer className="bfoot">
+          {/* The break is written, not left to the measure. It falls in the
+              right place at this size on a 390pt phone and would fall
+              somewhere else on a narrower one or a wider one, and "India's
+              last minute / app" is the line, not a lucky wrap. */}
           <p className="bfoot__line">
-            India&rsquo;s last minute app
-            <IconHeart className="bfoot__heart" size={44} />
+            <span>India&rsquo;s last minute</span>
+            <span>
+              app
+              <IconHeart className="bfoot__heart" size={52} />
+            </span>
           </p>
           <hr className="bfoot__rule" />
           <p className="bfoot__mark">blinkit</p>

@@ -1387,17 +1387,37 @@ input, select, textarea { font: inherit; color: inherit; }
    and dropped to a line of its own. Inline keeps it in the text run, following
    "app" the way it does in the real footer. */
 .bfoot__line {
-  font-size: clamp(34px, 11.5vw, 46px);
-  font-weight: 800; letter-spacing: -0.04em; line-height: 1.06;
+  /* Tracking opened by four percent, from -0.04em to 0, as asked.
+
+     The SIZE is what the break costs. "India's last minute" has to hold one
+     line, and measured on a 375pt screen it has 351px to do it in. At the
+     requested +12px with this tracking the line is 483px wide — it cannot fit
+     on any phone, and it only fitted before because the tracking was NEGATIVE
+     and pulled about 32px out of it. So the size is tied to the width instead:
+     10.7vw fills the column at 320, 375 and 430 without ever wrapping, which
+     is the largest this can be and still break where it is meant to. */
+  font-size: clamp(30px, 10.7vw, 50px);
+  font-weight: 800; letter-spacing: 0; line-height: 1.06;
   color: var(--line-3);
 }
+/* Each half on its own line. The old note here — that a flex row let the heart
+   wrap away on its own — still holds and is why these are blocks of text
+   rather than flex items: inside the second one the heart is still in the text
+   run, following "app" the way it does in the real footer. */
+.bfoot__line span { display: block; }
+/* The first line can never wrap. If the type ever outgrows the column the
+   failure should be a line that touches the edges, not a third line appearing
+   and the sign-off silently changing shape. */
+.bfoot__line span:first-child { white-space: nowrap; }
 .bfoot__heart {
   display: inline-block; vertical-align: -0.14em; margin-left: 12px;
   color: #FF6B5A; fill: currentColor; stroke: none;
 }
 .bfoot__rule { border: 0; border-top: 1px solid #E4E4E6; margin: 26px 0 22px; }
 .bfoot__mark {
-  font-size: clamp(24px, 8vw, 32px);
+  /* Smaller, now that the line above it is bigger. The sign-off is the thing
+     you register; the wordmark under it is the signature. */
+  font-size: clamp(18px, 6vw, 24px);
   font-weight: 800; letter-spacing: -0.04em;
   color: var(--line-3);
 }

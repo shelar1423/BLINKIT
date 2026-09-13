@@ -244,7 +244,12 @@
   display: flex; flex-direction: column; gap: 8px;
   padding: 6px 8px calc(10px + var(--safe-b));
   pointer-events: none;
-  background: linear-gradient(rgba(255, 255, 255, 0) 0%, var(--surface) 46%);
+  /* Fades to the FEED's ground, not to white. Every feed that carries this nav
+     ends on the sign-off, which is --surface-2, so a scrim that resolved to
+     white left a band of it under the sign-off — 150px of white at the bottom
+     of the scroll, which is the one place the page is meant to have stopped.
+     The two are three percent apart, so nothing above the fade can tell. */
+  background: linear-gradient(rgba(247, 247, 247, 0) 0%, var(--surface-2) 46%);
 }
 .bnav-wrap > * { pointer-events: auto; }
 .bnav-row { display: flex; align-items: center; gap: 8px; }
