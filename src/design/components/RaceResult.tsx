@@ -189,20 +189,17 @@ export function RaceResult({
               </>
             ) : (
               <>
-                {/* Nothing was won, and this half of the ticket has to say so.
-                    It used to lead with the next tier's NAME, set big in the
-                    same green a prize is written in — "Free Delivery", which
-                    reads as free delivery you have got. What is big here now is
-                    the distance left, which is the one number that is actually
-                    yours, and it is in ink rather than in a prize colour. */}
-                <p className="rwd__won">{next ? 'No reward yet' : 'All unlocked'}</p>
-                <p className="rwd__amt rwd__amt--gap">
-                  {next ? (next.min - totalPoints).toLocaleString('en-IN') : 'Every Tier Cleared'}
+                {/* Nothing was won, and this half of the ticket says only that.
+                    It used to lead with the NEXT tier's name, set big in the
+                    green a prize is written in, which reads as free delivery
+                    you already have. There is no prize to name here, so it
+                    names none. */}
+                <p className="rwd__amt rwd__amt--none">
+                  {next ? 'No rewards yet' : 'Every tier cleared'}
                 </p>
-                <p className="rwd__upto">{next ? `Points to ${next.label}` : ''}</p>
                 <p className="rwd__fine">
                   {next
-                    ? 'Keep racing. Every run adds to the same total.'
+                    ? 'Keep racing, every run adds to the same total.'
                     : 'Every reward in this drop is yours.'}
                 </p>
               </>

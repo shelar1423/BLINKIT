@@ -2433,25 +2433,36 @@ input, select, textarea { font: inherit; color: inherit; }
     radial-gradient(circle at 0 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 0 100% / 51% calc(var(--stub) + 33px) no-repeat,
     radial-gradient(circle at 100% 33px, transparent var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 100% / 51% calc(var(--stub) + 33px) no-repeat;
 }
-.rwd__body { padding: 18px 20px 14px; color: var(--ink); }
+/* One height for every tier.
+   The ticket used to be as tall as whatever it happened to say: 244px on the
+   cash tiers, 211 on Free Delivery, and the stub sliding up and down with it.
+   The body is held at the tallest of them and its contents centre inside, so
+   the perforation, the stub and the notches land on the same line whichever
+   reward you won. */
+.rwd__body {
+  padding: 18px 20px 14px; color: var(--ink);
+  min-height: 162px;
+  display: flex; flex-direction: column; justify-content: center;
+}
 .rwd__won {
   font-size: var(--f-md); font-weight: 800;
 }
 .rwd__amt {
-  font-size: clamp(38px, 12vw, 48px); font-weight: 900;
+  /* 42, not 48. "District Pass" is the longest headline on the ladder and
+     needs 251px at 45px inside a 244px box — so at the old size it either
+     wrapped or dropped a step, and the top of the ladder ended up announcing
+     itself more quietly than the ₹25 beneath it. At 42 it fits on one line and
+     every tier is set the same. */
+  font-size: clamp(30px, 11vw, 42px); font-weight: 900;
   letter-spacing: -0.03em; line-height: 1;
   /* Blinkit's green, not the coupon red it was. The figure is money you have
      been given to spend on Blinkit, and green is the colour Blinkit says that
      in — on the ADD button, on every price, on the cash wallet this lands in. */
   color: var(--green); margin-top: 4px;
 }
-/* One size for every headline, whatever it says.
-   "District Pass" used to drop to a smaller step because it is longer than
-   nine characters, so the top of the ladder announced itself more quietly than
-   the ₹25 below it. It wraps instead, balanced across its two words. */
 .rwd__amt { text-wrap: balance; }
-/* The distance still to go, when nothing was won. Ink, not a prize colour. */
-.rwd__amt--gap { color: var(--ink); }
+/* Not a prize, so not a prize's colour or a prize's size. */
+.rwd__amt--none { font-size: clamp(20px, 6.5vw, 25px); color: var(--ink); }
 /* District Pass, and only that: the one reward on the ladder that is not paid
    in Blinkit's own currency, so it is not written in Blinkit's own green. */
 .rwd__amt--pass { color: #8201FB; }
