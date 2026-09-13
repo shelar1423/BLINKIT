@@ -1373,11 +1373,21 @@ export class RaceEngine {
 
     const BED = LAUNCH_TRAVEL + 7;
     const midZ = BED / 2 - 1;
+    /* Half-width of the whole launcher, against a road half-width of 4.5.
+
+       It used to be built off ROAD_W and came out 4.37 at the feet — inside
+       the road by a tenth of a unit, which is to say flush with it. Nothing of
+       the track showed to either side, and from the launch camera the feet,
+       which stand nearly two units tall at that very edge, project past the
+       road's edge and the whole thing reads as hanging in the air. A launcher
+       has to sit ON something visible. Nine tenths of a unit of road down each
+       side is what makes it look placed rather than floating. */
+    const LW = 3.6;
 
     /* The bed the sled runs along, and the two guide rails standing off it.
        Local +Z runs BACK from the line, since the car's own -Z is the way it
        faces. */
-    const bedGeo = roundedBox(ROAD_W - 1.4, 0.45, BED, 0.16);
+    const bedGeo = roundedBox(LW * 2 - 1.0, 0.45, BED, 0.16);
     this.disposables.push(bedGeo);
     const bed = new THREE.Mesh(bedGeo, plastic);
     bed.position.set(0, 0.22, midZ);
@@ -1390,30 +1400,30 @@ export class RaceEngine {
        track has been turned. */
     const liveryTex = bedLiveryTexture();
     const liveryMat = new THREE.MeshStandardMaterial({ map: liveryTex, roughness: 0.5 });
-    const liveryGeo = new THREE.PlaneGeometry(1.25, BED - 3.6);
+    const liveryGeo = new THREE.PlaneGeometry(1.0, BED - 3.6);
     this.disposables.push(liveryTex, liveryMat, liveryGeo);
     for (const sgn of [-1, 1]) {
       const strip = new THREE.Mesh(liveryGeo, liveryMat);
       strip.rotation.x = -Math.PI / 2;
-      strip.position.set(sgn * 2.75, 0.46, midZ);
+      strip.position.set(sgn * 2.2, 0.46, midZ);
       this.launcher.add(strip);
     }
 
-    const railGeo = roundedBox(0.7, 0.95, BED, 0.22);
+    const railGeo = roundedBox(0.6, 0.95, BED, 0.2);
     /* A Blinkit-yellow cap along the top of each rail. The rails are Hot
        Wheels orange and the track they join is the same orange, so the
        partner's colour needs a surface of its own rather than a tint of
        theirs — and the cap is the one face of the rail the launch camera
        looks straight down onto. */
-    const capGeo = roundedBox(0.72, 0.16, BED, 0.065);
+    const capGeo = roundedBox(0.62, 0.16, BED, 0.065);
     const capMat = new THREE.MeshStandardMaterial({ color: 0xF8CB46, roughness: 0.45 });
     this.disposables.push(railGeo, capGeo, capMat);
     for (const sgn of [-1, 1]) {
       const rail = new THREE.Mesh(railGeo, plastic);
-      rail.position.set(sgn * (ROAD_W / 2 - 0.9), 0.5, midZ);
+      rail.position.set(sgn * (LW - 0.4), 0.5, midZ);
       this.launcher.add(rail);
       const cap = new THREE.Mesh(capGeo, capMat);
-      cap.position.set(sgn * (ROAD_W / 2 - 0.9), 1.02, midZ);
+      cap.position.set(sgn * (LW - 0.4), 1.02, midZ);
       this.launcher.add(cap);
     }
 
@@ -1421,18 +1431,18 @@ export class RaceEngine {
        carries the toy-set read in the concept art: the launcher is not a
        block, it is a bed propped up on moulded feet. A four-sided cylinder IS
        a truncated pyramid, so one geometry does all four. */
-    const footGeo = new THREE.CylinderGeometry(0.7, 1.12, 1.9, 12);
+    const footGeo = new THREE.CylinderGeometry(0.6, 0.85, 1.9, 12);
     this.disposables.push(footGeo);
     for (const sgn of [-1, 1]) {
       for (const z of [1.4, BED - 3.2]) {
         const foot = new THREE.Mesh(footGeo, dark);
-        foot.position.set(sgn * (ROAD_W / 2 - 1.25), 0.95, z);
+        foot.position.set(sgn * (LW - 0.85), 0.95, z);
         this.launcher.add(foot);
       }
     }
 
     // the back stop the spring pushes off
-    const stopGeo = roundedBox(ROAD_W - 1.2, 2.6, 1.1, 0.3);
+    const stopGeo = roundedBox(LW * 2 - 1.0, 2.6, 1.1, 0.3);
     this.disposables.push(stopGeo);
     const stop = new THREE.Mesh(stopGeo, dark);
     stop.position.set(0, 1.3, LAUNCH_TRAVEL + 5.4);
@@ -1446,7 +1456,7 @@ export class RaceEngine {
        the key light happened to be doing to the back of the launcher. */
     const plateTex = coBrandTexture();
     const plateMat = new THREE.MeshBasicMaterial({ map: plateTex, toneMapped: false });
-    const brandGeo = new THREE.PlaneGeometry(ROAD_W - 1.8, (ROAD_W - 1.8) / 3);
+    const brandGeo = new THREE.PlaneGeometry(LW * 2 - 1.5, (LW * 2 - 1.5) / 3);
     this.disposables.push(plateTex, plateMat, brandGeo);
     const brandPlate = new THREE.Mesh(brandGeo, plateMat);
     /* Just proud of the stop's rear face so it cannot z-fight with it, and
@@ -1459,8 +1469,8 @@ export class RaceEngine {
 
     /* The sled: a plate the car rests against, with a grip standing up behind
        it so there is something that visibly reads as the thing being pulled. */
-    const plateGeo = roundedBox(ROAD_W - 2.4, 1.5, 1.2, 0.3);
-    const gripGeo = roundedBox(ROAD_W - 3.6, 2.2, 0.8, 0.26);
+    const plateGeo = roundedBox(LW * 2 - 1.8, 1.5, 1.2, 0.3);
+    const gripGeo = roundedBox(LW * 2 - 2.8, 2.2, 0.8, 0.26);
     this.disposables.push(plateGeo, gripGeo);
     const plate = new THREE.Mesh(plateGeo, red);
     plate.position.y = 0.75;
@@ -1499,11 +1509,11 @@ export class RaceEngine {
        centreline: a seven-unit lever directly behind a one-unit-tall car hides
        it from every camera lower than a plan view. Three units is more than
        the two half-widths, so the car is clear at any sane angle. */
-    this.launchLever.position.set(-3.0, 1.05, 4.2);
+    this.launchLever.position.set(-2.3, 1.05, 4.2);
     this.launcher.add(this.launchLever);
 
     const armGeo = roundedBox(1.15, 4.3, 0.95, 0.3);
-    const padGeo = roundedBox(2.7, 1.6, 1.6, 0.38);
+    const padGeo = roundedBox(2.0, 1.6, 1.6, 0.34);
     const hubGeo = new THREE.CylinderGeometry(0.75, 0.75, 1.5, 14);
     this.disposables.push(armGeo, padGeo, hubGeo);
 
@@ -1525,7 +1535,7 @@ export class RaceEngine {
        mark was invisible. */
     const markTex = leverMarkTexture();
     const markMat = new THREE.MeshBasicMaterial({ map: markTex, transparent: true, toneMapped: false });
-    const markGeo = new THREE.PlaneGeometry(2.2, 1.1);
+    const markGeo = new THREE.PlaneGeometry(1.6, 0.8);
     this.disposables.push(markTex, markMat, markGeo);
     const mark = new THREE.Mesh(markGeo, markMat);
     mark.position.set(0, 0, 0.81);
@@ -1542,7 +1552,7 @@ export class RaceEngine {
        grab. `material.visible = false` keeps it out of the render while
        leaving it in the raycast; `object.visible = false` would drop it from
        both. */
-    const hitGeo = new THREE.BoxGeometry(4.4, 6.4, 3.6);
+    const hitGeo = new THREE.BoxGeometry(3.8, 6.4, 3.6);
     const hitMat = new THREE.MeshBasicMaterial({ visible: false });
     this.disposables.push(hitGeo, hitMat);
     this.leverHit = new THREE.Mesh(hitGeo, hitMat);
