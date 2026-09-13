@@ -9,6 +9,7 @@ import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconMute, IconRotate, IconSound } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
+import { Poppers } from '../design/components/Poppers';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import {
@@ -57,6 +58,13 @@ export default function RacePlay() {
   });
   const { pops, push: pushPop } = useScorePops();
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
+  /* The clock is in bullet time. Only the vignette cares, and only about the
+     flip — the engine reports it as a boolean for exactly that reason. */
+  const [slowmo, setSlowmo] = useState(false);
+  /* The flag has dropped and the paper is in the air. Set about two seconds
+     before `outcome`, and never cleared: the confetti's own animation ends it,
+     and clearing it would pull the scraps out of the sky mid-arc. */
+  const [cheering, setCheering] = useState(false);
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
   const [isBest, setIsBest] = useState(false);
@@ -113,6 +121,11 @@ export default function RacePlay() {
         window.setTimeout(() => setEventFlash(null), 1100);
       },
       onPull: setPull,
+      onBulletTime: setSlowmo,
+      /* The celebration starts here, not on `onFinish`. By the time the result
+         screen has the score, the moment it is celebrating is two seconds
+         gone. */
+      onFinishCue: () => setCheering(true),
       onLaunched: () => {
         setLaunched(true);
         engineStart();
@@ -514,6 +527,9 @@ export default function RacePlay() {
           </small>
         </p>
       )}
+
+      {slowmo && !outcome && <div className="btime" aria-hidden="true" />}
+      {cheering && <Poppers />}
 
       {outcome && (
         <RaceResult

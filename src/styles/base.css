@@ -2162,6 +2162,17 @@ input, select, textarea { font: inherit; color: inherit; }
       rgba(255, 255, 255, 0.30) 0deg 5deg, rgba(255, 255, 255, 0) 5deg 11deg),
     radial-gradient(115% 75% at 50% 26%, #FFD95A 0%, #F9C63E 52%, #EFB12A 100%);
   color: var(--rwd-ink);
+  /* It arrives under the last of the confetti rather than cutting in over the
+     race. The race itself is still running behind this for the length of the
+     engine's outro, so anything but an opaque, moving entrance shows it. */
+  animation: rwd-in 420ms cubic-bezier(0.16, 0.84, 0.36, 1) both;
+}
+@keyframes rwd-in {
+  from { opacity: 0; transform: translateY(4%) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rwd { animation-duration: 1ms; }
 }
 .rwd__bar { align-self: stretch; display: flex; align-items: center; gap: 8px; }
 .rwd__ic {
@@ -3468,4 +3479,125 @@ input, select, textarea { font: inherit; color: inherit; }
   position: fixed; left: 50%; bottom: 19%;
   transform: translateX(-50%);
   z-index: 8; text-align: center; pointer-events: none;
+}
+
+/* ---------- bullet time ----------
+   The clock drops to a third on the approach to a boost gate, and the screen
+   has to say so — otherwise three seconds of slow motion reads as three
+   seconds of dropped frames. A vignette that pulls in, warm at the edges, with
+   the speed of the world drawn as streaks running off the corners.
+
+   Nothing here is informational: the gate reticle already says what to aim at.
+   This only has to make the slowdown feel deliberate. */
+.btime {
+  position: fixed; inset: 0; z-index: 9;
+  pointer-events: none;
+  opacity: 0;
+  animation: btime-in 260ms ease-out forwards;
+  background:
+    radial-gradient(120% 85% at 50% 50%, rgba(0,0,0,0) 38%, rgba(6,10,22,0.42) 78%, rgba(4,7,16,0.72) 100%),
+    radial-gradient(70% 50% at 50% 50%, rgba(255,106,0,0.10), rgba(255,106,0,0) 70%);
+}
+/* The streaks. Two mirrored gradients rather than a sprite: at this opacity
+   they read as motion blur at the frame edge, which is what they are standing
+   in for. */
+.btime::before,
+.btime::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 26%;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(255,255,255,0.055) 0 1px,
+    rgba(255,255,255,0) 1px 7px
+  );
+  mask-image: linear-gradient(to right, #000, transparent);
+  -webkit-mask-image: linear-gradient(to right, #000, transparent);
+  animation: btime-streak 1.6s linear infinite;
+}
+.btime::before { left: 0; }
+.btime::after {
+  right: 0;
+  transform: scaleX(-1);
+}
+@keyframes btime-in {
+  from { opacity: 0; transform: scale(1.06); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes btime-streak {
+  from { background-position-x: 0; }
+  to   { background-position-x: 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btime { animation-duration: 1ms; }
+  .btime::before, .btime::after { animation: none; }
+}
+
+/* ---------- party poppers ----------
+   Fired from the bottom corners when the flag drops, over whatever is on
+   screen — the last of the race, then the result sliding up underneath them.
+
+   Above .rwd (260), because the confetti is thrown over the result rather than
+   behind it, and always pointer-events:none: the claim button underneath has
+   to stay pressable while the paper is still in the air. */
+.popr {
+  position: fixed; inset: 0; z-index: 280;
+  pointer-events: none;
+  overflow: hidden;
+}
+.popr__gun {
+  position: absolute; bottom: 8%;
+  width: 0; height: 0;
+}
+.popr__gun--l { left: 4%; }
+.popr__gun--r { right: 4%; }
+
+/* The charge. A soft warm flare at the mouth of the popper, gone in a fifth of
+   a second — long enough to explain where the paper came from. */
+.popr__flash {
+  position: absolute; left: -40px; top: -40px;
+  width: 80px; height: 80px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,214,140,0.9), rgba(255,106,0,0.35) 45%, rgba(255,106,0,0) 72%);
+  animation: popr-flash 240ms ease-out forwards;
+}
+
+/* Outer: travels sideways at a constant rate. Inner: up, then down. Composed,
+   a parabola — and `linear` on the outer is what keeps it one, because an
+   eased horizontal would bend the arc back on itself near the top.
+
+   `both`, not `forwards`. Every scrap carries its own delay, and with
+   `forwards` alone the ones that have not started yet are drawn in their
+   unanimated state — which is at the corner, at full opacity, in a pile. The
+   backwards fill is what holds them at the 0% keyframe until their turn. */
+.popr__x {
+  position: absolute; left: 0; top: 0;
+  animation: popr-x var(--dur) linear var(--delay) both;
+}
+.popr__y {
+  display: block;
+  width: var(--w); height: var(--h);
+  background: var(--c);
+  animation: popr-y var(--dur) cubic-bezier(0.25, 0.55, 0.45, 1) var(--delay) both;
+}
+.popr__y.is-dot { border-radius: 50%; }
+
+@keyframes popr-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--dx)); }
+}
+/* The arc is deliberately lopsided: up in the first 40%, down over the
+   remaining 60%. A symmetrical parabola is what a thrown ball does; paper
+   caught by the air is fired up and then takes its time coming back, and the
+   long descent is the whole reason the confetti is still in frame when the
+   result screen arrives underneath it. */
+@keyframes popr-y {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  40%  { transform: translateY(var(--rise)) rotate(calc(var(--spin) * 0.4)); opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateY(var(--fall)) rotate(var(--spin)); opacity: 0; }
+}
+@keyframes popr-flash {
+  from { transform: scale(0.3); opacity: 1; }
+  to   { transform: scale(1.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .popr { display: none; }
 }

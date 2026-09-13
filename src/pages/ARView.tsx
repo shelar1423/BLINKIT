@@ -22,6 +22,7 @@ import {
 import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
+import { Poppers } from '../design/components/Poppers';
 import type { BoostQuality, JumpQuality } from '../lib/raceInteractions';
 import {
   engineStart,
@@ -88,6 +89,11 @@ export default function ARView() {
      latched the moment the surface is read: the line is a briefing, given
      once, not a meter. Collision detection goes on using the live map. */
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
+  /* The clock is in bullet time — the boost approach, then the finish outro. */
+  const [slowmo, setSlowmo] = useState(false);
+  /* The flag has dropped and the paper is in the air. Set about two seconds
+     ahead of `outcome` and never cleared: the confetti ends itself. */
+  const [cheering, setCheering] = useState(false);
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
   const [isBest, setIsBest] = useState(false);
@@ -181,6 +187,8 @@ export default function ARView() {
           window.setTimeout(() => setBoostFlash(null), 1100);
         },
         onPenalty: (points) => pushPop(points, 'down'),
+        onBulletTime: setSlowmo,
+        onFinishCue: () => setCheering(true),
         onFinish,
         onError: (m) => toast(m),
         onObstacleHit: (hit) => {
@@ -453,6 +461,10 @@ export default function ARView() {
       <div className={'arov' + (phase && !outcome ? '' : ' is-idle')} ref={overlay}>
         {phase && !outcome && (
           <>
+            {/* Inside the overlay, not beside it: in a WebXR session the DOM
+                overlay root is the only DOM the headset composites, so a
+                vignette rendered anywhere else would simply not exist. */}
+            {slowmo && <div className="btime" aria-hidden="true" />}
             <div className="arov__bar">
               <span className="arov__chip arov__chip--name">
                 <IconAR size={14} /> {car.name.replace('Hot Wheels ', '')}
@@ -797,6 +809,10 @@ export default function ARView() {
           </p>
         </div>
       </main>
+
+      {/* Outside .arov, which goes visibility:hidden the moment the result
+          arrives — and the paper is still in the air for a second after it. */}
+      {cheering && <Poppers />}
 
       {/* Results screen */}
       {outcome && (

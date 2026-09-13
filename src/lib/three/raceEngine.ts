@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { color, scene } from '../../design/constants';
 import { PICKUPS } from '../../data/catalog';
 import { haptic } from '../haptics';
+import { setAudioTimeScale } from '../raceAudio';
 import { raceInteraction } from '../raceInteractions';
 
 /* ============================================================
@@ -64,8 +65,42 @@ export type EngineOpts = {
   /** Points taken off for hitting something. Reported from the one place that
    *  deducts them, so every caller that bounces the car gets it for free. */
   onPenalty?: (points: number) => void;
+  /**
+   * The clock has dropped into bullet time, or come back out of it.
+   *
+   * A boolean rather than the scale itself, and fired only when it flips: the
+   * callers are React pages, and a number arriving sixty times a second is
+   * sixty renders a second for an effect that has two states.
+   */
+  onBulletTime?: (on: boolean) => void;
+  /**
+   * The race is over and the outro has started. `onFinish` follows about two
+   * seconds later, with the same verdict.
+   *
+   * Split in two so the celebration can begin while the car is still rolling.
+   * With one callback the result screen was the first thing that said the race
+   * had ended, and it said so by replacing the race mid-frame.
+   */
+  onFinishCue?: (o: { finished: boolean }) => void;
   onFinish?: (o: RaceOutcome) => void;
 };
+
+/* ---- bullet time ----
+
+   The approach to a boost gate is the one moment in the race that asks for aim
+   rather than reflex, and at 26 m/s the gate is on you before a phone can be
+   brought round. Slowing the world is the arcade answer, and it costs the
+   leaderboard nothing: the gates sit at fixed points of the lap, everyone
+   passes four of them, and the race is still exactly `duration` SIMULATED
+   seconds long. What changes is how much real time those seconds take.
+
+   0.3 turns the 0.9s warning into three real seconds, which is the window the
+   brief asks for. */
+const SLOW_BOOST = 0.3;
+/** The lap is done. Slower still, because nothing is being aimed at any more. */
+const SLOW_FINISH = 0.22;
+/** Real seconds between the last corner and the result screen. */
+const FINISH_OUTRO = 1.9;
 
 const ROAD_W = 9;
 
@@ -952,6 +987,18 @@ export class RaceEngine {
   private jumpPitch = 0;
   /** Seconds of fire, for the boost gates. Never reset — it only ever turns. */
   private fireT = 0;
+  /* ---- the clock ----
+     `timeScale` is what the simulation actually runs at; `slowTarget` is what
+     it is heading for. Everything in `update` below the ramp runs on simulated
+     seconds — the ramp itself has to run on real ones, or slowing down would
+     also slow the act of slowing down. */
+  private timeScale = 1;
+  private slowTarget = 1;
+  /** The last value handed to `onBulletTime`, so it only fires on the flip. */
+  private slowReported = false;
+  /** Real seconds since the flag dropped; -1 until it has. */
+  private outroAt = -1;
+  private outroCrossed = false;
 
   constructor(opts: EngineOpts = {}) {
     this.opts = opts;
@@ -1959,6 +2006,10 @@ export class RaceEngine {
 
   pause() {
     this.running = false;
+    /* The clock stops being read the moment this returns, so anything it was
+       holding down has to be let go here — a race paused inside bullet time
+       otherwise leaves the bus muffled with nothing left to un-muffle it. */
+    setAudioTimeScale(1);
   }
 
   get isRunning() {
@@ -2057,11 +2108,40 @@ export class RaceEngine {
     return out;
   }
 
-  /** Advance the simulation. dt in seconds. */
-  update(dt: number) {
+  /** Advance the simulation. dt in REAL seconds, as the frame measured it. */
+  update(dtReal: number) {
     if (!this.running || this.done) return;
-    dt = Math.min(dt, 0.05); // clamp after tab switches
+    dtReal = Math.min(dtReal, 0.05); // clamp after tab switches
 
+    /* --- the clock ---
+
+       Chased on REAL seconds. Ramping the time scale with the time scale
+       applied would mean the deeper into bullet time the race went, the longer
+       it took to climb back out — the effect would never let go cleanly.
+
+       Into slow motion fast and out of it gently: the drop is the punch that
+       tells you the gate is here, and the climb back is the car picking the
+       speed back up. Symmetrical rates made the return read as a stutter. */
+    const chase = this.slowTarget < this.timeScale ? 9 : 3.6;
+    this.timeScale += (this.slowTarget - this.timeScale) * Math.min(1, dtReal * chase);
+    if (Math.abs(this.timeScale - this.slowTarget) < 0.004) this.timeScale = this.slowTarget;
+    setAudioTimeScale(this.timeScale);
+    const slowNow = this.timeScale < 0.85;
+    if (slowNow !== this.slowReported) {
+      this.slowReported = slowNow;
+      this.opts.onBulletTime?.(slowNow);
+    }
+
+    /* The outro, also on real seconds, and the only thing that can end it. The
+       car keeps driving underneath in slow motion — the race is over, but it
+       does not STOP, which is the whole point of not cutting to the result on
+       the frame the line is crossed. */
+    if (this.outroAt >= 0) {
+      this.outroAt += dtReal;
+      if (this.outroAt >= FINISH_OUTRO) return this.finish(this.outroCrossed);
+    }
+
+    const dt = dtReal * this.timeScale;
     this.elapsed += dt;
 
     // --- longitudinal ---
@@ -2166,6 +2246,7 @@ export class RaceEngine {
        because `t` per second depends on how fast the car happens to be going
        — a lead measured in curve units would give a flying car half the
        warning of a slow one, and the warning is the thing being scored. */
+    let gateArmed = false;
     if (this.interactions && raceInteraction.boostEnabled && goingForward) {
       const lead = (this.speed * raceInteraction.boostWarnLead) / this.curveLen;
       this.fireT += dt;
@@ -2186,7 +2267,7 @@ export class RaceEngine {
 
         // forward distance to the gate, wrapped
         const ahead = (g.t - this.t + 1) % 1;
-        if (!g.armed && ahead < lead) {
+        if (!g.armed && ahead < lead && this.outroAt < 0) {
           g.armed = true;
           g.target.getWorldPosition(boostWorld);
           this.opts.onBoostArm?.(i, boostWorld.clone());
@@ -2198,8 +2279,15 @@ export class RaceEngine {
           g.armed = false;
           this.opts.onBoostCross?.(i);
         }
+        if (g.armed) gateArmed = true;
       }
     }
+
+    /* One owner for the clock, set from state rather than from the events that
+       changed it. Written inside `onBoostArm` instead, a gate that armed and a
+       lap that ended on the same frame would each set it and the last one to
+       run would win. */
+    this.slowTarget = this.outroAt >= 0 ? SLOW_FINISH : gateArmed ? SLOW_BOOST : 1;
 
     // --- lateral ---
     // Grip falls away while the handbrake is down, so the same steering input
@@ -2327,8 +2415,28 @@ export class RaceEngine {
       speedKph: Math.round(this.speed * 3.6),
     });
 
-    if (this.lap >= this.laps) return this.finish(true);
-    if (timeLeft <= 0) return this.finish(false);
+    if (this.outroAt < 0) {
+      if (this.lap >= this.laps) this.beginOutro(true);
+      else if (timeLeft <= 0) this.beginOutro(false);
+    }
+  }
+
+  /**
+   * The flag drops: the clock sinks, the throttle comes off, and the result is
+   * still `FINISH_OUTRO` real seconds away.
+   *
+   * The race used to end on the frame the second lap completed — `onFinish`
+   * fired, the page mounted the result, and the track it was covering was
+   * still mid-corner behind it. Nothing marked the end except its replacement.
+   */
+  private beginOutro(crossed: boolean) {
+    this.outroAt = 0;
+    this.outroCrossed = crossed;
+    this.slowTarget = SLOW_FINISH;
+    this.throttle = 0;
+    this.braking = 0;
+    haptic([20, 50, 20, 50, 40]);
+    this.opts.onFinishCue?.({ finished: crossed });
   }
 
   private finish(crossed: boolean) {
@@ -2341,6 +2449,10 @@ export class RaceEngine {
       seconds: Math.round(this.elapsed),
       finished: crossed,
     });
+    /* After the callback, not before: the page stops the engine note inside it,
+       and opening the filter first would sweep the last of that note back up
+       to full brightness on the way out. */
+    setAudioTimeScale(1);
   }
 
   dispose() {

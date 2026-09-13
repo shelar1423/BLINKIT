@@ -121,6 +121,10 @@ type Opts = {
   onProximityAlert?: (alert: boolean) => void;
   /** Surface mapping progress while the circuit sits on the table. */
   onScan?: (s: { coverage: number; hazards: number }) => void;
+  /** The clock has dropped into bullet time, or come back out. */
+  onBulletTime?: (on: boolean) => void;
+  /** The race is over; the result follows about two seconds later. */
+  onFinishCue?: (o: { finished: boolean }) => void;
 };
 
 /* ---------- shared scene furniture ---------- */
@@ -516,6 +520,8 @@ function makeEngine(
       opts.onJumpCue?.(false, canLift());
       opts.onJumpResult?.({ quality, points });
     },
+    onBulletTime: opts.onBulletTime,
+    onFinishCue: opts.onFinishCue,
     onFinish: (o) => {
       onDone();
       opts.onFinish(o);

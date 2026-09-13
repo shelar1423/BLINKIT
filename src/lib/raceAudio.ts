@@ -29,6 +29,31 @@ let loading: Promise<void> | null = null;
 
 /** Master gain, so the whole race can be ducked or silenced in one place. */
 let master: GainNode | null = null;
+/** Everything leaves through here, so bullet time can close the room down. */
+let tone: BiquadFilterNode | null = null;
+
+/* ---- bullet time ----
+
+   The race slows on the approach to a boost gate, and the sound has to go with
+   it or the slow motion reads as a dropped frame rate. Two things move:
+
+   - `playbackRate` on the engine loop. It is an AudioParam, so it ramps rather
+     than steps, and a ramped rate on a looping buffer is the one way to pitch
+     a running engine down without restarting the sample.
+   - A lowpass over the whole bus. Pitch alone sounds like a flat battery;
+     pitch plus the top end rolling off sounds like the world thickening, which
+     is what the effect is imitating.
+
+   The rate never follows the clock all the way down — the race runs at 0.3 in
+   bullet time, and an engine at 0.3x is a dying growl nobody reads as a car.
+   It lands around 0.7, about six semitones, which is unmistakably slower and
+   still unmistakably an engine. */
+const OPEN_HZ = 18000;
+const MUFFLED_HZ = 820;
+/** The last scale actually applied, so a per-frame caller costs nothing. */
+let toneScale = 1;
+/** What a one-shot fired right now should be played at. */
+let rateNow = 1;
 
 /* Remembered across races and across visits. Somebody who turned the engine
    off once did not mean "off for this race". */
@@ -47,7 +72,16 @@ function bus(): GainNode | null {
   if (!master || master.context !== ac) {
     master = ac.createGain();
     master.gain.value = muted ? 0 : 1;
-    master.connect(ac.destination);
+    /* Gain first, filter second. The mute ramp has to reach zero whatever the
+       filter is doing, and a filter after the gain can only ever take away
+       from it. */
+    tone = ac.createBiquadFilter();
+    tone.type = 'lowpass';
+    tone.frequency.value = OPEN_HZ;
+    tone.Q.value = 0.55;
+    master.connect(tone).connect(ac.destination);
+    toneScale = 1;
+    rateNow = 1;
   }
   return master;
 }
@@ -80,6 +114,47 @@ export function setMuted(next: boolean) {
   out.gain.setValueAtTime(out.gain.value, t);
   // a short ramp, because cutting a running loop to zero in one sample clicks
   out.gain.linearRampToValueAtTime(next ? 0 : 1, t + 0.08);
+}
+
+/**
+ * Follow the race's clock, where 1 is full speed.
+ *
+ * Called every frame by the engine, so it has to be cheap when nothing has
+ * changed — the early return is the whole reason this takes a raw scale rather
+ * than an on/off flag. Ramped, never stepped: a `playbackRate` assigned
+ * outright on a running loop is audible as a click, and a filter cutoff jumped
+ * from 18 kHz to 820 Hz is audible as a thump.
+ */
+export function setAudioTimeScale(k: number) {
+  const scale = Math.max(0.05, Math.min(1, k));
+  if (Math.abs(scale - toneScale) < 0.01) return;
+  toneScale = scale;
+  /* 0.55 + 0.45k: full speed is 1.0 exactly, and the deepest the race ever
+     goes lands at about 0.69. Kept as a stated floor rather than as the clock
+     itself for the reason in the note above. */
+  rateNow = 0.55 + 0.45 * scale;
+  const ac = raceAudioContext();
+  if (!ac || !bus()) return;
+  const t = ac.currentTime;
+  const glide = 0.09;
+  if (engine) {
+    try {
+      const r = engine.src.playbackRate;
+      r.cancelScheduledValues(t);
+      r.setValueAtTime(r.value, t);
+      r.linearRampToValueAtTime(rateNow, t + glide);
+    } catch {
+      /* a source already stopped has no rate left to ramp */
+    }
+  }
+  if (tone) {
+    /* Exponential in Hz, because pitch is: a linear sweep spends most of its
+       time in the top two octaves, where the ear hears almost nothing move. */
+    const hz = MUFFLED_HZ * Math.pow(OPEN_HZ / MUFFLED_HZ, scale);
+    tone.frequency.cancelScheduledValues(t);
+    tone.frequency.setValueAtTime(Math.max(40, tone.frequency.value), t);
+    tone.frequency.exponentialRampToValueAtTime(hz, t + glide);
+  }
 }
 
 /**
@@ -116,6 +191,10 @@ function play(name: Name, gain: number, loop = false) {
   const src = ac.createBufferSource();
   src.buffer = buf;
   src.loop = loop;
+  /* A one-shot fired during bullet time is part of the same world as the
+     engine note, so it starts at the same rate. Set before start(), like
+     `loop` and for the same reason. */
+  src.playbackRate.value = rateNow;
   const amp = ac.createGain();
   amp.gain.value = gain;
   src.connect(amp).connect(out);
@@ -199,4 +278,15 @@ export function makePowerUpWatcher(step = 500) {
 /** Everything off — for unmount, whichever way the race ended. */
 export function stopRaceAudio() {
   engineStop();
+  /* The next race opens at full speed. The filter and the rate outlive any one
+     race — they live on the bus and in a module — so a race abandoned mid
+     bullet-time would otherwise hand the next one a muffled world. */
+  toneScale = 1;
+  rateNow = 1;
+  const ac = raceAudioContext();
+  if (ac && tone) {
+    const t = ac.currentTime;
+    tone.frequency.cancelScheduledValues(t);
+    tone.frequency.setValueAtTime(OPEN_HZ, t);
+  }
 }

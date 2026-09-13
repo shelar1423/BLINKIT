@@ -40,6 +40,10 @@ type Opts = {
   onPull?: (k: number) => void;
   /** The lever was released and the car is away. */
   onLaunched?: () => void;
+  /** The clock has dropped into bullet time, or come back out. */
+  onBulletTime?: (on: boolean) => void;
+  /** The race is over; the result follows about two seconds later. */
+  onFinishCue?: (o: { finished: boolean }) => void;
 };
 
 /**
@@ -177,6 +181,8 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
       opts.onJumpCue?.(false);
       opts.onJumpResult?.({ quality, points });
     },
+    onBulletTime: opts.onBulletTime,
+    onFinishCue: opts.onFinishCue,
     onFinish: opts.onFinish,
   };
   const engine: RaceEngine = new RaceEngine(engineOpts);
