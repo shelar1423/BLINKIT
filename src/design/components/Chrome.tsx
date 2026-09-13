@@ -8,7 +8,10 @@ import {
   IconChevronDown,
   IconChevronLeft,
   IconFlag,
+  IconBabyBottle,
+  IconFlightIntl,
   IconGift,
+  IconLamp,
   IconHeadphones,
   IconLipstick,
   IconVoiceBars,
@@ -45,13 +48,19 @@ export function DistrictMark() {
   );
 }
 
-/** The category rail's tabs. Only Hot Wheels is built out. */
+/** The category rail's tabs. Only Hot Wheels is built out.
+ *
+ *  Eight of them, which is more than fits: the rail scrolls, and a tab cut off
+ *  at the right edge is what says so. */
 const RAIL = [
   { id: 'all', label: 'All', Icon: IconBasket },
   { id: 'hw', label: 'Hot Wheels', Icon: IconFlag, badge: 'New', to: '/hot-wheels' },
   { id: 'elec', label: 'Electronics', Icon: IconHeadphones },
   { id: 'beauty', label: 'Beauty', Icon: IconLipstick },
   { id: 'gift', label: 'Gifting', Icon: IconGift },
+  { id: 'decor', label: 'Decor', Icon: IconLamp },
+  { id: 'kids', label: 'Kids', Icon: IconBabyBottle },
+  { id: 'imported', label: 'Imported', Icon: IconFlightIntl },
 ];
 
 /**

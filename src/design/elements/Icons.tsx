@@ -629,3 +629,59 @@ export const IconShrinkDiagonal = (p: P) => (
     />
   </T>
 );
+
+/* ---- three more categories on the home rail ----
+   Taken from the campaign file's icon sheet, like the tracking set above, and
+   redrawn onto the 24 grid the rail's own icons use so they sit at the same
+   optical weight as Beauty and Gifting rather than arriving heavier. */
+
+/** hugeicons:lamp — Decor. */
+export const IconLamp = (p: P) => (
+  /* Fitted to the rail's own optical size. Drawn at 48 it filled almost the
+     whole 24 box, where Beauty and Gifting sit about 17.6 tall, so it arrived
+     heavier than its neighbours. Scaled about its own centre, with the stroke
+     scaled back up so it does not thin out as the glyph shrinks. */
+  <S {...p} strokeWidth={p.strokeWidth ?? 2.14}>
+    <g transform="translate(12 12) scale(0.84) translate(-11.95 -12.7)">
+    <path d="M12 13.5v6.7" strokeLinecap="round" />
+    <path
+      d="M12 1.9c1.8 0 2.7 0 3.5.3.42.17.81.41 1.16.71.65.55 1.07 1.35 1.92 2.95l.88 1.66c1.54 2.9 2.31 4.35 1.68 5.42-.64 1.07-2.26 1.07-5.52 1.07H8.38c-3.26 0-4.89 0-5.52-1.07-.64-1.07.13-2.52 1.67-5.42l.88-1.66c.85-1.6 1.28-2.4 1.93-2.95.35-.3.74-.54 1.16-.71.78-.32 1.68-.32 3.5-.32Z"
+      strokeLinecap="round"
+    />
+    <path d="M9.86 21.6c.3-.5.44-.75.66-.94.22-.19.49-.33.79-.41.29-.08.62-.08 1.29-.08s1 0 1.29.08c.3.08.57.22.79.41.22.19.37.44.66.94.36.6.53.89.5 1.13a.86.86 0 0 1-.38.61c-.24.13-.64.13-1.43.13h-2.86c-.79 0-1.19 0-1.43-.13a.86.86 0 0 1-.38-.61c-.03-.24.14-.54.5-1.13Z" />
+    </g>
+  </S>
+);
+
+/** hugeicons:baby-bottle — Kids. */
+export const IconBabyBottle = (p: P) => (
+  <S {...p} strokeWidth={p.strokeWidth ?? 2.25}>
+    <g transform="translate(12 12) scale(0.8) translate(-13 -11.65)">
+    <path
+      d="M20.9 10.3s1.1 2.8 1.1 6.4c0 1.3-.14 2.5-.32 3.5-.23 1.25-.35 1.87-.96 2.38-.62.51-1.35.51-2.82.51H8.1c-1.47 0-2.2 0-2.82-.51-.62-.51-.73-1.13-.96-2.38-.22-1.15-.32-2.32-.32-3.5 0-3.6 1.1-6.4 1.1-6.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path d="M18.3 14.2h2.8M18.3 18.6h2.8" strokeLinecap="round" />
+    <path
+      d="M4.1 10.3h15.8c.16-.9-.09-2.65-2.26-3.34-.52-.16-1.12-.47-1.4-.98a2.1 2.1 0 0 1 .02-1.98c.31-.6.4-1.27.24-1.9a2.44 2.44 0 0 0-1.7-1.76 2.5 2.5 0 0 0-.8-.1c-.19 0-.38.04-.56.1a2.44 2.44 0 0 0-1.7 1.76c-.15.63-.06 1.3.25 1.9.36.68.25 1.3.01 1.75-.26.5-.84.94-1.38 1.11-1.5.48-2.53 1.61-2.24 3.2Z"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    </g>
+  </S>
+);
+
+/** carbon:flight-international — Imported. */
+export const IconFlightIntl = (p: P) => (
+  <F {...p}>
+    <g transform="translate(12 12) scale(0.835) translate(-12 -12.4)">
+    <path d="M12 21c-.17 0-.34-.01-.5-.03-1.54-2.47-2.4-5.31-2.48-8.22h13.44c.02-.25.04-.5.04-.75 0-2.08-.62-4.11-1.77-5.83a10.5 10.5 0 0 0-4.71-3.87 10.5 10.5 0 0 0-6.07-.6 10.5 10.5 0 0 0-5.38 2.87 10.5 10.5 0 0 0-2.87 5.38 10.5 10.5 0 0 0 .6 6.07 10.5 10.5 0 0 0 3.87 4.71A10.5 10.5 0 0 0 12 22.5V21Zm8.96-9.75h-4.49c-.08-2.76-.79-5.46-2.07-7.91a9 9 0 0 1 6.56 7.91Zm-8.46-8.22c1.54 2.47 2.4 5.31 2.47 8.22H9.02c.08-2.91.94-5.75 2.48-8.22a9 9 0 0 1 1.01 0M9.59 3.34a17.7 17.7 0 0 0-2.06 7.91H3.04a9 9 0 0 1 6.55-7.91M3.04 12.75h4.49c.08 2.76.79 5.46 2.07 7.91a9 9 0 0 1-6.56-7.91Z" />
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M18.75 18.75 22.5 20.25v-1.5l-3.75-1.88V15a.75.75 0 0 0-1.5 0v1.87L13.5 18.75v1.5l3.75-1.5v2.63l-1.5 1.12v.75l2.25-.75 2.25.75v-.75l-1.5-1.12v-2.63Z"
+    />
+    </g>
+  </F>
+);

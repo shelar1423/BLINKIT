@@ -750,9 +750,10 @@ input, select, textarea { font: inherit; color: inherit; }
      artwork is 2.18:1 against the old 1.46:1, so holding the old 100px width
      would have quietly shrunk the campaign name by a third. */
   /* Up 20% from 150px — the lockup is the campaign's name and was reading
-     smaller than the countdown sitting under it. */
+     smaller than the countdown sitting under it. Up another 20% from 180 since:
+     it is the one thing on the band that should be read from across a room. */
   margin: 14px auto 0;
-  max-width: 180px;
+  max-width: 216px;
   line-height: 0;
   /* The rig's `shake` frame, but the lockup holds its place: a shake moves the
      name off its own centre, and on a band this small that reads as the layout
