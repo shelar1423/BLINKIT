@@ -2,7 +2,9 @@
 .driftload {
   position: fixed; inset: 0; z-index: 400;
   display: grid; align-content: center; justify-items: center; gap: 18px;
-  background: radial-gradient(120% 80% at 50% 40%, #16305E 0%, #0B1836 60%, #070E1E 100%);
+  /* the Hot Wheels city in campaign blue; skyline anchored to the bottom, and
+     the flat sky colour behind it for screens taller than the artwork */
+  background: #1583FD url('/campaign/loader-bg.webp') center bottom / cover no-repeat;
   padding: 0 var(--gut);
 }
 /* The co-brand, up in the top of the screen rather than stacked on the ring.
