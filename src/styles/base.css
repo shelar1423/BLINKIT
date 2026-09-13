@@ -2247,7 +2247,6 @@ input, select, textarea { font: inherit; color: inherit; }
    rows comes from .ckobill, untouched, which is the point of sharing it. */
 .trkc__bill { border-top: 1px solid var(--line); padding: 12px 16px 0; }
 .trkc__bill .ckobill__r--tot { margin-inline: -16px; padding-inline: 16px; }
-.trkc__bill .ckosave { margin-inline: -16px; padding-inline: 16px; }
 
 .trkc__lines { border-top: 1px solid var(--line); padding: 12px 16px; display: grid; gap: 10px; }
 .trkc__ln { display: flex; align-items: baseline; gap: 12px; font-size: var(--f-md); }

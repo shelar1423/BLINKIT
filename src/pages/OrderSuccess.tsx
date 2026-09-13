@@ -315,7 +315,7 @@ export default function OrderSuccess() {
           {summaryOpen &&
             (order.bill ? (
               <div className="trkc__bill ckobill">
-                <BillRows t={order.bill} />
+                <BillRows t={order.bill} savings={false} />
               </div>
             ) : (
               <div className="trkc__lines">

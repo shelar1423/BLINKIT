@@ -28,7 +28,15 @@ export function Glyph({ name, className = '' }: { name: string; className?: stri
   );
 }
 
-export function BillRows({ t }: { t: Totals }) {
+export function BillRows({
+  t,
+  /** The savings band under the total. The checkout ends on it; the tracking
+   *  screen's order summary stops at the grand total. */
+  savings = true,
+}: {
+  t: Totals;
+  savings?: boolean;
+}) {
   return (
     <>
       <div className="ckobill__r">
@@ -87,7 +95,7 @@ export function BillRows({ t }: { t: Totals }) {
         <span className="ckobill__dot">Grand total</span>
         <b>{rupees(t.toPay)}</b>
       </div>
-      {t.savings > 0 && (
+      {savings && t.savings > 0 && (
         <div className="ckosave">
           <p className="ckosave__r">
             <b>Your total savings</b>
