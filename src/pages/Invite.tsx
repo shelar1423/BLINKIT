@@ -3,8 +3,11 @@ import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
 import { useStore } from '../store/useStore';
-import { IconCheck, IconCopy, IconFlag, IconShare, IconUsers, IconWhatsApp } from '../design/elements/Icons';
+import { IconCheck, IconCopy, IconShare, IconWhatsApp } from '../design/elements/Icons';
 import { useToast } from '../App';
+
+/** Invites that count. Five is the cap the badge counts towards. */
+const INVITE_GOAL = 5;
 
 export default function Invite() {
   const nav = useNavigate();
@@ -71,24 +74,21 @@ export default function Invite() {
               asked you to hold three sequential facts in your head to work out
               what the code was for. Three steps, in order, and the paragraph
               goes because it was saying the same thing the long way round. */}
-          <div className="hiw">
+          <div className="card hiw">
             <p className="hiw__t">How it works</p>
             <ol className="hiw__steps">
               <li>
-                <span className="hiw__n">1</span>
-                <IconShare size={19} />
+                <img src="/icons/step-invite.webp" alt="" />
                 <b>Invite a friend</b>
                 <small>Share your code</small>
               </li>
               <li>
-                <span className="hiw__n">2</span>
-                <IconUsers size={19} />
+                <img src="/icons/step-race.webp" alt="" />
                 <b>They race</b>
                 <small>They finish one race</small>
               </li>
               <li>
-                <span className="hiw__n">3</span>
-                <IconFlag size={19} />
+                <img src="/icons/step-unlock.webp" alt="" />
                 <b>You get +1 race</b>
                 <small>Same day, one more</small>
               </li>
@@ -122,6 +122,46 @@ export default function Invite() {
               <IconShare size={16} /> More ways to invite
             </Button>
           </div>
+
+          {/* Who has actually joined. The page asked you to invite people and
+              then never mentioned them again — the count lived as a chip on
+              the code card, which made it a property of the code rather than a
+              list of the friends it brought in. */}
+          <section className="frlist">
+            <div className="seccount">
+              <h2 className="seccount__t">Your invited friends</h2>
+              <span className="seccount__n">
+                {invitedCount}/{INVITE_GOAL} joined
+              </span>
+            </div>
+            {invitedCount === 0 ? (
+              <div className="nofr">
+                <img src="/icons/race-a-friend.webp" alt="" />
+                <b>No friends yet</b>
+                <small>
+                  Invite your friends and see them here.
+                  <br />
+                  The more, the merrier!
+                </small>
+              </div>
+            ) : (
+              <div className="nofr nofr--some">
+                {/* Slots rather than invented names: the campaign knows how
+                    many joined, not who they are. */}
+                <div className="nofr__slots" aria-hidden="true">
+                  {Array.from({ length: INVITE_GOAL }).map((_, i) => (
+                    <span key={i} className={i < invitedCount ? 'is-on' : ''}>
+                      {i < invitedCount ? <IconCheck size={15} /> : null}
+                    </span>
+                  ))}
+                </div>
+                <b>
+                  {invitedCount} of {INVITE_GOAL} joined
+                </b>
+                <small>Each one unlocked an extra race for you.</small>
+              </div>
+            )}
+          </section>
         </div>
       </main>
     </>

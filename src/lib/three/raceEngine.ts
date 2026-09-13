@@ -73,6 +73,48 @@ function buildCurve() {
   return new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.5);
 }
 
+/**
+ * The circuit's plan, normalised so one unit is the footprint the placed track
+ * occupies — for drawing a true preview of it before anything is built.
+ *
+ * It reads the SAME `buildCurve()` the track itself is built from, and divides
+ * by the same extent `trackExtent` uses, so a preview drawn from this cannot
+ * promise a shape or a size the placed circuit then contradicts. The origin is
+ * left where the curve puts it rather than recentred on the bounding box: the
+ * engine root lands on the anchor unrecentred, so the preview has to as well
+ * or it would sit a few centimetres off where the track actually arrives.
+ */
+export function circuitPlan(samples = 180) {
+  const curve = buildCurve();
+  const box = new THREE.Box3().setFromPoints(curve.getSpacedPoints(96));
+  const extent = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) + ROAD_W;
+  const centre = curve.getSpacedPoints(samples).map((p) => new THREE.Vector3(p.x / extent, 0, p.z / extent));
+  /* Road edges, offset along each point's normal — two lines read as a road,
+     one line reads as a wire. */
+  const left: THREE.Vector3[] = [];
+  const right: THREE.Vector3[] = [];
+  const half = ROAD_W / 2 / extent;
+  for (let i = 0; i < samples; i++) {
+    const t = i / samples;
+    const tan = curve.getTangentAt(t);
+    const n = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+    left.push(centre[i].clone().addScaledVector(n, half));
+    right.push(centre[i].clone().addScaledVector(n, -half));
+  }
+  return {
+    centre,
+    left,
+    right,
+    /** the dashed ground rectangle, in the same unit */
+    footprint: {
+      w: (box.max.x - box.min.x + ROAD_W) / extent,
+      d: (box.max.z - box.min.z + ROAD_W) / extent,
+      cx: (box.max.x + box.min.x) / 2 / extent,
+      cz: (box.max.z + box.min.z) / 2 / extent,
+    },
+  };
+}
+
 function roadMesh(curve: THREE.Curve<THREE.Vector3>, segments: number) {
   const pos: number[] = [];
   const uv: number[] = [];

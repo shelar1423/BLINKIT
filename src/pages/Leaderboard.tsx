@@ -3,8 +3,8 @@ import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
 import { LEADERBOARD } from '../data/catalog';
-import { hasReached, REWARD_TIERS, useStore } from '../store/useStore';
-import { IconChevronRight, IconFlag, IconUsers } from '../design/elements/Icons';
+import { useStore } from '../store/useStore';
+import { IconFlag, IconUsers } from '../design/elements/Icons';
 
 const TABS = ['Friends', 'City', 'All racers'];
 
@@ -31,7 +31,7 @@ function Row({ r }: { r: Racer }) {
 export default function Leaderboard() {
   const nav = useNavigate();
   const [tab, setTab] = useState(1);
-  const { totalPoints, racesLeft, unlockedRewards, claimedReward } = useStore();
+  const { totalPoints, racesLeft } = useStore();
 
   /* Friends is a smaller circle than the city. */
   const pool = tab === 0 ? LEADERBOARD.slice(0, 5) : LEADERBOARD;
@@ -52,13 +52,6 @@ export default function Leaderboard() {
   const folded = Math.max(0, myIdx - TOP);
   const head = folded > 0 ? ranked.slice(0, TOP) : ranked.slice(0, Math.max(TOP, myIdx + 1));
   const tailRow = folded > 0 ? ranked[myIdx] : null;
-
-  /* What the Rewards link has to say for itself. A reward sitting unclaimed is
-     the more useful fact, so it wins over the tally when there is one. */
-  const claimable = REWARD_TIERS.find(
-    (t) => hasReached(t, totalPoints, unlockedRewards) && claimedReward?.id !== t.id,
-  );
-  const earned = REWARD_TIERS.filter((t) => hasReached(t, totalPoints, unlockedRewards)).length;
 
   /* Where you stand, worked out from the same sorted list the table renders so
      the card and the highlighted row can never disagree. */
@@ -152,26 +145,11 @@ export default function Leaderboard() {
         {/* Race again has moved up into the rank card, so what closes the page
             is the other way to get one — which is also the answer when the
             button up there says you have none left. */}
-        <div className="shell" style={{ paddingTop: 14, display: 'grid', gap: 10 }}>
+        <div className="shell" style={{ paddingTop: 14 }}>
           <Button variant="outline" block type="button" onClick={() => nav('/invite')}>
             <IconUsers size={17} />
             Invite a friend to unlock +1 race
           </Button>
-          {/* The other half of the score, as a destination rather than a pill
-              in the header bar — the same row card the Rewards screen uses to
-              point back here, so the two directions match. */}
-          <button className="card rowcard" type="button" onClick={() => nav('/rewards')}>
-            <img className="rowcard__art" src="/icons/rewards.webp" alt="" />
-            <span className="grow">
-              <b>Rewards</b>
-              <small>
-                {claimable
-                  ? `${claimable.label} ready to claim`
-                  : `${earned} of ${REWARD_TIERS.length} tiers unlocked`}
-              </small>
-            </span>
-            <IconChevronRight size={17} />
-          </button>
         </div>
       </main>
     </>

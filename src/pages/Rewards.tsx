@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { PageHeader } from '../design/components/Chrome';
-import { LEADERBOARD, rupees } from '../data/catalog';
+import { rupees } from '../data/catalog';
 import { hasReached, REWARD_TIERS, useStore, type RewardTier } from '../store/useStore';
 import { useToast } from '../App';
-import { IconCheck, IconChevronRight, IconLock, IconTrophy } from '../design/elements/Icons';
+import { IconCheck, IconLock, IconTrophy } from '../design/elements/Icons';
 
 /** How long the claimed coupon takes to fold away and hand its space back. */
 const CLOSE_MS = 420;
@@ -68,13 +68,6 @@ export default function Rewards() {
 
   const earned = REWARD_TIERS.filter((t) => isUnlocked(t)).length;
 
-  /* Where this score puts you in the city — worked out the same way the
-     Leaderboard works it out, so the number on the link matches the number on
-     the page it opens. */
-  const cityRank =
-    [...LEADERBOARD.map((r) => r.points), totalPoints]
-      .sort((a, b) => b - a)
-      .indexOf(totalPoints) + 1;
 
   /* How far along the current leg the car sits, 0 to 1. Measured from the tier
      last cleared rather than from zero: scaled to the whole drop, a race worth
@@ -209,9 +202,9 @@ export default function Rewards() {
               rather than as the record of everything this drop has given you.
               The count opposite is the one-line version of the whole list. */}
           <section className="rwlist">
-            <div className="rwsec">
-              <h2 className="rwsec__t">Your rewards</h2>
-              <span className="rwsec__n">
+            <div className="seccount">
+              <h2 className="seccount__t">Your rewards</h2>
+              <span className="seccount__n">
                 {earned} of {REWARD_TIERS.length} unlocked
               </span>
             </div>
@@ -262,25 +255,6 @@ export default function Rewards() {
             })}
           </div>
           </section>
-
-          {/* The way across to the Leaderboard. It was a pill in the header
-              bar, where it read as chrome — a control belonging to the app
-              rather than a place the campaign goes — and it crowded the title
-              enough to truncate the subtitle beside it.
-
-              Here it is a destination: the same row card the hub uses, at the
-              foot of the list, in the space the page was already leaving
-              empty. And it carries the rank, so it is worth pressing rather
-              than merely available — the two screens are the same score read
-              two ways, and this is the sentence that says so. */}
-          <button className="card rowcard" type="button" onClick={() => nav('/leaderboard')}>
-            <img className="rowcard__art" src="/icons/leaderboard.webp" alt="" />
-            <span className="grow">
-              <b>Leaderboard</b>
-              <small>You&rsquo;re #{cityRank} in the city this drop</small>
-            </span>
-            <IconChevronRight size={17} />
-          </button>
 
           <p className="t-xs" style={{ lineHeight: 1.6 }}>
             One reward applies per order. Point values are campaign concepts, not final business rules.

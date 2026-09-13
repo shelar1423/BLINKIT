@@ -1013,7 +1013,16 @@ input, select, textarea { font: inherit; color: inherit; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; }
 /* The icon sits above the figure it belongs to, small enough that the number
    stays the thing you read first. */
-.stats > div { padding: 13px 8px 12px; text-align: center; border-left: 1px solid var(--line); }
+/* `> *`, not `> div`: two of the three cells are buttons now. A button also
+   brings its own font and background, so both are reset back to the cell's. */
+.stats > * {
+  padding: 13px 8px 12px; text-align: center;
+  border-left: 1px solid var(--line);
+  border-top: 0; border-right: 0; border-bottom: 0;
+  background: none; font: inherit; color: inherit;
+}
+.stats > button { cursor: pointer; }
+.stats > button:active { background: var(--surface-2); }
 /* "ui icons increase size + numbers size too". These are illustrations, not
    glyphs — a coin stack, a cash bag, a flagged car — and at 26px none of that
    survived; they were reading as three grey smudges over the only three
@@ -1024,7 +1033,7 @@ input, select, textarea { font: inherit; color: inherit; }
    starts. Measured: bottom padding 44/256, 35/256, 44/256. Pulling the number
    up by 4px lands the visible gap at 3-5px instead of 14. */
 .stats__ic { display: block; width: 52px; height: 52px; margin: 0 auto -4px; object-fit: contain; }
-.stats > div:first-child { border-left: 0; }
+.stats > *:first-child { border-left: 0; }
 .stats b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
 /* Title case, so no tracking: the 0.04em was there to open up all-caps, and
    left on a lower-case label it just pulls the words apart. */
@@ -2500,12 +2509,14 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .rwbody { padding-top: 14px; padding-bottom: 20px; display: grid; gap: 14px; }
 
-/* Heading and list are one block, so the 8px between them reads as a title
-   attached to its list rather than as another 14px item in the page's stack. */
+/* A section heading with its own tally opposite — the rewards list, the
+   invited friends. Heading and content are one block, so the 8px between them
+   reads as a title attached to its list rather than as another item in the
+   page's stack. */
 .rwlist { display: grid; gap: 8px; }
-.rwsec { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.rwsec__t { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; }
-.rwsec__n { flex: 0 0 auto; font-size: var(--f-xs); color: var(--mut); font-weight: 600; }
+.seccount { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.seccount__t { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; }
+.seccount__n { flex: 0 0 auto; font-size: var(--f-xs); color: var(--mut); font-weight: 600; }
 
 /* ---------- the track ---------- */
 .rwtrack {
@@ -2961,15 +2972,36 @@ input, select, textarea { font: inherit; color: inherit; }
    work a numbered list would otherwise need words for. Captions are short
    enough to hold two lines in a third of the width — the long-form versions
    wanted four, which is how the paragraph this replaces got written. */
-.hiw {
-  padding: 13px 14px 14px;
+.hiw { padding: 14px; }
+
+/* ---------- invited friends ----------
+   Heading and card as one block, and the card recessed rather than white:
+   it is a space waiting to be filled, and an empty white card among white
+   cards reads as something that failed to load. */
+.frlist { display: grid; gap: 9px; }
+.nofr {
+  display: grid; justify-items: center; gap: 3px;
+  padding: 22px 18px 20px;
   border-radius: var(--r-lg);
-  background: var(--yellow-tint);
-  border: 1px solid var(--yellow-lt);
+  background: var(--surface-2);
+  text-align: center;
 }
+.nofr img { width: 62px; height: 62px; object-fit: contain; margin-bottom: 4px; }
+.nofr b { font-size: var(--f-base); font-weight: 800; letter-spacing: -0.2px; }
+.nofr small { font-size: var(--f-xs); color: var(--mut); line-height: 1.5; }
+/* Once somebody has joined, the illustration gives way to the tally it was
+   standing in for. */
+.nofr--some { padding-top: 18px; }
+.nofr__slots { display: flex; gap: 7px; margin-bottom: 7px; }
+.nofr__slots span {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  border: 1.5px dashed var(--line-2); color: #fff;
+}
+.nofr__slots span.is-on { background: var(--green); border: 0; }
 .hiw__t { font-size: var(--f-base); font-weight: 800; letter-spacing: -0.2px; }
 .hiw__steps {
-  margin-top: 11px; padding: 0; list-style: none;
+  margin-top: 12px; padding: 0; list-style: none;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
 }
 .hiw__steps li {
@@ -2977,30 +3009,29 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; justify-items: center; gap: 3px;
   text-align: center;
 }
+/* Centred on the illustration rather than offset a fixed distance from the
+   top, so the chevron keeps its place if the art ever changes size. */
 .hiw__steps li + li::before {
   content: '';
-  position: absolute; left: -6px; top: 13px;
+  position: absolute; left: -6px; top: 27px;
   width: 5px; height: 5px;
-  border-top: 1.6px solid var(--yellow-dk);
-  border-right: 1.6px solid var(--yellow-dk);
-  transform: rotate(45deg);
+  border-top: 1.6px solid var(--line-2);
+  border-right: 1.6px solid var(--line-2);
+  transform: translateY(-50%) rotate(45deg);
 }
-.hiw__n {
-  width: 19px; height: 19px; border-radius: 50%;
-  display: grid; place-items: center;
-  background: var(--yellow); color: var(--ink);
-  font-size: 10px; font-weight: 800;
-}
-.hiw__steps svg { color: var(--ink-2); margin-top: 2px; }
-.hiw__steps b { font-size: var(--f-2xs); font-weight: 800; line-height: 1.25; margin-top: 1px; }
+/* The numbers are gone: three illustrations reading left to right through two
+   chevrons are already a sequence, and a numeral on each one was labelling an
+   order the layout had made obvious. What they were taking up in room the art
+   now has. */
+.hiw__steps img { width: 54px; height: 54px; object-fit: contain; }
+.hiw__steps b { font-size: var(--f-2xs); font-weight: 800; line-height: 1.25; margin-top: 2px; }
 .hiw__steps small { font-size: var(--f-2xs); color: var(--mut); line-height: 1.25; }
 
 .invcode { padding: 14px; display: grid; gap: 12px; }
 .invcode__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.invcode__k {
-  font-size: var(--f-xs); font-weight: 700; color: var(--mut);
-  letter-spacing: 0.08em; text-transform: uppercase;
-}
+/* Title case. The code itself keeps its capitals — it is a code, and it is
+   typed back in exactly as shown — but the label above it was only shouting. */
+.invcode__k { font-size: var(--f-xs); font-weight: 700; color: var(--mut); }
 /* The code and WhatsApp on one line: the code is what you send, WhatsApp is
    where you send it. The row is no longer a dashed box containing a button —
    the code IS the button, so the whole ticket is the tap target rather than a

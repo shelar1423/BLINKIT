@@ -1,17 +1,26 @@
 import { useNavigate } from 'react-router-dom';
-import { PageHeader, SectionHeader } from '../design/components/Chrome';
-import { rupees } from '../data/catalog';
-import { MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
+import { PageHeader } from '../design/components/Chrome';
+import { LEADERBOARD, rupees } from '../data/catalog';
+import { hasReached, MAX_RACE_ATTEMPTS, REWARD_TIERS, useStore } from '../store/useStore';
 import { IconChevronRight, IconFlag, IconInfo } from '../design/elements/Icons';
 import { useToast } from '../App';
 
 export default function Campaign() {
   const nav = useNavigate();
   const { toast } = useToast();
-  const { racesLeft, totalPoints, bestScore, unlockedRewards } = useStore();
+  const { racesLeft, totalPoints, unlockedRewards } = useStore();
 
   const next = REWARD_TIERS.find((t) => totalPoints < t.min);
   const cashEarned = REWARD_TIERS.filter((t) => unlockedRewards.includes(t.id)).reduce((a, t) => a + t.value, 0);
+
+  /* The two figures the strip's doors carry, each worked out the way the page
+     behind it works it out so the hub never advertises a number that screen
+     then contradicts. */
+  const earned = REWARD_TIERS.filter((t) => hasReached(t, totalPoints, unlockedRewards)).length;
+  const cityRank =
+    [...LEADERBOARD.map((r) => r.points), totalPoints]
+      .sort((a, b) => b - a)
+      .indexOf(totalPoints) + 1;
 
   return (
     <>
@@ -54,22 +63,31 @@ export default function Campaign() {
         </div>
 
         <div className="shell" style={{ paddingTop: 12 }}>
+          {/* Two of these three cells are doors now. Total Points and Best
+              Race were the two figures on the hub that led nowhere and changed
+              nothing — a scoreboard the page had already made its argument
+              with — while the two places worth going sat in their own section
+              further down, behind a heading, as a second copy of the same
+              journey. The strip carries the campaign's state AND its routes,
+              and each figure is the one the screen behind it shows. */}
           <div className="stats">
-            <div>
-              <img className="stats__ic" src="/icons/total-points.webp" alt="" />
-              <b className="t-num">{totalPoints.toLocaleString('en-IN')}</b>
-              <span>Total Points</span>
-            </div>
             <div>
               <img className="stats__ic" src="/icons/blinkit-cash.webp" alt="" />
               <b className="t-num">{rupees(cashEarned)}</b>
               <span>Blinkit Cash</span>
             </div>
-            <div>
-              <img className="stats__ic" src="/icons/best-race.webp" alt="" />
-              <b className="t-num">{bestScore.toLocaleString('en-IN')}</b>
-              <span>Best Race</span>
-            </div>
+            <button type="button" onClick={() => nav('/rewards')}>
+              <img className="stats__ic" src="/icons/rewards.webp" alt="" />
+              <b className="t-num">
+                {earned} of {REWARD_TIERS.length}
+              </b>
+              <span>Rewards</span>
+            </button>
+            <button type="button" onClick={() => nav('/leaderboard')}>
+              <img className="stats__ic" src="/icons/leaderboard.webp" alt="" />
+              <b className="t-num">#{cityRank}</b>
+              <span>Leaderboard</span>
+            </button>
           </div>
         </div>
 
@@ -153,33 +171,6 @@ export default function Campaign() {
             </div>
           </div>
         </div>
-
-        {/* "title missing". Two cards arriving straight off a progress bar read
-            as a continuation of the reward you are chasing; they are not — they
-            are the other two things the campaign does.
-
-            Two, not three: Race a friend went, because the row above it now
-            carries exactly that action and a page should not offer the same
-            door twice. And they are square tiles rather than list rows for the
-            same reason the storefront's are — posters for two places worth
-            going, with room for the art to be the thing you recognise, instead
-            of two more lines of 14px type with a thumbnail on the left. */}
-        <SectionHeader title="More ways to play" />
-        <div className="mtiles">
-          <button className="mtile" type="button" onClick={() => nav('/rewards')}>
-            <span className="mtile__t">Rewards</span>
-            <span className="mtile__s">
-              {unlockedRewards.length} of {REWARD_TIERS.length} tiers unlocked
-            </span>
-            <img className="mtile__im" src="/icons/rewards.webp" alt="" />
-          </button>
-          <button className="mtile" type="button" onClick={() => nav('/leaderboard')}>
-            <span className="mtile__t">Leaderboard</span>
-            <span className="mtile__s">See where you sit in the city</span>
-            <img className="mtile__im" src="/icons/leaderboard.webp" alt="" />
-          </button>
-        </div>
-
       </main>
     </>
   );

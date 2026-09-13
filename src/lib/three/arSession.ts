@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { color } from '../../design/constants';
-import { RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
+import { circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { loadCar } from './modelLoader';
 import { primeAudio, skid } from '../horn';
 
@@ -105,7 +105,72 @@ type Opts = {
  * The texture is pure black on transparent, so it can be tinted and faded from
  * code: dimmed while the surface is only provisional, full once tracking locks.
  */
-function makeReticle() {
+/**
+ * The circuit, drawn as a plan on the surface you are pointing at.
+ *
+ * The reticle says "a track goes here"; this says WHICH track and HOW BIG,
+ * before you commit to it — the two road edges at their true width, the
+ * centreline dashed like an axis, and the footprint it will occupy boxed out
+ * on the floor. Built from the engine's own curve at `trackSizeM` across, so
+ * what is outlined is what arrives.
+ *
+ * Lines rather than a ghosted copy of the real track: a solid preview reads as
+ * the thing already placed, and people stop looking for the button that places
+ * it. A plan reads as a proposal.
+ */
+function makeBlueprint(trackSizeM: number) {
+  const g = new THREE.Group();
+  g.name = 'blueprint';
+  const plan = circuitPlan();
+
+  const edge = (pts: THREE.Vector3[], hex: number, opacity: number, y: number) => {
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.LineLoop(geo, new THREE.LineBasicMaterial({ color: hex, transparent: true, opacity }));
+    line.position.y = y;
+    return line;
+  };
+
+  // the road itself — two rails, at the width the car will actually have
+  g.add(edge(plan.left, color.hwO.int, 0.95, 0.004));
+  g.add(edge(plan.right, color.hwO.int, 0.95, 0.004));
+
+  // the axis, dashed, the way a plan draws a centreline
+  const cGeo = new THREE.BufferGeometry().setFromPoints(plan.centre);
+  const centre = new THREE.LineLoop(
+    cGeo,
+    new THREE.LineDashedMaterial({ color: 0x5AA9FF, transparent: true, opacity: 0.7, dashSize: 0.02, gapSize: 0.018 }),
+  );
+  centre.computeLineDistances();
+  centre.position.y = 0.0035;
+  g.add(centre);
+
+  /* The ground it will take up. Drawn as four corner brackets rather than a
+     closed rectangle: a full box around the plan competes with the track lines
+     inside it, and the corners alone are enough to read the extent. */
+  const { w, d, cx, cz } = plan.footprint;
+  const hw = w / 2;
+  const hd = d / 2;
+  const arm = Math.min(hw, hd) * 0.34;
+  const bracket = new THREE.BufferGeometry().setFromPoints(
+    ([[-1, -1], [1, -1], [1, 1], [-1, 1]] as const).flatMap(([sx, sz]) => [
+      new THREE.Vector3(cx + sx * hw, 0, cz + sz * hd - sz * arm),
+      new THREE.Vector3(cx + sx * hw, 0, cz + sz * hd),
+      new THREE.Vector3(cx + sx * hw, 0, cz + sz * hd),
+      new THREE.Vector3(cx + sx * hw - sx * arm, 0, cz + sz * hd),
+    ]),
+  );
+  const corners = new THREE.LineSegments(
+    bracket,
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 }),
+  );
+  corners.position.y = 0.003;
+  g.add(corners);
+
+  g.scale.setScalar(trackSizeM);
+  return g;
+}
+
+function makeReticle(trackSizeM = 0) {
   const g = new THREE.Group();
 
   const tex = new THREE.TextureLoader().load('/decor/tire-mark.webp');
@@ -181,6 +246,12 @@ function makeReticle() {
   gridPoints.name = 'gridPoints';
 
   g.add(burnout, ring, pulseRing, gridPoints);
+  /* Inside the reticle, so it inherits the surface's position and rotation and
+     disappears with it the moment the track is placed — no second object to
+     keep in sync with the hit test. Inspect mode passes 0: it stands a car in
+     your room, and a circuit plan under it would be a promise of the wrong
+     thing. */
+  if (trackSizeM > 0) g.add(makeBlueprint(trackSizeM));
   return g;
 }
 
@@ -509,7 +580,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   const camera = new THREE.PerspectiveCamera(70, 1, 0.01, 40);
   lights(scene);
 
-  const reticle = makeReticle();
+  const reticle = makeReticle(opts.mode === 'inspect' ? 0 : (opts.trackSize ?? 2.4));
   reticle.matrixAutoUpdate = false;
   reticle.visible = false;
   scene.add(reticle);
@@ -933,7 +1004,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 60);
   lights(scene);
 
-  const reticle = makeReticle();
+  const reticle = makeReticle(opts.mode === 'inspect' ? 0 : (opts.trackSize ?? 2.4));
   scene.add(reticle);
 
   const anchor = new THREE.Group();
@@ -1144,6 +1215,13 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       reticle.rotation.set(0, Math.atan2(fwd.x, fwd.z), 0);
       // constant apparent size: scale with distance
       reticle.scale.setScalar(a.dist / RETICLE_REF);
+      /* The plan is the one part of the reticle that must NOT hold a constant
+         apparent size — its whole job is to show the footprint the circuit
+         will really take, and the circuit is placed at sizeM whatever the
+         distance. So it cancels the reticle's scaling and keeps its own,
+         inheriting only the position and rotation it is parented for. */
+      const bp = reticle.getObjectByName('blueprint');
+      if (bp) bp.scale.setScalar(sizeM / (reticle.scale.x || 1));
       const bo0 = reticle.getObjectByName('burnout') as THREE.Mesh | undefined;
       if (bo0) {
         const m = bo0.material as THREE.MeshBasicMaterial;
