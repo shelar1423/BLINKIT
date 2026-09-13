@@ -3053,7 +3053,14 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* handbrake + horn cluster, sat above the steering hint in the 3D race */
 .steer__acts {
-  position: absolute; right: 12px; bottom: calc(var(--safe-b) + 58px);
+  /* Clear of the steering pad below it, and derived from it rather than
+     guessed: .steer__pads sits at safe-b + 44px and its pads are 68px tall, so
+     the top of the right-hand one is at safe-b + 112px. At the old safe-b +
+     58px this column started 54px BELOW that line while sharing the same
+     right: 12px — so once the drift button appeared at launch, it materialised
+     inside the right steering pad. 12px of air on top of the pad's own height
+     is what keeps them apart. */
+  position: absolute; right: 12px; bottom: calc(var(--safe-b) + 44px + 68px + 12px);
   display: flex; flex-direction: column; gap: 10px; pointer-events: auto;
 }
 
