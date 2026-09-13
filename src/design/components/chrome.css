@@ -287,15 +287,23 @@
 .bnav__i.is-on::before {
   content: '';
   position: absolute; inset: 0 3px;
-  /* A rounded rectangle, not a stadium.
+  /* Derived from the bar, not eyeballed, because eyeballing it missed twice.
 
-     999px here made the lozenge's ends full half-circles: the bar is 66.4 tall
-     and the lozenge 54.4, so the radius resolved to 27.2 and there was no
-     straight edge left anywhere on it. That IS concentric with a stadium bar,
-     which is why it looked defensible and still read wrong — the reference
-     lozenge has long flat top and bottom edges and corners at roughly a
-     quarter of its height. 14 on 54.4 is 26%, measured off it. */
-  border-radius: 14px;
+     The bar is 66.4 tall and a stadium, so its corner radius is 33.2. The
+     lozenge sits 6px inside the bar's top and bottom (1 border + 5 padding)
+     but 11px inside its LEFT edge (1 + 7 padding + this rule's own 3). For a
+     curve to run parallel to the one outside it, its radius is that radius
+     minus however far in it sits:
+
+       following the top/bottom inset   33.2 - 6  = 27.2   half the lozenge
+                                                           height, i.e. a
+                                                           stadium
+       following the LEFT inset         33.2 - 11 = 22.2
+
+     999px resolved to the first and was too round; a measured-by-eye 14 was
+     too square. 22 is the one that actually tracks the bar's left end, which
+     is the edge the lozenge is nested against on the first tab. */
+  border-radius: 22px;
   background: rgba(31, 31, 31, 0.05);
 }
 .bnav__i > * { position: relative; z-index: 1; }
