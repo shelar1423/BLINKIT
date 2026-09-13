@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
-import { ARRIVE_U, DeliveryMap, DONE_U } from '../design/components/DeliveryMap';
+import { DeliveryMap } from '../design/components/DeliveryMap';
 import { rupees } from '../data/catalog';
 import { ADDRESSES } from '../data/addresses';
 import { useStore } from '../store/useStore';
@@ -38,15 +38,22 @@ import { useToast } from '../App';
    so the number and the picture can never disagree.
    ============================================================ */
 
-/** Real seconds the six-second design timeline is stretched across.
+/* One lap of the map, in real seconds.
  *
- *  Half a minute quicker than it was: at 108s the car crawled between turns
- *  and the drive read as idling rather than travelling. The whole timeline
- *  moves with this number, so the ETA still counts the same seven minutes
- *  down — it just counts them faster, which is the point. */
-const TRIP_S = 72;
+ * Stretching a single traversal across the whole delivery was the mistake:
+ * however the number was tuned, one drive had to carry seven minutes, so the
+ * car could only ever crawl. The design already loops — the car fades out at
+ * the house and fades back in at the store, which is what makes a lap join
+ * cleanly to the next — so the map runs at the speed it was drawn for and
+ * simply goes round again.
+ *
+ * The ETA is still read off the same motion, just at a coarser grain: one lap
+ * is one minute off the clock. Seven laps, seven minutes, and the count only
+ * moves when the car has actually driven the route again. */
+const LOOP_S = 10;
 /** What the ETA reads at the start of the trip. */
 const TRIP_MIN = 7;
+const TRIP_S = LOOP_S * TRIP_MIN;
 
 const PARTNER = 'Sangram';
 const ACCOUNT = { name: 'Aarav Mehta', first: 'Aarav', phone: '9620964510' };
@@ -65,8 +72,8 @@ export default function OrderSuccess() {
   const addressId = useStore((s) => s.addressId);
   const address = ADDRESSES.find((a) => a.id === addressId) ?? ADDRESSES[0];
 
-  /** Position on the design timeline, 0..1. Everything on this screen reads it. */
-  const [u, setU] = useState(0);
+  /** Seconds since the order was placed. Everything on this screen reads it. */
+  const [elapsed, setElapsed] = useState(0);
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -79,9 +86,9 @@ export default function OrderSuccess() {
     if (!placedAt) return;
     let raf = 0;
     const step = () => {
-      const k = Math.min(1, (Date.now() - placedAt) / 1000 / TRIP_S);
-      setU(k);
-      if (k < 1) raf = requestAnimationFrame(step);
+      const s = Math.min(TRIP_S, (Date.now() - placedAt) / 1000);
+      setElapsed(s);
+      if (s < TRIP_S) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
@@ -100,18 +107,21 @@ export default function OrderSuccess() {
     );
   }
 
-  /* How far along the drive itself is, which is not the same as how far along
-     the timeline is — the car arrives before the animation ends, and the beat
-     after that is the handover. */
-  const drive = Math.min(1, u / ARRIVE_U);
-  const done = u >= DONE_U;
-  const minsLeft = Math.max(1, Math.ceil((1 - drive) * TRIP_MIN));
+  const done = elapsed >= TRIP_S;
+  /* Which lap the car is on, and where it is within it. */
+  const lap = Math.min(TRIP_MIN - 1, Math.floor(elapsed / LOOP_S));
+  const u = done ? 1 : (elapsed % LOOP_S) / LOOP_S;
+  const minsLeft = Math.max(1, TRIP_MIN - lap);
+  /* The house only pops once, on the lap that is actually the last one. A
+     doorstep celebration every ten seconds while the ETA still reads five
+     minutes would be a lie the animation tells about itself. */
+  const arriving = lap >= TRIP_MIN - 1;
 
   const said = done
     ? 'I have handed over your order. Thanks for ordering!'
-    : drive > 0.88
+    : minsLeft <= 1
       ? 'I am at your location, please collect your order'
-      : drive > 0.45
+      : minsLeft <= 4
         ? 'I am on my way to your location'
         : 'I have picked up your order, and I am on the way';
 
@@ -135,6 +145,7 @@ export default function OrderSuccess() {
           making that a thing you switch back on is a step nobody wants. */}
       <DeliveryMap
         u={u}
+        arriving={arriving}
         onShare={() => toast('Location sharing is out of scope for this prototype')}
         label={done ? 'Your order has arrived' : `${PARTNER} is ${minsLeft} minutes away`}
       />
