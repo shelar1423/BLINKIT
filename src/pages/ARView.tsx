@@ -884,7 +884,7 @@ export default function ARView() {
             void launch();
           }}
           onShop={() => nav('/hot-wheels')}
-          onRewards={() => nav('?campaign=1')}
+          onRewards={() => nav('?rewards=1')}
           onExit={() => nav('/hot-wheels')}
           exitLabel="Shop cars"
         />

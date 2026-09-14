@@ -503,7 +503,7 @@ export default function RacePlay() {
           toast={toast}
           onRaceAgain={() => window.location.reload()}
           onShop={() => nav('/hot-wheels')}
-          onRewards={() => nav('?campaign=1')}
+          onRewards={() => nav('?rewards=1')}
           onExit={() => nav('/')}
           exitLabel="Done"
         />

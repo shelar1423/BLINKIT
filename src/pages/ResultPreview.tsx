@@ -52,7 +52,7 @@ export default function ResultPreview() {
         inviteUrl={`${window.location.origin}/?ref=PREVIEW`}
         onRaceAgain={() => toast('Preview only')}
         onShop={() => nav('/hot-wheels')}
-        onRewards={() => nav('?campaign=1')}
+        onRewards={() => nav('?rewards=1')}
         onExit={() => nav('/')}
         exitLabel="Close preview"
         toast={toast}

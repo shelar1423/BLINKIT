@@ -5002,89 +5002,12 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .carpick__i.is-on .carpick__tick { background: var(--green); }
 
-/* ---------- the campaign sheet ----------
-   One surface carrying what four screens carried: the tally, the reward
-   ladder, the city board and the invite. They are things you LOOK at, and once
-   a reward claims itself none of them is somewhere you go to act. */
+/* ---------- the rewards sheet ----------
+   Only the ladder is left in it, and the ladder brings its own styles: the
+   lane, the track and the stops are the rewards screen's, unchanged. This is
+   the box they sit in. Everything else that used to be here — a tally, a city
+   board, an invite row, a pair of buttons — went with the sections. */
 .cmp { display: grid; gap: 14px; padding-bottom: 4px; }
-.cmp__h {
-  margin: 4px 0 -4px;
-  display: flex; align-items: center; gap: 7px;
-  font-size: var(--sec-title-size); font-weight: var(--sec-title-weight);
-  letter-spacing: -0.2px; color: var(--ink);
-}
-
-/* What the racing has been worth. Three numbers, equal weight, no hierarchy
-   between them: points earn, the best run places you, the rank is the answer. */
-.cmp__tally {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  background: var(--surface-2); border-radius: 14px; padding: 12px 4px;
-  text-align: center;
-}
-.cmp__tally span { display: grid; gap: 2px; }
-.cmp__tally b { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; }
-.cmp__tally small { font-size: var(--f-2xs); color: var(--mut); }
-
-.cmp__riding {
-  display: flex; align-items: center; gap: 8px;
-  margin: 0; padding: 10px 12px; border-radius: 10px;
-  background: var(--green-tint); color: var(--green);
-  font-size: var(--f-md); font-weight: 700;
-}
-
-/* ---- the ladder ---- */
-.cmp__ladder { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-.cmp__rung {
-  display: flex; align-items: center; gap: 11px;
-  padding: 10px 12px; border-radius: 12px;
-  background: var(--surface-2);
-}
-.cmp__rung.is-got { background: var(--green-tint); }
-.cmp__rungic {
-  flex: none; width: 26px; height: 26px; border-radius: 50%;
-  display: grid; place-items: center;
-  background: #fff; color: var(--mut);
-}
-.cmp__rung.is-got .cmp__rungic { color: var(--green); }
-.cmp__rungt { flex: 1; min-width: 0; display: grid; gap: 1px; }
-.cmp__rungt b { font-size: var(--f-md); font-weight: 700; }
-.cmp__rungt small { font-size: var(--f-xs); color: var(--mut); }
-.cmp__rung.is-got .cmp__rungt small { color: var(--green); }
-.cmp__rungn { font-size: var(--f-xs); font-weight: 700; color: var(--mut-2); font-variant-numeric: tabular-nums; }
-
-/* ---- the board ---- */
-.cmp__board { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
-.cmp__row {
-  display: flex; align-items: center; gap: 11px;
-  padding: 9px 12px; border-radius: 10px;
-  font-size: var(--f-md);
-}
-.cmp__row small { display: block; font-size: var(--f-2xs); color: var(--mut); }
-.cmp__row b { font-variant-numeric: tabular-nums; font-weight: 700; }
-.cmp__row.is-you { background: var(--yellow-tint); font-weight: 700; }
-.cmp__pos {
-  flex: none; width: 22px; text-align: center;
-  font-size: var(--f-sm); font-weight: 800; color: var(--mut-2);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---- invite ---- */
-.cmp__invite {
-  display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
-  padding: 11px 12px; border-radius: 12px; background: var(--surface-2);
-}
-.cmp__badge {
-  flex: none; width: 32px; height: 32px; border-radius: 50%;
-  display: grid; place-items: center; background: #25D366; color: #fff;
-}
-.cmp__invite b { display: block; font-size: var(--f-md); font-weight: 700; }
-.cmp__invite small { display: block; font-size: var(--f-xs); color: var(--mut); margin-top: 1px; }
-
-.cmp__foot { display: grid; gap: 8px; padding-top: 2px; }
-.cmp__shop {
-  padding: 8px; border: 0; background: none;
-  font-size: var(--f-md); font-weight: 700; color: var(--green);
-}
 
 /* ---- /preview/result only: the tier switcher ---- */
 .rprev {

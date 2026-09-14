@@ -121,7 +121,7 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
         </div>
 
         <div className="bhdr__acts">
-          <button className="bhdr__wallet" type="button" onClick={() => nav('?campaign=1')} aria-label={`Blinkit Cash, ${points} points`}>
+          <button className="bhdr__wallet" type="button" onClick={() => nav('?rewards=1')} aria-label={`Blinkit Cash, ${points} points`}>
             <span className="bhdr__wallet-ic">
               <IconRupeeWallet size={28} />
             </span>

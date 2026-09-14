@@ -4,7 +4,7 @@ const Diag = lazy(() => import('./pages/Diag'));
 /* Deliberately unlinked, like /diag. See ResultPreview. */
 const ResultPreview = lazy(() => import('./pages/ResultPreview'));
 import { BottomNav } from './design/components/BottomNav';
-import { CampaignSheet } from './design/components/CampaignSheet';
+import { RewardsSheet } from './design/components/RewardsSheet';
 import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DriftLoader } from './design/components/DriftLoader';
@@ -94,8 +94,8 @@ export default function App() {
         {/* The campaign, everywhere, owned by nobody.
             On a query param rather than in a page's state so any screen can
             offer it, the back gesture closes it, and it can be linked to. */}
-        <CampaignSheet
-          open={new URLSearchParams(loc.search).has('campaign')}
+        <RewardsSheet
+          open={new URLSearchParams(loc.search).has('rewards')}
           onClose={() => nav(-1)}
         />
       </div>

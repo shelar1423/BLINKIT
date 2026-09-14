@@ -1,23 +1,20 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Sheet } from './Sheet';
-import { Button } from '../elements';
-import { LEADERBOARD, rupees } from '../../data/catalog';
+import { rupees } from '../../data/catalog';
 import { hasReached, REWARD_TIERS, useStore, type RewardTier } from '../../store/useStore';
-import { useStartRace } from '../../lib/useStartRace';
-import { IconCheck, IconFlag, IconLock, IconTrophy, IconUsers, IconWhatsApp } from '../elements/Icons';
+import { IconCheck, IconLock, IconTrophy } from '../elements/Icons';
 
 /* ============================================================
-   The campaign, as one sheet.
+   The rewards ladder, as a sheet.
 
-   This replaces four routes: the campaign hub, the reward ladder, the
-   leaderboard and the invite screen. None of them was a place you went to DO
-   something once claiming became automatic — they were places you went to
-   LOOK, and looking is what a sheet is for. The hub in particular was a second
-   home screen whose job was holding links to the other three.
+   It replaces the rewards screen, and for a while it replaced the campaign
+   hub, the leaderboard and the invite screen too. That made it a hub one
+   surface lower. It is only the ladder now: it opens off "Check your reward",
+   so the reward is the only thing it owes an answer about. The board lives on
+   the result screen, where a score is what raises the question.
 
-   It opens on `?campaign=1`, which means any screen can offer it without
-   owning it, the phone's back gesture closes it, and it can be linked to.
+   It opens on `?rewards=1`, which means any screen can offer it without owning
+   it, the phone's back gesture closes it, and it can be linked to.
    ============================================================ */
 
 /* Each of the four has artwork for the exact reward it names: the scooter for
@@ -151,121 +148,19 @@ function Ladder() {
   );
 }
 
-export function CampaignSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const nav = useNavigate();
-  const startRace = useStartRace();
-  const totalPoints = useStore((s) => s.totalPoints);
-  const bestScore = useStore((s) => s.bestScore);
-  const racesLeft = useStore((s) => s.racesLeft);
-  const referralCode = useStore((s) => s.referralCode);
-  const claimed = useStore((s) => s.claimedReward);
-
-  /* Where this score would sit among the city's, rather than a rank invented
-     and stored somewhere: the board is the board, and the player is placed in
-     it by the only number that decides it. */
-  const rank = LEADERBOARD.filter((r) => r.points > totalPoints).length + 1;
-  const top = LEADERBOARD.slice(0, 5);
-
-  const share = async () => {
-    const link = `${window.location.origin}/?ref=${referralCode}`;
-    const text = `Race It Home on Blinkit. Use my code ${referralCode} and we both get an extra race. ${link}`;
-    try {
-      if (navigator.share) await navigator.share({ title: 'Race It Home', text, url: link });
-      else await navigator.clipboard.writeText(link);
-    } catch {
-      /* dismissed, or no clipboard. Nothing to report: the player closed it. */
-    }
-  };
-
+export function RewardsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
-    <Sheet open={open} onClose={onClose} title="Race It Home">
+    /* Just the ladder.
+     *
+     * It carried a tally, a city board and an invite as well, which made it a
+     * campaign hub in a sheet: the same collection of everything the hub
+     * screen was, one surface lower. This opens off "Check your reward", so
+     * the reward is the only thing it owes an answer about. The board lives on
+     * the result screen where a score raises the question, and the points are
+     * already at the top of the lane. */
+    <Sheet open={open} onClose={onClose} title="Rewards">
       <div className="cmp">
-        {/* What the racing has been worth so far. */}
-        <div className="cmp__tally">
-          <span>
-            <b className="t-num">{totalPoints.toLocaleString('en-IN')}</b>
-            <small>Points</small>
-          </span>
-          <span>
-            <b className="t-num">{bestScore.toLocaleString('en-IN')}</b>
-            <small>Best run</small>
-          </span>
-          <span>
-            <b className="t-num">#{rank}</b>
-            <small>In your city</small>
-          </span>
-        </div>
-
-        {claimed && (
-          <p className="cmp__riding">
-            <IconTrophy size={15} />
-            {claimed.value > 0 ? `${rupees(claimed.value)} Blinkit Cash` : 'Free delivery'} is on your next order
-          </p>
-        )}
-
         <Ladder />
-
-        <h3 className="cmp__h">
-          <IconTrophy size={15} /> This week in your city
-        </h3>
-        <ol className="cmp__board">
-          {top.map((r, i) => (
-            <li key={r.name} className="cmp__row">
-              <span className="cmp__pos">{i + 1}</span>
-              <span className="grow">
-                {r.name}
-                <small>{r.area}</small>
-              </span>
-              <b className="t-num">{r.points.toLocaleString('en-IN')}</b>
-            </li>
-          ))}
-          <li className="cmp__row is-you">
-            <span className="cmp__pos">{rank}</span>
-            <span className="grow">You</span>
-            <b className="t-num">{totalPoints.toLocaleString('en-IN')}</b>
-          </li>
-        </ol>
-
-        <h3 className="cmp__h">
-          <IconUsers size={15} /> Race a friend
-        </h3>
-        <button type="button" className="cmp__invite" onClick={share}>
-          <span className="cmp__badge" aria-hidden="true">
-            <IconWhatsApp size={16} />
-          </span>
-          <span className="grow">
-            <b>Send your code</b>
-            <small>
-              {referralCode} · you both get an extra race
-            </small>
-          </span>
-        </button>
-
-        <div className="cmp__foot">
-          <Button
-            variant="yellow"
-            block
-            type="button"
-            disabled={racesLeft <= 0}
-            onClick={() => {
-              onClose();
-              startRace();
-            }}
-          >
-            <IconFlag size={16} />
-            {racesLeft > 0 ? 'Race now' : 'No races left today'}
-          </Button>
-          <button
-            type="button"
-            className="cmp__shop"
-            onClick={() => {
-              onClose();
-              nav('/hot-wheels');
-            }}
-          >
-            Shop Hot Wheels
-          </button>
-        </div>
       </div>
     </Sheet>
   );
