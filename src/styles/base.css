@@ -2659,7 +2659,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__foot--pair {
   position: sticky; bottom: 0;
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  margin-top: 18px; padding: 12px 0 calc(12px + var(--safe-b));
+  /* The same seat the app's bottom bar uses: .bnav-wrap ends on
+     10px + safe-b, so these sit on the line every other screen's buttons do. */
+  margin-top: 18px; padding: 12px 0 calc(10px + var(--safe-b));
   /* A ground of its own, and a solid one. Sticky over a white leaderboard
      card, the buttons had the card scrolling through the gap between them and
      read as part of it. A fade left the card ghosting through its top; this is
@@ -2726,7 +2728,9 @@ input, select, textarea { font: inherit; color: inherit; }
    top edge by half its height so it reads as sitting ON the card rather than
    inside it. */
 .rwd__topim {
-  position: absolute; left: 50%; top: 0; transform: translate(-50%, -86%);
+  /* -86% put its base 7px inside the card; the 6px brings it down to sit a
+     little deeper on the edge without giving the heading's air back. */
+  position: absolute; left: 50%; top: 0; transform: translate(-50%, calc(-86% + 6px));
   width: 112px; height: 112px; object-fit: contain;
 }
 /* The rows are .lrow, the leaderboard's own. Two things change: the gutter,
