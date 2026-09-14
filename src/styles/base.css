@@ -2910,7 +2910,12 @@ input, select, textarea { font: inherit; color: inherit; }
   position: fixed; left: 50%; right: auto; transform: translateX(-50%);
   bottom: 0; z-index: 2;
   margin: 0;
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  /* 320, not the 290 .rwd__foot caps a single button at: these two are read
+     against the cards above them, so Race again starts on the scorecard's left
+     edge and Shop now ends on its right. A narrower pair sat inside both cards
+     and read as a third, smaller column. */
+  max-width: 320px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
   padding: 12px 0 calc(10px + var(--safe-b));
   /* A ground of its own, and a solid one. Over a white leaderboard card, the
      card had been scrolling through the gap between the buttons and reading as
