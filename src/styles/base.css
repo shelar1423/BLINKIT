@@ -1235,13 +1235,22 @@ input, select, textarea { font: inherit; color: inherit; }
   position: absolute; top: calc(var(--safe-t) + 10px); left: 12px; right: 12px;
   display: flex; align-items: flex-start; gap: 8px;
 }
+/* The campaign's own two colours, not a smoked-glass chip. Over a camera feed
+   or a track the dark translucent version took whatever was behind it: on the
+   wooden floor of a living room it read brown, and the score was white text on
+   whatever happened to be under it. A solid Blinkit yellow chip with the
+   figure in Blinkit green reads the same on any ground, and it is the pairing
+   the rest of the app already uses. */
 .hud__c {
-  background: rgba(10,6,18,0.6); backdrop-filter: blur(8px);
-  border: 1px solid rgba(255,255,255,0.14); border-radius: var(--r);
-  padding: 6px 11px; color: #fff;
+  background: var(--yellow);
+  border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--r);
+  padding: 6px 11px; color: var(--green);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
 .hud__c b { display: block; font-size: var(--f-xl); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
-.hud__c span { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.12em; color: rgba(255,255,255,0.65); }
+/* The label sits back from the figure without leaving the pair: same green,
+   carrying less weight, rather than a third colour on a two-colour chip. */
+.hud__c span { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.12em; color: rgba(50, 134, 23, 0.72); }
 .hud__x {
   margin-left: auto; width: 36px; height: 36px; border-radius: 50%;
   background: rgba(10,6,18,0.6); border: 1px solid rgba(255,255,255,0.14);
