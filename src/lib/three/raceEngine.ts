@@ -1103,6 +1103,8 @@ export class RaceEngine {
 
   private t = 0;
   private lateral = 0;
+  /** How `steer` is read: as a rate across the road, or as a lane on it. */
+  private steerMode: 'rate' | 'lane' = 'rate';
   private steer = 0;
   private steerSmooth = 0;
   private speed = 0;
@@ -2761,6 +2763,26 @@ export class RaceEngine {
   /** -1 (full left) .. 1 (full right) */
   setSteer(v: number) {
     this.steer = Math.max(-1, Math.min(1, v));
+    this.steerMode = 'rate';
+  }
+
+  /**
+   * Steering as a POSITION across the road rather than a speed across it.
+   *
+   * A thumb on a pad is a rate control: you press, the car moves, you let go
+   * and it stops where it is. A tilted phone is not — it is never exactly at
+   * neutral, so the smallest steady lean integrates all the way to the
+   * barrier and pins there. Held up at arm's length in AR that is most of the
+   * race: the car sat on one wall, then on the other, and nothing in between
+   * answered the phone.
+   *
+   * So tilt drives the LANE: level is the centreline, half a lean is half way
+   * across, full lock is the edge, and the car eases to wherever the phone is
+   * pointing. Which is what a player tilting a phone thinks they are doing.
+   */
+  setSteerLane(v: number) {
+    this.steer = Math.max(-1, Math.min(1, v));
+    this.steerMode = 'lane';
   }
 
   /**
@@ -3439,6 +3461,12 @@ export class RaceEngine {
       // on the loop the car is ON the loop's path, not easing towards it
       if (this.loopS >= 0) this.lateral = lock;
       else this.lateral += (lock - this.lateral) * chase(6, dt);
+    } else if (this.steerMode === 'lane') {
+      /* Tilt: the input IS the lane. Eased rather than snapped, so the car
+         leans across the road with the phone instead of tracking every tremor
+         of a hand held up at arm's length. */
+      const want = this.steerSmooth * LANE_LIMIT;
+      this.lateral += (want - this.lateral) * chase(4.2, dt);
     } else {
       this.lateral += this.steerSmooth * dt * 5.5 * slide * bite;
     }

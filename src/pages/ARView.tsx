@@ -335,7 +335,7 @@ export default function ARView() {
   useEffect(() => {
     if (phase !== 'racing') return;
     const t = createTiltSteer({
-      onSteer: (v) => handle.current?.setSteer(v),
+      onSteer: (v) => handle.current?.setSteerLane(v),
       onStateChange: setTiltState,
     });
     tilt.current = t;

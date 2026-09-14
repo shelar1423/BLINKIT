@@ -242,7 +242,7 @@ export default function RacePlay() {
      fight over setSteer. */
   useEffect(() => {
     const t = createTiltSteer({
-      onSteer: (v) => handle.current?.engine.setSteer(v),
+      onSteer: (v) => handle.current?.engine.setSteerLane(v),
       onStateChange: setTiltState,
     });
     tilt.current = t;

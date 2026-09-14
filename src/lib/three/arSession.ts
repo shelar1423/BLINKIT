@@ -71,6 +71,9 @@ export type ARHandle = {
   /** Swipe-up / key fallback for the jump. */
   jumpNow: () => void;
   setSteer: (v: number) => void;
+  /** Tilt's way in: the value is a lane across the road, not a speed across
+   *  it. See RaceEngine.setSteerLane. */
+  setSteerLane: (v: number) => void;
   setThrottle: (v: number) => void;
   setBrake: (v: number) => void;
   setDrift: (on: boolean) => void;
@@ -838,6 +841,7 @@ function driveApi(engine: RaceEngine) {
   let drifting = false;
   return {
     setSteer: (v: number) => engine.setSteer(v),
+    setSteerLane: (v: number) => engine.setSteerLane(v),
     setThrottle: (v: number) => engine.setThrottle(v),
     setBrake: (v: number) => engine.setBrake(v),
     setDrift: (on: boolean) => {
