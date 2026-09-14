@@ -2411,7 +2411,7 @@ input, select, textarea { font: inherit; color: inherit; }
   /* x hidden: nothing here should ever make the screen draggable sideways. */
   overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
   display: flex; flex-direction: column; align-items: center;
-  padding: calc(var(--safe-t) + 10px) var(--gut) calc(14px + var(--safe-b));
+  padding: calc(var(--safe-t) + 10px) var(--gut) calc(88px + var(--safe-b));
   text-align: center;
   background: linear-gradient(180deg, var(--rwd-bg-top) 0%, #0062B8 45%, var(--rwd-bg-bot) 100%);
   color: #fff;
@@ -2594,13 +2594,13 @@ input, select, textarea { font: inherit; color: inherit; }
    already on the order, so the card was a picture of something that had
    already happened. */
 .rwd__cpn {
-  margin: 14px 0 0; text-align: center;
+  margin: 18px 0 0; text-align: center;
   font-size: var(--f-md); font-weight: 500; color: rgba(255, 255, 255, 0.9);
 }
 .rwd__cpn b { font-weight: 800; color: var(--yellow); }
 .rwd__cpn b.is-pass { color: #C9A6FF; }
 .rwd__check {
-  display: block; margin: 3px auto 0; padding: 0; border: 0; background: none;
+  display: block; margin: 6px auto 0; padding: 0; border: 0; background: none;
   font-size: var(--f-sm); font-weight: 700; color: #fff;
   text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 3px;
 }
@@ -2657,22 +2657,18 @@ input, select, textarea { font: inherit; color: inherit; }
 /* Pinned, so both answers are reachable from anywhere in the scroll. The
    screen is taller than a phone now that the board is on it. */
 .rwd__foot--pair {
-  position: sticky; bottom: 0;
+  /* Fixed, not sticky. Sticky kept the buttons in view but they still rode the
+     scroll at the ends of it, and the page ran on underneath them; these are
+     the screen's controls, so they hold their seat and only the middle moves.
+     The same seat the app's bottom bar uses: .bnav-wrap ends on 10px + safe-b,
+     so these sit on the line every other screen's buttons do. */
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 2;
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  /* The same seat the app's bottom bar uses: .bnav-wrap ends on
-     10px + safe-b, so these sit on the line every other screen's buttons do. */
-  margin-top: 18px; padding: 12px 0 calc(10px + var(--safe-b));
-  /* A ground of its own, and a solid one. Sticky over a white leaderboard
-     card, the buttons had the card scrolling through the gap between them and
-     read as part of it. A fade left the card ghosting through its top; this is
-     the page's own bottom colour, opaque, so nothing passes behind it. */
-  background: var(--rwd-bg-bot);
-}
-/* To the screen's edges and past its bottom. -50vw each side clears any width
-   the content column can take; the overhang below covers an overscroll bounce,
-   where the bar would otherwise lift and show the gradient under it. */
-.rwd__foot--pair::before {
-  content: ''; position: absolute; inset: 0 -50vw -240px; z-index: -1;
+  padding: 12px var(--gut) calc(10px + var(--safe-b));
+  /* A ground of its own, and a solid one. Over a white leaderboard card, the
+     card had been scrolling through the gap between the buttons and reading as
+     part of them. This is the page's own bottom colour, opaque, so nothing
+     passes behind it. */
   background: var(--rwd-bg-bot);
 }
 .rwd__foot--pair .btn { width: 100%; min-width: 0; }
@@ -2714,7 +2710,7 @@ input, select, textarea { font: inherit; color: inherit; }
      entirely above the card with its base resting on the top edge, so the
      card's own space belongs to its content rather than to the artwork sitting
      on it. */
-  margin-top: 82px;
+  margin-top: 108px;
   padding: 22px 14px 20px; border-radius: 18px;
   background: #fff; color: var(--ink);
 }
@@ -4335,14 +4331,6 @@ input, select, textarea { font: inherit; color: inherit; }
   font-style: normal; font-size: var(--f-2xs); font-weight: 800;
   display: grid; place-items: center;
 }
-.coach__alt {
-  justify-self: center;
-  border: 0; background: none; padding: 2px 10px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: var(--f-xs); font-weight: 700;
-  text-decoration: underline; text-underline-offset: 3px;
-}
-
 /* ---- the gesture drawings ----
    Every instruction here is a MOVEMENT, so every drawing moves. A phone
    tipping back says "tilt up" in a way no sentence does, and the loop means
@@ -5053,4 +5041,4 @@ input, select, textarea { font: inherit; color: inherit; }
 .rprev__b.is-on { background: var(--yellow); color: var(--ink); }
 /* The switcher sits where the buttons are, so the previewed screen makes room
    for it. Preview-only: nothing outside /preview/result carries this class. */
-.rprevhost .rwd { padding-bottom: calc(64px + var(--safe-b)); }
+.rprevhost .rwd { padding-bottom: calc(132px + var(--safe-b)); }

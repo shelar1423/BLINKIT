@@ -84,16 +84,7 @@ function GlyphSteer({ mode }: { mode: 'ar' | '3d' }) {
   );
 }
 
-export function RaceCoach({
-  mode,
-  onDone,
-  tilt,
-}: {
-  mode: 'ar' | '3d';
-  onDone: () => void;
-  /** Offered here rather than as its own strip over the race. */
-  tilt?: { offer: boolean; onEnable: () => void };
-}) {
+export function RaceCoach({ mode, onDone }: { mode: 'ar' | '3d'; onDone: () => void }) {
   const ar = mode === 'ar';
   const steps = [
     { glyph: <GlyphPull />, title: 'Pull the launcher', body: 'Drag back, let go' },
@@ -122,11 +113,6 @@ export function RaceCoach({
           ))}
         </ol>
 
-        {tilt?.offer && (
-          <button type="button" className="coach__alt" onClick={tilt.onEnable}>
-            Steer by tilting instead
-          </button>
-        )}
         <Button variant="hwBlue" block type="button" onClick={onDone}>
           Got it, let’s race
         </Button>

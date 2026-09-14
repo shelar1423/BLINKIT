@@ -15,6 +15,8 @@ export type RaceHandle = {
   /** Fire the launcher without touching the lever — the keyboard's way in. */
   launch: (power: number) => void;
   start: () => void;
+  /** Freeze the launch view while the briefing is over it. */
+  setHeld: (on: boolean) => void;
   pause: () => void;
   dispose: () => void;
 };
@@ -186,10 +188,13 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
      3-2-1 countdown, which asked nothing of the player and gave the launcher
      built into the track nothing to do. */
   let launching = true;
+  /* The briefing holds the launcher: nothing animates behind the overlay and
+     a press on the dim cannot take hold of the lever underneath it. */
+  let held = false;
   const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
 
   const fireLauncher = (power: number) => {
-    if (!launching) return;
+    if (!launching || held) return;
     launching = false;
     engine.setStartLights(3);
     engine.launch(power);
@@ -216,7 +221,7 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     !!(e.target as HTMLElement | null)?.closest?.('button,a,input,select,[role="button"]');
   let leverId: number | null = null;
   const onDown = (e: PointerEvent) => {
-    if (!launching || leverId !== null || onControl(e)) return;
+    if (!launching || held || leverId !== null || onControl(e)) return;
     if (leverDrag.grab(e.clientX, e.clientY)) leverId = e.pointerId;
   };
   const onMove = (e: PointerEvent) => {
@@ -242,7 +247,7 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
       /* The simulation is NOT ticked: no clock, no pickups, nothing moving
          until the lever is let go. Only the launcher framing — and `tickIdle`,
          which drives the chevrons standing over the lever and nothing else. */
-      engine.tickIdle(dt);
+      if (!held) engine.tickIdle(dt);
       engine.launcherCameraTarget(lnTarget);
       camPos.lerp(lnTarget.pos, chase(4, dt));
       camLook.lerp(lnTarget.look, chase(5, dt));
@@ -288,6 +293,7 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
       engine.start();
     },
     launch: (power: number) => fireLauncher(power),
+    setHeld: (on: boolean) => { held = on; },
     pause: () => engine.pause(),
     dispose() {
       disposed = true;

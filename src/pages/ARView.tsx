@@ -310,6 +310,13 @@ export default function ARView() {
     };
   }, [phase]);
 
+  /* The briefing holds the scene. Without this the car idles behind the
+     overlay and a tap on the dim reaches the canvas underneath, which starts
+     the race while the player is still reading how to drive it. */
+  useEffect(() => {
+    handle.current?.setHeld(phase === 'placed' && !coached && !inspect);
+  }, [phase, coached, inspect]);
+
   const press = useCallback((dir: number) => handle.current?.setSteer(dir), []);
   const release = useCallback(() => handle.current?.setSteer(0), []);
   const gas = useCallback((on: boolean) => handle.current?.setThrottle(on ? 1 : 0), []);

@@ -61,6 +61,9 @@ export type ARHandle = {
   armLaunch: (drawn: boolean) => void;
   /** Draw the sled back, 0..1 of its travel — the pull, shown in the world. */
   setLaunchPull: (k: number) => void;
+  /** Freeze the placed scene while the briefing is over it: the car stops
+   *  idling and nothing behind the overlay can start the race. */
+  setHeld: (on: boolean) => void;
   /** Swipe-up / key fallback for the jump. */
   jumpNow: () => void;
   setSteer: (v: number) => void;
@@ -889,6 +892,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   };
 
   const inspect = opts.mode === 'inspect';
+  /* The briefing overlay holds the scene. The car idles behind it otherwise,
+     and a tap on the dim reaches the canvas and starts the race under it. */
+  let held = false;
 
   const gateLift = makeJumpInput();
   const jumpInput = makeJumpInput();
@@ -969,7 +975,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   let fpInited = false;
 
   function startRace() {
-    if (inspect || phase !== 'placed') return;
+    if (inspect || held || phase !== 'placed') return;
     startBanner.visible = false;
     setPhase('racing');
     engine.start();
@@ -980,12 +986,12 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
      are not a countdown — nothing is being timed — they are the gantry
      answering the hand on the launcher. */
   function armLaunch(drawn: boolean) {
-    if (inspect || phase !== 'placed') return;
+    if (inspect || held || phase !== 'placed') return;
     engine.setStartLights(drawn ? 2 : 1);
   }
 
   function launch(power: number) {
-    if (inspect || phase !== 'placed') return;
+    if (inspect || held || phase !== 'placed') return;
     engine.setStartLights(3);
     startBanner.visible = false;
     setPhase('racing');
@@ -1087,7 +1093,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     if (phase === 'ready') place();
     /* Never in inspect mode: a second select there is someone looking closer
        at their car, not asking to race it. */
-    else if (phase === 'placed' && !inspect) startRace();
+    else if (phase === 'placed' && !inspect && !held) startRace();
   });
   session.addEventListener('end', cleanup);
   opts.overlayRoot.addEventListener('beforexrselect', blockSelect);
@@ -1101,7 +1107,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     /* In headset AR the camera IS the phone, so there is no launcher framing
        to move to — you look at the lever yourself. The drag is identical. */
     makeLeverDrag(
-      engine, renderer.xr.getCamera(), () => !inspect && phase === 'placed', armLaunch, launch,
+      engine, renderer.xr.getCamera(), () => !inspect && !held && phase === 'placed', armLaunch, launch,
       (k) => opts.onPull?.(k), renderer.domElement,
     ),
   );
@@ -1207,7 +1213,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     /* The launcher's own animation — the chevrons over the lever. The engine
        is not ticked until the lever goes, so this is the only thing keeping
        the launch view alive. */
-    if (phase === 'placed') engine.tickIdle(dt);
+    if (phase === 'placed' && !held) engine.tickIdle(dt);
 
     renderer.render(scene, camera);
   });
@@ -1227,6 +1233,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     startRace,
     launch,
     armLaunch,
+    setHeld: (on: boolean) => { held = on; },
     setLaunchPull: (k) => engine.setLaunchPull(k),
     jumpNow: () => race.jumpNow(),
     nudgeScale: (f) => setSize(sizeM * f),
@@ -1370,6 +1377,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   };
 
   const inspect = opts.mode === 'inspect';
+  /* The briefing overlay holds the scene. The car idles behind it otherwise,
+     and a tap on the dim reaches the canvas and starts the race under it. */
+  let held = false;
   const ground = inspect ? GROUND_INSPECT : GROUND;
   const gateLift = makeJumpInput();
   const jumpInput = makeJumpInput();
@@ -1545,7 +1555,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   /** Place using screen-space tap coordinates: raycast from the tap point
    *  through the camera to the ground plane, placing the track there. */
   function startRace() {
-    if (inspect || phase !== 'placed') return;
+    if (inspect || held || phase !== 'placed') return;
     startBanner.visible = false;
     setPhase('racing');
     engine.start();
@@ -1556,12 +1566,12 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      are not a countdown — nothing is being timed — they are the gantry
      answering the hand on the launcher. */
   function armLaunch(drawn: boolean) {
-    if (inspect || phase !== 'placed') return;
+    if (inspect || held || phase !== 'placed') return;
     engine.setStartLights(drawn ? 2 : 1);
   }
 
   function launch(power: number) {
-    if (inspect || phase !== 'placed') return;
+    if (inspect || held || phase !== 'placed') return;
     engine.setStartLights(3);
     startBanner.visible = false;
     setPhase('racing');
@@ -1588,7 +1598,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
    * how the launcher reads a press — the race's launcher behaves exactly as
    * it always has. */
   const leverDrag = makeLeverDrag(
-    engine, camera, () => !inspect && phase === 'placed', armLaunch, launch,
+    engine, camera, () => !inspect && !held && phase === 'placed', armLaunch, launch,
     (k) => opts.onPull?.(k), renderer.domElement,
   );
   const detachGestures = adjustGestures(
@@ -1712,7 +1722,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
        still and you are looking down the lane; turn it thirty degrees and you
        turn thirty degrees. */
     if (phase === 'placed' && !inspect) {
-      engine.tickIdle(dt);
+      if (!held) engine.tickIdle(dt);
       engine.launcherCameraTarget(lnTarget);
       const wp = engine.root.localToWorld(lnTarget.pos.clone());
       const wl = engine.root.localToWorld(lnTarget.look.clone());
@@ -1794,6 +1804,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     startRace,
     launch,
     armLaunch,
+    setHeld: (on: boolean) => { held = on; },
     setLaunchPull: (k) => engine.setLaunchPull(k),
     jumpNow: () => race.jumpNow(),
     nudgeScale: (f) => setSize(sizeM * f),

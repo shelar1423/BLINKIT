@@ -192,6 +192,12 @@ export default function RacePlay() {
     return () => window.removeEventListener('keydown', key);
   }, [launched]);
 
+  /* The briefing holds the launcher: the chevrons stop running and a press on
+     the dim cannot reach the lever behind it. */
+  useEffect(() => {
+    handle.current?.setHeld(!coached);
+  }, [coached, loaded]);
+
   /* ---------- steering ---------- */
   const steerTo = useCallback((clientX: number) => {
     const w = window.innerWidth;
@@ -214,13 +220,6 @@ export default function RacePlay() {
       t.stop();
       tilt.current = null;
     };
-  }, []);
-
-  const enableTilt = useCallback(async () => {
-    const t = tilt.current;
-    if (!t) return;
-    const s = await t.enable();
-    if (s === 'active') t.start();
   }, []);
 
   /* 'active' only means permitted — the sensor still has to deliver an event
@@ -477,14 +476,7 @@ export default function RacePlay() {
           said is in the briefing now, and the chevrons running down over the
           lever carry the reminder without a word. */}
       {loaded && !err && !coached && !outcome && (
-        <RaceCoach
-          mode="3d"
-          onDone={() => setCoached(true)}
-          tilt={{
-            offer: tiltState === 'needs-permission',
-            onEnable: () => void enableTilt(),
-          }}
-        />
+        <RaceCoach mode="3d" onDone={() => setCoached(true)} />
       )}
 
       {slowmo && !outcome && <div className="btime" aria-hidden="true" />}
