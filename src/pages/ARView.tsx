@@ -16,7 +16,7 @@ import {
 } from '../lib/three/arSession';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import {
-  IconAR, IconChevronLeft, IconClose, IconFlag, IconInfo, IconMinus, IconPlus, IconRotate,
+  IconAR, IconArrowLeft, IconClose, IconFlag, IconInfo, IconMinus, IconPlus, IconRotate,
 } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
@@ -528,15 +528,15 @@ export default function ARView() {
             {raceHud ? (
               <>
                 <div className="hud__top">
-                  {/* The delivery screen's round chevron, in the corner it
-                      puts it in. */}
+                  {/* The delivery screen's own round back button, in the
+                      corner it puts it in. */}
                   <button
                     className="hud__back"
                     type="button"
                     onClick={() => handle.current?.end()}
                     aria-label="Exit AR"
                   >
-                    <IconChevronLeft size={22} />
+                    <IconArrowLeft size={18} />
                   </button>
                   <div className="hud__c">
                     <b className="t-num">{(stats?.score ?? 0).toLocaleString('en-IN')}</b>

@@ -1231,22 +1231,17 @@ input, select, textarea { font: inherit; color: inherit; }
 .stage__ui > * { pointer-events: auto; }
 
 /* HUD */
-/* The two figures take a corner each, with the way out between them. They sat
-   as a pair in the left corner with the close button alone on the right, which
-   put the score and the clock — the two things you glance at, and never at the
-   same moment — in the same glance, and left two thirds of the row empty. */
+/* Two rows. The way out sits alone on the first, in the corner, because it is
+   not one of the figures and standing it between them made it read as one —
+   the row looked like three readouts with a button in the middle of it. The
+   score and the clock take the second row, a corner each: they are the two
+   things you glance at, and never at the same moment. */
 .hud__top {
-  position: absolute; top: calc(var(--safe-t) + 22px); left: 12px; right: 12px;
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+  position: absolute; top: calc(var(--safe-t) + 12px); left: 12px; right: 12px;
+  display: grid; grid-template-columns: auto auto; justify-content: space-between;
+  row-gap: 12px; column-gap: 8px;
 }
-/* The score sits off the corner, not in it: the chevron owns that, and a chip
-   hard against it would read as one control with two halves. */
-/* 16 plus the row's own 8px gap: 24px of clear air between the chevron and
-   the score. */
-.hud__c { margin-left: 16px; margin-right: auto; }
-/* The clock keeps the far corner; the auto margin above it is what pushes it
-   there, so the score does not drift into the middle of the row. */
-.hud__c + .hud__c { margin-left: 0; margin-right: 0; }
+.hud__back { grid-column: 1 / -1; justify-self: start; }
 /* The campaign's own two colours, not a smoked-glass chip. Over a camera feed
    or a track the dark translucent version took whatever was behind it: on the
    wooden floor of a living room it read brown, and the score was white text on
@@ -1263,12 +1258,12 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The label sits back from the figure without leaving it: the same black,
    carrying less weight, rather than a third colour on the chip. */
 .hud__c span { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.12em; color: rgba(31, 31, 31, 0.68); }
-/* The same round chevron the delivery screen puts in its corner, and the same
-   white disc, so leaving a race looks like leaving any other screen in the
-   app. It replaced a close X, which in a corner of its own read as dismissing
-   the app rather than stepping back out of the race. */
+/* The delivery screen's back button, and the same white disc, so leaving a
+   race looks like leaving any other screen in the app. Smaller than that one
+   at 34px: on the delivery screen it is the only thing in its corner, here it
+   sits over a race and has two readouts under it. */
 .hud__back {
-  width: 40px; height: 40px; border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   background: #fff; border: 1px solid var(--line);
   color: var(--ink); display: grid; place-items: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
