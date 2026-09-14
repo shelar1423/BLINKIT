@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { tagARSurface } from './arSurfaces';
 import { color } from '../../design/constants';
 import { chase, circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
 import { RACE_SECONDS, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
@@ -868,6 +869,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
      browser claims a two-finger gesture as a page zoom and a one-finger drag as
      a scroll, and our pointer handlers never see a clean stream. */
   renderer.domElement.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:60;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
+  tagARSurface(renderer.domElement);
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
@@ -1335,6 +1337,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   video.muted = true;
   video.srcObject = stream;
   video.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:55;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
+  tagARSurface(video);
   document.body.appendChild(video);
   await video.play().catch(() => {});
 
@@ -1355,6 +1358,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   renderer.domElement.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;z-index:56;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  tagARSurface(renderer.domElement);
   document.body.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();

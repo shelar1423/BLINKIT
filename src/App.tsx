@@ -9,6 +9,7 @@ import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DriftLoader } from './design/components/DriftLoader';
 import { primeAudio } from './lib/horn';
+import { clearARSurfaces } from './lib/three/arSurfaces';
 
 import Home from './pages/Home';
 import HotWheels from './pages/HotWheels';
@@ -60,6 +61,15 @@ export default function App() {
       window.removeEventListener('keydown', unlock);
     };
   }, []);
+
+  /* Belt and braces for the AR canvas. It is appended to document.body, so if
+     a session ever outlives its screen — a browser closed mid-race and
+     reopened on an earlier page — nothing in React can reach it, and it draws
+     a circuit over whatever is showing. Anywhere but /ar, there should be no
+     AR surface on the page; if there is, it is a leak, and this sweeps it. */
+  useEffect(() => {
+    if (!/^\/ar(\/|$)/.test(loc.pathname)) clearARSurfaces();
+  }, [loc.pathname]);
 
   const value = useMemo(() => ({ toast }), [toast]);
   const full = FULLSCREEN.some((p) => loc.pathname.startsWith(p));

@@ -23,6 +23,7 @@ import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
 import { SteerCue } from '../design/components/SteerCue';
 import { RaceCoach } from '../design/components/RaceCoach';
+import { clearARSurfaces } from '../lib/three/arSurfaces';
 import { Poppers } from '../design/components/Poppers';
 import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
 import {
@@ -110,6 +111,36 @@ export default function ARView() {
   }, []);
 
   useEffect(() => () => handle.current?.end(), []);
+
+  /* Close the session the moment the page goes away.
+
+     A phone that sleeps or a browser that is closed does not unmount this
+     screen: the canvas and the camera's video are on document.body, outside
+     React, so they survive with the camera light still on. Coming back, the
+     browser can restore an earlier screen — and the AR canvas is still there,
+     drawing the circuit over a product page.
+
+     `pagehide` covers the tab being closed or put away; `visibilitychange`
+     covers the app being backgrounded, which on iOS suspends the camera
+     anyway, so there is nothing to keep alive. The race cannot continue
+     through either, and the session's own `onEnd` puts this screen back to
+     its placement state. */
+  useEffect(() => {
+    const drop = () => {
+      handle.current?.end();
+      handle.current = null;
+      clearARSurfaces();
+    };
+    const onVis = () => {
+      if (document.visibilityState === 'hidden') drop();
+    };
+    window.addEventListener('pagehide', drop);
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      window.removeEventListener('pagehide', drop);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, []);
 
   /* Fetched and decoded while the gate is still on screen, so the first frame
      of a race is not also the first network request for its sound. */

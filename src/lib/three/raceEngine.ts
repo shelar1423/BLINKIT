@@ -3562,6 +3562,18 @@ export class RaceEngine {
         p.sprite.visible = false;
       }
     }
+    /* And nothing left to hit. The flag has dropped, the score is settled, and
+       the outro is a victory lap the player is not steering — so a chunk of
+       debris in the road after the line can only take points off a race that
+       is already over. The chunks go with the pickups. Anything mid-shatter is
+       left alone: those shards are already falling and fade on their own. */
+    for (const c of this.debris) {
+      if (c.broken > 0) continue;
+      c.mesh.visible = false;
+      /* Past the shatter window, so the collision pass skips it for good
+         without the shard physics ever running on it. */
+      c.broken = 2;
+    }
     this.outroCrossed = crossed;
     this.slowTarget = SLOW_FINISH;
     this.throttle = 0;
