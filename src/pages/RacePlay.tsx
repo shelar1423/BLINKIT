@@ -53,6 +53,7 @@ export default function RacePlay() {
   const [loaded, setLoaded] = useState(false);
   const mountedAt = useRef(performance.now());
   const [err, setErr] = useState<string | null>(null);
+  const [coached, setCoached] = useState(false);
   const [launched, setLaunched] = useState(false);
   const [stats, setStats] = useState<RaceStats>({
     score: 0, groceries: 0, timeLeft: RACE_SECONDS, lap: 1, laps: 2, progress: 0, speedKph: 0,
@@ -475,10 +476,10 @@ export default function RacePlay() {
           third of the frame, which is exactly where the launcher is. What it
           said is in the briefing now, and the chevrons running down over the
           lever carry the reminder without a word. */}
-      {/* Until the lever moves, not until it is dismissed. */}
-      {loaded && !err && !launched && !outcome && (
+      {loaded && !err && !coached && !outcome && (
         <RaceCoach
           mode="3d"
+          onDone={() => setCoached(true)}
           tilt={{
             offer: tiltState === 'needs-permission',
             onEnable: () => void enableTilt(),
@@ -495,6 +496,7 @@ export default function RacePlay() {
           car={car}
           tier={tier}
           isBest={isBest}
+          bestScore={useStore.getState().bestScore}
           totalPoints={useStore.getState().totalPoints}
           inviteUrl={`${window.location.origin}/?ref=${useStore.getState().referralCode}`}
           racesLeft={useStore.getState().racesLeft}

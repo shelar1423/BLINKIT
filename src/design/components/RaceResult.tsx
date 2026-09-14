@@ -49,6 +49,8 @@ export type RaceResultProps = {
   tier: RewardTier | null;
   /** Beat the previous best — captured before the store recorded this run. */
   isBest: boolean;
+  /** The best ever, as it stood BEFORE this run was recorded. */
+  bestScore: number;
   totalPoints: number;
   racesLeft: number;
   onRaceAgain: () => void;
@@ -67,7 +69,7 @@ const SHARE_TIP_KEY = 'rih-share-tip-seen';
 const SHARE_TIP_MS = 4000;
 
 export function RaceResult({
-  outcome, car, tier, isBest, totalPoints, racesLeft, inviteUrl,
+  outcome, car, tier, isBest, bestScore, totalPoints, racesLeft, inviteUrl,
   onRaceAgain, onShop, onRewards, onViewCar, onExit, exitLabel, toast,
 }: RaceResultProps) {
   /* The number counts up. A score that is simply present reads as a fact; one
@@ -181,6 +183,12 @@ export function RaceResult({
         New Personal Best
       </p>
 
+      {/* The run you just did, against the best you have ever done. One line,
+          two weights: the label is what it is, the figure is the thing. */}
+      <p className="rwd__best">
+        Your highest score <b className="t-num">{Math.max(bestScore, outcome.score).toLocaleString('en-IN')}</b>
+      </p>
+
       <div className="rwd__ticket">
         <div className="rwd__card">
           <div className="rwd__body">
@@ -197,7 +205,14 @@ export function RaceResult({
                     won.sub
                   )}
                 </p>
-                <p className="rwd__fine">{won.fine}</p>
+                {/* The fine print said where the reward had gone and how to
+                    spend it. It is already on the order by the time this is
+                    read, so the sentence was three lines explaining something
+                    that had already happened. One line that opens the sheet
+                    does the same job. */}
+                <button type="button" className="rwd__check" onClick={onRewards}>
+                  Check your reward
+                </button>
               </>
             ) : (
               <>
@@ -256,33 +271,18 @@ export function RaceResult({
         <IconChevronRight size={16} />
       </button>
 
-      <div className="rwd__foot">
-        {/* The loud one SPENDS it.
-            Race again was the primary button, which made the loudest thing on
-            the screen a way of going round again rather than a way of using
-            what had just been won. The reward is already on the order by the
-            time this screen appears; the only thing left to do with it is
-            shop. */}
-        {won ? (
-          <Button variant="primary" size="lg" block type="button" onClick={onShop}>
-            Shop with it
-            <IconChevronRight size={17} />
-          </Button>
-        ) : (
-          <Button variant="yellow" size="lg" block type="button" disabled={racesLeft <= 0} onClick={onRaceAgain}>
-            <IconFlag size={17} />
-            {racesLeft > 0 ? 'Race again' : 'No races left today'}
-          </Button>
-        )}
-        <div className="rwd__minor">
-          {won && (
-            <button type="button" disabled={racesLeft <= 0} onClick={onRaceAgain}>
-              {racesLeft > 0 ? 'Race again' : 'No races left'}
-            </button>
-          )}
-          <button type="button" onClick={onRewards}>Rewards</button>
-          <button type="button" onClick={onExit}>{exitLabel}</button>
-        </div>
+      {/* Two, side by side, and nothing underneath. Race again and Shop now
+          are the only two things anyone does from here; Rewards, Leaderboard
+          and Done were a row of exits under the one button that mattered, and
+          the reward link now lives on the ticket where the reward is. */}
+      <div className="rwd__foot rwd__foot--pair">
+        <Button variant="yellow" size="lg" type="button" disabled={racesLeft <= 0} onClick={onRaceAgain}>
+          <IconFlag size={16} />
+          {racesLeft > 0 ? 'Race again' : 'No races'}
+        </Button>
+        <Button variant="primary" size="lg" type="button" onClick={onShop}>
+          Shop now
+        </Button>
       </div>
     </div>
   );

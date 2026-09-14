@@ -69,6 +69,7 @@ export default function ARView() {
      choice was made there, so this screen should not ask again. */
   const autoStart = search.get('go') === '1';
   const triedAuto = useRef(false);
+  const [coached, setCoached] = useState(false);
   const [phase, setPhase] = useState<ARPhase | null>(null);
   const [busy, setBusy] = useState(false);
   /* Announces each 500-point boundary once; a ref so it outlives the renders
@@ -154,9 +155,9 @@ export default function ARView() {
            placement step, which can be many seconds of pointing at the floor. */
         onPhase: (p) => {
           setPhase(p);
-          /* The strip comes back with the circuit on its own: it is rendered
-             from `phase`, so re-placing a track shows it again without anything
-             here having to remember that it should. */
+          /* Fresh briefing each time a circuit goes down: re-placing a track
+             is the one moment somebody is most likely to want it again. */
+          if (p === 'placed') setCoached(false);
           if (p === 'racing') engineStart();
           else engineStop();
         },
@@ -860,8 +861,8 @@ export default function ARView() {
           thing on this screen you have to be able to press. In a WebXR session
           the headset composites only that overlay, so this is a camera-mode
           briefing; WebXR is not a path any phone in this campaign takes. */}
-      {phase === 'placed' && !outcome && !inspect && (
-        <RaceCoach mode="ar" />
+      {phase === 'placed' && !coached && !outcome && !inspect && (
+        <RaceCoach mode="ar" onDone={() => setCoached(true)} />
       )}
 
       {cheering && <Poppers />}
@@ -873,6 +874,7 @@ export default function ARView() {
           car={car}
           tier={tier}
           isBest={isBest}
+          bestScore={useStore.getState().bestScore}
           totalPoints={useStore.getState().totalPoints}
           inviteUrl={`${window.location.origin}/?ref=${useStore.getState().referralCode}`}
           racesLeft={racesLeft}

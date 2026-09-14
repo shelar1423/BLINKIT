@@ -1,3 +1,4 @@
+import { Button } from '../elements';
 
 /* ============================================================
    The briefing, shown once at the top of every race.
@@ -85,45 +86,51 @@ function GlyphSteer({ mode }: { mode: 'ar' | '3d' }) {
 
 export function RaceCoach({
   mode,
+  onDone,
   tilt,
 }: {
   mode: 'ar' | '3d';
+  onDone: () => void;
   /** Offered here rather than as its own strip over the race. */
   tilt?: { offer: boolean; onEnable: () => void };
 }) {
   const ar = mode === 'ar';
   const steps = [
-    /* One word each. Three sentences do not fit across a phone, and they do
-       not need to: the drawing beside each word is the instruction, and the
-       word is only there to say which drawing you are looking at. */
-    { glyph: <GlyphPull />, title: 'Pull' },
-    { glyph: <GlyphLift mode={mode} />, title: ar ? 'Tilt to jump' : 'Swipe to jump' },
-    { glyph: <GlyphSteer mode={mode} />, title: ar ? 'Tilt to steer' : 'Hold to steer' },
+    { glyph: <GlyphPull />, title: 'Pull the launcher', body: 'Drag back, let go' },
+    { glyph: <GlyphLift mode={mode} />, title: 'Jump the fire rings', body: ar ? 'Tilt up on the beat' : 'Swipe up on the beat' },
+    { glyph: <GlyphSteer mode={mode} />, title: 'Take the corners', body: ar ? 'Tilt left and right' : 'Hold left or right' },
   ];
 
   return (
-    /* A strip over the launcher, not a door in front of it.
-     *
-     * This used to be a dialog with a dim behind it and a "Got it" button: a
-     * screen you had to dismiss before every race, carrying three lines you
-     * had read the first time. The gestures are worth showing and the pause is
-     * not, so they sit beside the car instead and leave the moment the lever
-     * moves. Nothing here takes pointer events; the launcher is live behind
-     * it from the first frame. */
-    <div className="coachbar" role="note" aria-label="How to race">
-      <ol className="coachbar__steps">
-        {steps.map((s) => (
-          <li key={s.title} className="coachbar__step">
-            <span className="coachbar__glyph">{s.glyph}</span>
-            <span className="coachbar__t">{s.title}</span>
-          </li>
-        ))}
-      </ol>
-      {tilt?.offer && (
-        <button type="button" className="coachbar__alt" onClick={tilt.onEnable}>
-          Steer by tilting instead
-        </button>
-      )}
+    <div className="coach" role="dialog" aria-label="How to race">
+      <div className="coach__dim" />
+      <div className="coach__panel">
+        <p className="coach__kick">How to race</p>
+
+        <ol className="coach__steps">
+          {steps.map((s, i) => (
+            <li key={s.title} className="coach__step">
+              <span className="coach__glyph">{s.glyph}</span>
+              <span className="coach__txt">
+                <b>
+                  <i className="coach__n">{i + 1}</i>
+                  {s.title}
+                </b>
+                <small>{s.body}</small>
+              </span>
+            </li>
+          ))}
+        </ol>
+
+        {tilt?.offer && (
+          <button type="button" className="coach__alt" onClick={tilt.onEnable}>
+            Steer by tilting instead
+          </button>
+        )}
+        <Button variant="hwBlue" block type="button" onClick={onDone}>
+          Got it, let’s race
+        </Button>
+      </div>
     </div>
   );
 }
