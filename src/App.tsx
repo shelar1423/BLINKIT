@@ -16,6 +16,8 @@ import HotWheels from './pages/HotWheels';
 const Product = lazy(() => import('./pages/Product'));
 const RacePlay = lazy(() => import('./pages/RacePlay'));
 const ARView = lazy(() => import('./pages/ARView'));
+/* Where you stand, shown once on the way back into a race. */
+const LastResult = lazy(() => import('./pages/LastResult'));
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
@@ -29,7 +31,7 @@ export const useToast = () => useContext(Ctx);
 /** Routes that take over the screen — no bottom nav, no page padding. */
 const FULLSCREEN = ['/race/play'];
 /** Routes with their own sticky action bar, where Blinkit drops the tab bar. */
-const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/cart$/, /^\/checkout$/, /^\/ar(\/|$)/, /^\/diag$/, /^\/order-success$/, /^\/preview\//];
+const NO_NAV = [/^\/race\/result$/, /^\/hot-wheels\/[^/]+$/, /^\/cart$/, /^\/checkout$/, /^\/ar(\/|$)/, /^\/diag$/, /^\/order-success$/, /^\/preview\//];
 
 export default function App() {
   const [msg, setMsg] = useState<string | null>(null);
@@ -87,6 +89,7 @@ export default function App() {
           <Route path="/hot-wheels" element={<HotWheels />} />
           <Route path="/hot-wheels/:id" element={<Product />} />
           <Route path="/race/play" element={<RacePlay />} />
+          <Route path="/race/result" element={<LastResult />} />
           <Route path="/ar" element={<ARView />} />
           <Route path="/ar/:id" element={<ARView />} />
           <Route path="/cart" element={<Cart />} />
