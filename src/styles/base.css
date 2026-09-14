@@ -2474,21 +2474,28 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The one thing on the screen allowed to be loud. Clamped so a five-figure
    score still fits. */
 .rwd__score {
-  font-size: clamp(64px, min(22vw, 11vh), 112px);
+  font-size: clamp(52px, min(18vw, 9vh), 88px);
   font-weight: 900; line-height: 0.95; letter-spacing: -0.04em;
-  margin-top: 2px;
+  margin-top: 0;
 }
 /* Hidden, not removed: it keeps its 8px and its own height so nothing below
    it moves between a best and an ordinary run. */
 .rwd__pb.is-ghost { visibility: hidden; }
 .rwd__pb {
   /* Hugs its text. As a block inside the plaque it stretched the full width
-     and stopped reading as a badge. */
+     and stopped reading as a badge.
+
+     It still holds its space when there is nothing to boast about, so the
+     plaque does not change height between a best and an ordinary run. But it
+     was holding a LOT: 8px of margin and a full-size pill left a visible hole
+     between the best-score line and the stats on every run that was not a
+     best. Tighter on both counts, so the reserved space reads as a gap rather
+     than as something missing. */
   display: inline-block;
-  margin-top: 8px;
-  font-size: var(--f-xs); font-weight: 800;
+  margin-top: 2px;
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.02em;
   color: var(--rwd-code-ink); background: var(--rwd-code);
-  border-radius: 999px; padding: 4px 11px;
+  border-radius: 999px; padding: 3px 10px;
 }
 
 /* ---- the prize, as a Hot Wheels ticket ----
@@ -2599,8 +2606,8 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .rwd__stub {
   position: relative;
-  margin: 14px -14px 0;
-  padding: 12px 0;
+  margin: 8px -12px 0;
+  padding: 10px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.18);
   display: grid; grid-template-columns: repeat(3, 1fr); align-items: center;
   color: #fff;
@@ -2652,7 +2659,23 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__foot--pair {
   position: sticky; bottom: 0;
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  margin-top: 18px; padding: 12px 0 calc(10px + var(--safe-b));
+  margin-top: 18px; padding: 14px 0 calc(10px + var(--safe-b));
+  /* A ground of its own. Sticky over a white leaderboard card, the buttons
+     had the card scrolling through the gap between them and read as part of
+     it. The fade rather than a flat fill because the page is a gradient: a
+     solid bar would band against it, and the top edge of the fade is what
+     tells you there is more above. */
+  background: linear-gradient(
+    180deg,
+    rgba(0, 63, 125, 0) 0%,
+    rgba(0, 63, 125, 0.86) 34%,
+    var(--rwd-bg-bot) 68%
+  );
+}
+/* The fade has to reach the screen's edges, not stop at the content column. */
+.rwd__foot--pair::before {
+  content: ''; position: absolute; inset: 0 -50vw; z-index: -1;
+  background: inherit;
 }
 .rwd__foot--pair .btn { width: 100%; min-width: 0; }
 
@@ -2662,8 +2685,8 @@ input, select, textarea { font: inherit; color: inherit; }
    numbers loose on a gradient read as a headline with notes under it. */
 .rwd__plaque {
   position: relative;
-  width: 100%; max-width: 320px; margin-top: 26px;
-  padding: 26px 14px 0;
+  width: 100%; max-width: 300px; margin-top: 22px;
+  padding: 20px 12px 0;
   border: 1.5px solid rgba(255, 255, 255, 0.34);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.07);
@@ -2677,7 +2700,7 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 /* The run against the best ever. One line, two weights. */
 .rwd__best {
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: var(--f-md); font-weight: 500; color: rgba(255, 255, 255, 0.78);
 }
 .rwd__best b { font-weight: 800; color: #fff; }
