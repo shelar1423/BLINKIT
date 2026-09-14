@@ -35,10 +35,12 @@ import { Button } from '../elements';
    people put it on the nearest clear surface, and a table is the one everybody
    has — it is also what the AR session's own reticle is usually resting on.
 
-   Beats one and two are the SAME table, which is the whole point of them: the
-   first is that surface with nothing on it and a viewfinder reading it, the
-   second is that surface with the circuit standing on it. The change between
-   them is the thing being explained.
+   All three beats are the SAME table, which is the whole point of them: the
+   surface with nothing on it and a viewfinder reading it, then that surface
+   with the circuit standing on it, then that surface with the car away and
+   running. The background never moves; only what is on it changes, and that
+   change is the thing being explained. Three unrelated pictures cannot say
+   it.
 
    Over each frame, the INTERFACE, animated: the scan brackets and their sweep,
    the reticle landing, the circuit arriving on it. The frame carries the
@@ -136,22 +138,14 @@ const BEATS = [
     ),
   },
   {
-    src: '/howto/shot-track.jpg',
-    alt: 'The launcher at the start line, red lever drawn back',
-    title: 'Pull the launcher',
-    body: 'Drag the red lever back, let go, and the car is away',
-    /* The launcher's own cue, and pointing the way the launcher's own cue
-       points: DOWN, over the lever, because that is the direction the sled is
-       dragged. They ran UP the road before, which is where the car goes and
-       the exact opposite of what the hand is being asked to do. Placed over
-       the red lever in the frame behind. */
-    overlay: (
-      <svg className="arin__ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path data-p="chev" className="arin__chev" d="M20 38 L31 46 L42 38" />
-        <path data-p="chev" className="arin__chev" d="M20 47 L31 55 L42 47" />
-        <path data-p="chev" className="arin__chev" d="M20 56 L31 64 L42 56" />
-      </svg>
-    ),
+    src: '/howto/table.webp',
+    alt: 'The car away down the circuit, groceries waiting on the road',
+    title: 'Enjoy the race',
+    body: 'Collect the groceries, dodge the debris, beat the clock',
+    /* The same table, and the car on it. The ROAD's own chevrons run under the
+       car here rather than being drawn on: this is the race, and by now the
+       track is explaining itself. */
+    overlay: <img data-p="racecar" className="arin__racecar" src="/howto/race.webp" alt="" />,
   },
 ];
 
@@ -216,14 +210,16 @@ function timeline(beat: number, root: HTMLElement): AnimationPlaybackControls | 
     );
   }
 
-  const chev = all('[data-p="chev"]');
+  const car = one('[data-p="racecar"]');
+  if (!car) return null;
   return animate(
     [
       ...entrance,
-      /* down the lever, on a loop, the way the launcher's chevrons run in the
-         race itself: the direction the sled is dragged */
-      [chev, { opacity: [0, 1, 0], y: [-7, 9] }, { duration: 1, delay: stagger(0.15), at: '-0.8', ease: 'easeOut' }],
-      [chev, { opacity: [0, 1, 0], y: [-7, 9] }, { duration: 1, delay: stagger(0.15), at: '+0.05', ease: 'easeOut' }],
+      /* it arrives already moving: in from the near edge, settling into the
+         frame, rather than fading up from nothing on the spot */
+      [car, { opacity: [0, 1], x: [-26, 0], scale: [1.08, 1] }, { duration: 1.1, at: '-0.85', ...LAND }],
+      /* and carries on, out of the far side, so the loop reads as a lap */
+      [car, { opacity: [1, 1, 0], x: [0, 30], scale: [1, 0.94] }, { duration: 1.3, at: '+0.9', ease: 'easeIn' }],
     ],
     { repeat: Infinity, repeatDelay: 0.2 },
   );

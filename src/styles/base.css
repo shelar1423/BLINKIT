@@ -5515,11 +5515,13 @@ input, select, textarea { font: inherit; color: inherit; }
   opacity: 0;
   filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
 }
-.arin__chev {
-  fill: none; stroke: var(--yellow); stroke-width: 3;
-  stroke-linecap: round; stroke-linejoin: round;
-  vector-effect: non-scaling-stroke; opacity: 0;
-  filter: drop-shadow(0 0 7px rgba(248, 203, 70, 0.5));
+/* The car mid-lap, cut out of the running race the same way the circuit was,
+   standing on the same table. Sat lower and wider than the circuit because it
+   is a closer view of the same road. */
+.arin__racecar {
+  position: absolute; left: 4%; right: 4%; bottom: 6%;
+  width: auto; opacity: 0;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
 }
 
 .arin__say { display: grid; gap: 6px; max-width: 300px; animation: arin-swap 320ms ease-out both; }
