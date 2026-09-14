@@ -2841,15 +2841,27 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Fixed, not sticky. Sticky kept the buttons in view but they still rode the
      scroll at the ends of it, and the page ran on underneath them; these are
      the screen's controls, so they hold their seat and only the middle moves.
-     The same seat the app's bottom bar uses: .bnav-wrap ends on 10px + safe-b,
-     so these sit on the line every other screen's buttons do. */
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 2;
+
+     Centred on the column, NOT pinned to left:0. It inherits .rwd__foot's
+     290px cap, and a 290px bar with left:0 sits against the left edge of the
+     screen — which is what fixing it without this did. The same seat the app's
+     bottom bar uses: .bnav-wrap ends on 10px + safe-b, so these sit on the
+     line every other screen's buttons do. */
+  position: fixed; left: 50%; right: auto; transform: translateX(-50%);
+  bottom: 0; z-index: 2;
+  margin: 0;
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  padding: 12px var(--gut) calc(10px + var(--safe-b));
+  padding: 12px 0 calc(10px + var(--safe-b));
   /* A ground of its own, and a solid one. Over a white leaderboard card, the
      card had been scrolling through the gap between the buttons and reading as
      part of them. This is the page's own bottom colour, opaque, so nothing
      passes behind it. */
+  background: var(--rwd-bg-bot);
+}
+/* To the screen's edges. -50vw each side clears any width the content column
+   can take, so the band fills the screen while the buttons stay on the column. */
+.rwd__foot--pair::before {
+  content: ''; position: absolute; inset: 0 -50vw; z-index: -1;
   background: var(--rwd-bg-bot);
 }
 .rwd__foot--pair .btn { width: 100%; min-width: 0; }
