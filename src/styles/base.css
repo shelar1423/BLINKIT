@@ -2707,12 +2707,13 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__top {
   position: relative;
   width: 100%; max-width: 320px;
-  /* 24px of air over the heading, which is what sets the card's top padding.
-     The podium is not part of that measurement: it rides almost entirely above
-     the card with its base resting on the top edge, so the card's own space
-     belongs to its content rather than to the artwork sitting on it. */
+  /* The top padding is the air over the heading; the bottom carries the extra
+     height. The podium is not part of that measurement: it rides almost
+     entirely above the card with its base resting on the top edge, so the
+     card's own space belongs to its content rather than to the artwork sitting
+     on it. */
   margin-top: 82px;
-  padding: 24px 14px 8px; border-radius: 18px;
+  padding: 18px 14px 20px; border-radius: 18px;
   background: #fff; color: var(--ink);
 }
 /* The subtitle is gone, so the heading carries the gap to the rows itself
