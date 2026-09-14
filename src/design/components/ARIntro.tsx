@@ -24,23 +24,18 @@ import { Button } from '../elements';
    circuit is about to be in their living room, and a diagram of a rectangle
    cannot do that.
 
-   Everything here is the real thing. A photograph of a real dining table; the
-   actual circuit, rendered out of the race engine on a transparent background
-   at the angle it would be seen from standing over it; and, for the launcher,
-   a frame captured off the running game. Nothing promises anything the next
-   thirty seconds does not deliver, which is more than a marketing render can
-   say.
+   Everything here is the real thing. A photograph of a real room with a real
+   floor in it, and, standing on that floor, the actual circuit and the actual
+   car — both rendered straight out of the race engine on a transparent ground
+   at the angle you would see them from over the top. Nothing promises anything
+   the next thirty seconds does not deliver, which is more than a marketing
+   render can say.
 
-   A TABLE, not a floor. The circuit is 2.4m across at full size but most
-   people put it on the nearest clear surface, and a table is the one everybody
-   has — it is also what the AR session's own reticle is usually resting on.
-
-   All three beats are the SAME table, which is the whole point of them: the
-   surface with nothing on it and a viewfinder reading it, then that surface
-   with the circuit standing on it, then that surface with the car away and
-   running. The background never moves; only what is on it changes, and that
-   change is the thing being explained. Three unrelated pictures cannot say
-   it.
+   All three beats are the SAME surface, which is the whole point of them: the
+   floor with nothing on it and a viewfinder reading it, then that floor with
+   the circuit standing on it, then that floor with the car away and running.
+   The background never moves; only what is on it changes, and that change is
+   the thing being explained. Three unrelated pictures cannot say it.
 
    Over each frame, the INTERFACE, animated: the scan brackets and their sweep,
    the reticle landing, the circuit arriving on it. The frame carries the
@@ -108,10 +103,10 @@ function Brackets() {
 
 const BEATS = [
   {
-    src: '/howto/table.webp',
-    alt: 'A clear wooden dining table',
+    src: '/howto/surface.webp',
+    alt: 'A clear polished floor in a hallway',
     title: 'Find a surface',
-    body: 'Point the phone at a table or a clear patch of floor',
+    body: 'Point the phone at a clear patch of floor or a table',
     /* The viewfinder reading the room, and the sweep that says it is reading. */
     overlay: (
       <>
@@ -121,8 +116,8 @@ const BEATS = [
     ),
   },
   {
-    src: '/howto/table.webp',
-    alt: 'The Hot Wheels circuit standing on that table',
+    src: '/howto/surface.webp',
+    alt: 'The Hot Wheels circuit standing on that floor',
     title: 'Drop the track',
     body: 'One press puts the whole circuit in the room with you',
     /* The same floor, and what lands on it. The ring goes down first, then the
@@ -138,7 +133,7 @@ const BEATS = [
     ),
   },
   {
-    src: '/howto/table.webp',
+    src: '/howto/surface.webp',
     alt: 'The car away down the circuit, groceries waiting on the road',
     title: 'Enjoy the race',
     body: 'Collect the groceries, dodge the debris, beat the clock',
