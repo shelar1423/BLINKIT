@@ -196,6 +196,10 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
   const fireLauncher = (power: number) => {
     if (!launching || held) return;
     launching = false;
+    /* However this fired — the lever let go, or the start line's count
+       reaching GO while it is still held — the drag stops here. A drag still
+       live after the launch keeps pulling the racing car back onto the sled. */
+    leverDrag.cancel();
     engine.setStartLights(3);
     engine.launch(power);
     opts.onLaunched?.();

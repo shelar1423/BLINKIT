@@ -897,6 +897,9 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   /* The briefing overlay holds the scene. The car idles behind it otherwise,
      and a tap on the dim reaches the canvas and starts the race under it. */
   let held = false;
+  /** The launcher drag, once it exists: `launch` has to be able to let go of
+   *  it, and it is built further down. */
+  let lever: { cancel(): void } | null = null;
 
   const gateLift = makeJumpInput();
   const jumpInput = makeJumpInput();
@@ -994,6 +997,11 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   function launch(power: number) {
     if (inspect || held || phase !== 'placed') return;
+    /* However this fired — the lever let go, or the start line's count
+       reaching GO while it is still held — the drag stops here. A drag still
+       live after the launch keeps pulling the racing car back onto the sled,
+       and takes the chase camera into the road with it. */
+    lever?.cancel();
     engine.setStartLights(3);
     startBanner.visible = false;
     setPhase('racing');
@@ -1108,10 +1116,10 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     opts.overlayRoot, anchor, renderer.xr.getCamera(), () => ({ phase, size: sizeM }), setSize, inspect,
     /* In headset AR the camera IS the phone, so there is no launcher framing
        to move to — you look at the lever yourself. The drag is identical. */
-    makeLeverDrag(
+    (lever = makeLeverDrag(
       engine, renderer.xr.getCamera(), () => !inspect && !held && phase === 'placed', armLaunch, launch,
       (k) => opts.onPull?.(k), renderer.domElement,
-    ),
+    )),
   );
 
   /* ---- where the track goes ----
@@ -1395,6 +1403,9 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   /* The briefing overlay holds the scene. The car idles behind it otherwise,
      and a tap on the dim reaches the canvas and starts the race under it. */
   let held = false;
+  /** The launcher drag, once it exists: `launch` has to be able to let go of
+   *  it, and it is built further down. */
+  let lever: { cancel(): void } | null = null;
   const ground = inspect ? GROUND_INSPECT : GROUND;
   const gateLift = makeJumpInput();
   const jumpInput = makeJumpInput();
@@ -1587,6 +1598,11 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
 
   function launch(power: number) {
     if (inspect || held || phase !== 'placed') return;
+    /* However this fired — the lever let go, or the start line's count
+       reaching GO while it is still held — the drag stops here. A drag still
+       live after the launch keeps pulling the racing car back onto the sled,
+       and takes the chase camera into the road with it. */
+    lever?.cancel();
     engine.setStartLights(3);
     startBanner.visible = false;
     setPhase('racing');
@@ -1616,6 +1632,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     engine, camera, () => !inspect && !held && phase === 'placed', armLaunch, launch,
     (k) => opts.onPull?.(k), renderer.domElement,
   );
+  lever = leverDrag;
   const detachGestures = adjustGestures(
     opts.overlayRoot, anchor, camera, () => ({ phase, size: sizeM }), setSize, inspect, leverDrag,
   );

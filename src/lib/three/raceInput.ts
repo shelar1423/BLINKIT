@@ -269,6 +269,21 @@ export function makeLeverDrag(
       onPull(0);
       onLaunch(k);
     },
+    /**
+     * Let go without firing.
+     *
+     * The launcher can now go off while the lever is still being held — the
+     * start line's count reaching GO fires it — and a drag that does not know
+     * that carries on calling `setLaunchPull` on a car that is already racing,
+     * which drags it back onto the sled it left and takes the chase camera
+     * down into the road with it.
+     */
+    cancel() {
+      if (!held) return;
+      held = false;
+      moved = false;
+      onPull(0);
+    },
     get held() {
       return held;
     },
