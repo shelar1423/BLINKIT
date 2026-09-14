@@ -5440,8 +5440,9 @@ input, select, textarea { font: inherit; color: inherit; }
 /* ---------- the AR intro: one beat at a time ----------
    A screen, not a panel. Everything else in the app is a shape somebody has
    seen before; this one is asking a player to point their phone at their own
-   floor, so it gets the room to show what that looks like rather than a line
-   of copy describing it. */
+   floor, so it gets the room to SHOW what that looks like — the campaign's own
+   AR renders, with the interface drawn over them and animated. The photograph
+   carries the promise, the overlay carries the instruction. */
 .arin {
   position: fixed; inset: 0; z-index: 240;
   display: grid; align-content: center; justify-items: center;
@@ -5456,17 +5457,56 @@ input, select, textarea { font: inherit; color: inherit; }
   letter-spacing: 0.14em; text-transform: uppercase;
   color: rgba(255, 255, 255, 0.72);
 }
-/* A fixed box, so the copy under it does not jump as the drawings change
-   shape between beats. */
+/* A fixed box, so the copy under it does not jump as the beats change. The
+   photograph is scaled slightly past the frame and drifts, which is also what
+   hides the edge of a crop. */
 .arin__stage {
-  width: min(78vw, 260px); aspect-ratio: 1;
-  display: grid; place-items: center;
-  border-radius: 28px;
+  position: relative; overflow: hidden;
+  width: min(78vw, 268px); aspect-ratio: 4 / 5;
+  border-radius: 26px;
   background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
   animation: arin-swap 320ms ease-out both;
 }
-.arin__art { width: 78%; height: 78%; display: block; overflow: visible; }
+.arin__shot {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transform-origin: 50% 58%;
+}
+/* Every overlay is drawn in the card's own 100x100 space and stretched to it,
+   so a mark sits where it was placed whatever the card measures. */
+.arin__ov { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.arin__br {
+  fill: none; stroke: var(--yellow); stroke-width: 2.4;
+  stroke-linecap: round; stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 0 6px rgba(248, 203, 70, 0.55));
+}
+/* The read itself: a bar of light travelling down the frame. */
+.arin__sweep {
+  position: absolute; left: 6%; right: 6%; top: 6%; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--yellow), transparent);
+  box-shadow: 0 0 14px 3px rgba(248, 203, 70, 0.4);
+  opacity: 0;
+}
+.arin__reticle {
+  fill: rgba(255, 255, 255, 0.08); stroke: #fff; stroke-width: 1.6;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 62%;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
+}
+.arin__ripple {
+  fill: none; stroke: var(--hw-o); stroke-width: 1.6;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 62%; opacity: 0;
+}
+.arin__chev {
+  fill: none; stroke: var(--yellow); stroke-width: 3;
+  stroke-linecap: round; stroke-linejoin: round;
+  vector-effect: non-scaling-stroke; opacity: 0;
+  filter: drop-shadow(0 0 7px rgba(248, 203, 70, 0.5));
+}
+
 .arin__say { display: grid; gap: 6px; max-width: 300px; animation: arin-swap 320ms ease-out both; }
 .arin__say b { font-size: var(--f-2xl); font-weight: 800; letter-spacing: -0.01em; }
 .arin__say small { font-size: var(--f-md); font-weight: 500; color: rgba(255, 255, 255, 0.78); line-height: 1.4; }
@@ -5483,58 +5523,11 @@ input, select, textarea { font: inherit; color: inherit; }
 .arin__dots i.is-on { width: 20px; border-radius: 4px; background: var(--yellow); }
 .arin .btn { max-width: 300px; }
 
-/* ---- the three drawings ---- */
-.arin__floor { fill: none; stroke: rgba(255, 255, 255, 0.34); stroke-width: 3; stroke-linecap: round; }
-.arin__ring { fill: rgba(255, 138, 0, 0.14); stroke: var(--hw-o); stroke-width: 3.5; }
-.arin__phone { fill: rgba(255, 255, 255, 0.12); stroke: #fff; stroke-width: 3; }
-.arin__beam { fill: none; stroke: rgba(255, 255, 255, 0.4); stroke-width: 2.5; stroke-dasharray: 5 6; stroke-linecap: round; }
-.arin__press { fill: #fff; }
-.arin__track { fill: var(--hw-o); }
-.arin__trackline { fill: rgba(255, 255, 255, 0.75); }
-.arin__deck { fill: rgba(255, 255, 255, 0.22); }
-.arin__red { fill: var(--hw-r); }
-.arin__body { fill: var(--yellow); }
-.arin__wheel { fill: #16213F; stroke: rgba(255, 255, 255, 0.5); stroke-width: 2; }
-
-/* 1. the sweep: the phone leans across, the ring follows where it points */
-.arin__tip { transform-origin: 36px 20px; animation: arin-tip 2.8s ease-in-out infinite; }
-@keyframes arin-tip {
-  0%, 8%    { transform: rotate(-13deg); }
-  46%, 58%  { transform: rotate(13deg); }
-  92%, 100% { transform: rotate(-13deg); }
-}
-.arin__sweep { animation: arin-sweep 2.8s ease-in-out infinite; }
-@keyframes arin-sweep {
-  0%, 8%    { transform: translateX(-16px); opacity: 0.45; }
-  46%, 58%  { transform: translateX(10px); opacity: 1; }
-  92%, 100% { transform: translateX(-16px); opacity: 0.45; }
-}
-/* 2. the press, and the circuit dropping in a beat behind it */
-.arin__press { animation: arin-press 2.8s ease-in-out infinite; transform-origin: 60px 34px; }
-@keyframes arin-press {
-  0%, 12%   { transform: translateY(-6px); opacity: 0.35; }
-  24%, 32%  { transform: translateY(4px); opacity: 1; }
-  56%, 100% { transform: translateY(-6px); opacity: 0.35; }
-}
-.arin__fall { animation: arin-fall 2.8s cubic-bezier(0.3, 1.4, 0.5, 1) infinite; }
-@keyframes arin-fall {
-  0%, 28%   { transform: translateY(-34px); opacity: 0; }
-  44%, 88%  { transform: translateY(0); opacity: 1; }
-  100%      { transform: translateY(-34px); opacity: 0; }
-}
-/* 3. the lever back, and the car gone */
-.arin__lever { transform-origin: 40px 86px; animation: arin-lever 2.8s ease-in-out infinite; }
-@keyframes arin-lever {
-  0%, 10%   { transform: rotate(0deg); }
-  40%, 52%  { transform: rotate(36deg); }
-  60%, 100% { transform: rotate(0deg); }
-}
-.arin__car { animation: arin-car 2.8s ease-in-out infinite; }
-@keyframes arin-car {
-  0%, 56%   { transform: translateX(0); opacity: 1; }
-  82%, 100% { transform: translateX(46px); opacity: 0; }
-}
+/* The timelines are Motion's, in ARIntro.tsx. What is left here is the resting
+   state each of them animates FROM, so a device that has asked for less motion
+   still gets a composed frame rather than a blank card. */
 @media (prefers-reduced-motion: reduce) {
   .arin, .arin__stage, .arin__say { animation-duration: 1ms; }
-  .arin__tip, .arin__sweep, .arin__press, .arin__fall, .arin__lever, .arin__car { animation: none; }
+  .arin__br, .arin__chev, .arin__reticle { opacity: 1; }
+  .arin__sweep { opacity: 0; }
 }
