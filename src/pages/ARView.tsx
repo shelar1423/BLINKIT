@@ -23,6 +23,7 @@ import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
 import { SteerCue } from '../design/components/SteerCue';
 import { RaceCoach } from '../design/components/RaceCoach';
+import { ARIntro, arIntroSeen, markARIntroSeen } from '../design/components/ARIntro';
 import { clearARSurfaces } from '../lib/three/arSurfaces';
 import { Poppers } from '../design/components/Poppers';
 import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
@@ -68,6 +69,10 @@ export default function ARView() {
   /* Set by the screens whose button already said "view in your space" — the
      choice was made there, so this screen should not ask again. */
   const autoStart = search.get('go') === '1';
+  /* The first AR session on this device gets the three beats first. `?intro=1`
+     brings them back for a demo; the car viewer never shows them, because
+     looking at a car is not the thing that needs explaining. */
+  const [intro, setIntro] = useState(() => search.get('intro') === '1' || !arIntroSeen());
   const triedAuto = useRef(false);
   const [coached, setCoached] = useState(false);
   const [phase, setPhase] = useState<ARPhase | null>(null);
@@ -300,12 +305,13 @@ export default function ARView() {
 
   useEffect(() => {
     if (!autoStart || triedAuto.current) return;
+    if (intro && !inspect) return;
     if (!arWorks) return;
     if (!car.glb || !overlay.current || handle.current) return;
     if (!canAutoStart()) return;
     triedAuto.current = true;
     void launch(true);
-  }, [autoStart, arWorks, car.glb, launch]);
+  }, [autoStart, arWorks, car.glb, intro, inspect, launch]);
 
   useEffect(() => {
     if (phase !== 'ready') {
@@ -506,7 +512,7 @@ export default function ARView() {
      called — with the same loader, so the intro screen never flashes up
      between the car picker and the race. */
   const pendingAuto =
-    autoStart && !triedAuto.current && !phase && !outcome &&
+    autoStart && !triedAuto.current && !phase && !outcome && !(intro && !inspect) &&
     (support === null || (arWorks && !!car.glb && canAutoStart()));
 
   return (
@@ -848,6 +854,17 @@ export default function ARView() {
           thing on this screen you have to be able to press. In a WebXR session
           the headset composites only that overlay, so this is a camera-mode
           briefing; WebXR is not a path any phone in this campaign takes. */}
+      {/* Before anything else, including the loader: this is the screen the
+          camera opens behind. */}
+      {intro && !inspect && !outcome && (
+        <ARIntro
+          onDone={() => {
+            markARIntroSeen();
+            setIntro(false);
+          }}
+        />
+      )}
+
       {phase === 'placed' && !coached && !outcome && !inspect && (
         <RaceCoach mode="ar" onDone={() => setCoached(true)} />
       )}

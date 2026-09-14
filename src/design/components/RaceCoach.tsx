@@ -102,7 +102,7 @@ export function RaceCoach({ mode, onDone }: { mode: 'ar' | '3d'; onDone: () => v
     {
       glyph: <GlyphSteer mode={mode} />,
       title: 'Steer the car',
-      body: ar ? 'Tilt left or right' : 'Hold left or right',
+      body: ar ? 'Tilt left or right' : 'Tap left or right',
     },
     /* What the lane is FOR. The first two steps are how the car is driven;
        this is why it is being driven anywhere, and it is the only one of the
