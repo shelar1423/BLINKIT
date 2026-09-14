@@ -114,6 +114,22 @@ export const raceInteraction = {
   boostWarnLead: 1.3,
 
   /**
+   * How far into a ring's gauge the ring takes the wheel, 0..1.
+   *
+   * It used to take it the instant the gate armed, which is a full
+   * `boostWarnLead` of travel — and both rings sit dead centre, so with two
+   * rings a lap plus the loop the car spent most of a lap being driven down
+   * the middle of the road by the engine. Steering that does nothing for a
+   * third of every lap reads as a car that drives itself.
+   *
+   * The run-up belongs to the player: that is where the groceries and the
+   * rocks are, and picking a line through them is the whole game. The ring
+   * only lines the car up for the last stretch, which is when the phone is
+   * tipping up for the lift and a line cannot be held anyway.
+   */
+  gateTakeover: 0.6,
+
+  /**
    * Seconds the car spends in the air over a gate.
    *
    * The takeoff is half an airtime before the gate, so a lift on the beat puts

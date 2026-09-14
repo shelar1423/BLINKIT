@@ -1886,7 +1886,9 @@ export class RaceEngine {
     }
     const i = this.armedGate;
     const g = i >= 0 ? this.boostGates[i] : undefined;
-    if (g && !g.done) return this.gateLane(i);
+    /* Not from the moment it arms: the run-up is the player's, and the ring
+       only takes the wheel for the last of it. See `gateTakeover`. */
+    if (g && !g.done && g.stoke >= raceInteraction.gateTakeover) return this.gateLane(i);
     if (this.airFromGate >= 0 && this.airT >= 0) return this.gateLane(this.airFromGate);
     const f = this.boostGates.length - 1;
     if (this.isFinalGate(f) && (this.finalPhase === 1 || this.finalPhase === 2)) return this.gateLane(f);
