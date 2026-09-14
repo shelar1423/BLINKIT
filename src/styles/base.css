@@ -2686,8 +2686,11 @@ input, select, textarea { font: inherit; color: inherit; }
    The only thing that answers the question a score raises. It was a screen you
    left this one to reach; here it is the next thing down. */
 .rwd__top {
-  width: 100%; max-width: 320px; margin-top: 16px;
-  padding: 14px; border-radius: 18px;
+  position: relative;
+  width: 100%; max-width: 320px;
+  /* Room above for the half of the podium that sits outside the card. */
+  margin-top: 52px;
+  padding: 42px 14px 8px; border-radius: 18px;
   background: #fff; color: var(--ink);
 }
 .rwd__toph {
@@ -2695,11 +2698,22 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.2px;
 }
 .rwd__tops { margin: 1px 0 10px; text-align: center; font-size: var(--f-xs); color: var(--mut); }
-/* The leaderboard screen's own illustration, where Swiggy puts a trophy. */
-.rwd__topim { display: block; width: 72px; height: 72px; margin: -2px auto 6px; object-fit: contain; }
-/* The rows are .lrow, the leaderboard's own. Only the gutter changes: they
-   were written to run edge to edge on a page and these sit inside a card. */
-.rwd__board .lrow { padding-inline: 6px; }
+/* The campaign's own podium, where MushakGo puts a trophy, breaking the card's
+   top edge by half its height so it reads as sitting ON the card rather than
+   inside it. */
+.rwd__topim {
+  position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%);
+  width: 76px; height: 76px; object-fit: contain;
+}
+/* The rows are .lrow, the leaderboard's own. Two things change: the gutter,
+   because they were written to run edge to edge on a page and these sit in a
+   card, and the alignment, because this screen centres everything and a name
+   floating in the middle of its own row put a hole between the avatar and the
+   word. Left-aligned, the avatar and the name are neighbours and the only
+   thing on the right is the score. */
+.rwd__board { text-align: left; }
+.rwd__board .lrow { padding-inline: 6px; gap: 9px; }
+.rwd__board .lrow .grow { min-width: 0; }
 .rwd__board .lrow:last-child { border-bottom: 0; }
 .rwd__board .lrow.is-me { border-radius: 10px; }
 
