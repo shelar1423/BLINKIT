@@ -17,6 +17,9 @@ export type RaceHandle = {
   start: () => void;
   /** Freeze the launch view while the briefing is over it. */
   setHeld: (on: boolean) => void;
+  /** While true, letting the lever go banks the pull instead of launching:
+   *  the car leaves on the start line's GO. */
+  startLine: (on: boolean) => void;
   pause: () => void;
   dispose: () => void;
 };
@@ -193,6 +196,12 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
   let held = false;
   const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
 
+  /* The start line's count, while it is running. The car leaves on GO and not
+     before: the count is the whole point of the count. */
+  let startLine = false;
+  /** The pull the player let go on, kept until GO can spend it. */
+  let heldPower: number | null = null;
+
   const fireLauncher = (power: number) => {
     if (!launching || held) return;
     launching = false;
@@ -205,12 +214,29 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
     opts.onLaunched?.();
   };
 
+  /**
+   * What the LEVER does when it is let go.
+   *
+   * With a count running, letting go early is not a start: the car waits for
+   * GO like everybody else, and the pull is banked until then. Without one,
+   * this is the launch it always was.
+   */
+  const leverFire = (power: number) => {
+    if (startLine) {
+      heldPower = power;
+      leverDrag.cancel();
+      engine.setStartLights(2);
+      return;
+    }
+    fireLauncher(power);
+  };
+
   const leverDrag = makeLeverDrag(
     engine,
     camera,
     () => launching,
     (drawn) => engine.setStartLights(drawn ? 2 : 1),
-    fireLauncher,
+    leverFire,
     (k) => opts.onPull?.(k),
     renderer.domElement,
   );
@@ -296,7 +322,19 @@ export function createRaceScene(container: HTMLElement, opts: Opts): RaceHandle 
       launching = false;
       engine.start();
     },
-    launch: (power: number) => fireLauncher(power),
+    /* The count's own way in, and the keyboard's. It fires whatever the start
+       line is doing, spending the pull the player let go on if they let go
+       early. */
+    launch: (power: number) => {
+      startLine = false;
+      const p = heldPower ?? power;
+      heldPower = null;
+      fireLauncher(p);
+    },
+    startLine: (on: boolean) => {
+      startLine = on;
+      if (!on) heldPower = null;
+    },
     setHeld: (on: boolean) => { held = on; },
     pause: () => engine.pause(),
     dispose() {

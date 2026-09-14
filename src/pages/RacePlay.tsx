@@ -226,6 +226,7 @@ export default function RacePlay() {
     pull,
     launched,
     onGo: (power) => handle.current?.launch(power),
+    onArm: (on) => handle.current?.startLine(on),
   });
 
   /* ---------- steering ---------- */

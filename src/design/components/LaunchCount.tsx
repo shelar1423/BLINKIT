@@ -8,10 +8,11 @@ import { useEffect, useRef, useState } from 'react';
    wants a count: it tells you the race is about to happen, it gives the pull
    a purpose while it is being held, and it turns a drag into a moment.
 
-   It starts when the sled is drawn back and ends on GO, and GO fires the
-   launcher whether or not the thumb has left it. Letting go early still
-   launches, the way it always did — the count is a promise about when, not a
-   gate you have to wait for.
+   It starts when the sled is drawn back and ends on GO, and GO is when the car
+   leaves — whether or not the thumb is still on the lever, and whether or not
+   it left on "3". Letting go early banks the pull rather than launching with
+   it: a count that anybody can jump is not a start line, and letting go is
+   what most people do the moment they see a 3.
 
    The figures wear the scorecard's own face: heavy italic with the lighter
    blue set under them, which is the campaign's number treatment everywhere
@@ -28,10 +29,14 @@ export function useLaunchCount({
   launched,
   /** Called on GO with the pull as it stands. */
   onGo,
+  /** True while the count is running, so the scene can hold the launcher back:
+   *  letting the lever go early must not start the race ahead of GO. */
+  onArm,
 }: {
   pull: number;
   launched: boolean;
   onGo: (power: number) => void;
+  onArm: (counting: boolean) => void;
 }) {
   /* 3, 2, 1, 0 = GO. null = not counting. */
   const [step, setStep] = useState<number | null>(null);
@@ -41,8 +46,17 @@ export function useLaunchCount({
   live.current = pull;
   const go = useRef(onGo);
   go.current = onGo;
+  const arm = useRef(onArm);
+  arm.current = onArm;
 
   const counting = step !== null;
+
+  /* The scene is told the moment the count starts, not the moment it ends: a
+     player who lets the lever go on "3" has to be held back, and the scene is
+     the only thing that can hold them. */
+  useEffect(() => {
+    arm.current(counting);
+  }, [counting]);
 
   useEffect(() => {
     if (launched || counting) return;

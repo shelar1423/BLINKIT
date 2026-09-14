@@ -418,6 +418,7 @@ export default function ARView() {
     pull,
     launched: phase === 'racing',
     onGo: (power) => handle.current?.launch(power),
+    onArm: (on) => handle.current?.startLine(on),
   });
 
 
