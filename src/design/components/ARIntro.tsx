@@ -24,16 +24,20 @@ import { Button } from '../elements';
    circuit is about to be in their living room, and a diagram of a rectangle
    cannot do that.
 
-   Everything here is the real thing. A photograph of a real room with a real
-   wooden floor; the actual circuit, rendered out of the race engine on a
-   transparent background at the angle it would be seen from standing over it;
-   and, for the launcher, a frame captured off the running game. Nothing
-   promises anything the next thirty seconds does not deliver, which is more
-   than a marketing render can say.
+   Everything here is the real thing. A photograph of a real dining table; the
+   actual circuit, rendered out of the race engine on a transparent background
+   at the angle it would be seen from standing over it; and, for the launcher,
+   a frame captured off the running game. Nothing promises anything the next
+   thirty seconds does not deliver, which is more than a marketing render can
+   say.
 
-   Beats one and two are the SAME room, which is the whole point of them: the
-   first is that floor with nothing on it and a viewfinder reading it, the
-   second is that floor with the circuit standing on it. The change between
+   A TABLE, not a floor. The circuit is 2.4m across at full size but most
+   people put it on the nearest clear surface, and a table is the one everybody
+   has — it is also what the AR session's own reticle is usually resting on.
+
+   Beats one and two are the SAME table, which is the whole point of them: the
+   first is that surface with nothing on it and a viewfinder reading it, the
+   second is that surface with the circuit standing on it. The change between
    them is the thing being explained.
 
    Over each frame, the INTERFACE, animated: the scan brackets and their sweep,
@@ -102,10 +106,10 @@ function Brackets() {
 
 const BEATS = [
   {
-    src: '/howto/room.webp',
-    alt: 'A living room with a clear wooden floor',
-    title: 'Find your floor',
-    body: 'Hold the phone up and look down at a clear patch of floor',
+    src: '/howto/table.webp',
+    alt: 'A clear wooden dining table',
+    title: 'Find a surface',
+    body: 'Point the phone at a table or a clear patch of floor',
     /* The viewfinder reading the room, and the sweep that says it is reading. */
     overlay: (
       <>
@@ -115,8 +119,8 @@ const BEATS = [
     ),
   },
   {
-    src: '/howto/room.webp',
-    alt: 'The Hot Wheels circuit standing on the floor of that room',
+    src: '/howto/table.webp',
+    alt: 'The Hot Wheels circuit standing on that table',
     title: 'Drop the track',
     body: 'One press puts the whole circuit in the room with you',
     /* The same floor, and what lands on it. The ring goes down first, then the
@@ -124,8 +128,8 @@ const BEATS = [
     overlay: (
       <>
         <svg className="arin__ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <ellipse data-p="ripple" className="arin__ripple" cx="50" cy="88" rx="42" ry="9" />
-          <ellipse data-p="reticle" className="arin__reticle" cx="50" cy="88" rx="42" ry="9" />
+          <ellipse data-p="ripple" className="arin__ripple" cx="50" cy="86" rx="33" ry="7" />
+          <ellipse data-p="reticle" className="arin__reticle" cx="50" cy="86" rx="33" ry="7" />
         </svg>
         <img data-p="circuit" className="arin__circuit" src="/howto/circuit.webp" alt="" />
       </>
@@ -136,12 +140,16 @@ const BEATS = [
     alt: 'The launcher at the start line, red lever drawn back',
     title: 'Pull the launcher',
     body: 'Drag the red lever back, let go, and the car is away',
-    /* The road's own arrows, running away up the track. */
+    /* The launcher's own cue, and pointing the way the launcher's own cue
+       points: DOWN, over the lever, because that is the direction the sled is
+       dragged. They ran UP the road before, which is where the car goes and
+       the exact opposite of what the hand is being asked to do. Placed over
+       the red lever in the frame behind. */
     overlay: (
       <svg className="arin__ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path data-p="chev" className="arin__chev" d="M36 60 L50 52 L64 60" />
-        <path data-p="chev" className="arin__chev" d="M38 49 L50 42 L62 49" />
-        <path data-p="chev" className="arin__chev" d="M40 39 L50 33 L60 39" />
+        <path data-p="chev" className="arin__chev" d="M20 38 L31 46 L42 38" />
+        <path data-p="chev" className="arin__chev" d="M20 47 L31 55 L42 47" />
+        <path data-p="chev" className="arin__chev" d="M20 56 L31 64 L42 56" />
       </svg>
     ),
   },
@@ -212,10 +220,10 @@ function timeline(beat: number, root: HTMLElement): AnimationPlaybackControls | 
   return animate(
     [
       ...entrance,
-      /* the road's own arrows, running away from the car: the direction of
-         travel, stated by the track rather than by a label */
-      [chev, { opacity: [0, 1, 0], y: [8, -6] }, { duration: 1.1, delay: stagger(0.16), at: '-0.8', ease: 'easeOut' }],
-      [chev, { opacity: [0, 1, 0], y: [8, -6] }, { duration: 1.1, delay: stagger(0.16), at: '+0.05', ease: 'easeOut' }],
+      /* down the lever, on a loop, the way the launcher's chevrons run in the
+         race itself: the direction the sled is dragged */
+      [chev, { opacity: [0, 1, 0], y: [-7, 9] }, { duration: 1, delay: stagger(0.15), at: '-0.8', ease: 'easeOut' }],
+      [chev, { opacity: [0, 1, 0], y: [-7, 9] }, { duration: 1, delay: stagger(0.15), at: '+0.05', ease: 'easeOut' }],
     ],
     { repeat: Infinity, repeatDelay: 0.2 },
   );
@@ -225,9 +233,11 @@ export function ARIntro({ onDone }: { onDone: () => void }) {
   const [beat, setBeat] = useState(0);
   const stage = useRef<HTMLDivElement>(null);
 
+  /* Round and round. It used to stop on the last beat, which left whoever was
+     still reading it looking at a still — and somebody who glanced away during
+     the launcher had no way back to the surface but a reload. */
   useEffect(() => {
-    if (beat >= BEATS.length - 1) return;
-    const id = window.setTimeout(() => setBeat((b) => b + 1), BEAT_MS);
+    const id = window.setTimeout(() => setBeat((b) => (b + 1) % BEATS.length), BEAT_MS);
     return () => window.clearTimeout(id);
   }, [beat]);
 

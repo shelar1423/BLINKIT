@@ -5473,6 +5473,9 @@ input, select, textarea { font: inherit; color: inherit; }
   position: absolute; inset: 0;
   width: 100%; height: 100%; object-fit: cover;
   transform-origin: 50% 58%;
+  /* The table is shot in low, flat light. A touch of lift keeps the yellow
+     viewfinder over it from being the only thing with any contrast. */
+  filter: brightness(1.14) saturate(1.06);
 }
 /* Every overlay is drawn in the card's own 100x100 space and stretched to it,
    so a mark sits where it was placed whatever the card measures. */
@@ -5493,12 +5496,12 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .arin__reticle {
   fill: rgba(255, 255, 255, 0.08); stroke: #fff; stroke-width: 1.6;
-  vector-effect: non-scaling-stroke; transform-origin: 50% 88%;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 86%;
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
 }
 .arin__ripple {
   fill: none; stroke: var(--hw-o); stroke-width: 1.6;
-  vector-effect: non-scaling-stroke; transform-origin: 50% 88%; opacity: 0;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 86%; opacity: 0;
 }
 /* The circuit itself, rendered out of the race engine on a transparent
    ground, standing on the floor of the photograph behind it. The shadow is
@@ -5507,7 +5510,7 @@ input, select, textarea { font: inherit; color: inherit; }
   /* Centred by its own offsets, NOT by a transform: the timeline owns
      `transform` on this element, and a translateX(-50%) written here is the
      first thing it overwrites. */
-  position: absolute; left: 7%; right: 7%; bottom: 4%;
+  position: absolute; left: 13%; right: 13%; bottom: 3%;
   width: auto;
   opacity: 0;
   filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
