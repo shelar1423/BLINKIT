@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { ARRIVE_U, DeliveryMap, DONE_U } from '../design/components/DeliveryMap';
 import { BillRows } from '../design/components/BillDetails';
+import { Poppers } from '../design/components/Poppers';
 import { rupees } from '../data/catalog';
 import { ADDRESSES } from '../data/addresses';
 import { useStore } from '../store/useStore';
@@ -83,6 +84,10 @@ export default function OrderSuccess() {
      mounted, so leaving and coming back picks the trip up where it really is
      instead of restarting the delivery. */
   const placedAt = order?.placedAt ?? 0;
+  /* Confetti marks the handover you watched happen. Coming back to an order
+     that was already delivered shows the delivered screen without throwing
+     it again. */
+  const [watching] = useState(() => Date.now() - placedAt < TRIP_S * DONE_U * 1000);
   useEffect(() => {
     if (!placedAt) return;
     let raf = 0;
@@ -127,6 +132,8 @@ export default function OrderSuccess() {
 
   return (
     <main className="page trk">
+      {done && watching && <Poppers />}
+
       {/* ---- the green bar ---- */}
       <header className="trk__top">
         <button className="trk__back" type="button" aria-label="Back" onClick={() => nav('/')}>

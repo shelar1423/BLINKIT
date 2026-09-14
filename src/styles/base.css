@@ -1057,15 +1057,14 @@ input, select, textarea { font: inherit; color: inherit; }
 /* White at the top where the type sits, cooling to a pale blue behind the art.
    The art needs a ground to stand on and the badge needs one to read against,
    and a single flat fill cannot do both. */
+/* The tile is the card artwork itself — outline, title and product are all in
+   the image, which carries its own transparent corners — so the button adds no
+   ground, padding or radius of its own. */
 .ctile {
-  position: relative; overflow: hidden;
-  border-radius: var(--r-lg); border: 0;
-  aspect-ratio: 1 / 1.16;
-  /* top padding clears the badge, which now hangs off the card's own edge */
-  padding: 30px 8px 0;
-  display: flex; flex-direction: column; align-items: center;
-  text-align: center;
-  background: linear-gradient(180deg, #fff 0%, #fff 34%, #E4EEFB 100%);
+  position: relative;
+  border: 0; padding: 0; background: none;
+  aspect-ratio: 572 / 800;
+  display: block;
 }
 /* The badge is one pill in two halves: the qualifier on near-black, the number
    on the campaign yellow. Two segments rather than two pills, so it reads as a
@@ -1113,9 +1112,8 @@ input, select, textarea { font: inherit; color: inherit; }
    leftGap 0, rightGap 0. Padding the box equally gives them a common frame to
    be centred in, which is what makes them read as a set. */
 .ctile__im {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  width: calc(100% - 24px); margin: 0 12px; height: 56%;
-  object-fit: contain; object-position: 50% 100%;
+  display: block; width: 100%; height: 100%;
+  object-fit: contain;
 }
 .ctile:active { transform: scale(0.985); }
 
@@ -2167,8 +2165,8 @@ input, select, textarea { font: inherit; color: inherit; }
   color: var(--ink); background: #F1F6EE; border-radius: 50%;
 }
 .trk__back:active { background: #DCE8D6; }
-.trk__k { font-size: var(--f-base); font-weight: 700; color: rgba(255, 255, 255, 0.92); }
-.trk__eta { font-size: calc(var(--f-2xl) + 4px); font-weight: 800; letter-spacing: -0.4px; margin-top: 3px; }
+.trk__k { font-size: calc(var(--f-base) - 4px); font-weight: 700; color: rgba(255, 255, 255, 0.92); }
+.trk__eta { font-size: var(--f-2xl); font-weight: 800; letter-spacing: -0.4px; margin-top: 3px; }
 
 /* ---------- the map ----------
    The card is the design file's own frame, 740 x 414 with an 18px radius, and
@@ -2254,15 +2252,15 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .trkc__ic--sm { flex-basis: 40px; width: 40px; height: 40px; }
 .trkc__t { flex: 1; min-width: 0; }
-.trkc__t b { display: block; font-size: var(--f-lg); font-weight: 700; line-height: 1.28; letter-spacing: -0.2px; }
-.trkc__t small { display: block; font-size: var(--f-md); color: var(--mut); line-height: 1.35; margin-top: 2px; }
+.trkc__t b { display: block; font-size: calc(var(--f-lg) + 2px); font-weight: 700; line-height: 1.28; letter-spacing: -0.2px; }
+.trkc__t small { display: block; font-size: calc(var(--f-md) + 2px); color: var(--mut); line-height: 1.35; margin-top: 2px; }
 .trkc__caret { color: var(--ink); flex: none; transition: transform 0.18s ease; }
 .trkc__caret.is-open { transform: rotate(180deg); }
 
 /* ---------- who has the order ---------- */
 .trkc__who { display: flex; align-items: center; gap: 12px; padding: 16px 16px 12px; }
 .trkc__face { flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%; object-fit: cover; }
-.trkc__name { flex: 1; font-size: calc(var(--f-xl) + 2px); font-weight: 700; letter-spacing: -0.3px; line-height: 1.22; }
+.trkc__name { flex: 1; font-size: calc(var(--f-xl) + 4px); font-weight: 700; letter-spacing: -0.3px; line-height: 1.22; }
 .trkc__call {
   flex: none; width: 42px; height: 42px; border-radius: 50%;
   display: grid; place-items: center;
@@ -2279,7 +2277,7 @@ input, select, textarea { font: inherit; color: inherit; }
   padding: 11px 14px;
   border-radius: 12px;
   background: var(--green-tint); color: #1B7A2C;
-  font-size: var(--f-md); font-weight: 500; line-height: 1.35;
+  font-size: calc(var(--f-md) + 2px); font-weight: 500; line-height: 1.35;
 }
 .trkc__said::before {
   content: '';
@@ -2294,12 +2292,13 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .trkc__row { display: flex; align-items: flex-start; gap: 14px; padding: 16px; width: 100%; text-align: left;
   font-size: var(--f-md); color: var(--mut); line-height: 1.35; }
+.trkc__row--sep .grow { font-size: calc(var(--f-md) + 2px); }
 .trkc__row--sep { border-top: 1px solid var(--line); align-items: center; }
 /* A single line next to a 40px disc belongs on its centre line. flex-start is
    right for the address above it, which runs to four lines and has to start
    level with its pin — it is wrong for one name and a number. */
 .trkc__row--mid { align-items: center; }
-.trkc__row b { color: var(--ink); font-weight: 600; }
+.trkc__row b { color: var(--ink); font-weight: 400; }
 .trkc__shield { flex: none; color: var(--green); display: grid; place-items: center; }
 
 /* ---------- delivery instructions ---------- */
@@ -2315,10 +2314,10 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex; align-items: center; gap: 8px;
   margin: 0 16px; padding: 10px 12px; border-radius: 10px;
   background: #E8F4F1; color: #10796A;
-  font-size: var(--f-md); font-weight: 600;
+  font-size: calc(var(--f-md) + 2px); font-weight: 600;
 }
-.trkc__at { display: block; font-size: var(--f-lg); font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
-.trkc__line { display: block; font-size: var(--f-md); color: var(--mut); line-height: 1.4; margin-top: 2px; }
+.trkc__at { display: block; font-size: calc(var(--f-lg) + 2px); font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
+.trkc__line { display: block; font-size: calc(var(--f-md) + 2px); color: var(--mut); line-height: 1.4; margin-top: 2px; }
 .trkc__change {
   display: inline-flex; align-items: center; gap: 1px; margin-top: 3px;
   color: var(--green); font-size: var(--f-md); font-weight: 700;
