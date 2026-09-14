@@ -622,7 +622,13 @@ function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasText
       paint();
       onReady();
     };
-    img.src = '/brand/hot-wheels-logo.webp';
+    /* The SVG here, and the raster on the co-brand plate. This mark is knocked
+       to WHITE with a source-in composite, and that needs a logo whose shape
+       is its alpha: the raster's flame is painted on opaque pixels, so the
+       knockout fills the whole rectangle and the mark comes back as a white
+       block. The plate wants the mark in full colour and takes the raster for
+       exactly the opposite reason. */
+    img.src = '/brand/hot-wheels.svg';
     paint();
   } else {
     paint();
@@ -794,7 +800,13 @@ function leverMarkTexture(): THREE.CanvasTexture {
     paint(img);
     tex.needsUpdate = true;
   };
-  img.src = '/brand/hot-wheels-logo.webp';
+    /* The SVG here, and the raster on the co-brand plate. This mark is knocked
+       to WHITE with a source-in composite, and that needs a logo whose shape
+       is its alpha: the raster's flame is painted on opaque pixels, so the
+       knockout fills the whole rectangle and the mark comes back as a white
+       block. The plate wants the mark in full colour and takes the raster for
+       exactly the opposite reason. */
+  img.src = '/brand/hot-wheels.svg';
   return tex;
 }
 
