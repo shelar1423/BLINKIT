@@ -93,10 +93,16 @@ export function RaceCoach({ mode, onDone }: { mode: 'ar' | '3d'; onDone: () => v
   const ar = mode === 'ar';
   const steps = [
     { glyph: <GlyphPull />, title: 'Pull the launcher', body: 'Drag back, let go' },
+    /* Steering, not corners. "Take the corners" described a moment rather than
+       a control, and left the impression that the wheel is only wanted at the
+       bends and that the throttle must be somebody's job in between. Neither
+       is true: the car drives itself for the whole lap and steering is the
+       only thing the player ever does with it, so that is what the step
+       says. */
     {
       glyph: <GlyphSteer mode={mode} />,
-      title: 'Take the corners',
-      body: ar ? 'Tilt left to go left, right to go right' : 'Hold left to go left, right to go right',
+      title: 'Steer the car',
+      body: ar ? 'It drives itself. Just tilt left or right.' : 'It drives itself. Just hold left or right.',
     },
     /* What the lane is FOR. The first two steps are how the car is driven;
        this is why it is being driven anywhere, and it is the only one of the
