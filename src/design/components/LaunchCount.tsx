@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { playCountdown } from '../../lib/raceAudio';
 
 /* ============================================================
    Three, two, one, GO — counted off the launcher, not off a clock.
@@ -19,9 +20,17 @@ import { useEffect, useRef, useState } from 'react';
    else it counts something.
    ============================================================ */
 
-/** How long each figure holds. Three of them: 3, 2, 1. */
-const STEP_MS = 620;
-/** And GO's own beat, which the car leaves during rather than after. */
+/**
+ * When each figure lands, in ms from the moment the count starts.
+ *
+ * These are not a chosen rhythm: they are where the beeps actually are in
+ * beep.mp3, measured off the file (silencedetect at -35dB) — three short ones
+ * at 0.352, 1.343 and 2.335, and the long one at 3.307. The figure and its
+ * beep have to be the same event, so the timing belongs to the recording and
+ * the screen follows it. Re-measure if the file is ever replaced.
+ */
+const COUNT_BEEPS = [352, 1343, 2335, 3307];
+/** How long GO stays up after its beep. The car leaves during it. */
 const GO_MS = 900;
 
 export function useLaunchCount({
@@ -57,6 +66,11 @@ export function useLaunchCount({
      GO was cleared in the same tick it appeared — the count read 3, 2, 1 and
      then nothing, with the car leaving on a blank screen. */
   const fired = useRef(false);
+  /* The whole count, booked in one go and held HERE rather than in an effect's
+     cleanup. It was in an effect keyed on the count starting, and React tore
+     that effect down the moment the first figure changed — taking the timers
+     for "1" and GO with it, so the count stopped dead on "2". */
+  const sched = useRef<{ ids: number[]; stop: () => void } | null>(null);
 
   /* The scene is told the moment the count starts, not the moment it ends: a
      player who lets the lever go on "3" has to be held back, and the scene is
@@ -66,15 +80,39 @@ export function useLaunchCount({
   }, [counting]);
 
   useEffect(() => {
-    if (launched || counting) return;
+    if (launched || counting || sched.current) return;
     /* A brush against the lever is not a pull. Past a tenth of its travel the
        player is committed, and that is where the count picks it up. */
-    if (pull > 0.1) setStep(3);
+    if (pull <= 0.1) return;
+
+    /* The beeps are one recording playing straight through, so every figure is
+       booked against the same start rather than chained off the one before it:
+       a chain accumulates each timeout's lateness, and by the long beep the
+       screen and the speaker would be visibly apart. */
+    const stop = playCountdown();
+    const ids = COUNT_BEEPS.slice(1).map((at, i) =>
+      window.setTimeout(() => setStep(2 - i), at - COUNT_BEEPS[0]),
+    );
+    sched.current = { ids, stop };
+    setStep(3);
   }, [pull, launched, counting]);
+
+  /** Drop the booking: a count that is over, or one being abandoned. */
+  const clear = () => {
+    if (!sched.current) return;
+    sched.current.ids.forEach((id) => window.clearTimeout(id));
+    sched.current.stop();
+    sched.current = null;
+  };
+  const drop = useRef(clear);
+  drop.current = clear;
+  /* The race quit on "2" should not beep on at a screen that has gone. */
+  useEffect(() => () => drop.current(), []);
 
   useEffect(() => {
     if (step === null) {
       fired.current = false;
+      clear();
       return;
     }
     if (step === 0) {
@@ -90,13 +128,9 @@ export function useLaunchCount({
     }
     /* Launched some other way mid-count — the keyboard, a tap — so there is
        nothing left to count down to. */
-    if (launched) {
-      setStep(null);
-      return;
-    }
-    const id = window.setTimeout(() => setStep((n) => (n === null ? null : n - 1)), STEP_MS);
-    return () => window.clearTimeout(id);
-  }, [step, launched, counting]);
+    if (launched) setStep(null);
+    return;
+  }, [step, launched]);
 
   return step;
 }

@@ -20,6 +20,10 @@ const SOURCES = {
   engine: '/audio/engine-gt40.mp3',
   hit: '/audio/hit.mp3',
   powerUp: '/audio/power-up.mp3',
+  /* The start line, as one recording: three short beeps and a long one, which
+     is why the count's figures are timed to ITS onsets rather than to a round
+     number. See COUNT_BEEPS in LaunchCount. */
+  beep: '/audio/beep.mp3',
 } as const;
 
 type Name = keyof typeof SOURCES;
@@ -210,6 +214,26 @@ export function playHit() {
 /** Crossing another 500 points. */
 export function playPowerUp() {
   play('powerUp', 0.7);
+}
+
+/**
+ * The whole start-line count, in one go.
+ *
+ * One source rather than four one-shots: the gaps between the beeps are the
+ * recording's own, so nothing can drift out of time with them the way four
+ * separately scheduled sounds would. Returns a stop for a count that is
+ * abandoned — the race quit on "2" should not beep on at an empty screen.
+ */
+export function playCountdown() {
+  const it = play('beep', 0.75);
+  if (!it) return () => {};
+  return () => {
+    try {
+      it.src.stop();
+    } catch {
+      /* already finished */
+    }
+  };
 }
 
 let engine: { src: AudioBufferSourceNode; amp: GainNode } | null = null;
