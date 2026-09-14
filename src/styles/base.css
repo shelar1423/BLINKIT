@@ -5458,7 +5458,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .arin {
   position: fixed; inset: 0; z-index: 240;
   display: grid; grid-template-rows: 1fr auto; justify-items: center;
-  padding: calc(var(--safe-t) + 20px) var(--gut) calc(10px + var(--safe-b));
+  padding: calc(var(--safe-t) + 20px) var(--gut) calc(18px + var(--safe-b));
   text-align: center; color: #fff;
   background: linear-gradient(180deg, var(--rwd-bg-top) 0%, #0062B8 48%, var(--rwd-bg-bot) 100%);
   animation: coach-in 260ms ease-out both;
@@ -5574,7 +5574,10 @@ input, select, textarea { font: inherit; color: inherit; }
   transition: background 200ms ease, width 200ms ease;
 }
 .arin__dots i.is-on { width: 20px; border-radius: 4px; background: var(--yellow); }
-.arin .btn { width: min(78vw, 268px); }
+/* Inset 4px inside the card on each side, and sitting 8px above the seat the
+   app's other bottom buttons take: a full-width button under a card reads as
+   the base of the card rather than as its own control. */
+.arin .btn { width: calc(min(78vw, 268px) - 8px); }
 
 /* The timelines are Motion's, in ARIntro.tsx. What is left here is the resting
    state each of them animates FROM, so a device that has asked for less motion
@@ -5599,8 +5602,9 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-2xs); font-weight: 700; color: #fff;
   background: rgba(255, 255, 255, 0.12);
 }
-/* Room for them under the Continue button. */
-.iprevhost .arin { padding-bottom: calc(var(--safe-b) + 62px); }
+/* Room for them under the Continue button, carrying the same 8px lift the
+   real screen has so the preview shows the real spacing plus the chips. */
+.iprevhost .arin { padding-bottom: calc(var(--safe-b) + 70px); }
 
 /* ---------- the start line: 3, 2, 1, GO ----------
    The scorecard's own number treatment, because this is the campaign's way of
