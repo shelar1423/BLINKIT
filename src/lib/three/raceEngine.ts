@@ -2456,6 +2456,17 @@ export class RaceEngine {
         return u > -(final ? 26 : 14) && u < 12;
       });
       if (nearGate) continue;
+      /* Nothing on the ramp or under the jump. A grocery on the raised wedge
+         sat inside its sloped face and was cut off by it, and one in the arc's
+         stretch is either flown over or collected mid-air for you. Clear from
+         just before the foot of the ramp, up its full length, and on through
+         the airtime to the landing. */
+      if (this.interactions && raceInteraction.jumpEnabled) {
+        let dj = t - raceInteraction.jumpAt;
+        dj -= Math.round(dj);
+        const uj = dj * this.curveLen;
+        if (uj > -6 && uj < RAMP_LEN + 26) continue;
+      }
       /* Round the loop there is nothing on lap one — the car is on rails — but
          the loop is gone on lap two and that straight would be bare, so these
          appear only from then. */

@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useStartRace } from '../lib/useStartRace';
 import { AppHeader, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
-import { CARS, CATEGORIES, HERO_CARS, SHOP_CARS, rupees } from '../data/catalog';
+import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
-import { IconChevronRight, IconHeart } from '../design/elements/Icons';
+import { IconChevronRight, IconFlag, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import { preloadCar } from '../lib/three/modelLoader';
@@ -27,46 +27,14 @@ const SHOW_TRACK_DIVIDER = false;
 /**
  * The three ways into the catalogue that sit on the campaign band.
  *
- * Every number on these badges is computed from the catalogue rather than
- * typed, so a tile cannot promise something the listing then contradicts. The
- * reference artwork said "from Rs 149" and "up to 25% off"; the real figures
- * are Rs 179 and 29%, and those are what show.
+ * Each tile is a finished card cut-out — title and product drawn in — so the
+ * title here is only the image's accessible name.
  */
-const SHOP_TILES = (() => {
-  const cars = CARS.filter((c) => !c.mystery);
-  const cheapest = Math.min(...cars.map((c) => c.price));
-  const deepest = Math.max(
-    ...cars.map((c) => (c.mrp ? Math.round(((c.mrp - c.price) / c.mrp) * 100) : 0)),
-  );
-  // the one truck we actually sell
-  const truck = cars.find((c) => c.id === 'pickup');
-  return [
-    {
-      id: 'diecast',
-      title: 'Die-Cast Cars',
-      lead: 'Starting at',
-      value: rupees(cheapest),
-      image: '/campaign/tile-diecast.webp',
-      to: '/hot-wheels',
-    },
-    {
-      id: 'track',
-      title: 'Track Sets',
-      lead: 'Up to',
-      value: `${deepest}% OFF`,
-      image: '/campaign/tile-tracksets.webp',
-      to: '/hot-wheels',
-    },
-    {
-      id: 'trucks',
-      title: 'Toy Trucks',
-      lead: 'Starting at',
-      value: rupees(truck?.price ?? cheapest),
-      image: '/campaign/tile-trucks.webp',
-      to: '/hot-wheels',
-    },
-  ];
-})();
+const SHOP_TILES = [
+  { id: 'diecast', title: 'Die-Cast Cars', image: '/campaign/card-diecast.webp', to: '/hot-wheels' },
+  { id: 'track', title: 'Track Sets', image: '/campaign/card-track.webp', to: '/hot-wheels' },
+  { id: 'trucks', title: 'Trucks', image: '/campaign/card-trucks.webp', to: '/hot-wheels' },
+];
 
 export default function Home() {
   const nav = useNavigate();
@@ -205,6 +173,7 @@ export default function Home() {
                 window.setTimeout(() => startRace(), LOADER_MS);
               }}
             >
+              <IconFlag className="mystery__flag" size={20} aria-hidden="true" />
               Race now
             </Button>
           </div>
@@ -222,12 +191,9 @@ export default function Home() {
                 type="button"
                 onClick={() => nav(t.to)}
               >
-                <span className="ctile__flag">
-                  <b>{t.lead}</b>
-                  <i>{t.value}</i>
-                </span>
-                <span className="ctile__t">{t.title}</span>
-                <img className="ctile__im" src={t.image} alt="" loading="lazy" />
+                {/* The card is the artwork: title, product and the peg-hook
+                    outline are all drawn into the image. */}
+                <img className="ctile__im" src={t.image} alt={t.title} loading="lazy" />
               </button>
             ))}
           </div>
@@ -290,11 +256,11 @@ export default function Home() {
           {/* The break is written, not left to the measure. It falls in the
               right place at this size on a 390pt phone and would fall
               somewhere else on a narrower one or a wider one, and "India's
-              last minute / app" is the line, not a lucky wrap. */}
+              last / minute app" is the line, not a lucky wrap. */}
           <p className="bfoot__line">
-            <span>India&rsquo;s last minute</span>
+            <span>India&rsquo;s last</span>
             <span>
-              app
+              minute app
               <IconHeart className="bfoot__heart" size={52} />
             </span>
           </p>

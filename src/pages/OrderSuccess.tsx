@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { ARRIVE_U, DeliveryMap, DONE_U } from '../design/components/DeliveryMap';
 import { BillRows } from '../design/components/BillDetails';
+import { Poppers } from '../design/components/Poppers';
 import { rupees } from '../data/catalog';
 import { ADDRESSES } from '../data/addresses';
 import { useStore } from '../store/useStore';
 import {
+  IconArrowLeft,
   IconCallOutline,
   IconChatBubble,
   IconChevronDown,
@@ -19,8 +21,6 @@ import {
   IconLike,
   IconMicSolid,
   IconMotorcycle,
-  IconPhoneCall,
-  IconPin,
   IconShieldCheck,
 } from '../design/elements/Icons';
 import { useToast } from '../App';
@@ -61,6 +61,18 @@ const ACCOUNT = { name: 'Aarav Mehta', first: 'Aarav', phone: '9620964510' };
 /** Blinkit prints the last five digits as X, and so does this. */
 const mask = (p: string) => p.slice(0, 5) + 'XXXXX';
 
+/** A single-colour icon exported from the design file (public/track/delivered),
+ *  drawn in the surrounding text colour — see .figic. */
+function FigIcon({ name }: { name: 'star-empty' | 'star-full' | 'location' | 'phone-call' }) {
+  return (
+    <span
+      className="figic"
+      aria-hidden="true"
+      style={{ '--src': `url(/track/delivered/${name}.svg)` } as React.CSSProperties}
+    />
+  );
+}
+
 /* The instructions Blinkit offers as taps rather than typing. A delivery note
    is written one-handed at a door, so a set of choices beats a text field. */
 const NOTES = ['Leave at the door', 'Do not ring the bell', 'Call on arrival', 'Guard will collect'];
@@ -78,11 +90,17 @@ export default function OrderSuccess() {
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [packed, setPacked] = useState<'yes' | 'no' | null>(null);
+  const [stars, setStars] = useState(0);
 
   /* Timed from when the order was actually placed, not from when this screen
      mounted, so leaving and coming back picks the trip up where it really is
      instead of restarting the delivery. */
   const placedAt = order?.placedAt ?? 0;
+  /* Confetti marks the handover you watched happen. Coming back to an order
+     that was already delivered shows the delivered screen without throwing
+     it again. */
+  const [watching] = useState(() => Date.now() - placedAt < TRIP_S * DONE_U * 1000);
   useEffect(() => {
     if (!placedAt) return;
     let raf = 0;
@@ -124,24 +142,35 @@ export default function OrderSuccess() {
         : 'I have picked up your order, and I am on the way';
 
   const items = order.lines.reduce((n, l) => n + l.qty, 0);
+  /* The promised time: when the order was placed plus the ETA it was given. */
+  const arrivedBy = new Date(order.placedAt + TRIP_MIN * 60_000)
+    .toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })
+    .toUpperCase();
 
   return (
     <main className="page trk">
+      {done && watching && <Poppers />}
+
       {/* ---- the green bar ---- */}
-      <header className="trk__top">
+      {/* Once it is delivered there is no ETA left to carry, so the green bar
+          steps aside for a plain white one and the arrival card below takes
+          over its job. */}
+      <header className={'trk__top' + (done ? ' trk__top--done' : '')}>
         <button className="trk__back" type="button" aria-label="Back" onClick={() => nav('/')}>
-          <IconChevronLeft size={22} />
+          {done ? <IconArrowLeft size={22} /> : <IconChevronLeft size={22} />}
         </button>
-        <p className="trk__k">{done ? 'Order delivered' : 'Order is on the way'}</p>
-        <h1 className="trk__eta">
-          {done ? 'Enjoy your Hot Wheels' : `Arriving in ${minsLeft} minute${minsLeft > 1 ? 's' : ''}`}
-        </h1>
+        {!done && (
+          <>
+            <p className="trk__k">Order is on the way</p>
+            <h1 className="trk__eta">{`Arriving in ${minsLeft} minute${minsLeft > 1 ? 's' : ''}`}</h1>
+          </>
+        )}
       </header>
 
       {/* Shown by default, always. The shrink button is the way to put it away
           once you have stopped caring where the car is — it is never something
           you have to press to see the map in the first place. */}
-      {mapOpen ? (
+      {done ? null : mapOpen ? (
         <DeliveryMap
           u={u}
           onCollapse={() => setMapOpen(false)}
@@ -156,6 +185,51 @@ export default function OrderSuccess() {
       )}
 
       <div className="trk__body">
+        {/* ---- delivered: the finish line ---- */}
+        {done && (
+          <section className="trkc trkdone">
+            <div className="trkdone__hero">
+              <span className="trkdone__art">
+                <img src="/track/delivered/box.svg" alt="" />
+              </span>
+              <span className="grow">
+                <h1 className="trkdone__t">
+                  Raced home <em>1 minute early</em>
+                </h1>
+                <p className="trkdone__p">
+                  {PARTNER} took the fast lane and crossed your finish line before {arrivedBy}
+                </p>
+              </span>
+            </div>
+            <div className="trkdone__ask">
+              <img className="trkdone__shield" src="/track/delivered/shield.svg" alt="" />
+              <p className="grow">Did your Hot Wheels arrive clean and well-packed?</p>
+              <div className="trkdone__yn">
+                <button
+                  type="button"
+                  className={'trkdone__no' + (packed === 'no' ? ' is-on' : '')}
+                  onClick={() => {
+                    setPacked('no');
+                    toast('Sorry about that. Our pit crew will look into it');
+                  }}
+                >
+                  No
+                </button>
+                <button
+                  type="button"
+                  className={'trkdone__yes' + (packed === 'yes' ? ' is-on' : '')}
+                  onClick={() => {
+                    setPacked('yes');
+                    toast('Great, thanks for letting us know');
+                  }}
+                >
+                  Yes
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ---- who has the order ---- */}
         <section className="trkc trkc--partner">
           <div className="trkc__who">
@@ -169,26 +243,54 @@ export default function OrderSuccess() {
               aria-label={`Call ${PARTNER}`}
               onClick={() => toast('Calling is out of scope for this prototype')}
             >
-              <IconPhoneCall size={20} />
+              <FigIcon name="phone-call" />
             </button>
           </div>
 
-          <p className="trkc__said">{said}</p>
+          {done ? (
+            <div className="trkrate">
+              <p className="trkrate__t">Rate {PARTNER}&rsquo;s delivery lap</p>
+              <div className="trkrate__stars" role="radiogroup" aria-label="Rating">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={stars === n}
+                    aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                    className={'trkrate__star' + (n <= stars ? ' is-on' : '')}
+                    onClick={() => {
+                      setStars(n);
+                      toast(n >= 4 ? `${PARTNER} takes the podium. Thanks!` : 'Thanks for the feedback');
+                    }}
+                  >
+                    <FigIcon name={n <= stars ? 'star-full' : 'star-empty'} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="trkc__said">{said}</p>
 
-          <button className="trkc__row trkc__row--sep" type="button" onClick={() => toast('Safety details are out of scope for this prototype')}>
-            <span className="trkc__shield">
-              <IconShieldCheck size={20} />
-            </span>
-            <span className="grow">
-              <b>Your Blinkit store is 1.6 km away.</b>
-              <br />
-              Learn about delivery partner safety
-            </span>
-            <IconChevronRight size={18} />
-          </button>
+              <button className="trkc__row trkc__row--sep" type="button" onClick={() => toast('Safety details are out of scope for this prototype')}>
+                <span className="trkc__shield">
+                  <IconShieldCheck size={20} />
+                </span>
+                <span className="grow">
+                  <b>Your Blinkit store is 1.6 km away.</b>
+                  <br />
+                  Learn about delivery partner safety
+                </span>
+                <IconChevronRight size={18} />
+              </button>
+            </>
+          )}
         </section>
 
-        {/* ---- delivery instructions ---- */}
+        {/* ---- delivery instructions ---- nothing left to instruct once it
+            has been handed over */}
+        {!done && (
         <section className="trkc">
           <button
             className="trkc__hd"
@@ -224,6 +326,7 @@ export default function OrderSuccess() {
             </div>
           )}
         </section>
+        )}
 
         {/* ---- where it is going ---- */}
         <section className="trkc">
@@ -241,7 +344,7 @@ export default function OrderSuccess() {
           </p>
 
           <div className="trkc__row">
-            <span className="trkc__ic trkc__ic--sm"><IconPin size={19} /></span>
+            <span className="trkc__ic trkc__ic--sm"><FigIcon name="location" /></span>
             <span className="grow">
               <b className="trkc__at">Delivery at {address.label}</b>
               <span className="trkc__line">{address.line}</span>
@@ -363,9 +466,9 @@ export default function OrderSuccess() {
         {/* Blinkit closes every scroll with this, tracking included. */}
         <footer className="bfoot">
           <p className="bfoot__line">
-            <span>India&rsquo;s last minute</span>
+            <span>India&rsquo;s last</span>
             <span>
-              app
+              minute app
               <IconHeart className="bfoot__heart" size={52} />
             </span>
           </p>

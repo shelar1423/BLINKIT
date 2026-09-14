@@ -234,7 +234,6 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="pcard__prow">
           <b className="pcard__price pcard__price--locked">Locked</b>
         </div>
-        <p className="pcard__off" />
         <p className="pcard__nm">{product.name}</p>
         <span className="pcard__specs">
           <span className="pcard__spec">{product.age ?? AGE_RATING}</span>
@@ -312,8 +311,10 @@ export function ProductCard({ product }: { product: Product }) {
           )}
           {views.length > 1 && (
             <span className="pcard__dots" aria-hidden="true">
+              {/* Blinkit's pager: dots shrink the further they are from the
+                  current picture, so the row reads as a direction, not a count. */}
               {views.map((v, i) => (
-                <i key={v} className={i === view ? 'is-on' : undefined} />
+                <i key={v} className={i === view ? 'is-on' : undefined} data-d={Math.min(3, Math.abs(i - view))} />
               ))}
             </span>
           )}
@@ -333,10 +334,9 @@ export function ProductCard({ product }: { product: Product }) {
         <b className="pcard__price">{rupees(product.price)}</b>
         {product.mrp && <s className="pcard__mrp">{rupees(product.mrp)}</s>}
       </div>
-      {/* Always rendered, even with nothing to say. A card with no MRP was
-          coming out a line shorter than its neighbours, which is exactly the
-          raggedness the fixed name height exists to prevent. */}
-      <p className="pcard__off">{off > 0 ? `${off}% OFF on MRP` : ''}</p>
+      {/* Only when there is a real discount. Every car now sells at its MRP,
+          so an always-rendered row left a blank line under every price. */}
+      {off > 0 && <p className="pcard__off">{`${off}% OFF on MRP`}</p>}
       <p className="pcard__nm">{product.name}</p>
       <span className="pcard__specs">
         <span className="pcard__spec">{product.age ?? AGE_RATING}</span>

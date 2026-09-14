@@ -54,15 +54,13 @@ const GROUPS: Group[] = [
   { id: 'collector', label: 'Collector', match: (p) => /Collector|Premium/i.test(p.series) },
 ];
 
-type SortId = 'featured' | 'priceAsc' | 'priceDesc' | 'rating' | 'discount';
+type SortId = 'featured' | 'priceAsc' | 'priceDesc' | 'rating';
 const SORTS: { id: SortId; label: string }[] = [
   { id: 'featured', label: 'Relevance (default)' },
   { id: 'priceAsc', label: 'Price (low to high)' },
   { id: 'priceDesc', label: 'Price (high to low)' },
   { id: 'rating', label: 'Rating (high to low)' },
-  { id: 'discount', label: 'Discount (high to low)' },
 ];
-const discountOf = (p: Product) => (p.mrp && p.mrp > p.price ? (p.mrp - p.price) / p.mrp : 0);
 
 type Band = { id: string; label: string; match: (p: Product) => boolean };
 const BANDS: Band[] = [
@@ -141,7 +139,6 @@ export default function HotWheels() {
     if (sort === 'priceAsc') out.sort((a, b) => a.price - b.price);
     if (sort === 'priceDesc') out.sort((a, b) => b.price - a.price);
     if (sort === 'rating') out.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-    if (sort === 'discount') out.sort((a, b) => discountOf(b) - discountOf(a));
     return out;
   }, [all, group, sort, bands, series, models]);
 

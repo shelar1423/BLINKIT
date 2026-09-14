@@ -794,7 +794,7 @@ function adjustGestures(
        its own pointer capture for the pull. Without it in this list the
        gesture layer read a launcher pull as a drag-to-move on the track and
        the car never left the line. */
-    !!(e.target as HTMLElement | null)?.closest('button,a,input,.arov__drive,.arov__size,.arlaunch');
+    !!(e.target as HTMLElement | null)?.closest('button,a,input,.arov__size,.arlaunch');
   const guard = (fn: (e: PointerEvent) => void) => (e: PointerEvent) => {
     if (fromControl(e)) return;
     fn(e);

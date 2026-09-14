@@ -30,14 +30,44 @@
   padding: calc(var(--safe-t) + 10px) 0 0;
   color: var(--ink);
 }
+/* The ground is two layers rather than a background, so pinning can cross-fade
+   between them: ::before is the frosted, see-through bar it becomes once
+   pinned; ::after is the campaign blue sitting over it, which fades away. */
 .bhdr--campaign {
+  background: transparent;
+  color: #fff;
+  /* Pinned by its search row: the negative top is everything above that row
+     (set from AppHeader), so the ETA and address scroll away while search and
+     the tabs stay. */
+  position: sticky; top: calc(-1 * var(--bhdr-shift, 78px));
+  transition: color 0.22s ease;
+}
+.bhdr--campaign::before,
+.bhdr--campaign::after {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  pointer-events: none;
+}
+/* Translucent, not white: the page shows through, blurred, as on Blinkit. */
+.bhdr--campaign::before {
+  background: rgba(244, 247, 255, 0.72);
+  -webkit-backdrop-filter: blur(18px) saturate(1.6);
+  backdrop-filter: blur(18px) saturate(1.6);
+  box-shadow: 0 1px 0 rgba(16, 20, 24, 0.06);
+}
+.bhdr--campaign::after {
   background:
     /* flame glow, Hot Wheels' signature accent */
     radial-gradient(130% 85% at 86% 0%, rgba(255, 122, 26, 0.55) 0%, rgba(255, 122, 26, 0) 55%),
     radial-gradient(90% 60% at 8% 100%, rgba(11, 95, 208, 0.45) 0%, rgba(11, 95, 208, 0) 60%),
     linear-gradient(178deg, #1B4FD1 0%, #17399B 55%, #102A6B 100%);
-  color: #fff;
+  transition: opacity 0.22s ease;
 }
+.bhdr--campaign.is-stuck { color: var(--ink); }
+.bhdr--campaign.is-stuck::after { opacity: 0; }
+/* The rows above the search fade as they scroll up and out. */
+.bhdr--campaign .bhdr__top { opacity: var(--bhdr-fade, 1); }
+.bhdr--campaign.is-stuck .bsearch,
+.bhdr--campaign.is-stuck .bvoice { background: #fff; box-shadow: 0 1px 3px rgba(31, 31, 31, 0.12); }
 
 .bhdr__top { display: flex; align-items: flex-start; gap: 10px; padding: 0 var(--gut); }
 .bhdr__eta { flex: 1; min-width: 0; }
@@ -114,10 +144,31 @@
   border: 0; border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   color: var(--ink); font-size: var(--f-base); text-align: left;
+  transition: background-color 0.22s ease, box-shadow 0.22s ease;
 }
 /* "Search" is the instruction and the quoted term is the example — the real
    field sets them apart so the rotating suggestion never reads as typed text. */
 .bsearch__q { color: var(--mut); }
+/* ---- the rotating suggestion ----
+   "Search" holds still; what follows it changes every few seconds. The old
+   suggestion lifts and fades, and the new one writes itself in from the left,
+   as Blinkit's field does. Both sit in one grid cell so they overlap. */
+.bsearch__t { min-width: 0; overflow: hidden; white-space: nowrap; }
+.bsearch__rot { display: inline-grid; vertical-align: top; }
+.bsearch__rot > * { grid-area: 1 / 1; }
+.bsearch__q--in { animation: bsqIn 0.75s cubic-bezier(0.3, 0, 0.4, 1) both; }
+.bsearch__q--out { animation: bsqOut 0.28s ease-in both; }
+@keyframes bsqIn {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+@keyframes bsqOut {
+  to { opacity: 0; transform: translateY(-70%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bsearch__q--in { animation: none; }
+  .bsearch__q--out { display: none; }
+}
 .bsearch svg { flex: 0 0 auto; color: var(--ink-2); }
 .bhdr:not(.bhdr--campaign) .bsearch { background: #fff; box-shadow: 0 1px 3px rgba(31, 31, 31, 0.1); }
 .bvoice {
@@ -126,6 +177,7 @@
   background: rgba(255, 255, 255, 0.92);
   color: #1F3D2B;
   display: grid; place-items: center;
+  transition: background-color 0.22s ease, box-shadow 0.22s ease;
 }
 .bhdr:not(.bhdr--campaign) .bvoice { background: #fff; box-shadow: 0 1px 3px rgba(31, 31, 31, 0.1); }
 .bvoice:active { background: #fff; }

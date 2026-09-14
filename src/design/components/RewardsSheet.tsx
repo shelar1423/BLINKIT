@@ -31,6 +31,9 @@ const ART: Record<string, string> = {
    its slot edge to edge or it reads as a small purple square in a circle. */
 const TILE_ART = new Set(['podium']);
 
+/** Points as a milestone label: 3000 → "3k", 2500 → "2.5k", 750 → "750". */
+const shortPts = (n: number) => (n >= 1000 ? `${Number((n / 1000).toFixed(2))}k` : String(n));
+
 /**
  * The reward ladder, as the rewards screen drew it.
  *
@@ -63,6 +66,18 @@ function Ladder() {
   const legTo = next?.min ?? legFrom;
   const progress = legTo > legFrom ? Math.min(1, Math.max(0, (totalPoints - legFrom) / (legTo - legFrom))) : 1;
 
+  /* Checkpoints along the leg, so the lane says how far is left in points and
+     not only as a distance. They sit on round numbers — multiples of 250, 500
+     or 1,000, whichever gives the leg between two and five marks — so the
+     2,500–5,000 leg reads 3k and 4k rather than 3.5k and 4.5k. */
+  const span = legTo - legFrom;
+  const inner = (s: number) => {
+    const out: number[] = [];
+    for (let m = Math.floor(legFrom / s) * s + s; m < legTo; m += s) out.push(m);
+    return out;
+  };
+  const marks = [1000, 500, 250].map(inner).find((m) => m.length >= 2 && m.length <= 5) ?? [];
+
   /* It drives there rather than starting there. One frame so the empty lane
      paints first and the transition has something to move from. */
   const [lanePos, setLanePos] = useState(0);
@@ -82,12 +97,30 @@ function Ladder() {
             <div className="rwlane__road">
               <span className="rwlane__done" />
             </div>
+            {/* Milestones: a tick across the road and its points under it, at
+                the same scale the car travels, so the car passes each one
+                exactly when the points do. The two ends are the leg itself. */}
+            <div className="rwlane__marks" aria-hidden="true">
+              {[legFrom, ...marks, legTo].map((m, i, all) => (
+                <span
+                  key={m}
+                  className={
+                    'rwlane__mark' +
+                    (totalPoints >= m ? ' is-passed' : '') +
+                    (i === 0 ? ' is-start' : i === all.length - 1 ? ' is-end' : '')
+                  }
+                  style={{ '--at': span > 0 ? (m - legFrom) / span : 0 } as CSSProperties}
+                >
+                  <i />
+                  <em>{shortPts(m)}</em>
+                </span>
+              ))}
+            </div>
             <img className="rwlane__car" src="/cars/lane-car.webp" alt="" />
-            <img
-              className={'rwlane__prize' + (TILE_ART.has(next.id) ? ' is-tile' : '')}
-              src={ART[next.id]}
-              alt=""
-            />
+            {/* The drop's top prize stands at the end of the lane whatever the
+                next tier is, so the finish line always shows what the whole
+                track is racing towards. */}
+            <img className="rwlane__prize is-tile" src={ART.podium} alt="" />
             <p className="rwlane__l">
               <b>{(next.min - totalPoints).toLocaleString('en-IN')}</b> points to {next.label}
             </p>
