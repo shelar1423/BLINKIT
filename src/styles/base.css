@@ -2930,6 +2930,15 @@ input, select, textarea { font: inherit; color: inherit; }
   background: var(--rwd-bg-bot);
 }
 .rwd__foot--pair .btn { width: 100%; min-width: 0; }
+/* The line spans both buttons and sits above them, inside the bar, so it
+   holds its seat with the controls it is about rather than scrolling away
+   from them. */
+.rwd__foot--pair.has-earn { grid-template-areas: 'earn earn' 'a b'; row-gap: 9px; }
+.rwd__earn {
+  grid-area: earn; margin: 0;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: var(--f-sm); font-weight: 600; color: var(--yellow);
+}
 
 /* ---------- the score, on one plaque ----------
    Score, best and the run's figures were three things stacked down the

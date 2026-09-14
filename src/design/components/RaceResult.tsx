@@ -296,7 +296,18 @@ export function RaceResult({
           are the only two things anyone does from here; Rewards, Leaderboard
           and Done were a row of exits under the one button that mattered, and
           the reward link now lives on the ticket where the reward is. */}
-      <div className="rwd__foot rwd__foot--pair">
+      <div className={'rwd__foot rwd__foot--pair' + (racesLeft <= 0 ? ' has-earn' : '')}>
+        {/* What the button is worth, said before it is pressed. "Invite a
+            friend" on its own is a favour being asked; the race it earns is
+            the reason to do it, and the only place it had ever been written
+            was a tip on the share icon that shows once per device and is long
+            gone by the time anybody runs out. */}
+        {racesLeft <= 0 && (
+          <p className="rwd__earn">
+            <IconFlag size={13} />
+            Invite a friend and you get one more race
+          </p>
+        )}
         {/* Out of races, the yellow goes out and the button changes job
             rather than going dead. "No races" was a disabled button naming the
             problem and offering nothing; there IS a way to get another one,
