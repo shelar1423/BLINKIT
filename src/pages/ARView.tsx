@@ -21,6 +21,7 @@ import {
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
+import { SteerCue } from '../design/components/SteerCue';
 import { RaceCoach } from '../design/components/RaceCoach';
 import { Poppers } from '../design/components/Poppers';
 import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
@@ -33,7 +34,7 @@ import {
   stopRaceAudio,
 } from '../lib/raceAudio';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
-import { AR_LOADER_LINES, DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
+import { AR_LOADER_LINES, DriftLoader, LOADER_MS, TrackRing } from '../design/components/DriftLoader';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 /** Coverage at which the surface is considered read well enough to brief on. */
@@ -78,6 +79,8 @@ export default function ARView() {
      drop actually takes longer than a frame or two — a fast placement never
      flashes a spinner. */
   const [placing, setPlacing] = useState(false);
+  /** Safety net for a build that never reports back; cleared on every press. */
+  const placeGuard = useRef(0);
   /* Twelve seconds pointing at the floor without placing anything means it is
      not going where they want. Rather than leave them guessing, say the thing
      that actually works — leaving and re-entering gives the camera a clean
@@ -152,6 +155,8 @@ export default function ARView() {
            placement step, which can be many seconds of pointing at the floor. */
         onPhase: (p) => {
           setPhase(p);
+          // the track is down (or the session moved on): the build is over
+          if (p !== 'ready') setPlacing(false);
           /* Fresh briefing each time a circuit goes down: re-placing a track
              is the one moment somebody is most likely to want it again. */
           if (p === 'placed') setCoached(false);
@@ -520,6 +525,18 @@ export default function ARView() {
             )}
 
             {phase === 'racing' && <ScorePops pops={pops} />}
+            {/* How to steer, a second into the race. AR has no pads: tilt only. */}
+            {phase === 'racing' && <SteerCue mode="tilt" />}
+
+            {/* While the track is being built after "Place track here": the
+                campaign's track loader in the middle of the camera view, so a
+                slow build reads as working rather than stuck. */}
+            {phase === 'ready' && placing && (
+              <div className="arov__building" role="status" aria-live="polite">
+                <TrackRing className="trackload trackload--ar" />
+                <p>{inspect ? 'Placing your car…' : 'Building your track…'}</p>
+              </div>
+            )}
 
             {/* The gate's timing gauge. There is no crosshair any more: the
                 hoop hangs above the road and the car goes under it unless it
@@ -652,15 +669,16 @@ export default function ARView() {
                   type="button"
                   disabled={placing}
                   onClick={() => {
-                    /* The spinner only appears if the drop is still going after
-                       250ms. Anything faster than that reads as instant and a
-                       flash of "loading" would be noise. */
-                    const slow = window.setTimeout(() => setPlacing(true), 250);
+                    /* Busy from the press until the scene reports the track is
+                       down (the phase leaves 'ready'). This used to clear itself
+                       after 60ms — before its own 250ms spinner delay — so the
+                       loader never appeared and a slow build looked stuck. The
+                       loader fades in after 250ms (CSS), so a fast drop still
+                       reads as instant; the timeout is only a safety net. */
+                    setPlacing(true);
                     handle.current?.placeNow();
-                    window.setTimeout(() => {
-                      window.clearTimeout(slow);
-                      setPlacing(false);
-                    }, 60);
+                    window.clearTimeout(placeGuard.current);
+                    placeGuard.current = window.setTimeout(() => setPlacing(false), 20000);
                   }}
                 >
                   {placing ? 'Placing…' : inspect ? 'Place car here' : 'Place track here'}

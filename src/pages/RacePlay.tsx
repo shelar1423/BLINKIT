@@ -11,6 +11,7 @@ import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import { IconChevronLeft, IconChevronRight, IconClose } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
+import { SteerCue } from '../design/components/SteerCue';
 import { RaceCoach } from '../design/components/RaceCoach';
 import { Poppers } from '../design/components/Poppers';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
@@ -368,6 +369,10 @@ export default function RacePlay() {
               hint below. They are steering affordances, there is nothing to
               steer yet, and the right-hand one sat squarely on the launcher's
               co-brand plate. */}
+          {/* How to steer, a second after the car leaves the line: tilt when
+              tilt has the wheel, otherwise pressing the left and right pads. */}
+          {launched && !outcome && <SteerCue mode={tiltDriving ? 'tilt' : 'press'} />}
+
           {!tiltDriving && launched && (
             <div className="steer__pads" aria-hidden="true">
               <span className="steer__pad"><IconChevronLeft size={22} /></span>

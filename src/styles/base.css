@@ -1291,6 +1291,92 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .steer__pad:active { background: rgba(255,255,255,0.24); }
 
+/* ---------- steering guide (SteerCue) ----------
+   Plays once, a second into the race. Both versions run one 2.4s loop split
+   into a left half and a right half, so the arrow, the ring and the caption
+   for a side are always lit together. */
+.stcue {
+  position: fixed; inset: 0; z-index: 205;
+  pointer-events: none;
+  animation: stcueIn 260ms ease-out both;
+}
+.stcue.is-out { animation: stcueOut 300ms ease-in both; }
+@keyframes stcueIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes stcueOut { from { opacity: 1; } to { opacity: 0; } }
+
+/* The caption: both lines in one cell, each shown during its own half. */
+.stcue__cap {
+  position: absolute; left: 0; right: 0; top: 64%;
+  display: grid; justify-items: center; margin: 0;
+}
+.stcue__say {
+  grid-area: 1 / 1;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(10, 12, 20, 0.66);
+  font-size: var(--f-md); font-weight: 800; color: #fff; white-space: nowrap;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+.stcue__say--l { animation: stcueHalfL 2.4s ease-in-out infinite; }
+.stcue__say--r { animation: stcueHalfR 2.4s ease-in-out infinite; }
+@keyframes stcueHalfL { 0%, 46% { opacity: 1; } 54%, 100% { opacity: 0; } }
+@keyframes stcueHalfR { 0%, 46% { opacity: 0; } 54%, 100% { opacity: 1; } }
+
+/* tilt: a phone rocking, the arrow on the side it leans towards lighting */
+.stcue__tilt {
+  position: absolute; left: 50%; top: 52%;
+  transform: translate(-50%, -50%);
+  display: flex; align-items: center; gap: 22px;
+}
+.stcue__phone {
+  width: 36px; height: 62px; border-radius: 9px;
+  border: 3px solid #fff; background: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 -6px 0 -3px rgba(255, 255, 255, 0.55);
+  animation: stcueRock 2.4s ease-in-out infinite;
+}
+@keyframes stcueRock {
+  0%, 6% { transform: rotate(0deg); }
+  18%, 38% { transform: rotate(-24deg); }
+  50%, 56% { transform: rotate(0deg); }
+  68%, 88% { transform: rotate(24deg); }
+  100% { transform: rotate(0deg); }
+}
+.stcue__arrow {
+  display: block; width: 18px; height: 18px;
+  border-top: 4px solid #FFD400; border-right: 4px solid #FFD400; border-radius: 2px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+}
+.stcue__arrow--l { transform: rotate(-135deg); animation: stcueHalfL 2.4s ease-in-out infinite; }
+.stcue__arrow--r { transform: rotate(45deg); animation: stcueHalfR 2.4s ease-in-out infinite; }
+
+/* press: a ring pulsing over each steering pad (.steer__pads) in turn */
+.stcue__ring {
+  position: absolute; bottom: calc(var(--safe-b) + 44px + 34px);
+  width: 68px; height: 68px; border-radius: var(--r-lg);
+  border: 3px solid #FFD400;
+  transform: translate(-50%, 50%);
+  box-shadow: 0 0 18px rgba(255, 212, 0, 0.55);
+}
+.stcue__ring--l { left: calc(12px + 34px); animation: stcuePulseL 2.4s ease-out infinite; }
+.stcue__ring--r { left: calc(100% - 12px - 34px); animation: stcuePulseR 2.4s ease-out infinite; }
+@keyframes stcuePulseL {
+  0% { opacity: 1; transform: translate(-50%, 50%) scale(0.9); }
+  40% { opacity: 0; transform: translate(-50%, 50%) scale(1.45); }
+  100% { opacity: 0; transform: translate(-50%, 50%) scale(1.45); }
+}
+@keyframes stcuePulseR {
+  0%, 50% { opacity: 0; transform: translate(-50%, 50%) scale(0.9); }
+  50.1% { opacity: 1; transform: translate(-50%, 50%) scale(0.9); }
+  90%, 100% { opacity: 0; transform: translate(-50%, 50%) scale(1.45); }
+}
+.stcue__cap--press { top: auto; bottom: calc(var(--safe-b) + 44px + 68px + 18px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stcue__phone, .stcue__arrow--l, .stcue__arrow--r,
+  .stcue__ring--l, .stcue__ring--r { animation: none; opacity: 1; }
+  .stcue__say--l { animation: none; opacity: 1; }
+  .stcue__say--r { display: none; }
+}
+
 /* countdown */
 .cdown { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10,6,18,0.72); }
 .cdown b { font-size: 84px; font-weight: 800; color: var(--yellow); font-variant-numeric: tabular-nums; animation: cd 0.7s ease-out; }
@@ -3088,7 +3174,41 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 /* A brand tile keeps its own corners; the cut-out illustrations need none. */
 .rwlane__prize.is-tile { border-radius: 7px; }
-.rwlane__l { margin-top: 11px; font-size: var(--f-xs); color: rgba(255, 255, 255, 0.72); }
+/* Milestones on the lane. Placed on the car's own travel scale (see
+   .rwlane__car), so the car crosses a tick exactly when the points reach it.
+   Ticks cross the road; labels hang under it. Passed ones turn yellow. */
+.rwlane__marks {
+  position: absolute; left: 0; right: 0; top: 0; height: 18px;
+  pointer-events: none; z-index: 1;
+}
+.rwlane__mark {
+  position: absolute; top: 0; height: 100%;
+  left: calc(var(--at) * (100% - 56px) + 20px);
+  transform: translateX(-50%);
+  display: grid; justify-items: center;
+}
+/* A chequered strip across the road at each milestone — a finish line in
+   miniature, so it reads as a checkpoint rather than a ruler mark. */
+.rwlane__mark i {
+  display: block; width: 6px; height: 100%;
+  background: repeating-conic-gradient(#fff 0 25%, #1B1F2A 0 50%) 0 0 / 6px 6px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+  opacity: 0.7;
+}
+.rwlane__mark em {
+  position: absolute; top: calc(100% + 4px);
+  font-style: normal; font-size: var(--f-2xs); font-weight: 700;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+  color: rgba(255, 255, 255, 0.6);
+}
+.rwlane__mark.is-passed i { opacity: 1; }
+.rwlane__mark.is-passed em { color: var(--yellow); }
+/* The ends are the leg itself: no tick at the start (the car sits there) or
+   under the prize, just their points, and the target set in white. */
+.rwlane__mark.is-start i,
+.rwlane__mark.is-end i { visibility: hidden; }
+.rwlane__mark.is-end em { color: #fff; font-weight: 800; }
+.rwlane__l { margin-top: 26px; font-size: var(--f-xs); color: rgba(255, 255, 255, 0.72); }
 .rwlane__l b { color: #fff; font-weight: 800; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   .rwlane__car, .rwlane__done { transition: none; }
@@ -3468,6 +3588,29 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   .arboost__verdict { animation: none; }
+}
+
+/* The AR track build. Centred over the camera on a soft dark disc so the
+   orange ring reads on any floor, and faded in after 250ms so a build that
+   finishes instantly never flashes a loader. */
+.arov__building {
+  position: fixed; left: 50%; top: 42%; z-index: 215;
+  transform: translate(-50%, -50%);
+  display: grid; justify-items: center; gap: 12px;
+  padding: 22px 26px 18px; border-radius: 22px;
+  background: rgba(8, 12, 22, 0.62);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  color: #fff; text-align: center; pointer-events: none;
+  animation: arBuildIn 220ms ease-out 250ms both;
+}
+.arov__building p { margin: 0; font-size: var(--f-md); font-weight: 800; }
+.trackload--ar { width: 76px; }
+@keyframes arBuildIn {
+  from { opacity: 0; transform: translate(-50%, -46%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arov__building { animation-duration: 1ms; }
 }
 
 /* Round translucent pads — the 3D race's horn, mute and drift buttons. The AR
