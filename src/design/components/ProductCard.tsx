@@ -312,8 +312,10 @@ export function ProductCard({ product }: { product: Product }) {
           )}
           {views.length > 1 && (
             <span className="pcard__dots" aria-hidden="true">
+              {/* Blinkit's pager: dots shrink the further they are from the
+                  current picture, so the row reads as a direction, not a count. */}
               {views.map((v, i) => (
-                <i key={v} className={i === view ? 'is-on' : undefined} />
+                <i key={v} className={i === view ? 'is-on' : undefined} data-d={Math.min(3, Math.abs(i - view))} />
               ))}
             </span>
           )}

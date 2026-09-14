@@ -8,10 +8,9 @@ import { rupees } from '../data/catalog';
 import { ADDRESSES } from '../data/addresses';
 import { useStore } from '../store/useStore';
 import {
+  IconArrowLeft,
   IconCallOutline,
   IconChatBubble,
-  IconCheck,
-  IconStar,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
@@ -22,8 +21,6 @@ import {
   IconLike,
   IconMicSolid,
   IconMotorcycle,
-  IconPhoneCall,
-  IconPin,
   IconShieldCheck,
 } from '../design/elements/Icons';
 import { useToast } from '../App';
@@ -63,6 +60,18 @@ const ACCOUNT = { name: 'Aarav Mehta', first: 'Aarav', phone: '9620964510' };
 
 /** Blinkit prints the last five digits as X, and so does this. */
 const mask = (p: string) => p.slice(0, 5) + 'XXXXX';
+
+/** A single-colour icon exported from the design file (public/track/delivered),
+ *  drawn in the surrounding text colour — see .figic. */
+function FigIcon({ name }: { name: 'star-empty' | 'star-full' | 'location' | 'phone-call' }) {
+  return (
+    <span
+      className="figic"
+      aria-hidden="true"
+      style={{ '--src': `url(/track/delivered/${name}.svg)` } as React.CSSProperties}
+    />
+  );
+}
 
 /* The instructions Blinkit offers as taps rather than typing. A delivery note
    is written one-handed at a door, so a set of choices beats a text field. */
@@ -148,7 +157,7 @@ export default function OrderSuccess() {
           over its job. */}
       <header className={'trk__top' + (done ? ' trk__top--done' : '')}>
         <button className="trk__back" type="button" aria-label="Back" onClick={() => nav('/')}>
-          <IconChevronLeft size={22} />
+          {done ? <IconArrowLeft size={22} /> : <IconChevronLeft size={22} />}
         </button>
         {!done && (
           <>
@@ -181,8 +190,7 @@ export default function OrderSuccess() {
           <section className="trkc trkdone">
             <div className="trkdone__hero">
               <span className="trkdone__art">
-                <img src="/icons/delivery-truck.webp" alt="" />
-                <i><IconCheck size={14} /></i>
+                <img src="/track/delivered/box.svg" alt="" />
               </span>
               <span className="grow">
                 <h1 className="trkdone__t">
@@ -194,7 +202,7 @@ export default function OrderSuccess() {
               </span>
             </div>
             <div className="trkdone__ask">
-              <span className="trkdone__shield"><IconShieldCheck size={30} /></span>
+              <img className="trkdone__shield" src="/track/delivered/shield.svg" alt="" />
               <p className="grow">Did your Hot Wheels arrive clean and well-packed?</p>
               <div className="trkdone__yn">
                 <button
@@ -235,7 +243,7 @@ export default function OrderSuccess() {
               aria-label={`Call ${PARTNER}`}
               onClick={() => toast('Calling is out of scope for this prototype')}
             >
-              <IconPhoneCall size={20} />
+              <FigIcon name="phone-call" />
             </button>
           </div>
 
@@ -256,7 +264,7 @@ export default function OrderSuccess() {
                       toast(n >= 4 ? `${PARTNER} takes the podium. Thanks!` : 'Thanks for the feedback');
                     }}
                   >
-                    <IconStar size={30} />
+                    <FigIcon name={n <= stars ? 'star-full' : 'star-empty'} />
                   </button>
                 ))}
               </div>
@@ -336,7 +344,7 @@ export default function OrderSuccess() {
           </p>
 
           <div className="trkc__row">
-            <span className="trkc__ic trkc__ic--sm"><IconPin size={19} /></span>
+            <span className="trkc__ic trkc__ic--sm"><FigIcon name="location" /></span>
             <span className="grow">
               <b className="trkc__at">Delivery at {address.label}</b>
               <span className="trkc__line">{address.line}</span>

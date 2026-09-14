@@ -332,6 +332,9 @@ input, select, textarea { font: inherit; color: inherit; }
   background: #fff;
   /* With the card's 4px gap, 8px from the panel to the price. */
   margin-bottom: 4px;
+  /* So the pack-size band can size itself off the panel's width (cqw) — see
+     .pcard__unit. */
+  container-type: inline-size;
 }
 /* touch-action so a horizontal swipe through the pictures is ours, while a
    vertical drag still scrolls the page under it */
@@ -383,14 +386,19 @@ input, select, textarea { font: inherit; color: inherit; }
    picture, so the count is always the number of real photographs. */
 .pcard__dots {
   position: absolute; left: 10px; bottom: 9px; z-index: 2;
-  display: flex; gap: 4px;
+  display: flex; align-items: center; gap: 4px;
 }
+/* Sized by distance from the current picture, as Blinkit's pager is: the
+   current dot largest and dark, each step away a size smaller. */
 .pcard__dots i {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--line-2);
-  transition: background-color 0.15s ease;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #A9ADB8;
+  transition: width 0.18s ease, height 0.18s ease, background-color 0.15s ease;
 }
-.pcard__dots i.is-on { background: var(--ink); }
+.pcard__dots i[data-d='1'] { width: 6px; height: 6px; }
+.pcard__dots i[data-d='2'] { width: 5px; height: 5px; }
+.pcard__dots i[data-d='3'] { width: 4px; height: 4px; }
+.pcard__dots i.is-on { background: #5A6072; }
 .pcard__save::after {
   content: ''; position: absolute; top: 50%; left: 50%;
   width: 44px; height: 44px; transform: translate(-50%, -50%);
@@ -400,7 +408,11 @@ input, select, textarea { font: inherit; color: inherit; }
    band and the button the same size on every card width. */
 .pcard__unit {
   display: flex; align-items: center;
-  aspect-ratio: 100 / 36;
+  /* Sized to the ADD button rather than the other way round, so the button
+     keeps its own shape and sits 5px above this band's divider and 2px below
+     the panel's bottom edge: the button's height (its width, 50% + 4px, over
+     its 154/100 ratio) less those 5px and the 3px it hangs below the band. */
+  height: calc((50cqw + 4px) * 100 / 154 - 8px);
   padding: 0 50% 0 10px;
   border-top: 1px solid var(--line);
   /* Not white. The band under the shot is a shade cooler than the panel it
@@ -423,23 +435,35 @@ input, select, textarea { font: inherit; color: inherit; }
    little taller than the band, so it breaks the divider above and the panel's
    bottom below. 50% of the card wide, 35% of the card tall. */
 .pcard__act {
-  position: absolute; right: 0; bottom: -3px; z-index: 3;
+  position: absolute; right: -6px; bottom: -3px; z-index: 3;
   /* Four wider than half the card, and it grows LEFT because this is pinned
      right — so the button stays flush with the panel's edge. */
   width: calc(50% + 4px);
 }
-/* Half the card wide, 34px tall — a fixed height, as specified. The width-
-   derived ratio it had came out at 43px on a 126px card, which read as a block
-   sitting on the card rather than a button on it. ADD and the stepper it
-   becomes share the same box, so there is still no jump on press. */
+/* Sized off the real listing and left alone. The button is HALF the card wide
+   and derives its height from that width, which is what makes it overhang the
+   pack-size band — breaking the divider above it and the panel's bottom edge
+   below. That overhang is the whole shape of Blinkit's card.
+
+   Do not swap this for a fixed control height. It was briefly set to --ctl-h
+   for consistency with the same button elsewhere, which took 10px off it; the
+   button stopped breaking the divider and sat down inside the band instead,
+   and the card read as though the button had moved. Inside the card, ADD and
+   the stepper it becomes both derive the same height from the same width, so
+   there is no jump on press either way. */
 .pcard__act .add, .pcard__act .stepper {
   width: 100%; min-width: 0;
-  height: 34px; aspect-ratio: auto;
+  /* Still derived from the width, still no fixed height — see the note above,
+     which is the whole reason this button overhangs at all.
+
+     154/100 rather than 142/105: four pixels wider and four shorter on a
+     390pt phone, which is the shape as measured off the real card. The ratio
+     is how that has to be expressed here, because the height is a consequence
+     of the width and a vertical padding on a box this size changes nothing. */
+  height: auto; aspect-ratio: 154 / 100;
   border-radius: var(--r-ctl);
-  padding: 0 6px;
+  padding: 0 8px;
 }
-/* The − and + a size up from the stepper's default, inside the card only. */
-.pcard__act .stepper svg { width: 16px; height: 16px; }
 
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
 /* Sized as a share of the card, off the real listing: the price is 14.7% of
@@ -977,8 +1001,10 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
 .mystery__go:active { transform: scale(0.97); }
-/* Black type on the orange, with the chequered flag after it. */
+/* Black type on the orange, led by the chequered flag — leaning right, towards
+   the words, the way it is waved at the line. */
 .mystery__go.btn--hwTrack { color: var(--ink); gap: 8px; }
+.mystery__flag { flex: none; transform: rotate(14deg); }
 /* "Sparkle like the logo (shiny reflective surface)". A highlight travelling
    across the face, so the button reads as the same chrome-and-flame material
    as the lettering above it rather than a flat orange rectangle sitting under
@@ -1489,12 +1515,11 @@ input, select, textarea { font: inherit; color: inherit; }
    and dropped to a line of its own. Inline keeps it in the text run, following
    "app" the way it does in the real footer. */
 .bfoot__line {
-  /* Two words a line — "India's last" / "minute app" — so the type can be far
-     larger than when "India's last minute" had to hold one line. The size is
-     tied to the width: at 15vw the longer half, "minute app" plus the heart,
-     fills the column at 320, 375 and 430 without wrapping (348 of 351px at
-     375). */
-  font-size: clamp(40px, 15vw, 68px);
+  /* Two lines, always: "India's last" / "minute app ♥". The size is tied to the
+     width so the longer half — "minute app" with the heart — fits the column
+     with room to spare on every phone width; at a flat 15vw it only just fit
+     at 375 and dropped the heart to a third line on narrower screens. */
+  font-size: clamp(36px, calc(15vw - 6px), 64px);
   font-weight: 800; letter-spacing: 0; line-height: 1.06;
   color: #CCD0D9;
 }
@@ -1506,9 +1531,9 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The first line can never wrap. If the type ever outgrows the column the
    failure should be a line that touches the edges, not a third line appearing
    and the sign-off silently changing shape. */
-.bfoot__line span:first-child { white-space: nowrap; }
+.bfoot__line span { white-space: nowrap; }
 .bfoot__heart {
-  display: inline-block; vertical-align: -0.14em; margin-left: 12px;
+  display: inline-block; vertical-align: -0.14em; margin-left: 0.2em;
   /* Scales with the line rather than staying at its 52px attribute. */
   width: 0.72em; height: 0.72em;
   color: #FF6B5A; fill: currentColor; stroke: none;
@@ -2302,24 +2327,28 @@ input, select, textarea { font: inherit; color: inherit; }
    The green bar gives way to a plain white one with just the back button, and
    this card takes the top of the stack: a mint band saying it has arrived,
    then one quick question about the packing. */
+/* On white the back button is white too, carried by a hairline ring rather
+   than the green bar's pale green disc. */
+.trk__top--done .trk__back { background: #fff; border: 1px solid var(--line); }
+.trk__top--done .trk__back:active { background: var(--surface-2); }
 .trk__top--done { background: var(--surface); padding-block: calc(var(--safe-t) + 8px) 12px; min-height: calc(var(--safe-t) + 60px); }
 .trkdone__hero { display: flex; align-items: center; gap: 14px; padding: 18px 16px; background: #E8F4F1; }
+/* The box and its tick sit in a pale yellow disc that glows softly into the
+   mint band, as on Blinkit's arrival card. The disc is drawn here; the
+   illustration is the box alone. */
 .trkdone__art {
-  position: relative; flex: 0 0 76px; width: 76px; height: 76px; border-radius: 50%;
-  display: grid; place-items: center; background: #FFF6CC;
+  flex: 0 0 92px; width: 92px; height: 92px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: radial-gradient(circle, #FFF8D6 0%, #FDF3C4 62%, #FAEFC0 100%);
+  box-shadow: 0 0 14px 4px rgba(253, 243, 196, 0.75);
 }
-.trkdone__art img { width: 62px; height: auto; }
-.trkdone__art i {
-  position: absolute; top: 6px; right: 4px; width: 24px; height: 24px; border-radius: 50%;
-  display: grid; place-items: center; background: var(--green); color: #fff;
-  box-shadow: 0 0 0 2px #FFF6CC;
-}
+.trkdone__art img { width: 104%; height: 104%; max-width: none; }
 .trkdone__t { font-size: calc(var(--f-xl) + 4px); font-weight: 700; line-height: 1.22; letter-spacing: -0.3px; color: var(--ink); }
 .trkdone__t em { font-style: normal; color: var(--green); }
 .trkdone__p { margin-top: 4px; font-size: calc(var(--f-md) + 2px); color: var(--mut); line-height: 1.35; }
 .trkdone__ask { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
 .trkdone__ask p { font-size: calc(var(--f-md) + 2px); font-weight: 600; color: var(--ink); line-height: 1.3; }
-.trkdone__shield { flex: none; color: var(--green); display: grid; place-items: center; }
+.trkdone__shield { flex: 0 0 48px; width: 48px; height: 48px; }
 .trkdone__yn { flex: none; display: flex; gap: 8px; }
 .trkdone__yn button {
   min-width: 52px; padding: 9px 12px; border-radius: 10px; border: 1px solid;
@@ -2333,8 +2362,19 @@ input, select, textarea { font: inherit; color: inherit; }
 .trkrate { margin: 0 16px 16px; padding: 14px 16px 16px; border: 1px solid var(--line); border-radius: 14px; }
 .trkrate__t { font-size: calc(var(--f-md) + 2px); font-weight: 700; color: var(--ink); }
 .trkrate__stars { display: flex; gap: 8px; margin-top: 12px; }
-.trkrate__star { color: #E3E6EC; display: grid; place-items: center; transition: transform 0.12s ease, color 0.12s ease; }
+.trkrate__star { color: #C5CAD3; display: grid; place-items: center; transition: transform 0.12s ease, color 0.12s ease; }
+.trkrate__star .figic { width: 30px; height: 30px; }
 .trkrate__star.is-on { color: #F7B500; }
+
+/* The tracking screen's single-colour icons from the design file. They are
+   drawn in black there, so each is used as a mask over currentColor and takes
+   whatever colour its button already sets. */
+.figic {
+  display: block; width: 20px; height: 20px;
+  background: currentColor;
+  -webkit-mask: var(--src) center / contain no-repeat;
+  mask: var(--src) center / contain no-repeat;
+}
 .trkrate__star:active { transform: scale(0.9); }
 
 /* ---------- delivery instructions ---------- */

@@ -98,6 +98,13 @@ export const IconStar = (p: P) => (
   </F>
 );
 
+/** Back, as a full arrow — the delivered screen's header uses it over the chevron. */
+export const IconArrowLeft = (p: P) => (
+  <S {...p}>
+    <path d="M20 12H4.5M10.5 5.5 4 12l6.5 6.5" />
+  </S>
+);
+
 export const IconChevronRight = (p: P) => (
   <S {...p}>
     <path d="m9.5 5 7 7-7 7" />

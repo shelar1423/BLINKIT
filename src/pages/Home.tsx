@@ -173,8 +173,8 @@ export default function Home() {
                 window.setTimeout(() => startRace(), LOADER_MS);
               }}
             >
+              <IconFlag className="mystery__flag" size={20} aria-hidden="true" />
               Race now
-              <IconFlag size={20} aria-hidden="true" />
             </Button>
           </div>
 
