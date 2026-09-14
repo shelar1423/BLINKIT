@@ -23,6 +23,7 @@ import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
 import { SteerCue } from '../design/components/SteerCue';
 import { RaceCoach } from '../design/components/RaceCoach';
+import { LaunchCount, useLaunchCount } from '../design/components/LaunchCount';
 import { ARIntro, arIntroSeen, markARIntroSeen } from '../design/components/ARIntro';
 import { clearARSurfaces } from '../lib/three/arSurfaces';
 import { Poppers } from '../design/components/Poppers';
@@ -410,6 +411,15 @@ export default function ARView() {
      old widget's launch-inside-a-setState bug went with it, since there is no
      longer a React handler in the path at all. */
   const [pull, setPull] = useState(0);
+
+  /* The start line, same as the 3D race: 3, 2, 1, GO off the sled being drawn
+     back, and GO fires the launcher whether or not the thumb has left it. */
+  const count = useLaunchCount({
+    pull,
+    launched: phase === 'racing',
+    onGo: (power) => handle.current?.launch(power),
+  });
+
 
   /* The gate being approached, and the verdict once it is behind us. */
   const [gateCue, setGateCue] = useState<{ index: number; k: number; canLift: boolean } | null>(null);
@@ -876,6 +886,8 @@ export default function ARView() {
           }}
         />
       )}
+
+      {count !== null && !inspect && !outcome && <LaunchCount step={count} />}
 
       {phase === 'placed' && !coached && !outcome && !inspect && (
         <RaceCoach mode="ar" onDone={() => setCoached(true)} />

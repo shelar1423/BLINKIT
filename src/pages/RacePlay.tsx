@@ -12,6 +12,7 @@ import { IconArrowLeft, IconChevronLeft, IconChevronRight } from '../design/elem
 import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
 import { SteerCue } from '../design/components/SteerCue';
+import { LaunchCount, useLaunchCount } from '../design/components/LaunchCount';
 import { RaceCoach } from '../design/components/RaceCoach';
 import { Poppers } from '../design/components/Poppers';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
@@ -53,6 +54,8 @@ export default function RacePlay() {
   const mountedAt = useRef(performance.now());
   const [err, setErr] = useState<string | null>(null);
   const [coached, setCoached] = useState(false);
+  /* 0..1 of the launcher's travel, for the start-line count. */
+  const [pull, setPull] = useState(0);
   const [launched, setLaunched] = useState(false);
   const [stats, setStats] = useState<RaceStats>({
     score: 0, groceries: 0, timeLeft: RACE_SECONDS, lap: 1, laps: 2, progress: 0, speedKph: 0,
@@ -128,6 +131,7 @@ export default function RacePlay() {
         setLaunched(true);
         engineStart();
       },
+      onPull: setPull,
       onJumpCue: setJumpCue,
       onJumpResult: (r) => {
         setJumpCue(false);
@@ -215,6 +219,14 @@ export default function RacePlay() {
       engineStart();
     }
   }, []);
+
+  /* The start line: 3, 2, 1, GO, counted off the sled being drawn back, and
+     GO fires the launcher whether or not the thumb has left it. */
+  const count = useLaunchCount({
+    pull,
+    launched,
+    onGo: (power) => handle.current?.launch(power),
+  });
 
   /* ---------- steering ---------- */
   const steerTo = useCallback((clientX: number) => {
@@ -418,6 +430,8 @@ export default function RacePlay() {
       {loaded && !err && !coached && !outcome && (
         <RaceCoach mode="3d" onDone={() => setCoached(true)} />
       )}
+
+      {count !== null && !outcome && <LaunchCount step={count} />}
 
       {slowmo && !outcome && <div className="btime" aria-hidden="true" />}
       {cheering && <Poppers />}
