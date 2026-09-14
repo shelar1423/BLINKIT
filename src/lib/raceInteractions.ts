@@ -60,17 +60,24 @@ export const raceInteraction = {
      These are the midpoints of the second and fourth straights, measured from
      that same map. At the boosted top speed of 34 the flight spans 0.205-0.296
      and 0.705-0.796, so ramp and landing are both still on tarmac. */
-  /* The first ring moved from 0.2505 to 0.48: at 0.2505 it arrived 4.7s after
-     the launch, which is before a first-time player has finished working out
-     which way the car is pointing. It is on the THIRD straight now rather than
-     the second, and it had to be — the ask was two seconds later, and two
-     seconds is 0.112 of a lap at racing pace, which lands at 0.36, squarely in
-     the corner between those two straights. There is no legal slot in between:
-     the flight spans 0.091 of a lap at the boosted top speed, so the earliest
-     gate the third straight can carry with both takeoff and landing on tarmac
-     is 0.474. 0.48 is that, with a little room. It reads as about four seconds
-     later, and the second straight is now clear running. */
-  boostGates: [0.48, 0.96],
+  /* The first ring is back on the SECOND straight, and it has to be.
+
+     It was moved to 0.48 to buy a few seconds after the launch, and 0.48 is on
+     the third straight (0.428-0.573) — which is the jump's. The ramp starts at
+     0.432 and the whole jump, climb plus flight, runs 0.136 of a lap: it owns
+     that straight end to end. A ring at 0.48 therefore sat on the ramp itself,
+     and a takeoff is a lift, so the car went up the slope and through the ring
+     in one movement with nothing asked of the player.
+
+     There is no third option. A ring's flight spans 0.091 of a lap at the
+     boosted top speed and both ends have to be on tarmac, so it needs a
+     straight almost to itself: the start straight is the second ring's, the
+     fourth is the loop's, and the third is the jump's. That leaves the second
+     (0.202-0.299), whose midpoint is this.
+
+     The cost is that the first ring is early again, about 4.7s after the
+     launch. The lap is simply full: launch, ring, jump, loop, ring, flag. */
+  boostGates: [0.2505, 0.96],
   /* The last ring moved from the middle of the fourth straight to the end of
      the lap, ~12 units short of the finish line, so the jump is the last thing
      the race asks of you. The start straight runs 0.928-1.073 and the launcher
