@@ -53,7 +53,6 @@ export default function ResultPreview() {
         onRaceAgain={() => toast('Preview only')}
         onShop={() => nav('/hot-wheels')}
         onRewards={() => nav('?campaign=1')}
-        onViewCar={() => nav(`/hot-wheels/${car.id}`)}
         onExit={() => nav('/')}
         exitLabel="Close preview"
         toast={toast}

@@ -2695,19 +2695,13 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.2px;
 }
 .rwd__tops { margin: 1px 0 10px; text-align: center; font-size: var(--f-xs); color: var(--mut); }
-.rwd__board { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
-.rwd__board li {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; border-radius: 10px;
-  font-size: var(--f-md);
-}
-.rwd__board li.is-you { background: var(--yellow-tint); font-weight: 700; }
-.rwd__board b { font-variant-numeric: tabular-nums; font-weight: 700; }
-.rwd__pos {
-  flex: none; width: 18px; text-align: center;
-  font-size: var(--f-sm); font-weight: 800; color: var(--mut-2);
-  font-variant-numeric: tabular-nums;
-}
+/* The leaderboard screen's own illustration, where Swiggy puts a trophy. */
+.rwd__topim { display: block; width: 72px; height: 72px; margin: -2px auto 6px; object-fit: contain; }
+/* The rows are .lrow, the leaderboard's own. Only the gutter changes: they
+   were written to run edge to edge on a page and these sit inside a card. */
+.rwd__board .lrow { padding-inline: 6px; }
+.rwd__board .lrow:last-child { border-bottom: 0; }
+.rwd__board .lrow.is-me { border-radius: 10px; }
 
 /* ---------- the claimable reward, as a ticket ----------
    RESTORED. These were deleted with the old race-result block when that screen

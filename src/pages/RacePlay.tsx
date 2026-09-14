@@ -504,7 +504,6 @@ export default function RacePlay() {
           onRaceAgain={() => window.location.reload()}
           onShop={() => nav('/hot-wheels')}
           onRewards={() => nav('?campaign=1')}
-          onViewCar={() => nav(`/hot-wheels/${car.id}`)}
           onExit={() => nav('/')}
           exitLabel="Done"
         />

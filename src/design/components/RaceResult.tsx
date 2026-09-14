@@ -4,7 +4,7 @@ import { REWARD_TIERS, type RewardTier } from '../../store/useStore';
 import type { RaceOutcome } from '../../lib/three/raceEngine';
 import { shareScore } from '../../lib/shareCard';
 import { Button } from '../elements';
-import { IconBasket, IconChevronRight, IconClock, IconClose, IconFlag, IconShare } from '../elements/Icons';
+import { IconBasket, IconClock, IconClose, IconFlag, IconShare } from '../elements/Icons';
 
 /* ============================================================
    The screen you land on when the race ends.
@@ -61,8 +61,6 @@ export type RaceResultProps = {
   /** Where the reward gets spent. */
   onShop: () => void;
   onRewards: () => void;
-  /** Opens the product page of the car that was raced. */
-  onViewCar: () => void;
   onExit: () => void;
   exitLabel: string;
   toast: (m: string) => void;
@@ -74,7 +72,7 @@ const SHARE_TIP_MS = 4000;
 
 export function RaceResult({
   outcome, car, tier, isBest, bestScore, totalPoints, racesLeft, inviteUrl,
-  onRaceAgain, onShop, onRewards, onViewCar, onExit, exitLabel, toast,
+  onRaceAgain, onShop, onRewards, onExit, exitLabel, toast,
 }: RaceResultProps) {
   /* The number counts up. A score that is simply present reads as a fact; one
      that arrives reads as something you earned. */
@@ -121,9 +119,6 @@ export function RaceResult({
   const next = REWARD_TIERS.find((t) => totalPoints < t.min);
   /* Where this total sits on the board, worked out from the board itself. */
   const myRank = LEADERBOARD.filter((r) => r.points > totalPoints).length + 1;
-  const shortName = car.name.replace('Hot Wheels ', '').replace(' Die Cast Car', '');
-  /* Blinkit Cash applies on orders above twice its value. */
-  const cashOff = tier && tier.value > 0 && car.price > tier.value * 2 ? tier.value : 0;
   const won = tier ? prize(tier) : null;
 
   const share = async () => {
@@ -238,42 +233,36 @@ export function RaceResult({
       {/* ---- who is ahead ----
           The board was a screen you left this one to reach, then a section in
           a sheet. On the result screen it is the only thing that answers the
-          question the score just raised. */}
+          question the score just raised.
+
+          The rows are the leaderboard screen's own: rank, initial, name,
+          points, in .lrow. Rebuilding them here would have been a second
+          leaderboard free to drift from the first. */}
       <div className="rwd__top">
+        <img className="rwd__topim" src="/icons/leaderboard.webp" alt="" />
         <p className="rwd__toph">Top racers</p>
         <p className="rwd__tops">This week in your city</p>
-        <ol className="rwd__board">
+        <div className="rwd__board">
           {LEADERBOARD.slice(0, 3).map((r, i) => (
-            <li key={r.name}>
-              <span className="rwd__pos">{i + 1}</span>
-              <span className="grow">{r.name}</span>
-              <b className="t-num">{r.points.toLocaleString('en-IN')}</b>
-            </li>
+            <div className="lrow" key={r.name}>
+              <span className="lrow__r t-num">{i + 1}</span>
+              <span className="lrow__a" aria-hidden="true">{r.name.charAt(0)}</span>
+              <span className="grow">
+                <b>{r.name}</b>
+              </span>
+              <span className="lrow__p t-num">{r.points.toLocaleString('en-IN')}</span>
+            </div>
           ))}
-          <li className="is-you">
-            <span className="rwd__pos">{myRank}</span>
-            <span className="grow">You</span>
-            <b className="t-num">{totalPoints.toLocaleString('en-IN')}</b>
-          </li>
-        </ol>
-      </div>
-
-      {/* The car you raced, with what it costs once the cash just won is
-          taken off. Quiet on purpose: a row, not a banner. */}
-      <button className="rwd__own" type="button" onClick={onViewCar}>
-        <img className="rwd__ownim" src={car.image} alt="" />
-        <span className="rwd__ownt">
-          <b>Take the {shortName} home</b>
-          {cashOff > 0 ? (
-            <span>
-              {rupees(car.price)} · <em>{rupees(car.price - cashOff)} with your cash</em>
+          <div className="lrow is-me">
+            <span className="lrow__r t-num">{myRank}</span>
+            <span className="lrow__a" aria-hidden="true">Y</span>
+            <span className="grow">
+              <b>You</b>
             </span>
-          ) : (
-            <span>{rupees(car.price)} · delivered in minutes</span>
-          )}
-        </span>
-        <IconChevronRight size={16} />
-      </button>
+            <span className="lrow__p t-num">{totalPoints.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+      </div>
 
       {/* Two, side by side, and nothing underneath. Race again and Shop now
           are the only two things anyone does from here; Rewards, Leaderboard
