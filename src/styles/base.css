@@ -4557,8 +4557,10 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .coach__dim {
   position: absolute; inset: 0;
-  /* Light enough that the car and the launcher stay visible behind. */
-  background: rgba(4, 7, 16, 0.35);
+  /* Light enough that the car and the launcher stay visible behind. The race
+     is held while this is up, so the dim is not hiding anything moving — it is
+     only taking the room's contrast down so the lit step reads. */
+  background: rgba(0, 0, 0, 0.34);
 }
 .coach__panel {
   position: relative;
@@ -4585,14 +4587,29 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 .coach__steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+/* One step at a time. `.is-on` is the one being demonstrated; the other two
+   sit back far enough to read as waiting their turn, close enough to still be
+   read. Nothing moves or reflows between them — only weight changes — so the
+   panel does not twitch as the light walks down it. */
 .coach__step {
   display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px;
   align-items: center;
+  opacity: 0.32;
+  transition: opacity 320ms ease;
 }
+.coach__step.is-on { opacity: 1; }
+/* And only the lit step's drawing runs. Three gestures looping at once is
+   three moving things after the same glance. */
+.coach__step:not(.is-on) .cg * { animation-play-state: paused; }
 .coach__glyph {
   width: 56px; height: 56px; border-radius: var(--r-md);
   display: grid; place-items: center;
   background: rgba(255, 255, 255, 0.1);
+  transition: background 320ms ease, box-shadow 320ms ease;
+}
+.coach__step.is-on .coach__glyph {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.3);
 }
 .coach__txt { display: grid; gap: 2px; min-width: 0; }
 .coach__txt b {
