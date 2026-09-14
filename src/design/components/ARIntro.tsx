@@ -24,19 +24,21 @@ import { Button } from '../elements';
    circuit is about to be in their living room, and a diagram of a rectangle
    cannot do that.
 
-   Two of the three beats are now THE GAME: frames captured off the running
-   race, the circuit exactly as it lands with the launcher at the line, and the
-   car away among the groceries. Nothing here promises anything the next thirty
-   seconds does not deliver, which a marketing render cannot claim.
+   Everything here is the real thing. A photograph of a real room with a real
+   wooden floor; the actual circuit, rendered out of the race engine on a
+   transparent background at the angle it would be seen from standing over it;
+   and, for the launcher, a frame captured off the running game. Nothing
+   promises anything the next thirty seconds does not deliver, which is more
+   than a marketing render can say.
 
-   The first beat is still the campaign's AR render, and has to be: finding a
-   surface only exists with a camera behind it, and there is no frame of that
-   to capture off a desktop. Swapping in a phone screenshot is a one-line
-   change — see SHOTS below.
+   Beats one and two are the SAME room, which is the whole point of them: the
+   first is that floor with nothing on it and a viewfinder reading it, the
+   second is that floor with the circuit standing on it. The change between
+   them is the thing being explained.
 
    Over each frame, the INTERFACE, animated: the scan brackets and their sweep,
-   the reticle landing, the chevrons running away up the road. The frame
-   carries the promise; the overlay carries the instruction.
+   the reticle landing, the circuit arriving on it. The frame carries the
+   promise; the overlay carries the instruction.
 
    ---- and why a motion library ----
 
@@ -100,9 +102,8 @@ function Brackets() {
 
 const BEATS = [
   {
-    /* The only one not captured from the game. See the note at the top. */
-    src: '/campaign/13-ar-surface-detection-illustration.webp',
-    alt: 'A phone held over a table, finding the surface',
+    src: '/howto/room.webp',
+    alt: 'A living room with a clear wooden floor',
     title: 'Find your floor',
     body: 'Hold the phone up and look down at a clear patch of floor',
     /* The viewfinder reading the room, and the sweep that says it is reading. */
@@ -114,29 +115,33 @@ const BEATS = [
     ),
   },
   {
-    src: '/howto/shot-track.jpg',
-    alt: 'The Hot Wheels circuit as it lands, with the launcher at the line',
+    src: '/howto/room.webp',
+    alt: 'The Hot Wheels circuit standing on the floor of that room',
     title: 'Drop the track',
     body: 'One press puts the whole circuit in the room with you',
-    /* The reticle landing where the press went, and the ring it sends out. */
+    /* The same floor, and what lands on it. The ring goes down first, then the
+       circuit arrives into it. */
     overlay: (
-      <svg className="arin__ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <ellipse data-p="ripple" className="arin__ripple" cx="50" cy="74" rx="32" ry="11" />
-        <ellipse data-p="reticle" className="arin__reticle" cx="50" cy="74" rx="32" ry="11" />
-      </svg>
+      <>
+        <svg className="arin__ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          <ellipse data-p="ripple" className="arin__ripple" cx="50" cy="88" rx="42" ry="9" />
+          <ellipse data-p="reticle" className="arin__reticle" cx="50" cy="88" rx="42" ry="9" />
+        </svg>
+        <img data-p="circuit" className="arin__circuit" src="/howto/circuit.webp" alt="" />
+      </>
     ),
   },
   {
-    src: '/howto/shot-race.jpg',
-    alt: 'The car away down the circuit, groceries waiting on the road',
+    src: '/howto/shot-track.jpg',
+    alt: 'The launcher at the start line, red lever drawn back',
     title: 'Pull the launcher',
     body: 'Drag the red lever back, let go, and the car is away',
-    /* Chevrons running away up the road: the track telling you which way. */
+    /* The road's own arrows, running away up the track. */
     overlay: (
       <svg className="arin__ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <path data-p="chev" className="arin__chev" d="M36 74 L50 66 L64 74" />
-        <path data-p="chev" className="arin__chev" d="M38 62 L50 55 L62 62" />
-        <path data-p="chev" className="arin__chev" d="M40 51 L50 45 L60 51" />
+        <path data-p="chev" className="arin__chev" d="M36 60 L50 52 L64 60" />
+        <path data-p="chev" className="arin__chev" d="M38 49 L50 42 L62 49" />
+        <path data-p="chev" className="arin__chev" d="M40 39 L50 33 L60 39" />
       </svg>
     ),
   },
@@ -185,17 +190,21 @@ function timeline(beat: number, root: HTMLElement): AnimationPlaybackControls | 
   if (beat === 1) {
     const reticle = one('[data-p="reticle"]');
     const ripple = one('[data-p="ripple"]');
-    if (!reticle || !ripple) return null;
+    const circuit = one('[data-p="circuit"]');
+    if (!reticle || !ripple || !circuit) return null;
     return animate(
       [
         ...entrance,
-        /* the ring lands, with a settle */
-        [reticle, { opacity: [0, 1], scale: [0.45, 1] }, { duration: 0.8, at: '-0.6', ...LAND }],
-        /* and what the landing sends out across the surface */
-        [ripple, { opacity: [0.85, 0], scale: [0.9, 1.9] }, { duration: 1.1, at: '-0.45', ease: 'easeOut' }],
-        [ripple, { opacity: [0.7, 0], scale: [0.9, 1.9] }, { duration: 1.1, at: '+0.35', ease: 'easeOut' }],
+        /* the ring goes down where the press went */
+        [reticle, { opacity: [0, 1], scale: [0.45, 1] }, { duration: 0.7, at: '-0.7', ...LAND }],
+        [ripple, { opacity: [0.85, 0], scale: [0.9, 1.7] }, { duration: 1, at: '-0.4', ease: 'easeOut' }],
+        /* and the circuit lands into it, from above, with a settle */
+        [circuit, { opacity: [0, 1], y: [-38, 0], scale: [0.9, 1] }, { duration: 1, at: '-0.7', ...LAND }],
+        /* off again, so the loop does not jump-cut back to an empty floor */
+        [circuit, { opacity: 0, y: -22, scale: 0.94 }, { duration: 0.45, at: '+1.1' }],
+        [reticle, { opacity: 0, scale: 0.6 }, { duration: 0.4, at: '-0.4' }],
       ],
-      { repeat: Infinity, repeatDelay: 0.4 },
+      { repeat: Infinity, repeatDelay: 0.25 },
     );
   }
 

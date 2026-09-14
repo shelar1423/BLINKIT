@@ -5493,12 +5493,24 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .arin__reticle {
   fill: rgba(255, 255, 255, 0.08); stroke: #fff; stroke-width: 1.6;
-  vector-effect: non-scaling-stroke; transform-origin: 50% 74%;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 88%;
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
 }
 .arin__ripple {
   fill: none; stroke: var(--hw-o); stroke-width: 1.6;
-  vector-effect: non-scaling-stroke; transform-origin: 50% 74%; opacity: 0;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 88%; opacity: 0;
+}
+/* The circuit itself, rendered out of the race engine on a transparent
+   ground, standing on the floor of the photograph behind it. The shadow is
+   what sets it ON the floor rather than in front of it. */
+.arin__circuit {
+  /* Centred by its own offsets, NOT by a transform: the timeline owns
+     `transform` on this element, and a translateX(-50%) written here is the
+     first thing it overwrites. */
+  position: absolute; left: 7%; right: 7%; bottom: 4%;
+  width: auto;
+  opacity: 0;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
 }
 .arin__chev {
   fill: none; stroke: var(--yellow); stroke-width: 3;
