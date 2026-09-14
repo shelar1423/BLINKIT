@@ -197,14 +197,14 @@ export function RaceResult({
           <i className="rwd__chk" aria-hidden="true" />
         </span>
         <p className="rwd__score t-num">{shown.toLocaleString('en-IN')}</p>
-        {isBest && outcome.score > 0 ? (
+        {/* Only the pill, and only when there is one. The best used to be
+            spelled out under the score as well, which said the same thing
+            twice on the one screen where it is also a figure in the stub
+            below. */}
+        {isBest && outcome.score > 0 && (
           <p className="rwd__pb">
             <i className="rwd__sic rwd__sic--crown" style={figIcon('crown')} aria-hidden="true" />
             New personal best!
-          </p>
-        ) : (
-          <p className="rwd__best">
-            Your best <b className="t-num">{Math.max(bestScore, outcome.score).toLocaleString('en-IN')}</b>
           </p>
         )}
 
@@ -223,10 +223,15 @@ export function RaceResult({
             <b className="t-num">{outcome.seconds}s</b>
             <span>Time</span>
           </div>
+          {/* The best, where the run's own figures are. Items was a count of
+              what the car drove through, which is already in the score it
+              earned; the figure this one is read against is the best. The
+              crown is the same mark the personal-best pill wears, so the two
+              places the best appears are marked the same way. */}
           <div className="rwd__stat">
-            <i className="rwd__sic" style={figIcon('package')} aria-hidden="true" />
-            <b className="t-num">{outcome.groceries}</b>
-            <span>Items</span>
+            <i className="rwd__sic" style={figIcon('crown')} aria-hidden="true" />
+            <b className="t-num">{Math.max(bestScore, outcome.score).toLocaleString('en-IN')}</b>
+            <span>Your best</span>
           </div>
         </div>
       </div>
