@@ -3,6 +3,9 @@ import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 const Diag = lazy(() => import('./pages/Diag'));
 /* Deliberately unlinked, like /diag. See ResultPreview. */
 const ResultPreview = lazy(() => import('./pages/ResultPreview'));
+/* The AR onboarding on its own, so its three beats can be watched without
+   opening a camera. Also unlinked. */
+const IntroPreview = lazy(() => import('./pages/IntroPreview'));
 import { BottomNav } from './design/components/BottomNav';
 import { RewardsSheet } from './design/components/RewardsSheet';
 import { IconCheck } from './design/elements/Icons';
@@ -99,6 +102,8 @@ export default function App() {
           <Route path="/diag" element={<Diag />} />
           {/* the result screen at any score, without driving for it */}
           <Route path="/preview/result" element={<ResultPreview />} />
+          {/* the AR onboarding, without the AR */}
+          <Route path="/preview/intro" element={<IntroPreview />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>

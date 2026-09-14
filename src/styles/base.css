@@ -5493,12 +5493,12 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .arin__reticle {
   fill: rgba(255, 255, 255, 0.08); stroke: #fff; stroke-width: 1.6;
-  vector-effect: non-scaling-stroke; transform-origin: 50% 62%;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 74%;
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
 }
 .arin__ripple {
   fill: none; stroke: var(--hw-o); stroke-width: 1.6;
-  vector-effect: non-scaling-stroke; transform-origin: 50% 62%; opacity: 0;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 74%; opacity: 0;
 }
 .arin__chev {
   fill: none; stroke: var(--yellow); stroke-width: 3;
@@ -5531,3 +5531,20 @@ input, select, textarea { font: inherit; color: inherit; }
   .arin__br, .arin__chev, .arin__reticle { opacity: 1; }
   .arin__sweep { opacity: 0; }
 }
+
+/* The AR onboarding's own preview controls. Same shape as the result screen's
+   tier switcher, and like it, not part of the screen underneath. */
+.iprev {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--safe-b) + 8px); z-index: 300;
+  display: flex; gap: 6px; padding: 6px;
+  background: rgba(10, 12, 18, 0.82); border-radius: 999px;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.iprev__b {
+  padding: 6px 11px; border-radius: 999px; border: 0;
+  font-size: var(--f-2xs); font-weight: 700; color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+}
+/* Room for them under the Continue button. */
+.iprevhost .arin { padding-bottom: calc(var(--safe-b) + 62px); }

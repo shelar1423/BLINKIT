@@ -22,15 +22,21 @@ import { Button } from '../elements';
    for a car — and they were selling something they did not look like. This is
    the one screen whose whole job is to make a player believe a Hot Wheels
    circuit is about to be in their living room, and a diagram of a rectangle
-   cannot do that. The campaign's own AR renders can: a phone finding a table,
-   a die-cast car sitting on real wood, a lit circuit running between the
-   groceries. They were shot for exactly these three moments and were sitting
-   unused in public/campaign.
+   cannot do that.
 
-   So each beat is the render, with the INTERFACE drawn over it and animated —
-   the scan brackets and their sweep, the reticle landing, the chevrons running
-   away down the track. The photograph carries the promise; the overlay carries
-   the instruction.
+   Two of the three beats are now THE GAME: frames captured off the running
+   race, the circuit exactly as it lands with the launcher at the line, and the
+   car away among the groceries. Nothing here promises anything the next thirty
+   seconds does not deliver, which a marketing render cannot claim.
+
+   The first beat is still the campaign's AR render, and has to be: finding a
+   surface only exists with a camera behind it, and there is no frame of that
+   to capture off a desktop. Swapping in a phone screenshot is a one-line
+   change — see SHOTS below.
+
+   Over each frame, the INTERFACE, animated: the scan brackets and their sweep,
+   the reticle landing, the chevrons running away up the road. The frame
+   carries the promise; the overlay carries the instruction.
 
    ---- and why a motion library ----
 
@@ -94,6 +100,7 @@ function Brackets() {
 
 const BEATS = [
   {
+    /* The only one not captured from the game. See the note at the top. */
     src: '/campaign/13-ar-surface-detection-illustration.webp',
     alt: 'A phone held over a table, finding the surface',
     title: 'Find your floor',
@@ -107,21 +114,21 @@ const BEATS = [
     ),
   },
   {
-    src: '/campaign/14-ar-toy-car-placement.webp',
-    alt: 'A die-cast Hot Wheels car standing on a wooden table',
+    src: '/howto/shot-track.jpg',
+    alt: 'The Hot Wheels circuit as it lands, with the launcher at the line',
     title: 'Drop the track',
     body: 'One press puts the whole circuit in the room with you',
     /* The reticle landing where the press went, and the ring it sends out. */
     overlay: (
       <svg className="arin__ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-        <ellipse data-p="ripple" className="arin__ripple" cx="50" cy="62" rx="30" ry="11" />
-        <ellipse data-p="reticle" className="arin__reticle" cx="50" cy="62" rx="30" ry="11" />
+        <ellipse data-p="ripple" className="arin__ripple" cx="50" cy="74" rx="32" ry="11" />
+        <ellipse data-p="reticle" className="arin__reticle" cx="50" cy="74" rx="32" ry="11" />
       </svg>
     ),
   },
   {
-    src: '/campaign/07-ar-racing-game-background.webp',
-    alt: 'The lit circuit running across a table between the groceries',
+    src: '/howto/shot-race.jpg',
+    alt: 'The car away down the circuit, groceries waiting on the road',
     title: 'Pull the launcher',
     body: 'Drag the red lever back, let go, and the car is away',
     /* Chevrons running away up the road: the track telling you which way. */
