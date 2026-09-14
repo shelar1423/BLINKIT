@@ -100,6 +100,9 @@ export default function ARView() {
      latched the moment the surface is read: the line is a briefing, given
      once, not a meter. Collision detection goes on using the live map. */
   const [outcome, setOutcome] = useState<RaceOutcome | null>(null);
+  /* Set when a session has ended with nothing left to show, so the screen can
+     take itself off rather than fall back to the gate underneath. */
+  const [leave, setLeave] = useState(false);
   /* The clock is in bullet time — the boost approach, then the finish outro. */
   const [slowmo, setSlowmo] = useState(false);
   /* The flag has dropped and the paper is in the air. Set about two seconds
@@ -118,6 +121,20 @@ export default function ARView() {
   }, []);
 
   useEffect(() => () => handle.current?.end(), []);
+
+  useEffect(() => {
+    if (!leave) return;
+    /* Unless the race finished: the result screen is mounted over the top and
+       ends the session itself, and that end is not an exit. */
+    if (outcome) {
+      setLeave(false);
+      return;
+    }
+    /* The viewer came from a product page and goes back to it; a race came
+       from the campaign and goes home. */
+    if (inspect) nav(-1);
+    else nav('/');
+  }, [leave, outcome, inspect, nav]);
 
   /* Close the session the moment the page goes away.
 
@@ -256,6 +273,12 @@ export default function ARView() {
           setStats(null);
           setPlacing(false);
           handle.current = null;
+          /* However the session ended — the headset's own exit, the system
+             taking the camera, a tab losing focus — there is nothing behind it
+             worth showing. The gate screen is a chooser, and the flow does not
+             choose any more. The result screen is the one exception: it is
+             mounted over the top and ends the session itself. */
+          setLeave(true);
         },
       });
     } catch (e) {
@@ -268,6 +291,12 @@ export default function ARView() {
       const msg = e instanceof Error ? e.message : 'AR could not start';
       toast(msg.includes('denied') || msg.includes('NotAllowed') ? 'Camera permission was denied' : msg);
       setPhase(null);
+      /* And then the 3D race, which is the same race. Showing the gate instead
+         put a second button in front of somebody whose first one had just
+         failed, with no way of knowing the other option even works. Not for
+         the car viewer: "view in your space" has no 3D equivalent to fall
+         through to, and its own screen is where it belongs. */
+      if (!inspect) startRace({ force3d: true, skipStanding: true });
     } finally {
       /* Held to a floor of 1.8s. A session that opens in 200ms would otherwise
          flash the loader for four frames, which reads as a glitch — and the
@@ -276,7 +305,7 @@ export default function ARView() {
       if (elapsed < LOADER_MS) await new Promise((r) => setTimeout(r, LOADER_MS - elapsed));
       setBusy(false);
     }
-  }, [car.glb, onFinish, toast, support, inspect]);
+  }, [car.glb, onFinish, toast, support, inspect, startRace]);
 
   /* Arriving with ?go=1 means the tap that got here already said "view in your
      space", so open the camera rather than showing a second button with the
@@ -301,7 +330,7 @@ export default function ARView() {
     /* force3d, and it has to be. startRace picks AR whenever the device
        claims to support it, so bailing out of AR without saying so sends the
        player straight back into AR and round again. */
-    startRace({ force3d: true });
+    startRace({ force3d: true, skipStanding: true });
   }, [arKnown, arWorks, inspect, toast, selectCar, car.id, nav]);
 
   useEffect(() => {
@@ -560,8 +589,17 @@ export default function ARView() {
                   <button
                     className="hud__back"
                     type="button"
-                    onClick={() => handle.current?.end()}
-                    aria-label="Exit AR"
+                    /* Out of the race, not out of the session. Ending the
+                       session alone left the player on the gate screen
+                       underneath, which is a screen asking them to choose
+                       what to open — and the app does not ask that any more:
+                       a phone that can do AR gets AR, one that cannot gets
+                       the 3D race. */
+                    onClick={() => {
+                      handle.current?.end();
+                      nav('/');
+                    }}
+                    aria-label="Leave race"
                   >
                     <IconArrowLeft size={18} />
                   </button>
@@ -815,7 +853,7 @@ export default function ARView() {
               type="button"
               onClick={() => {
                 selectCar(car.id);
-                startRace({ force3d: true });
+                startRace({ force3d: true, skipStanding: true });
               }}
             >
               <IconFlag size={16} />
