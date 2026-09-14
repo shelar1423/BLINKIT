@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { rupees, type Product } from '../../data/catalog';
+import { LEADERBOARD, rupees, type Product } from '../../data/catalog';
 import { REWARD_TIERS, type RewardTier } from '../../store/useStore';
 import type { RaceOutcome } from '../../lib/three/raceEngine';
 import { shareScore } from '../../lib/shareCard';
@@ -28,15 +28,19 @@ function prize(tier: RewardTier) {
       head: 'District Pass',
       sub: '1 Month',
       fine: `${tier.perk}, plus free delivery on Blinkit for a month. Yours now.`,
+      line: 'District Pass',
       pass: true,
     };
   }
   if (tier.freeDelivery && tier.value === 0) {
-    return { head: 'Free', sub: 'Delivery', fine: 'Already on your order. It comes off at checkout.' };
+    return { head: 'Free', sub: 'Delivery', line: 'free delivery', fine: 'Already on your order. It comes off at checkout.' };
   }
   return {
     head: `${rupees(tier.value)} Off`,
     sub: 'Blinkit Cash',
+    /* Named for the sentence it lands in: "Your ₹25 Off is here" is not a
+       thing anybody says. */
+    line: `${rupees(tier.value)} Blinkit Cash`,
     fine: `In your Blinkit Cash now. It comes off at checkout on any order above ${rupees(tier.value * 2)}.`,
   };
 }
@@ -115,6 +119,8 @@ export function RaceResult({
   }, [outcome.score]);
 
   const next = REWARD_TIERS.find((t) => totalPoints < t.min);
+  /* Where this total sits on the board, worked out from the board itself. */
+  const myRank = LEADERBOARD.filter((r) => r.points > totalPoints).length + 1;
   const shortName = car.name.replace('Hot Wheels ', '').replace(' Die Cast Car', '');
   /* Blinkit Cash applies on orders above twice its value. */
   const cashOff = tier && tier.value > 0 && car.price > tier.value * 2 ? tier.value : 0;
@@ -167,91 +173,89 @@ export function RaceResult({
         </span>
       </div>
 
-      <p className="rwd__kick">Your score</p>
-      <p className="rwd__score t-num">{shown.toLocaleString('en-IN')}</p>
+      {/* ---- the score, on one plaque ----
+          Score, personal best and the run's own figures were three separate
+          things stacked down the screen. They are one card now with a tab on
+          its top edge, which is what makes it read as a scoreboard rather than
+          as a headline followed by some numbers. */}
+      <div className="rwd__plaque">
+        <span className="rwd__tab">Your score</span>
+        <p className="rwd__score t-num">{shown.toLocaleString('en-IN')}</p>
+        <p className="rwd__best">
+          Your highest score <b className="t-num">{Math.max(bestScore, outcome.score).toLocaleString('en-IN')}</b>
+        </p>
+        {/* Reserved rather than conditional, so the plaque is the same height
+            on a run that was not a best. */}
+        <p
+          className={'rwd__pb' + (isBest && outcome.score > 0 ? '' : ' is-ghost')}
+          aria-hidden={!(isBest && outcome.score > 0)}
+        >
+          New Personal Best
+        </p>
 
-      {/* Always in the flow, even when there is nothing to boast about.
-          Rendered only on a personal best, it took its height with it when it
-          went — so the ticket, the stub and everything under them sat higher on
-          any run that was not a best, including every run that won nothing. The
-          screen has one layout, and the pill is either in it or invisible in
-          it. */}
-      <p
-        className={'rwd__pb' + (isBest && outcome.score > 0 ? '' : ' is-ghost')}
-        aria-hidden={!(isBest && outcome.score > 0)}
-      >
-        New Personal Best
-      </p>
-
-      {/* The run you just did, against the best you have ever done. One line,
-          two weights: the label is what it is, the figure is the thing. */}
-      <p className="rwd__best">
-        Your highest score <b className="t-num">{Math.max(bestScore, outcome.score).toLocaleString('en-IN')}</b>
-      </p>
-
-      <div className="rwd__ticket">
-        <div className="rwd__card">
-          <div className="rwd__body">
-            {won ? (
-              <>
-                <p className="rwd__won">You Won</p>
-                <p className={'rwd__amt' + ('pass' in won ? ' rwd__amt--pass' : '')}>{won.head}</p>
-                <p className="rwd__upto">
-                  {won.sub === 'Blinkit Cash' ? (
-                    <span className="rwd__brand">
-                      Blink<em>it</em> Cash
-                    </span>
-                  ) : (
-                    won.sub
-                  )}
-                </p>
-                {/* The fine print said where the reward had gone and how to
-                    spend it. It is already on the order by the time this is
-                    read, so the sentence was three lines explaining something
-                    that had already happened. One line that opens the sheet
-                    does the same job. */}
-                <button type="button" className="rwd__check" onClick={onRewards}>
-                  Check your reward
-                </button>
-              </>
-            ) : (
-              <>
-                {/* Nothing was won, and this half of the ticket says only that.
-                    It used to lead with the NEXT tier's name, set big in the
-                    green a prize is written in, which reads as free delivery
-                    you already have. There is no prize to name here, so it
-                    names none. */}
-                <p className="rwd__amt rwd__amt--none">
-                  {next ? 'No rewards yet' : 'Every tier cleared'}
-                </p>
-                <p className="rwd__fine">
-                  {next
-                    ? 'Keep racing, every run adds to the same total.'
-                    : 'Every reward in this drop is yours.'}
-                </p>
-              </>
-            )}
+        <div className="rwd__stub">
+          <div className="rwd__stat">
+            <IconBasket size={18} />
+            <b className="t-num">{outcome.groceries}</b>
+            <span>Groceries</span>
           </div>
-          {/* The run itself, in the ticket's stub. The cash is already in the
-              wallet, so there is no code to show here. */}
-          <div className="rwd__stub">
-            <div className="rwd__stat">
-              <IconBasket size={20} />
-              <b className="t-num">{outcome.groceries}</b>
-              <span>Groceries</span>
-            </div>
-            <div className="rwd__stat">
-              <IconClock size={20} />
-              <b className="t-num">{outcome.seconds}s</b>
-              <span>Time</span>
-            </div>
-            <div className="rwd__stat">
-              <IconFlag size={20} />
-              <b className="t-num">{outcome.finished ? '2/2' : 'DNF'}</b>
-              <span>Laps</span>
-            </div>
+          <div className="rwd__stat">
+            <IconClock size={18} />
+            <b className="t-num">{outcome.seconds}s</b>
+            <span>Time</span>
+          </div>
+          <div className="rwd__stat">
+            <IconFlag size={18} />
+            <b className="t-num">{outcome.finished ? '2/2' : 'DNF'}</b>
+            <span>Laps</span>
           </div>
         </div>
+      </div>
+
+      {/* ---- the reward, as two lines on the ground ----
+          It was a whole coupon card with its own perforation and stub. The
+          reward is already on the order, so the card was a picture of a thing
+          that had already happened; what is left to say is what it is and
+          where to look at it. */}
+      {won ? (
+        <p className="rwd__cpn">
+          Your{' '}
+          <b className={'pass' in won ? 'is-pass' : undefined}>{won.line}</b>{' '}
+          is here.
+          <button type="button" className="rwd__check" onClick={onRewards}>
+            Check your reward
+          </button>
+        </p>
+      ) : (
+        <p className="rwd__cpn">
+          {next ? 'No rewards yet.' : 'Every tier cleared.'}
+          <button type="button" className="rwd__check" onClick={onRewards}>
+            {next ? 'See what is next' : 'See your rewards'}
+          </button>
+        </p>
+      )}
+
+      {/* ---- who is ahead ----
+          The board was a screen you left this one to reach, then a section in
+          a sheet. On the result screen it is the only thing that answers the
+          question the score just raised. */}
+      <div className="rwd__top">
+        <p className="rwd__toph">Top racers</p>
+        <p className="rwd__tops">This week in your city</p>
+        <ol className="rwd__board">
+          {LEADERBOARD.slice(0, 3).map((r, i) => (
+            <li key={r.name}>
+              <span className="rwd__pos">{i + 1}</span>
+              <span className="grow">{r.name}</span>
+              <b className="t-num">{r.points.toLocaleString('en-IN')}</b>
+            </li>
+          ))}
+          <li className="is-you">
+            <span className="rwd__pos">{myRank}</span>
+            <span className="grow">You</span>
+            <b className="t-num">{totalPoints.toLocaleString('en-IN')}</b>
+          </li>
+        </ol>
       </div>
 
       {/* The car you raced, with what it costs once the cash just won is
