@@ -202,8 +202,17 @@ export default function RacePlay() {
   const holdForCue = useCallback((held: boolean) => {
     const e = handle.current?.engine;
     if (!e) return;
-    if (held) e.pause();
-    else e.resume();
+    if (held) {
+      e.pause();
+      /* And the engine note with it. A car standing still under a guide while
+         it is still revving is the one thing that gives the pause away as a
+         bug rather than a beat. It fades rather than cutting, and fades back
+         in on the far side, so the hold reads as the race taking a breath. */
+      engineStop();
+    } else {
+      e.resume();
+      engineStart();
+    }
   }, []);
 
   /* ---------- steering ---------- */
