@@ -313,8 +313,10 @@ input, select, textarea { font: inherit; color: inherit; }
    3s were competing at page level and winning against the sticky filter bar,
    which sits at 2. Contained here, they order within the card and the card
    orders as one box against the page. */
+/* 4px between every line of text under the panel — the gap does it, so none of
+   the rows below carry a margin of their own. */
 .pcard {
-  display: flex; flex-direction: column; gap: 2px; text-align: left;
+  display: flex; flex-direction: column; gap: 4px; text-align: left;
   position: relative; isolation: isolate;
 }
 /* A tinted panel rather than a white box with a hairline: the product shot and
@@ -328,7 +330,8 @@ input, select, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: #fff;
-  margin-bottom: 12px;
+  /* With the card's 4px gap, 8px from the panel to the price. */
+  margin-bottom: 4px;
 }
 /* touch-action so a horizontal swipe through the pictures is ours, while a
    vertical drag still scrolls the page under it */
@@ -369,7 +372,7 @@ input, select, textarea { font: inherit; color: inherit; }
   width: 26px; height: 26px;
   /* see .hit44 — drawn at 26, tappable at 44 */
   display: grid; place-items: center;
-  background: none; border: 0; color: var(--mut);
+  background: none; border: 0; color: #C5CAD3;
 }
 /* White fill AND a stroke. The reference heart is white because it sits on
    dark lifestyle photography; our cut-outs are on a near-white ground, where a
@@ -425,30 +428,18 @@ input, select, textarea { font: inherit; color: inherit; }
      right — so the button stays flush with the panel's edge. */
   width: calc(50% + 4px);
 }
-/* Sized off the real listing and left alone. The button is HALF the card wide
-   and derives its height from that width, which is what makes it overhang the
-   pack-size band — breaking the divider above it and the panel's bottom edge
-   below. That overhang is the whole shape of Blinkit's card.
-
-   Do not swap this for a fixed control height. It was briefly set to --ctl-h
-   for consistency with the same button elsewhere, which took 10px off it; the
-   button stopped breaking the divider and sat down inside the band instead,
-   and the card read as though the button had moved. Inside the card, ADD and
-   the stepper it becomes both derive the same height from the same width, so
-   there is no jump on press either way. */
+/* Half the card wide, 34px tall — a fixed height, as specified. The width-
+   derived ratio it had came out at 43px on a 126px card, which read as a block
+   sitting on the card rather than a button on it. ADD and the stepper it
+   becomes share the same box, so there is still no jump on press. */
 .pcard__act .add, .pcard__act .stepper {
   width: 100%; min-width: 0;
-  /* Still derived from the width, still no fixed height — see the note above,
-     which is the whole reason this button overhangs at all.
-
-     154/100 rather than 142/105: four pixels wider and four shorter on a
-     390pt phone, which is the shape as measured off the real card. The ratio
-     is how that has to be expressed here, because the height is a consequence
-     of the width and a vertical padding on a box this size changes nothing. */
-  height: auto; aspect-ratio: 154 / 100;
+  height: 34px; aspect-ratio: auto;
   border-radius: var(--r-ctl);
-  padding: 0 8px;
+  padding: 0 6px;
 }
+/* The − and + a size up from the stepper's default, inside the card only. */
+.pcard__act .stepper svg { width: 16px; height: 16px; }
 
 .pcard__prow { display: flex; align-items: baseline; gap: 5px; }
 /* Sized as a share of the card, off the real listing: the price is 14.7% of
@@ -456,7 +447,7 @@ input, select, textarea { font: inherit; color: inherit; }
    land on --f-xl / --f-lg / --f-base exactly — so they are taken from the scale
    rather than hardcoded, and the card grows with everything else at 768px
    instead of staying still while the page around it steps up. */
-.pcard__price { font-size: var(--f-xl); font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+.pcard__price { font-size: calc(var(--f-xl) + 4px); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
 /* The locked car has no price yet, and saying so in price-sized bold made it
    read as a product whose data failed to load. Smaller, lighter, and carrying
    the campaign's red, it reads as a state instead of a value. */
@@ -478,7 +469,6 @@ input, select, textarea { font: inherit; color: inherit; }
 .pcard__nm {
   font-size: var(--f-lg); line-height: 1.3; font-weight: 600; color: var(--ink);
   min-height: calc(var(--f-lg) * 1.3 * 2);
-  margin-top: 2px;
 }
 /* The full name everywhere a car is being shopped — it always ends in "Car",
    and cutting it off hid that. Only the checkout's suggestion shelf, where the
@@ -487,14 +477,14 @@ input, select, textarea { font: inherit; color: inherit; }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .pcard__un { font-size: var(--f-xs); color: var(--mut); }
-.pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; margin-top: 4px; }
+.pcard__specs { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 5px; }
 .pcard__spec {
   flex: 0 0 auto; white-space: nowrap;
   background: var(--yellow-tint); border: 1px solid #F0E3BC;
-  color: #6B5A1E; font-size: var(--f-2xs); font-weight: 700;
-  border-radius: var(--r-xs); padding: 3px 7px;
+  color: #6B5A1E; font-size: calc(var(--f-2xs) + 2px); font-weight: 700;
+  border-radius: var(--r-xs); padding: 4px 8px;
 }
-.pcard__rt { display: flex; align-items: center; gap: 4px; font-size: var(--f-xs); margin-top: 3px; }
+.pcard__rt { display: flex; align-items: center; gap: 4px; font-size: var(--f-xs); }
 /* Named, not `.pcard__rt span`: a bare descendant selector also caught the
    spans inside the star row and outranked their own colours, which greyed the
    fill out. */
@@ -504,7 +494,6 @@ input, select, textarea { font: inherit; color: inherit; }
   /* The delivery promise is the one thing on this card that is a promise, so
      it is set in the ink colour at full weight rather than as grey meta. */
   font-size: var(--f-xs); color: var(--ink-2); font-weight: 800;
-  margin-top: 3px;
 }
 .pcard__meta span { display: inline-flex; align-items: center; gap: 3px; }
 
@@ -988,6 +977,8 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
 .mystery__go:active { transform: scale(0.97); }
+/* Black type on the orange, with the chequered flag after it. */
+.mystery__go.btn--hwTrack { color: var(--ink); gap: 8px; }
 /* "Sparkle like the logo (shiny reflective surface)". A highlight travelling
    across the face, so the button reads as the same chrome-and-flame material
    as the lettering above it rather than a flat orange rectangle sitting under
@@ -1458,7 +1449,7 @@ input, select, textarea { font: inherit; color: inherit; }
    label has to sit closer to the tile it names than to the tile under it; at
    6px over 16px it did the opposite, and every label read as a caption for the
    row below. */
-.cat { display: grid; align-content: start; gap: 12px; justify-items: center; }
+.cat { display: grid; align-content: start; gap: 8px; justify-items: center; }
 /* `contain` with a little inset, not `cover`: the art is a centred grouping on
    a transparent ground, so cropping it to fill the tile clips the edges of the
    composition for nothing. */
@@ -1479,7 +1470,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* text-wrap: balance so a long name splits into two even lines instead of
    filling the first and dropping one word onto the second. */
 .cat__l {
-  font-size: var(--f-base); line-height: 1.28;
+  font-size: calc(var(--f-base) - 2px); line-height: 1.28;
   text-align: center; font-weight: 600; color: var(--ink);
   text-wrap: balance;
 }
@@ -1498,18 +1489,14 @@ input, select, textarea { font: inherit; color: inherit; }
    and dropped to a line of its own. Inline keeps it in the text run, following
    "app" the way it does in the real footer. */
 .bfoot__line {
-  /* Tracking opened by four percent, from -0.04em to 0, as asked.
-
-     The SIZE is what the break costs. "India's last minute" has to hold one
-     line, and measured on a 375pt screen it has 351px to do it in. At the
-     requested +12px with this tracking the line is 483px wide — it cannot fit
-     on any phone, and it only fitted before because the tracking was NEGATIVE
-     and pulled about 32px out of it. So the size is tied to the width instead:
-     10.7vw fills the column at 320, 375 and 430 without ever wrapping, which
-     is the largest this can be and still break where it is meant to. */
-  font-size: clamp(30px, 10.7vw, 50px);
+  /* Two words a line — "India's last" / "minute app" — so the type can be far
+     larger than when "India's last minute" had to hold one line. The size is
+     tied to the width: at 15vw the longer half, "minute app" plus the heart,
+     fills the column at 320, 375 and 430 without wrapping (348 of 351px at
+     375). */
+  font-size: clamp(40px, 15vw, 68px);
   font-weight: 800; letter-spacing: 0; line-height: 1.06;
-  color: var(--line-3);
+  color: #CCD0D9;
 }
 /* Each half on its own line. The old note here — that a flex row let the heart
    wrap away on its own — still holds and is why these are blocks of text
@@ -1522,6 +1509,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .bfoot__line span:first-child { white-space: nowrap; }
 .bfoot__heart {
   display: inline-block; vertical-align: -0.14em; margin-left: 12px;
+  /* Scales with the line rather than staying at its 52px attribute. */
+  width: 0.72em; height: 0.72em;
   color: #FF6B5A; fill: currentColor; stroke: none;
 }
 .bfoot__rule { border: 0; border-top: 1px solid #E4E4E6; margin: 26px 0 22px; }
@@ -1530,7 +1519,7 @@ input, select, textarea { font: inherit; color: inherit; }
      you register; the wordmark under it is the signature. */
   font-size: clamp(18px, 6vw, 24px);
   font-weight: 800; letter-spacing: -0.04em;
-  color: var(--line-3);
+  color: #E1E4EB;
 }
 
 /* ---------- campaign hub hero ----------
@@ -1846,7 +1835,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .pdp__chips::-webkit-scrollbar { display: none; }
 /* Everything under the photo that belongs to it — pager, View in your space,
    the spec chips — on the photo's own ground, so the hero reads as one block. */
-.pdp__herofoot { background: var(--product-bg); padding-bottom: 12px; }
+.pdp__herofoot { background: var(--product-bg); padding-bottom: 8px; }
 /* Two halves in one container, as the real spec chip is built: the label on a
    tinted ground, the value on white under it. Ours was a single flat grey box
    with both lines in it, which read as one label wrapped onto two lines rather
@@ -1886,6 +1875,9 @@ input, select, textarea { font: inherit; color: inherit; }
    not a list of separate panels. */
 .pdp .card, .pdp .rowcard { margin: 8px var(--gut) 0; }
 .pdp__info { padding: 12px; display: grid; gap: 0; }
+/* Straight under the hero's ground: its own 8px padding is the gap, so the
+   chips sit the same 8 above this card as every other block on the page. */
+.pdp .pdp__herofoot + .pdp__info { margin-top: 0; }
 
 /* The card's first line: how fast it lands, how it is rated, and the campaign
    flags in the space the real PDP leaves empty. */
@@ -2305,6 +2297,45 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The store distance reads as plain text, not a heading. */
 .trkc__row.trkc__row--sep b { font-weight: 400; }
 .trkc__shield { flex: none; color: var(--green); display: grid; place-items: center; }
+
+/* ---------- delivered ----------
+   The green bar gives way to a plain white one with just the back button, and
+   this card takes the top of the stack: a mint band saying it has arrived,
+   then one quick question about the packing. */
+.trk__top--done { background: var(--surface); padding-block: calc(var(--safe-t) + 8px) 12px; min-height: calc(var(--safe-t) + 60px); }
+.trkdone__hero { display: flex; align-items: center; gap: 14px; padding: 18px 16px; background: #E8F4F1; }
+.trkdone__art {
+  position: relative; flex: 0 0 76px; width: 76px; height: 76px; border-radius: 50%;
+  display: grid; place-items: center; background: #FFF6CC;
+}
+.trkdone__art img { width: 62px; height: auto; }
+.trkdone__art i {
+  position: absolute; top: 6px; right: 4px; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--green); color: #fff;
+  box-shadow: 0 0 0 2px #FFF6CC;
+}
+.trkdone__t { font-size: calc(var(--f-xl) + 4px); font-weight: 700; line-height: 1.22; letter-spacing: -0.3px; color: var(--ink); }
+.trkdone__t em { font-style: normal; color: var(--green); }
+.trkdone__p { margin-top: 4px; font-size: calc(var(--f-md) + 2px); color: var(--mut); line-height: 1.35; }
+.trkdone__ask { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.trkdone__ask p { font-size: calc(var(--f-md) + 2px); font-weight: 600; color: var(--ink); line-height: 1.3; }
+.trkdone__shield { flex: none; color: var(--green); display: grid; place-items: center; }
+.trkdone__yn { flex: none; display: flex; gap: 8px; }
+.trkdone__yn button {
+  min-width: 52px; padding: 9px 12px; border-radius: 10px; border: 1px solid;
+  background: #fff; font-size: var(--f-md); font-weight: 600;
+}
+.trkdone__no { color: #D0342C; border-color: #D0342C; }
+.trkdone__yes { color: var(--green); border-color: var(--green); }
+.trkdone__no.is-on { background: #D0342C; color: #fff; }
+.trkdone__yes.is-on { background: var(--green); color: #fff; }
+
+.trkrate { margin: 0 16px 16px; padding: 14px 16px 16px; border: 1px solid var(--line); border-radius: 14px; }
+.trkrate__t { font-size: calc(var(--f-md) + 2px); font-weight: 700; color: var(--ink); }
+.trkrate__stars { display: flex; gap: 8px; margin-top: 12px; }
+.trkrate__star { color: #E3E6EC; display: grid; place-items: center; transition: transform 0.12s ease, color 0.12s ease; }
+.trkrate__star.is-on { color: #F7B500; }
+.trkrate__star:active { transform: scale(0.9); }
 
 /* ---------- delivery instructions ---------- */
 .trkc__notes { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 16px; }

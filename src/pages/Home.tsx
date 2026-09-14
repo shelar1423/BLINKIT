@@ -7,7 +7,7 @@ import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
-import { IconChevronRight, IconHeart } from '../design/elements/Icons';
+import { IconChevronRight, IconFlag, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import { preloadCar } from '../lib/three/modelLoader';
@@ -174,6 +174,7 @@ export default function Home() {
               }}
             >
               Race now
+              <IconFlag size={20} aria-hidden="true" />
             </Button>
           </div>
 
@@ -255,11 +256,11 @@ export default function Home() {
           {/* The break is written, not left to the measure. It falls in the
               right place at this size on a 390pt phone and would fall
               somewhere else on a narrower one or a wider one, and "India's
-              last minute / app" is the line, not a lucky wrap. */}
+              last / minute app" is the line, not a lucky wrap. */}
           <p className="bfoot__line">
-            <span>India&rsquo;s last minute</span>
+            <span>India&rsquo;s last</span>
             <span>
-              app
+              minute app
               <IconHeart className="bfoot__heart" size={52} />
             </span>
           </p>
