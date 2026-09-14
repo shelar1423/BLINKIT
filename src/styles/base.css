@@ -4686,7 +4686,12 @@ input, select, textarea { font: inherit; color: inherit; }
   display: flex; align-items: center; gap: 7px;
   font-size: var(--f-lg); font-weight: 700;
 }
+/* Under the TITLE, not under the number. The number is a marker on the row,
+   not the first word of it, and a second line starting beneath it read as a
+   hanging indent on a list that has no hanging indent. 19px of disc plus the
+   7px that follows it. */
 .coach__txt small {
+  padding-left: 26px;
   font-size: var(--f-md); font-weight: 500;
   color: rgba(255, 255, 255, 0.75);
 }
