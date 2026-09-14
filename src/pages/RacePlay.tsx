@@ -500,9 +500,9 @@ export default function RacePlay() {
           racesLeft={useStore.getState().racesLeft}
           toast={toast}
           onRaceAgain={() => window.location.reload()}
+          onShop={() => nav('/hot-wheels')}
           onRewards={() => nav('/rewards')}
           onViewCar={() => nav(`/hot-wheels/${car.id}`)}
-          onLeaderboard={() => nav('/leaderboard')}
           onExit={() => nav('/campaign')}
           exitLabel="Campaign"
         />

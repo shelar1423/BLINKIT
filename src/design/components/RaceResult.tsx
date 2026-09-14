@@ -27,17 +27,17 @@ function prize(tier: RewardTier) {
     return {
       head: 'District Pass',
       sub: '1 Month',
-      fine: `${tier.perk}, plus free delivery on Blinkit for a month`,
+      fine: `${tier.perk}, plus free delivery on Blinkit for a month. Yours now.`,
       pass: true,
     };
   }
   if (tier.freeDelivery && tier.value === 0) {
-    return { head: 'Free', sub: 'Delivery', fine: 'Applied automatically on your next Blinkit order' };
+    return { head: 'Free', sub: 'Delivery', fine: 'Already on your order. It comes off at checkout.' };
   }
   return {
     head: `${rupees(tier.value)} Off`,
     sub: 'Blinkit Cash',
-    fine: `Added to your Blinkit Cash wallet. Use it on any order above ${rupees(tier.value * 2)}`,
+    fine: `In your Blinkit Cash now. It comes off at checkout on any order above ${rupees(tier.value * 2)}.`,
   };
 }
 
@@ -52,10 +52,11 @@ export type RaceResultProps = {
   totalPoints: number;
   racesLeft: number;
   onRaceAgain: () => void;
+  /** Where the reward gets spent. */
+  onShop: () => void;
   onRewards: () => void;
   /** Opens the product page of the car that was raced. */
   onViewCar: () => void;
-  onLeaderboard: () => void;
   onExit: () => void;
   exitLabel: string;
   toast: (m: string) => void;
@@ -67,7 +68,7 @@ const SHARE_TIP_MS = 4000;
 
 export function RaceResult({
   outcome, car, tier, isBest, totalPoints, racesLeft, inviteUrl,
-  onRaceAgain, onRewards, onViewCar, onLeaderboard, onExit, exitLabel, toast,
+  onRaceAgain, onShop, onRewards, onViewCar, onExit, exitLabel, toast,
 }: RaceResultProps) {
   /* The number counts up. A score that is simply present reads as a fact; one
      that arrives reads as something you earned. */
@@ -256,15 +257,30 @@ export function RaceResult({
       </button>
 
       <div className="rwd__foot">
-        <Button variant="yellow" size="lg" block type="button" disabled={racesLeft <= 0} onClick={onRaceAgain}>
-          <IconFlag size={17} />
-          {racesLeft > 0 ? 'Race again' : 'No races left today'}
-        </Button>
-        {/* Quiet, because the screen is allowed exactly one loud thing. The
-            reward is claimed from Rewards. */}
+        {/* The loud one SPENDS it.
+            Race again was the primary button, which made the loudest thing on
+            the screen a way of going round again rather than a way of using
+            what had just been won. The reward is already on the order by the
+            time this screen appears; the only thing left to do with it is
+            shop. */}
+        {won ? (
+          <Button variant="primary" size="lg" block type="button" onClick={onShop}>
+            Shop with it
+            <IconChevronRight size={17} />
+          </Button>
+        ) : (
+          <Button variant="yellow" size="lg" block type="button" disabled={racesLeft <= 0} onClick={onRaceAgain}>
+            <IconFlag size={17} />
+            {racesLeft > 0 ? 'Race again' : 'No races left today'}
+          </Button>
+        )}
         <div className="rwd__minor">
+          {won && (
+            <button type="button" disabled={racesLeft <= 0} onClick={onRaceAgain}>
+              {racesLeft > 0 ? 'Race again' : 'No races left'}
+            </button>
+          )}
           <button type="button" onClick={onRewards}>Rewards</button>
-          <button type="button" onClick={onLeaderboard}>Leaderboard</button>
           <button type="button" onClick={onExit}>{exitLabel}</button>
         </div>
       </div>

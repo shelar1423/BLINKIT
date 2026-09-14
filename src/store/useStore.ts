@@ -255,6 +255,23 @@ export const useStore = create<State>()(
           bestScore: Math.max(s.bestScore, r.score),
           lastResult: result,
           unlockedRewards: tier && !s.unlockedRewards.includes(tier.id) ? [...s.unlockedRewards, tier.id] : s.unlockedRewards,
+          /* Won IS claimed.
+           *
+           * A tier used to be unlocked here and then held, waiting for the
+           * player to find the rewards screen and press a button to actually
+           * have it. So the result screen showed a ticket reading "₹25 Off"
+           * that was not yet worth anything, and the one thing standing
+           * between a race and a basket was a step whose only job was to say
+           * yes to something already earned.
+           *
+           * It is applied on the spot. Nothing is overwritten: only one reward
+           * rides on an order at a time, so a better one replaces a smaller
+           * one that has not been spent, and a smaller one does not displace a
+           * better one already waiting. */
+          claimedReward:
+            tier && (!s.claimedReward || tier.value > s.claimedReward.value)
+              ? { id: tier.id, value: tier.value, freeDelivery: tier.freeDelivery }
+              : s.claimedReward,
           mysteryUnlocked: s.mysteryUnlocked || s.totalPoints + r.score >= MYSTERY_UNLOCK_POINTS,
         }));
         return result;
