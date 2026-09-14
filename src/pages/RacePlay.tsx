@@ -3,7 +3,6 @@ import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
-import { useStartRace } from '../lib/useStartRace';
 import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
 import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
@@ -29,7 +28,6 @@ import { useToast } from '../App';
 
 export default function RacePlay() {
   const nav = useNavigate();
-  const startRace = useStartRace();
   const { toast } = useToast();
   const selectedCarId = useStore((s) => s.selectedCarId);
   const racesLeft = useStore((s) => s.racesLeft);
@@ -106,60 +104,81 @@ export default function RacePlay() {
     [finishRace],
   );
 
+  /* A race that cannot start has to SAY so.
+   *
+   * The loader is shown until `onReady`, and there were three ways that never
+   * came: a car with no model at all (this effect simply returned), a scene
+   * that threw on the way up — a refused WebGL context is the common one, and
+   * a tab that has opened a few too many gets exactly that — and a model whose
+   * request never settles. All three left the track ring turning forever with
+   * nothing behind it and no way out of the screen.
+   */
   useEffect(() => {
-    if (!host.current || !car.glb) return;
-    const h = createRaceScene(host.current, {
-      onGateCue: (c) => {
-        atGate.current = !!c;
-        setGateCue(c);
-        /* Hold the wheel straight through the gate. The car is being lined up
-           on the hoop by the engine; a steering input mid-run-up fights it. */
-        if (c) handle.current?.engine.setSteer(0);
-      },
-      onBoostResult: (r) => {
-        atGate.current = false;
-        setGateCue(null);
-        setEventFlash({ kind: 'boost', quality: r.quality, points: r.points });
-        window.setTimeout(() => setEventFlash(null), 1100);
-      },
-      onBulletTime: setSlowmo,
-      /* The celebration starts here, not on `onFinish`. By the time the result
-         screen has the score, the moment it is celebrating is two seconds
-         gone. */
-      onFinishCue: () => setCheering(true),
-      onLaunched: () => {
-        setLaunched(true);
-        engineStart();
-      },
-      onPull: setPull,
-      onJumpCue: setJumpCue,
-      onJumpResult: (r) => {
-        setJumpCue(false);
-        setEventFlash({ kind: 'jump', quality: r.quality, points: r.points });
-        window.setTimeout(() => setEventFlash(null), 1100);
-      },
-      glbUrl: car.glb,
-      duration: RACE_SECONDS,
-      laps: 2,
-      onProgress: (p) => setPct(p < 0 ? 0 : p),
-      /* Held to a floor of 1.8s. A cached model is ready inside a frame, and a
-         loader that appears and vanishes in one reads as a flicker — the point
-         of it is to make the entry into a race feel like a moment, not to
-         measure how long the file took. */
-      onReady: () => {
-        const elapsed = performance.now() - mountedAt.current;
-        if (elapsed >= LOADER_MS) setLoaded(true);
-        else window.setTimeout(() => setLoaded(true), LOADER_MS - elapsed);
-      },
-      onError: (m) => setErr(m),
-      onTick: (st) => {
-        setStats(st);
-        powerUp.current(st.score);
-      },
-      onPickup,
-      onPenalty,
-      onFinish,
-    });
+    if (!host.current) return;
+    if (!car.glb) {
+      setErr('This car has no 3D model to race.');
+      return;
+    }
+    let h: ReturnType<typeof createRaceScene>;
+    try {
+      h = createRaceScene(host.current, {
+        onGateCue: (c) => {
+          atGate.current = !!c;
+          setGateCue(c);
+          /* Hold the wheel straight through the gate. The car is being lined up
+             on the hoop by the engine; a steering input mid-run-up fights it. */
+          if (c) handle.current?.engine.setSteer(0);
+        },
+        onBoostResult: (r) => {
+          atGate.current = false;
+          setGateCue(null);
+          setEventFlash({ kind: 'boost', quality: r.quality, points: r.points });
+          window.setTimeout(() => setEventFlash(null), 1100);
+        },
+        onBulletTime: setSlowmo,
+        /* The celebration starts here, not on `onFinish`. By the time the result
+           screen has the score, the moment it is celebrating is two seconds
+           gone. */
+        onFinishCue: () => setCheering(true),
+        onLaunched: () => {
+          setLaunched(true);
+          engineStart();
+        },
+        onPull: setPull,
+        onJumpCue: setJumpCue,
+        onJumpResult: (r) => {
+          setJumpCue(false);
+          setEventFlash({ kind: 'jump', quality: r.quality, points: r.points });
+          window.setTimeout(() => setEventFlash(null), 1100);
+        },
+        glbUrl: car.glb,
+        duration: RACE_SECONDS,
+        laps: 2,
+        onProgress: (p) => setPct(p < 0 ? 0 : p),
+        /* Held to a floor of 1.8s. A cached model is ready inside a frame, and a
+           loader that appears and vanishes in one reads as a flicker — the point
+           of it is to make the entry into a race feel like a moment, not to
+           measure how long the file took. */
+        onReady: () => {
+          const elapsed = performance.now() - mountedAt.current;
+          if (elapsed >= LOADER_MS) setLoaded(true);
+          else window.setTimeout(() => setLoaded(true), LOADER_MS - elapsed);
+        },
+        onError: (m) => setErr(m),
+        onTick: (st) => {
+          setStats(st);
+          powerUp.current(st.score);
+        },
+        onPickup,
+        onPenalty,
+        onFinish,
+      });
+    } catch (e) {
+      /* Nothing below this can run without a scene, and the message matters
+         more than the stack: the player is looking at a loader. */
+      setErr(e instanceof Error ? e.message : 'The race could not start.');
+      return;
+    }
     handle.current = h;
     /* Fetched and decoded while the track builds, so GO is not the first time
        anything touches the network. */
@@ -172,6 +191,20 @@ export default function RacePlay() {
       stopRaceAudio();
     };
   }, [car.glb, onPickup, onPenalty, onFinish]);
+
+  /* And a stop on the whole thing. A model request that never settles reports
+     no error to catch and no progress to show, so the only evidence is a
+     loader that will not end. Twenty seconds is far past any real load — the
+     track and the car are a few hundred kB — and being told is better than
+     being left. */
+  useEffect(() => {
+    if (loaded || err) return;
+    const id = window.setTimeout(
+      () => setErr('The race is taking too long to load. Check your connection and try again.'),
+      20000,
+    );
+    return () => window.clearTimeout(id);
+  }, [loaded, err]);
 
   /* No countdown. The race starts when the lever does.
 
@@ -343,7 +376,9 @@ export default function RacePlay() {
       {err && (
         <div className="loadbox loadbox--dark" style={{ position: 'absolute', inset: 0 }}>
           <p style={{ color: '#fff' }}>{err}</p>
-          <Button variant="outline" type="button" onClick={() => startRace()}>
+          {/* Home, not another race. Whatever stopped this one is still true
+              a second later, and a Back that fails the same way is a loop. */}
+          <Button variant="outline" type="button" onClick={() => nav('/')}>
             Back
           </Button>
         </div>

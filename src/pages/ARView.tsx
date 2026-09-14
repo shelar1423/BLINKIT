@@ -116,8 +116,23 @@ export default function ARView() {
   const { pops, push: pushPop } = useScorePops();
   const [lastHitMessage, setLastHitMessage] = useState<string | null>(null);
 
+  /* The support check, with a stop on it.
+   *
+   * `pendingAuto` covers the screen with the loader while `support` is still
+   * null, so a probe that never settles — `isSessionSupported` can sit there
+   * on some Android builds, and a rejected promise resolves nothing — is a
+   * loader that never ends. After four seconds the answer is taken to be no,
+   * which is the answer that still leads somewhere: the 3D race. */
   useEffect(() => {
-    detectAR().then(setSupport);
+    let settled = false;
+    const done = (s: ARSupport) => {
+      if (settled) return;
+      settled = true;
+      setSupport(s);
+    };
+    detectAR().then(done, () => done({ kind: 'unsupported', reason: 'The AR check failed' }));
+    const id = window.setTimeout(() => done({ kind: 'unsupported', reason: 'The AR check timed out' }), 4000);
+    return () => window.clearTimeout(id);
   }, []);
 
   useEffect(() => () => handle.current?.end(), []);
