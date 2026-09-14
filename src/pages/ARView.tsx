@@ -321,6 +321,16 @@ export default function ARView() {
      setThrottle, so the engine stays in the self-driving mode the 3D race
      uses — the only input is the tilt, plus the lift or swipe for jumps. */
 
+  /* The steering guide stops the race while it plays. It appears a second
+     after the launch and takes about four and a half seconds; the car stands
+     still for exactly that, so the guide is read instead of raced through. */
+  const holdForCue = useCallback((held: boolean) => {
+    const e = handle.current?.engine;
+    if (!e) return;
+    if (held) e.pause();
+    else e.resume();
+  }, []);
+
   const press = useCallback((dir: number) => handle.current?.setSteer(dir), []);
   const release = useCallback(() => handle.current?.setSteer(0), []);
 
@@ -533,7 +543,7 @@ export default function ARView() {
 
             {phase === 'racing' && <ScorePops pops={pops} />}
             {/* How to steer, a second into the race. AR has no pads: tilt only. */}
-            {phase === 'racing' && <SteerCue mode="tilt" />}
+            {phase === 'racing' && <SteerCue mode="tilt" onHold={holdForCue} />}
 
             {/* While the track is being built after "Place track here": the
                 campaign's track loader in the middle of the camera view, so a

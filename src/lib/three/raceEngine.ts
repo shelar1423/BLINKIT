@@ -2806,6 +2806,17 @@ export class RaceEngine {
     if (p > 0.85) this.boost();
   }
 
+  /**
+   * Put the race back in motion after a `pause()`.
+   *
+   * Not `start()`: that is the standing start, and calling it mid-race would
+   * clear the launcher again and read as a restart. This only lifts the hold.
+   * A race that has already finished stays finished.
+   */
+  resume() {
+    if (!this.done) this.running = true;
+  }
+
   pause() {
     this.running = false;
     /* The clock stops being read the moment this returns, so anything it was

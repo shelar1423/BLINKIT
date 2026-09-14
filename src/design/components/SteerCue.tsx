@@ -12,15 +12,33 @@ import { useEffect, useState } from 'react';
      press  a ring pulsing over each steering pad in turn, captioned
             "Press left to go left" / "Press right to go right"
 
-   Pure CSS animation and pointer-events: none, so it never takes a touch from
-   the race it is explaining.
+   The race is HELD for the whole of it. Playing a guide over a car that is
+   already into the first corner asks the player to read and drive at once, and
+   whichever they choose they lose the other: watch the guide and the corner is
+   missed, drive the corner and the guide has gone by the time they look up.
+   So the moment the guide appears the race stops dead, and it starts again the
+   instant the guide has faded. `onHold` is how the page is told; both races
+   pause and resume their engine on it.
+
+   Under it, a plain black wash at low opacity — enough to take the contrast
+   out of the track so the phone and its two captions are the only things on
+   screen with any weight. Pure CSS animation and pointer-events: none, so it
+   never takes a touch from the race it is explaining.
    ============================================================ */
 
 const DELAY_MS = 1000;
 const SHOW_MS = 4200;
 const FADE_MS = 300;
 
-export function SteerCue({ mode }: { mode: 'tilt' | 'press' }) {
+export function SteerCue({
+  mode,
+  /** Called with true when the guide takes the screen, false when it has gone.
+   *  The race is expected to stand still in between. */
+  onHold,
+}: {
+  mode: 'tilt' | 'press';
+  onHold?: (held: boolean) => void;
+}) {
   const [stage, setStage] = useState<'wait' | 'on' | 'out' | 'gone'>('wait');
 
   useEffect(() => {
@@ -34,6 +52,17 @@ export function SteerCue({ mode }: { mode: 'tilt' | 'press' }) {
     };
   }, []);
 
+  /* Held from the first frame it is visible to the last. Reported from an
+     effect rather than inside the timers so that unmounting mid-guide — the
+     race quit, or finished early — always hands the race back. */
+  const held = stage === 'on' || stage === 'out';
+  useEffect(() => {
+    onHold?.(held);
+    return () => {
+      if (held) onHold?.(false);
+    };
+  }, [held, onHold]);
+
   if (stage === 'wait' || stage === 'gone') return null;
 
   const cls = 'stcue stcue--' + mode + (stage === 'out' ? ' is-out' : '');
@@ -41,6 +70,7 @@ export function SteerCue({ mode }: { mode: 'tilt' | 'press' }) {
   if (mode === 'tilt') {
     return (
       <div className={cls} role="status" aria-label="Tilt your phone left or right to steer">
+        <div className="stcue__dim" aria-hidden="true" />
         <div className="stcue__tilt" aria-hidden="true">
           <i className="stcue__arrow stcue__arrow--l" />
           <span className="stcue__phone" />
@@ -56,6 +86,7 @@ export function SteerCue({ mode }: { mode: 'tilt' | 'press' }) {
 
   return (
     <div className={cls} role="status" aria-label="Press left or right to steer">
+      <div className="stcue__dim" aria-hidden="true" />
       <span className="stcue__ring stcue__ring--l" aria-hidden="true" />
       <span className="stcue__ring stcue__ring--r" aria-hidden="true" />
       <p className="stcue__cap stcue__cap--press" aria-hidden="true">

@@ -196,6 +196,16 @@ export default function RacePlay() {
     handle.current?.setHeld(!coached);
   }, [coached, loaded]);
 
+  /* The steering guide stops the race while it plays. It appears a second
+     after the launch and takes about four and a half seconds; the car stands
+     still for exactly that, so the guide is read instead of raced through. */
+  const holdForCue = useCallback((held: boolean) => {
+    const e = handle.current?.engine;
+    if (!e) return;
+    if (held) e.pause();
+    else e.resume();
+  }, []);
+
   /* ---------- steering ---------- */
   const steerTo = useCallback((clientX: number) => {
     const w = window.innerWidth;
@@ -370,7 +380,7 @@ export default function RacePlay() {
               co-brand plate. */}
           {/* How to steer, a second after the car leaves the line: tilt when
               tilt has the wheel, otherwise pressing the left and right pads. */}
-          {launched && !outcome && <SteerCue mode={tiltDriving ? 'tilt' : 'press'} />}
+          {launched && !outcome && <SteerCue mode={tiltDriving ? 'tilt' : 'press'} onHold={holdForCue} />}
 
           {!tiltDriving && launched && (
             <div className="steer__pads" aria-hidden="true">

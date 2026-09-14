@@ -1301,6 +1301,11 @@ input, select, textarea { font: inherit; color: inherit; }
   animation: stcueIn 260ms ease-out both;
 }
 .stcue.is-out { animation: stcueOut 300ms ease-in both; }
+/* The race is standing still under this, so the wash is not hiding anything
+   moving: it takes the contrast out of the track so the phone and its caption
+   are the only things on screen with any weight. Black, and light — the car
+   has to stay recognisable behind it or the guide is explaining nothing. */
+.stcue__dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.34); }
 @keyframes stcueIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes stcueOut { from { opacity: 1; } to { opacity: 0; } }
 
