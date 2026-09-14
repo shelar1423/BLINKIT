@@ -5507,20 +5507,27 @@ input, select, textarea { font: inherit; color: inherit; }
    ground, standing on the floor of the photograph behind it. The shadow is
    what sets it ON the floor rather than in front of it. */
 .arin__circuit {
-  /* Centred by its own offsets, NOT by a transform: the timeline owns
+  /* Placed by its own offsets, NOT by a transform: the timeline owns
      `transform` on this element, and a translateX(-50%) written here is the
-     first thing it overwrites. */
-  position: absolute; left: 13%; right: 13%; bottom: 3%;
-  width: auto;
+     first thing it overwrites.
+
+     And sized by an explicit WIDTH, not by a left/right pair. This is an
+     image, and for an absolutely positioned replaced element `width: auto`
+     resolves to the intrinsic size and `right` is simply dropped — which is
+     why the circuit was coming out full-bleed and hanging 35px off the right
+     edge of the card instead of the 74% the offsets asked for. */
+  position: absolute; left: 13%; width: 74%; bottom: 8%;
   opacity: 0;
   filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
 }
 /* The car mid-lap, cut out of the running race the same way the circuit was,
-   standing on the same table. Sat lower and wider than the circuit because it
-   is a closer view of the same road. */
+   standing on the same floor. Full width and sat on the bottom edge, because
+   this is a close view of the road: a margin around it would read as a
+   picture of a track rather than as the track running past you. Explicit
+   width for the same reason as the circuit above. */
 .arin__racecar {
-  position: absolute; left: 4%; right: 4%; bottom: 6%;
-  width: auto; opacity: 0;
+  position: absolute; left: 0; width: 100%; bottom: -3%;
+  opacity: 0;
   filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
 }
 
