@@ -2659,23 +2659,19 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__foot--pair {
   position: sticky; bottom: 0;
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-  margin-top: 18px; padding: 14px 0 calc(10px + var(--safe-b));
-  /* A ground of its own. Sticky over a white leaderboard card, the buttons
-     had the card scrolling through the gap between them and read as part of
-     it. The fade rather than a flat fill because the page is a gradient: a
-     solid bar would band against it, and the top edge of the fade is what
-     tells you there is more above. */
-  background: linear-gradient(
-    180deg,
-    rgba(0, 63, 125, 0) 0%,
-    rgba(0, 63, 125, 0.86) 34%,
-    var(--rwd-bg-bot) 68%
-  );
+  margin-top: 18px; padding: 12px 0 calc(12px + var(--safe-b));
+  /* A ground of its own, and a solid one. Sticky over a white leaderboard
+     card, the buttons had the card scrolling through the gap between them and
+     read as part of it. A fade left the card ghosting through its top; this is
+     the page's own bottom colour, opaque, so nothing passes behind it. */
+  background: var(--rwd-bg-bot);
 }
-/* The fade has to reach the screen's edges, not stop at the content column. */
+/* To the screen's edges and past its bottom. -50vw each side clears any width
+   the content column can take; the overhang below covers an overscroll bounce,
+   where the bar would otherwise lift and show the gradient under it. */
 .rwd__foot--pair::before {
-  content: ''; position: absolute; inset: 0 -50vw; z-index: -1;
-  background: inherit;
+  content: ''; position: absolute; inset: 0 -50vw -240px; z-index: -1;
+  background: var(--rwd-bg-bot);
 }
 .rwd__foot--pair .btn { width: 100%; min-width: 0; }
 
@@ -2711,9 +2707,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__top {
   position: relative;
   width: 100%; max-width: 320px;
-  /* Room above for the half of the podium that sits outside the card. */
-  margin-top: 52px;
-  padding: 42px 14px 8px; border-radius: 18px;
+  /* Room above for the part of the podium that sits outside the card. */
+  margin-top: 60px;
+  padding: 46px 14px 8px; border-radius: 18px;
   background: #fff; color: var(--ink);
 }
 .rwd__toph {
@@ -2725,8 +2721,8 @@ input, select, textarea { font: inherit; color: inherit; }
    top edge by half its height so it reads as sitting ON the card rather than
    inside it. */
 .rwd__topim {
-  position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%);
-  width: 76px; height: 76px; object-fit: contain;
+  position: absolute; left: 50%; top: 0; transform: translate(-50%, -62%);
+  width: 94px; height: 94px; object-fit: contain;
 }
 /* The rows are .lrow, the leaderboard's own. Two things change: the gutter,
    because they were written to run edge to edge on a page and these sit in a
