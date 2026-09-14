@@ -1231,10 +1231,18 @@ input, select, textarea { font: inherit; color: inherit; }
 .stage__ui > * { pointer-events: auto; }
 
 /* HUD */
+/* The two figures take a corner each, with the way out between them. They sat
+   as a pair in the left corner with the close button alone on the right, which
+   put the score and the clock — the two things you glance at, and never at the
+   same moment — in the same glance, and left two thirds of the row empty. */
 .hud__top {
-  position: absolute; top: calc(var(--safe-t) + 10px); left: 12px; right: 12px;
-  display: flex; align-items: flex-start; gap: 8px;
+  position: absolute; top: calc(var(--safe-t) + 22px); left: 12px; right: 12px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
 }
+/* Source order is POINTS, TIME LEFT, close — the reading order, and the one a
+   screen reader should keep. These place them across the row without changing
+   it: the clock to the far right, the close button into the gap. */
+.hud__c + .hud__c { order: 2; }
 /* The campaign's own two colours, not a smoked-glass chip. Over a camera feed
    or a track the dark translucent version took whatever was behind it: on the
    wooden floor of a living room it read brown, and the score was white text on
@@ -1244,15 +1252,16 @@ input, select, textarea { font: inherit; color: inherit; }
 .hud__c {
   background: var(--yellow);
   border: 1px solid rgba(0, 0, 0, 0.08); border-radius: var(--r);
-  padding: 6px 11px; color: var(--green);
+  padding: 6px 11px; color: var(--ink);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
 .hud__c b { display: block; font-size: var(--f-xl); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
-/* The label sits back from the figure without leaving the pair: same green,
-   carrying less weight, rather than a third colour on a two-colour chip. */
-.hud__c span { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.12em; color: rgba(50, 134, 23, 0.72); }
+/* The label sits back from the figure without leaving it: the same black,
+   carrying less weight, rather than a third colour on the chip. */
+.hud__c span { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.12em; color: rgba(31, 31, 31, 0.68); }
 .hud__x {
-  margin-left: auto; width: 36px; height: 36px; border-radius: 50%;
+  order: 1;
+  width: 36px; height: 36px; border-radius: 50%;
   background: rgba(10,6,18,0.6); border: 1px solid rgba(255,255,255,0.14);
   color: #fff; display: grid; place-items: center;
 }
@@ -4613,29 +4622,14 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 .coach__steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
-/* One step at a time. `.is-on` is the one being demonstrated; the other two
-   sit back far enough to read as waiting their turn, close enough to still be
-   read. Nothing moves or reflows between them — only weight changes — so the
-   panel does not twitch as the light walks down it. */
 .coach__step {
   display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px;
   align-items: center;
-  opacity: 0.32;
-  transition: opacity 320ms ease;
 }
-.coach__step.is-on { opacity: 1; }
-/* And only the lit step's drawing runs. Three gestures looping at once is
-   three moving things after the same glance. */
-.coach__step:not(.is-on) .cg * { animation-play-state: paused; }
 .coach__glyph {
   width: 56px; height: 56px; border-radius: var(--r-md);
   display: grid; place-items: center;
   background: rgba(255, 255, 255, 0.1);
-  transition: background 320ms ease, box-shadow 320ms ease;
-}
-.coach__step.is-on .coach__glyph {
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.3);
 }
 .coach__txt { display: grid; gap: 2px; min-width: 0; }
 .coach__txt b {

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Button } from '../elements';
 
 /* ============================================================
@@ -22,17 +21,12 @@ import { Button } from '../elements';
    phone tipping back is understood before you have finished the line beside
    it.
 
-   And they are shown ONE AT A TIME. All three drawings running at once is
-   three moving things competing for the same glance, and a player reading the
-   corner line watches the launcher out of the corner of their eye. So the
-   briefing walks: the step being demonstrated is lit and its drawing is the
-   only one moving, the other two sit back at a third of their weight. The
-   race is held for the whole of it — see `setHeld` in the scenes — so nothing
-   is happening behind this that the player is missing.
+   All three at once, all three lit. A walking spotlight was tried — one step
+   demonstrated at a time with the other two sat back — and it reads as the
+   briefing deciding how fast you get to read it. Three short lines are taken
+   in at a glance; the race is held for the whole of it (see `setHeld` in the
+   scenes), so there is no reason to ration them.
    ============================================================ */
-
-/** How long each step holds the light before the briefing walks to the next. */
-const STEP_MS = 2400;
 
 /** The launcher: a lever drawn back, and the arrow saying which way. */
 function GlyphPull() {
@@ -108,18 +102,6 @@ export function RaceCoach({ mode, onDone }: { mode: 'ar' | '3d'; onDone: () => v
     },
   ];
 
-  /* -1 lights every step at once, which is where a player who has asked for
-     less motion starts and stays: a walking spotlight is itself an animation. */
-  const [step, setStep] = useState(() =>
-    typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? -1 : 0,
-  );
-
-  useEffect(() => {
-    if (step < 0) return;
-    const id = window.setInterval(() => setStep((i) => (i + 1) % 3), STEP_MS);
-    return () => window.clearInterval(id);
-  }, [step < 0]);
-
   return (
     <div className="coach" role="dialog" aria-label="How to race">
       <div className="coach__dim" />
@@ -128,13 +110,8 @@ export function RaceCoach({ mode, onDone }: { mode: 'ar' | '3d'; onDone: () => v
 
         <ol className="coach__steps">
           {steps.map((s, i) => (
-            <li key={s.title} className={'coach__step' + (step < 0 || step === i ? ' is-on' : '')}>
-              {/* Keyed on whether it is lit, so the drawing is remounted and
-                  the gesture plays from the top each time the light reaches
-                  it rather than resuming wherever it was paused. */}
-              <span key={step === i ? 'on' : 'off'} className="coach__glyph">
-                {s.glyph}
-              </span>
+            <li key={s.title} className="coach__step">
+              <span className="coach__glyph">{s.glyph}</span>
               <span className="coach__txt">
                 <b>
                   <i className="coach__n">{i + 1}</i>
