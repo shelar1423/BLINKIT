@@ -14,12 +14,17 @@ import { Button } from '../elements';
    Annotation only works when its subject is on screen. Here it is not, so the
    briefing has to CARRY its subjects instead of pointing at them.
 
-   Each control is drawn, as a small animation of the gesture itself: a lever
-   pulled back, a phone tipping up, a phone rocking side to side. Motion is the
-   right medium because every one of these instructions IS a motion — "tilt up"
-   in words is a sentence you have to picture, and the same thing shown as a
-   phone tipping back is understood before you have finished the line beside
-   it.
+   Each step is drawn, as a small animation of the thing itself: a lever pulled
+   back, a phone rocking side to side, a bag lifting off the lane while a chunk
+   of rock tumbles beside it. Motion is the right medium because every one of
+   these instructions IS a motion — "tilt left" in words is a sentence you have
+   to picture, and the same thing shown as a phone leaning is understood before
+   you have finished the line beside it.
+
+   The jump is not here. It has its own cue in the race, on the approach to
+   every gate, which is the moment it can actually be acted on — a gesture
+   explained on a briefing screen and then not needed for twenty seconds is a
+   gesture that has to be explained twice.
 
    All three at once, all three lit. A walking spotlight was tried — one step
    demonstrated at a time with the other two sat back — and it reads as the
@@ -43,37 +48,6 @@ function GlyphPull() {
   );
 }
 
-/**
- * The gate: the hoop, and the gesture that gets you through it.
- *
- * In AR the phone is drawn EDGE-ON — a narrow bar rotating about its foot —
- * because tipping a phone away from you is a rotation in depth, and a face-on
- * phone rotating in the plane of the screen reads as turning it sideways
- * instead. In profile the same rotation is unambiguous.
- *
- * In the 3D race there is no phone to tip: the gesture is a thumb, so it is
- * drawn as one, with a trail behind it.
- */
-function GlyphLift({ mode }: { mode: 'ar' | '3d' }) {
-  return (
-    <svg className="cg" viewBox="0 0 48 48" aria-hidden="true">
-      <circle className="cg-ring" cx="24" cy="13" r="9.5" />
-      <path className="cg-arrow" d="M24 31 L24 21" />
-      <path className="cg-arrow" d="M20 25 L24 20 L28 25" />
-      {mode === 'ar' ? (
-        <g className="cg-tip">
-          <rect className="cg-phone" x="21" y="31" width="6" height="15" rx="2" />
-        </g>
-      ) : (
-        <g className="cg-swipe">
-          <path className="cg-trail" d="M24 46 L24 38" />
-          <circle className="cg-dot" cx="24" cy="38" r="4" />
-        </g>
-      )}
-    </svg>
-  );
-}
-
 /** Steering: the phone rocks left and right. */
 function GlyphSteer({ mode }: { mode: 'ar' | '3d' }) {
   return (
@@ -90,16 +64,44 @@ function GlyphSteer({ mode }: { mode: 'ar' | '3d' }) {
   );
 }
 
+
+/**
+ * The track's two loose objects: one you want and one you do not.
+ *
+ * Drawn side by side rather than as two rows, because the instruction is the
+ * pair — a lane with things in it, some worth hitting and some not. The bag
+ * lifts and brightens as it is taken; the chunk tumbles and stays grey.
+ */
+function GlyphPick() {
+  return (
+    <svg className="cg" viewBox="0 0 48 48" aria-hidden="true">
+      <path className="cg-floor" d="M4 42 L44 42" />
+      {/* the grocery bag, collected */}
+      <g className="cg-grab">
+        <path className="cg-handle" d="M12 20 a5 5 0 0 1 10 0" />
+        <rect className="cg-bag" x="8" y="20" width="18" height="17" rx="3" />
+      </g>
+      {/* the debris, tumbling past */}
+      <g className="cg-chunk">
+        <path className="cg-deck" d="M36 24 L43 28 L41 36 L33 36 L31 28 Z" />
+      </g>
+    </svg>
+  );
+}
+
 export function RaceCoach({ mode, onDone }: { mode: 'ar' | '3d'; onDone: () => void }) {
   const ar = mode === 'ar';
   const steps = [
     { glyph: <GlyphPull />, title: 'Pull the launcher', body: 'Drag back, let go' },
-    { glyph: <GlyphLift mode={mode} />, title: 'Jump the fire rings', body: ar ? 'Tilt up on the beat' : 'Swipe up on the beat' },
     {
       glyph: <GlyphSteer mode={mode} />,
       title: 'Take the corners',
       body: ar ? 'Tilt left to go left, right to go right' : 'Hold left to go left, right to go right',
     },
+    /* What the lane is FOR. The first two steps are how the car is driven;
+       this is why it is being driven anywhere, and it is the only one of the
+       three that changes the score. */
+    { glyph: <GlyphPick />, title: 'Collect the groceries', body: 'And avoid the debris' },
   ];
 
   return (

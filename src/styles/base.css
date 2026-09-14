@@ -4754,13 +4754,32 @@ input, select, textarea { font: inherit; color: inherit; }
   62%, 74% { transform: rotate(17deg); }
 }
 
+/* ---- groceries and debris ----
+   One is worth hitting and one is not, so one is lit and lifts and the other
+   just tumbles. */
+.cg-floor { fill: none; stroke: rgba(255, 255, 255, 0.3); stroke-width: 2; stroke-linecap: round; }
+.cg-bag { fill: var(--yellow); }
+.cg-handle { fill: none; stroke: var(--yellow); stroke-width: 2.4; stroke-linecap: round; }
+.cg-grab { transform-origin: 17px 30px; animation: cg-grab 2.4s ease-in-out infinite; }
+@keyframes cg-grab {
+  0%, 20%   { transform: translateY(0) scale(1); opacity: 0.75; }
+  44%, 58%  { transform: translateY(-5px) scale(1.1); opacity: 1; }
+  80%, 100% { transform: translateY(0) scale(1); opacity: 0.75; }
+}
+/* Grey, and it never lifts: the one thing on the lane that is not a prize. */
+.cg-chunk { transform-origin: 37px 30px; animation: cg-chunk 2.4s linear infinite; }
+@keyframes cg-chunk {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 @keyframes coach-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .coach { animation-duration: 1ms; }
-  .cg-lever, .cg-tip, .cg-swipe, .cg-rock { animation: none; }
+  .cg-lever, .cg-tip, .cg-swipe, .cg-rock, .cg-grab, .cg-chunk { animation: none; }
 }
 
 /* The exit button borrows the 3D race's HUD, and .arov is pointer-events:none
