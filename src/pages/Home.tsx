@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useStartRace } from '../lib/useStartRace';
 import { AppHeader, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
 import { CARS, CATEGORIES, HERO_CARS, SHOP_CARS, rupees } from '../data/catalog';
@@ -70,6 +71,7 @@ const SHOP_TILES = (() => {
 export default function Home() {
   const nav = useNavigate();
   const { toast } = useToast();
+  const startRace = useStartRace();
   const { status: drop, parts } = useDrop();
   /* The storefront's Race now gets the same hold as the ones deeper in. It is
      the first press of the campaign, so it is the one that most wants to feel
@@ -200,7 +202,7 @@ export default function Home() {
               disabled={launching}
               onClick={() => {
                 setLaunching(true);
-                window.setTimeout(() => nav('/campaign'), LOADER_MS);
+                window.setTimeout(() => startRace(), LOADER_MS);
               }}
             >
               Race now

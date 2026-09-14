@@ -3,6 +3,7 @@ import { Button } from '../design/elements';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AGE_RATING, BADGE_TONE, CARS, ETA_MINS, productById, rupees, type Product as ProductT } from '../data/catalog';
 import { useStore } from '../store/useStore';
+import { useStartRace } from '../lib/useStartRace';
 import { createProductViewer, type ViewerHandle } from '../lib/three/productViewer';
 import {
   IconAR,
@@ -209,6 +210,7 @@ const GLIDE_MS = 190;
 export default function Product() {
   const { id = '' } = useParams();
   const nav = useNavigate();
+  const startRace = useStartRace();
   const { toast } = useToast();
   /* null while the check is in flight — treated as yes, so the AR route never
      flickers in after a frame of saying 3D. */
@@ -704,7 +706,7 @@ export default function Product() {
               type="button"
               onClick={() => {
                 selectCar(product.id);
-                nav('/race');
+                startRace();
               }}
             >
               <span className="rowcard__ic rowcard__ic--flame">

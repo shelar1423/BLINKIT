@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
 import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
+import { useStartRace } from '../lib/useStartRace';
 import {
   detectAR,
   startARSession,
@@ -43,6 +44,7 @@ import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } fro
 export default function ARView() {
   const { id } = useParams();
   const nav = useNavigate();
+  const startRace = useStartRace();
   const { toast } = useToast();
   const selectedCarId = useStore((s) => s.selectedCarId);
   const selectCar = useStore((s) => s.selectCar);
@@ -96,7 +98,6 @@ export default function ARView() {
   const [cheering, setCheering] = useState(false);
   /* The briefing, shown the moment the circuit is on the table. Reset on every
      placement, so re-placing a track re-explains it. */
-  const [coached, setCoached] = useState(false);
   /* Read before finishRace writes the new best, or every run is a personal
      best by the time the result screen asks. */
   const [isBest, setIsBest] = useState(false);
@@ -153,9 +154,9 @@ export default function ARView() {
            placement step, which can be many seconds of pointing at the floor. */
         onPhase: (p) => {
           setPhase(p);
-          /* Fresh briefing each time a circuit goes down — re-placing a track
-             is the one moment somebody is most likely to want it again. */
-          if (p === 'placed') setCoached(false);
+          /* The strip comes back with the circuit on its own: it is rendered
+             from `phase`, so re-placing a track shows it again without anything
+             here having to remember that it should. */
           if (p === 'racing') engineStart();
           else engineStop();
         },
@@ -256,7 +257,7 @@ export default function ARView() {
     if (!arKnown || arWorks || inspect) return;
     toast('This device does not support AR. Playing in 3D instead.');
     selectCar(car.id);
-    nav('/race', { replace: true });
+    startRace();
   }, [arKnown, arWorks, inspect, toast, selectCar, car.id, nav]);
 
   useEffect(() => {
@@ -806,7 +807,7 @@ export default function ARView() {
               type="button"
               onClick={() => {
                 selectCar(car.id);
-                nav('/race');
+                startRace();
               }}
             >
               <IconFlag size={16} />
@@ -856,8 +857,8 @@ export default function ARView() {
           thing on this screen you have to be able to press. In a WebXR session
           the headset composites only that overlay, so this is a camera-mode
           briefing; WebXR is not a path any phone in this campaign takes. */}
-      {phase === 'placed' && !coached && !outcome && !inspect && (
-        <RaceCoach mode="ar" onDone={() => setCoached(true)} />
+      {phase === 'placed' && !outcome && !inspect && (
+        <RaceCoach mode="ar" />
       )}
 
       {cheering && <Poppers />}

@@ -4169,86 +4169,51 @@ input, select, textarea { font: inherit; color: inherit; }
 
    Above .arov (200) because it covers that overlay's own HUD, and below .rwd
    (260) because a result must never arrive behind a briefing. */
-.coach {
-  position: fixed; inset: 0; z-index: 230;
-  pointer-events: auto;
-  overscroll-behavior: none; touch-action: none;
-  display: grid; place-items: center;
-  padding: calc(var(--safe-t) + 12px) var(--gut) calc(var(--safe-b) + 12px);
-  animation: coach-in 260ms ease-out both;
-}
-.coach__dim {
-  position: absolute; inset: 0;
-  /* Light enough that the car and the launcher stay visible behind. */
-  background: rgba(4, 7, 16, 0.35);
-}
-.coach__panel {
-  position: relative;
-  width: min(100%, 380px);
-  /* Never taller than the glass. On a small phone the three steps plus the
-     button do not fit, and a briefing you cannot reach the button of is a
-     briefing that traps you on the launcher screen. */
-  max-height: 100%;
-  overflow-y: auto; overscroll-behavior: contain;
-  display: grid; gap: 14px;
-  padding: 18px 16px 16px;
-  border-radius: var(--r-lg);
-  background: rgba(12, 17, 32, 0.55);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  backdrop-filter: blur(14px) saturate(1.2);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
-  color: #fff;
-}
-.coach__kick {
-  margin: 0;
-  font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.01em;
-  color: #fff;
-}
+/* ---------- how to race, as a strip ----------
+   It was a dialog with a dim behind it and a button to dismiss, shown before
+   every race and carrying three lines you had read the first time. The
+   gestures are worth keeping and the pause is not, so they sit over the
+   launcher and leave when the lever moves.
 
-.coach__steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
-.coach__step {
-  display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px;
-  align-items: center;
+   pointer-events: none is the whole point: the launcher is live behind this
+   from the first frame, so there is nothing to get past. */
+.coachbar {
+  position: absolute; left: 12px; right: 12px; top: calc(var(--safe-t) + 64px);
+  z-index: 14; pointer-events: none;
+  display: grid; gap: 8px; justify-items: center;
+  animation: coachIn 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
-.coach__glyph {
-  width: 56px; height: 56px; border-radius: var(--r-md);
-  display: grid; place-items: center;
-  background: rgba(255, 255, 255, 0.1);
+.coachbar__steps {
+  margin: 0; padding: 7px 10px; list-style: none;
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(10, 12, 18, 0.62); border-radius: 999px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
-.coach__txt { display: grid; gap: 2px; min-width: 0; }
-.coach__txt b {
-  display: flex; align-items: center; gap: 7px;
-  font-size: var(--f-lg); font-weight: 700;
+.coachbar__step { display: flex; align-items: center; gap: 6px; padding: 0 4px; }
+.coachbar__step + .coachbar__step { border-left: 1px solid rgba(255, 255, 255, 0.16); padding-left: 10px; }
+.coachbar__glyph { display: grid; place-items: center; }
+.coachbar__t {
+  color: #fff; font-size: var(--f-2xs); font-weight: 700;
+  letter-spacing: 0.01em; white-space: nowrap;
 }
-.coach__txt small {
-  font-size: var(--f-md); font-weight: 500;
-  color: rgba(255, 255, 255, 0.75);
+/* The one thing here that IS pressable, because it changes how you steer. */
+.coachbar__alt {
+  pointer-events: auto;
+  border: 0; background: rgba(10, 12, 18, 0.62); padding: 5px 12px; border-radius: 999px;
+  color: #fff; font-size: var(--f-2xs); font-weight: 700;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
-/* Numbered, and here the numbers are honest: this IS the order you do them
-   in, and the rows run down the panel in that order. The annotated version
-   could not say that — its launcher note sat at the BOTTOM of the frame, so
-   the steps read 2, 3, 1 down the screen. */
-.coach__n {
-  flex: 0 0 auto;
-  width: 19px; height: 19px; border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2); color: #fff;
-  font-style: normal; font-size: var(--f-2xs); font-weight: 800;
-  display: grid; place-items: center;
+@keyframes coachIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
 }
-.coach__alt {
-  justify-self: center;
-  border: 0; background: none; padding: 2px 10px;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: var(--f-xs); font-weight: 700;
-  text-decoration: underline; text-underline-offset: 3px;
-}
+@media (prefers-reduced-motion: reduce) { .coachbar { animation: none; } }
 
 /* ---- the gesture drawings ----
    Every instruction here is a MOVEMENT, so every drawing moves. A phone
    tipping back says "tilt up" in a way no sentence does, and the loop means
    the player sees it whenever they happen to look at that row. */
-.cg { width: 40px; height: 40px; display: block; }
+.cg { width: 22px; height: 22px; display: block; }
 .cg-deck { fill: rgba(255, 255, 255, 0.22); }
 .cg-red { fill: var(--hw-r); }
 .cg-ring { fill: none; stroke: var(--hw-o); stroke-width: 3; }

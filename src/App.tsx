@@ -11,7 +11,6 @@ import Home from './pages/Home';
 import HotWheels from './pages/HotWheels';
 const Product = lazy(() => import('./pages/Product'));
 import Campaign from './pages/Campaign';
-import Race from './pages/Race';
 const RacePlay = lazy(() => import('./pages/RacePlay'));
 const ARView = lazy(() => import('./pages/ARView'));
 import Rewards from './pages/Rewards';
@@ -78,7 +77,6 @@ export default function App() {
           <Route path="/hot-wheels" element={<HotWheels />} />
           <Route path="/hot-wheels/:id" element={<Product />} />
           <Route path="/campaign" element={<Campaign />} />
-          <Route path="/race" element={<Race />} />
           <Route path="/race/play" element={<RacePlay />} />
           <Route path="/ar" element={<ARView />} />
           <Route path="/ar/:id" element={<ARView />} />

@@ -3,6 +3,7 @@ import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
+import { useStartRace } from '../lib/useStartRace';
 import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
 import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
@@ -29,6 +30,7 @@ import { useToast } from '../App';
 
 export default function RacePlay() {
   const nav = useNavigate();
+  const startRace = useStartRace();
   const { toast } = useToast();
   const selectedCarId = useStore((s) => s.selectedCarId);
   const racesLeft = useStore((s) => s.racesLeft);
@@ -69,7 +71,6 @@ export default function RacePlay() {
   const [isBest, setIsBest] = useState(false);
   /* The briefing is up until it is dismissed, and the race does not begin
      until it is: everything it explains is on the screen behind it. */
-  const [coached, setCoached] = useState(false);
 
   // guard: no attempts left
   useEffect(() => {
@@ -336,7 +337,7 @@ export default function RacePlay() {
       {err && (
         <div className="loadbox loadbox--dark" style={{ position: 'absolute', inset: 0 }}>
           <p style={{ color: '#fff' }}>{err}</p>
-          <Button variant="outline" type="button" onClick={() => nav('/race')}>
+          <Button variant="outline" type="button" onClick={() => startRace()}>
             Back
           </Button>
         </div>
@@ -474,10 +475,10 @@ export default function RacePlay() {
           third of the frame, which is exactly where the launcher is. What it
           said is in the briefing now, and the chevrons running down over the
           lever carry the reminder without a word. */}
-      {loaded && !err && !coached && !outcome && (
+      {/* Until the lever moves, not until it is dismissed. */}
+      {loaded && !err && !launched && !outcome && (
         <RaceCoach
           mode="3d"
-          onDone={() => setCoached(true)}
           tilt={{
             offer: tiltState === 'needs-permission',
             onEnable: () => void enableTilt(),
