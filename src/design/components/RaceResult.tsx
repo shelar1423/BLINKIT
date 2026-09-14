@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { LEADERBOARD, rupees, type Product } from '../../data/catalog';
 import { REWARD_TIERS, type RewardTier } from '../../store/useStore';
 import type { RaceOutcome } from '../../lib/three/raceEngine';
 import { shareScore } from '../../lib/shareCard';
 import { Button } from '../elements';
-import { IconBasket, IconClock, IconClose, IconFlag, IconShare } from '../elements/Icons';
+import { IconClose, IconFlag, IconShare } from '../elements/Icons';
 
 /* ============================================================
    The screen you land on when the race ends.
@@ -65,6 +65,11 @@ export type RaceResultProps = {
   exitLabel: string;
   toast: (m: string) => void;
 };
+
+/** A single-colour icon from the scorecard design (public/rewards/scorecard),
+ *  used as a mask so it takes the colour of the text around it. */
+const figIcon = (name: 'crown' | 'racetrack' | 'stopwatch' | 'package') =>
+  ({ '--src': `url(/rewards/scorecard/${name}.svg)` }) as CSSProperties;
 
 /** The share hint shows once per device: the first result screen only. */
 const SHARE_TIP_KEY = 'rih-share-tip-seen';
@@ -174,35 +179,41 @@ export function RaceResult({
           its top edge, which is what makes it read as a scoreboard rather than
           as a headline followed by some numbers. */}
       <div className="rwd__plaque">
-        <span className="rwd__tab">Your score</span>
+        {/* The design file's scorecard: a yellow ribbon over a chamfered blue
+            panel, the points in heavy italic, a personal-best pill, and the
+            run's figures under a rule with the file's own icons. */}
+        <span className="rwd__tab">
+          <i className="rwd__chk" aria-hidden="true" />
+          Your points
+          <i className="rwd__chk" aria-hidden="true" />
+        </span>
         <p className="rwd__score t-num">{shown.toLocaleString('en-IN')}</p>
-        <p className="rwd__best">
-          Your highest score <b className="t-num">{Math.max(bestScore, outcome.score).toLocaleString('en-IN')}</b>
-        </p>
-        {/* Reserved rather than conditional, so the plaque is the same height
-            on a run that was not a best. */}
-        <p
-          className={'rwd__pb' + (isBest && outcome.score > 0 ? '' : ' is-ghost')}
-          aria-hidden={!(isBest && outcome.score > 0)}
-        >
-          New Personal Best
-        </p>
+        {isBest && outcome.score > 0 ? (
+          <p className="rwd__pb">
+            <i className="rwd__sic rwd__sic--crown" style={figIcon('crown')} aria-hidden="true" />
+            New personal best!
+          </p>
+        ) : (
+          <p className="rwd__best">
+            Your best <b className="t-num">{Math.max(bestScore, outcome.score).toLocaleString('en-IN')}</b>
+          </p>
+        )}
 
         <div className="rwd__stub">
           <div className="rwd__stat">
-            <IconBasket size={18} />
-            <b className="t-num">{outcome.groceries}</b>
-            <span>Groceries</span>
+            <i className="rwd__sic" style={figIcon('racetrack')} aria-hidden="true" />
+            <b className="t-num">{outcome.finished ? '2/2' : 'DNF'}</b>
+            <span>Laps</span>
           </div>
           <div className="rwd__stat">
-            <IconClock size={18} />
+            <i className="rwd__sic" style={figIcon('stopwatch')} aria-hidden="true" />
             <b className="t-num">{outcome.seconds}s</b>
             <span>Time</span>
           </div>
           <div className="rwd__stat">
-            <IconFlag size={18} />
-            <b className="t-num">{outcome.finished ? '2/2' : 'DNF'}</b>
-            <span>Laps</span>
+            <i className="rwd__sic" style={figIcon('package')} aria-hidden="true" />
+            <b className="t-num">{outcome.groceries}</b>
+            <span>Items</span>
           </div>
         </div>
       </div>

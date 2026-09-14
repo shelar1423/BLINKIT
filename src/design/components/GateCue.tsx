@@ -47,6 +47,13 @@ export function GateCue({ k, canLift }: { k: number; canLift: boolean }) {
       className={'gatecue' + (late ? ' is-late' : now ? ' is-now' : near ? ' is-near' : '')}
       aria-hidden="true"
     >
+      {/* Three chevrons climbing upward, above the rings: the instruction is a
+          movement — bring the phone up — so the cue shows which way. */}
+      {!late && (
+        <span className="gatecue__up">
+          <i /><i /><i />
+        </span>
+      )}
       <span className="gatecue__target" />
       <span className="gatecue__closing" style={{ transform: `scale(${scale.toFixed(3)})` }} />
       <span className="gatecue__k">

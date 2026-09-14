@@ -8,20 +8,17 @@ import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
 import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
-import { IconChevronLeft, IconChevronRight, IconClose, IconDrift, IconHorn, IconMute, IconRotate, IconSound } from '../design/elements/Icons';
+import { IconChevronLeft, IconChevronRight, IconClose } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
 import { RaceCoach } from '../design/components/RaceCoach';
 import { Poppers } from '../design/components/Poppers';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
-import { horn as playHorn, primeAudio } from '../lib/horn';
 import {
   engineStart,
   engineStop,
-  isMuted,
   loadRaceAudio,
   makePowerUpWatcher,
-  setMuted,
   stopRaceAudio,
 } from '../lib/raceAudio';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
@@ -296,37 +293,6 @@ export default function RacePlay() {
     };
   }, [nav, tiltDriving]);
 
-  /* ---------- handbrake + horn ---------- */
-  const [drift, setDrift] = useState(false);
-  /* Seeded from the stored preference so the button matches what you will
-     actually hear the moment the screen appears. */
-  const [mute, setMute] = useState(isMuted);
-  const slide = useCallback((on: boolean) => {
-    setDrift(on);
-    handle.current?.engine.setDrift(on);
-  }, []);
-  const hornNow = useCallback(() => {
-    primeAudio();
-    playHorn();
-  }, []);
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.repeat) return;
-      if (e.key === 'Shift') slide(true);
-      if (e.key === 'h') hornNow();
-    };
-    const up = (e: KeyboardEvent) => {
-      if (e.key === 'Shift') slide(false);
-    };
-    window.addEventListener('keydown', down);
-    window.addEventListener('keyup', up);
-    return () => {
-      window.removeEventListener('keydown', down);
-      window.removeEventListener('keyup', up);
-    };
-  }, [slide, hornNow]);
-
   const tier = outcome ? tierFor(outcome.score) : null;
   const mm = Math.floor(stats.timeLeft / 60);
   const ss = Math.floor(stats.timeLeft % 60);
@@ -409,65 +375,8 @@ export default function RacePlay() {
             </div>
           )}
 
-          {/* The tilt offer used to be a strip here, over the race. It is a
-             line in the briefing now — the one screen that exists to explain
-             the controls is the right place to offer a different one. */}
-          {/* the whole stage is a steering surface, so a tap on these buttons
-              must not also register as "steer hard right" */}
-          <div className="steer__acts" onPointerDown={(e) => e.stopPropagation()}>
-            {tiltDriving && (
-              <button
-                type="button"
-                className="arov__pad arov__pad--sm"
-                aria-label="Re-centre tilt steering"
-                title="Re-centre"
-                onClick={() => {
-                  tilt.current?.recalibrate();
-                  toast('Tilt re-centred');
-                }}
-              >
-                <IconRotate size={20} />
-              </button>
-            )}
-            <button type="button" className="arov__pad arov__pad--sm" aria-label="Horn" onClick={hornNow}>
-              <IconHorn size={22} />
-            </button>
-            <button
-              type="button"
-              className={'arov__pad arov__pad--sm' + (mute ? ' is-on' : '')}
-              aria-label={mute ? 'Unmute race audio' : 'Mute race audio'}
-              aria-pressed={mute}
-              onClick={() => {
-                primeAudio();
-                const next = !mute;
-                setMuted(next);
-                setMute(next);
-              }}
-            >
-              {mute ? <IconMute size={21} /> : <IconSound size={21} />}
-            </button>
-            {/* Also held back until the launch. It is the lowest button in the
-                column, which put it directly over the back of the launcher —
-                the one part of the frame the player is being asked to look at
-                and drag. */}
-            {launched && <button
-              type="button"
-              className={'arov__pad arov__pad--sm' + (drift ? ' is-on' : '')}
-              aria-label="Drift"
-              aria-pressed={drift}
-              onPointerDown={(e) => {
-                e.currentTarget.setPointerCapture(e.pointerId);
-                slide(true);
-              }}
-              onPointerUp={(e) => {
-                e.currentTarget.releasePointerCapture?.(e.pointerId);
-                slide(false);
-              }}
-              onPointerCancel={() => slide(false)}
-            >
-              <IconDrift size={22} />
-            </button>}
-          </div>
+          {/* Left and right are the only controls. The horn, mute, drift and
+              tilt re-centre buttons that stacked on the right are gone. */}
         </div>
       )}
 

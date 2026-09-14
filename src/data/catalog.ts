@@ -71,8 +71,7 @@ export const HERO_CARS: Product[] = [
     name: 'Hot Wheels Ballistik Die Cast Car',
     series: 'Unleashed 2 Series · Collector #04',
     unit: '1 pc · die-cast',
-    price: 249,
-    mrp: 349,
+    price: 179,
     rating: 4.9,
     ratings: 214,
     image: CAR('ballistik-diecast'),
@@ -85,8 +84,7 @@ export const HERO_CARS: Product[] = [
     name: 'Hot Wheels Battle Spec Die Cast Car',
     series: 'Unleashed 2 Series',
     unit: '1 pc · die-cast',
-    price: 249,
-    mrp: 299,
+    price: 179,
     rating: 4.8,
     ratings: 167,
     image: CAR('battlespec-diecast'),
@@ -98,8 +96,7 @@ export const HERO_CARS: Product[] = [
     name: 'Hot Wheels Jack Hammer Die Cast Car',
     series: 'Unleashed 2 Series',
     unit: '1 pc · die-cast',
-    price: 279,
-    mrp: 359,
+    price: 179,
     rating: 4.7,
     ratings: 98,
     image: CAR('jackhammer-diecast'),
@@ -112,8 +109,7 @@ export const HERO_CARS: Product[] = [
     name: 'Hot Wheels Hollowback Die Cast Car',
     series: 'Unleashed Series',
     unit: '1 pc · die-cast',
-    price: 299,
-    mrp: 399,
+    price: 179,
     rating: 4.9,
     ratings: 143,
     image: CAR('hollowback-diecast'),
@@ -127,8 +123,7 @@ export const HERO_CARS: Product[] = [
     name: 'Hot Wheels K.I.T.T. Die Cast Car',
     series: 'Unleashed Series · Licensed',
     unit: '1 pc · die-cast',
-    price: 349,
-    mrp: 449,
+    price: 179,
     rating: 5.0,
     ratings: 302,
     image: CAR('kitt-diecast'),
@@ -140,14 +135,17 @@ export const HERO_CARS: Product[] = [
 
 /** Ordinary catalogue products — flat photo, no 3D. Buyable without racing. */
 export const SHOP_CARS: Product[] = [
-  { id: 'muscle', name: 'Hot Wheels Muscle Bound Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, mrp: 229, rating: 4.7, ratings: 35, image: CAR('09-02-muscle-car-orange'), views: [CAR('09-02-muscle-car-orange'), CAR('muscle-c1'), CAR('muscle-c2')] },
-  { id: 'retro', name: 'Hot Wheels Retro Racer Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, mrp: 239, rating: 4.8, ratings: 43, image: CAR('09-05-retro-racing-car-yellow'), views: [CAR('09-05-retro-racing-car-yellow'), CAR('retro-c1'), CAR('retro-c2')] },
-  { id: 'supercar', name: 'Hot Wheels Night Shifter Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 199, mrp: 259, rating: 4.6, ratings: 61, image: CAR('09-07-supercar-purple'), views: [CAR('09-07-supercar-purple'), CAR('supercar-c1'), CAR('supercar-c2')] },
-  { id: 'pickup', name: 'Hot Wheels Performance Pickup Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 189, mrp: 249, rating: 4.6, ratings: 51, image: CAR('09-09-performance-pickup-blue'), views: [CAR('09-09-performance-pickup-blue'), CAR('pickup-c1'), CAR('pickup-c2')] },
-  { id: 'proto', name: 'Hot Wheels Race Prototype Die Cast Car', series: 'Track Stars', unit: '1 pc', price: 219, mrp: 259, rating: 4.5, ratings: 22, image: CAR('09-10-race-prototype-red'), views: [CAR('09-10-race-prototype-red'), CAR('proto-c1'), CAR('proto-c2')] },
-  { id: 'metallic', stock: 2, name: 'Hot Wheels Metallic Edition Die Cast Car', series: 'Collector Series', unit: '1 pc', price: 329, mrp: 399, rating: 4.9, ratings: 88, image: CAR('09-11-rare-metallic-edition'), views: [CAR('09-11-rare-metallic-edition'), CAR('metallic-c1'), CAR('metallic-c2')], badge: 'LIMITED' },
-  { id: 'premium', stock: 1, name: 'Hot Wheels Premium Limited Racer Die Cast Car', series: 'Premium Collection', unit: '1 pc', price: 449, mrp: 549, rating: 4.9, ratings: 46, image: CAR('09-12-premium-limited-racer'), views: [CAR('09-12-premium-limited-racer'), CAR('premium-c1'), CAR('premium-c2')], badge: 'LIMITED' },
-  { id: 'featured', stock: 5, name: 'Hot Wheels Featured Drop Die Cast Car', series: 'Drop #01', unit: '1 pc', price: 299, mrp: 349, rating: 4.8, ratings: 130, image: CAR('featured-drop-diecast'), views: [CAR('featured-drop-diecast'), CAR('featured-c1'), CAR('featured-c2')], badge: 'NEW DROP' },
+  /* Real prices, as sold in India. A single basic (mainline) Hot Wheels car is
+     ₹179 on Blinkit, at its MRP — so no invented discounts. The two premium-line
+     cars sit in Mattel India's premium (Real Riders) range of ₹399–599. */
+  { id: 'muscle', name: 'Hot Wheels Muscle Bound Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, rating: 4.7, ratings: 35, image: CAR('09-02-muscle-car-orange'), views: [CAR('09-02-muscle-car-orange'), CAR('muscle-c1'), CAR('muscle-c2')] },
+  { id: 'retro', name: 'Hot Wheels Retro Racer Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, rating: 4.8, ratings: 43, image: CAR('09-05-retro-racing-car-yellow'), views: [CAR('09-05-retro-racing-car-yellow'), CAR('retro-c1'), CAR('retro-c2')] },
+  { id: 'supercar', name: 'Hot Wheels Night Shifter Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, rating: 4.6, ratings: 61, image: CAR('09-07-supercar-purple'), views: [CAR('09-07-supercar-purple'), CAR('supercar-c1'), CAR('supercar-c2')] },
+  { id: 'pickup', name: 'Hot Wheels Performance Pickup Die Cast Car', series: 'Worldwide Basic Series', unit: '1 pc', price: 179, rating: 4.6, ratings: 51, image: CAR('09-09-performance-pickup-blue'), views: [CAR('09-09-performance-pickup-blue'), CAR('pickup-c1'), CAR('pickup-c2')] },
+  { id: 'proto', name: 'Hot Wheels Race Prototype Die Cast Car', series: 'Track Stars', unit: '1 pc', price: 179, rating: 4.5, ratings: 22, image: CAR('09-10-race-prototype-red'), views: [CAR('09-10-race-prototype-red'), CAR('proto-c1'), CAR('proto-c2')] },
+  { id: 'metallic', stock: 2, name: 'Hot Wheels Metallic Edition Die Cast Car', series: 'Collector Series', unit: '1 pc', price: 399, rating: 4.9, ratings: 88, image: CAR('09-11-rare-metallic-edition'), views: [CAR('09-11-rare-metallic-edition'), CAR('metallic-c1'), CAR('metallic-c2')], badge: 'LIMITED' },
+  { id: 'premium', stock: 1, name: 'Hot Wheels Premium Limited Racer Die Cast Car', series: 'Premium Collection', unit: '1 pc', price: 599, rating: 4.9, ratings: 46, image: CAR('09-12-premium-limited-racer'), views: [CAR('09-12-premium-limited-racer'), CAR('premium-c1'), CAR('premium-c2')], badge: 'LIMITED' },
+  { id: 'featured', stock: 5, name: 'Hot Wheels Featured Drop Die Cast Car', series: 'Drop #01', unit: '1 pc', price: 179, rating: 4.8, ratings: 130, image: CAR('featured-drop-diecast'), views: [CAR('featured-drop-diecast'), CAR('featured-c1'), CAR('featured-c2')], badge: 'NEW DROP' },
 ];
 
 /** Rare car gated behind an actual race score. */
@@ -168,7 +166,6 @@ export const REVEALED_CAR: Product = {
   name: 'Hot Wheels Phantom Reveal Die Cast Car',
   series: 'Drop #02 · unlocked',
   image: CAR('23-rare-car-reveal'),
-  mrp: 499,
   rating: 5.0,
   ratings: 12,
   badge: 'RARE',

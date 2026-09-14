@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { DELIVERY_ADDRESS } from '../../data/catalog';
@@ -72,6 +72,46 @@ const RAIL = [
  * — so the Hot Wheels takeover runs it in flame red. That is also what keeps
  * Hot Wheels legible: the campaign never has to compete with Blinkit's yellow.
  */
+/* What the search field suggests, in turn. Short enough to fit the field on a
+   narrow phone after "Search ". */
+const SEARCH_HINTS = ['“hot wheels”', 'for cars, tracks and more', '“monster trucks”', '“track sets”'];
+const HINT_MS = 3000;
+const HINT_OUT_MS = 280;
+
+/** The suggestion after "Search", swapped every few seconds — see .bsearch__rot. */
+function SearchHint() {
+  const [i, setI] = useState(0);
+  const [prev, setPrev] = useState<number | null>(null);
+  const shown = useRef(0);
+  useEffect(() => {
+    let out = 0;
+    const t = window.setInterval(() => {
+      const cur = shown.current;
+      shown.current = (cur + 1) % SEARCH_HINTS.length;
+      setPrev(cur);
+      setI(shown.current);
+      window.clearTimeout(out);
+      out = window.setTimeout(() => setPrev(null), HINT_OUT_MS);
+    }, HINT_MS);
+    return () => {
+      window.clearInterval(t);
+      window.clearTimeout(out);
+    };
+  }, []);
+  return (
+    <span className="bsearch__rot">
+      {prev !== null && (
+        <span key={'out' + prev} className="bsearch__q bsearch__q--out" aria-hidden="true">
+          {SEARCH_HINTS[prev]}
+        </span>
+      )}
+      <span key={'in' + i} className={'bsearch__q' + (prev !== null ? ' bsearch__q--in' : '')}>
+        {SEARCH_HINTS[i]}
+      </span>
+    </span>
+  );
+}
+
 export function AppHeader({ onSearch }: { onSearch?: () => void }) {
   /* Five tabs across the screen — All to Gifting, gutter to gutter — and the
      sixth starting just past the edge, on any phone width. The gap is what
@@ -95,11 +135,53 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  /* ---- on scroll ----
+     As Blinkit's home header behaves: the ETA and address rows scroll up and
+     fade out, the search field and the tab rail pin to the top, and once they
+     are pinned the bar turns light with dark type. The header is sticky with a
+     negative top equal to everything above the search row, so the rows above
+     leave by ordinary scrolling — nothing collapses, so the page never jumps.
+     Written straight to the element rather than through state: this runs on
+     every scroll frame. */
+  const hdr = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = hdr.current;
+    const row = el?.querySelector<HTMLElement>('.bsearchrow');
+    if (!el || !row) return;
+    let shift = 0;
+    let raf = 0;
+    const measure = () => {
+      shift = row.offsetTop - (parseFloat(getComputedStyle(el).paddingTop) || 0);
+      el.style.setProperty('--bhdr-shift', `${shift}px`);
+    };
+    const update = () => {
+      raf = 0;
+      const y = window.scrollY;
+      el.style.setProperty('--bhdr-fade', String(1 - Math.min(1, y / Math.max(1, shift))));
+      el.classList.toggle('is-stuck', y >= shift - 1);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    measure();
+    update();
+    const ro = new ResizeObserver(() => {
+      measure();
+      update();
+    });
+    ro.observe(el);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
   const nav = useNavigate();
   const points = useStore((s) => s.totalPoints);
 
   return (
-    <header className="bhdr bhdr--campaign">
+    <header className="bhdr bhdr--campaign" ref={hdr}>
       <div className="bhdr__top">
         <div className="bhdr__eta">
           <p className="bhdr__kicker">Blinkit in</p>
@@ -139,8 +221,8 @@ export function AppHeader({ onSearch }: { onSearch?: () => void }) {
       <div className="bsearchrow">
         <button className="bsearch" type="button" onClick={onSearch}>
           <IconSearch size={19} />
-          <span className="grow">
-            Search <span className="bsearch__q">&ldquo;hot wheels&rdquo;</span>
+          <span className="grow bsearch__t">
+            Search <SearchHint />
           </span>
         </button>
         <button className="bvoice" type="button" aria-label="Search by voice" onClick={onSearch}>

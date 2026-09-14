@@ -471,7 +471,7 @@ input, select, textarea { font: inherit; color: inherit; }
    land on --f-xl / --f-lg / --f-base exactly — so they are taken from the scale
    rather than hardcoded, and the card grows with everything else at 768px
    instead of staying still while the page around it steps up. */
-.pcard__price { font-size: calc(var(--f-xl) + 4px); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; }
+.pcard__price { font-size: calc(var(--f-xl) + 4px); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
 /* The locked car has no price yet, and saying so in price-sized bold made it
    read as a product whose data failed to load. Smaller, lighter, and carrying
    the campaign's red, it reads as a state instead of a value. */
@@ -1496,9 +1496,13 @@ input, select, textarea { font: inherit; color: inherit; }
 /* text-wrap: balance so a long name splits into two even lines instead of
    filling the first and dropping one word onto the second. */
 .cat__l {
-  font-size: calc(var(--f-base) - 2px); line-height: 1.28;
+  font-size: var(--f-base); line-height: 1.28;
   text-align: center; font-weight: 600; color: var(--ink);
   text-wrap: balance;
+  /* 4px into the gap each side: at this size "& Appliances" is 83px against an
+     80px column, and without the room the name broke onto three lines with
+     the ampersand on its own. */
+  margin-inline: -4px;
 }
 
 /* ---------- end-of-feed footer ----------
@@ -2549,29 +2553,37 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The one thing on the screen allowed to be loud. Clamped so a five-figure
    score still fits. */
 .rwd__score {
-  font-size: clamp(52px, min(18vw, 9vh), 88px);
-  font-weight: 900; line-height: 0.95; letter-spacing: -0.04em;
+  font-size: clamp(52px, min(18vw, 9vh), 84px);
+  font-weight: 900; font-style: italic; line-height: 0.95; letter-spacing: -0.02em;
   margin-top: 0;
+  color: #fff;
+  /* The lighter blue offset under the white figures, as on the card. */
+  text-shadow: 0 4px 0 #2F86F0, 0 8px 18px rgba(0, 20, 80, 0.45);
 }
-/* Hidden, not removed: it keeps its 8px and its own height so nothing below
-   it moves between a best and an ordinary run. */
-.rwd__pb.is-ghost { visibility: hidden; }
+/* The personal-best pill from the design: yellow, a crown, heavy italic caps,
+   and two short spark strokes flaring off each side. Shown only on a best;
+   on any other run the "Your best" line takes its place at about the same
+   height. */
 .rwd__pb {
-  /* Hugs its text. As a block inside the plaque it stretched the full width
-     and stopped reading as a badge.
-
-     It still holds its space when there is nothing to boast about, so the
-     plaque does not change height between a best and an ordinary run. But it
-     was holding a LOT: 8px of margin and a full-size pill left a visible hole
-     between the best-score line and the stats on every run that was not a
-     best. Tighter on both counts, so the reserved space reads as a gap rather
-     than as something missing. */
-  display: inline-block;
-  margin-top: 2px;
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.02em;
-  color: var(--rwd-code-ink); background: var(--rwd-code);
-  border-radius: 999px; padding: 3px 10px;
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px;
+  padding: 5px 12px 6px;
+  border-radius: 9px;
+  background: var(--hw-y); color: var(--hw-navy);
+  font-size: var(--f-sm); font-weight: 900; font-style: italic;
+  letter-spacing: 0.01em; text-transform: uppercase;
 }
+.rwd__pb::before,
+.rwd__pb::after {
+  content: ''; position: absolute; top: 50%;
+  width: 14px; height: 14px;
+  background:
+    linear-gradient(var(--hw-y), var(--hw-y)) 0 2px / 100% 2.5px no-repeat,
+    linear-gradient(var(--hw-y), var(--hw-y)) 3px 10px / 80% 2.5px no-repeat;
+}
+.rwd__pb::before { right: calc(100% + 8px); transform: translateY(-50%) rotate(-18deg); }
+.rwd__pb::after { left: calc(100% + 8px); transform: translateY(-50%) rotate(18deg) scaleX(-1); }
 
 /* ---- the prize, as a Hot Wheels ticket ----
    The notches are cut out with a mask, so the blue ground shows through them
@@ -2681,20 +2693,23 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .rwd__stub {
   position: relative;
-  margin: 8px -12px 0;
-  padding: 10px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  margin: 14px 4px 0;
+  padding: 12px 0 16px;
+  border-top: 1px solid rgba(95, 174, 255, 0.5);
   display: grid; grid-template-columns: repeat(3, 1fr); align-items: center;
   color: #fff;
 }
 .rwd__stat {
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
   line-height: 1.15;
 }
-.rwd__stat + .rwd__stat { border-left: 1px solid rgba(255, 255, 255, 0.22); }
-.rwd__stat svg { margin-bottom: 3px; opacity: 0.9; }
-.rwd__stat b { font-size: var(--f-lg); font-weight: 800; }
-.rwd__stat span { font-size: var(--f-2xs); font-weight: 600; opacity: 0.8; }
+.rwd__stat + .rwd__stat { border-left: 1px solid rgba(95, 174, 255, 0.4); }
+.rwd__stat .rwd__sic { margin-bottom: 4px; color: #9DD2FF; }
+.rwd__stat b { font-size: var(--f-xl); font-weight: 900; font-style: italic; }
+.rwd__stat span {
+  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.04em;
+  text-transform: uppercase; color: #9DD2FF;
+}
 
 /* ---- one loud action ---- */
 /* ---- the car you raced, on the shelf ----
@@ -2736,7 +2751,10 @@ input, select, textarea { font: inherit; color: inherit; }
   display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
   /* The same seat the app's bottom bar uses: .bnav-wrap ends on
      10px + safe-b, so these sit on the line every other screen's buttons do. */
-  margin-top: 18px; padding: 12px 0 calc(10px + var(--safe-b));
+  /* auto, so on a screen taller than the content the pair sits on the bottom
+     edge instead of straight under the board with an empty band below it.
+     The board's own bottom margin keeps the gap when the content is long. */
+  margin-top: auto; margin-bottom: 0; padding: 12px 0 calc(10px + var(--safe-b));
   /* A ground of its own, and a solid one. Sticky over a white leaderboard
      card, the buttons had the card scrolling through the gap between them and
      read as part of it. A fade left the card ghosting through its top; this is
@@ -2746,8 +2764,12 @@ input, select, textarea { font: inherit; color: inherit; }
 /* To the screen's edges and past its bottom. -50vw each side clears any width
    the content column can take; the overhang below covers an overscroll bounce,
    where the bar would otherwise lift and show the gradient under it. */
+/* Its bottom stops at the screen's own bottom padding. It used to hang 240px
+   below to cover an overscroll bounce, but inside a scrolling screen an
+   overhang is scrollable content: it added a 240px empty band under the
+   buttons. overscroll-behavior on .rwd already stops the bounce. */
 .rwd__foot--pair::before {
-  content: ''; position: absolute; inset: 0 -50vw -240px; z-index: -1;
+  content: ''; position: absolute; inset: 0 -50vw calc(-14px - var(--safe-b)); z-index: -1;
   background: var(--rwd-bg-bot);
 }
 .rwd__foot--pair .btn { width: 100%; min-width: 0; }
@@ -2756,27 +2778,75 @@ input, select, textarea { font: inherit; color: inherit; }
    Score, best and the run's figures were three things stacked down the
    screen. One card with a tab on its top edge reads as a scoreboard; the same
    numbers loose on a gradient read as a headline with notes under it. */
+/* Drawn as the design file's scorecard: a deep blue panel with chamfered
+   corners, a light blue edge that turns yellow at each chamfer, and a faint
+   chequer fading in from both sides. The panel is two clipped layers — the
+   edge colour, then the fill inset over it — because a clip-path also cuts a
+   real border away. */
 .rwd__plaque {
-  position: relative;
-  width: 100%; max-width: 300px; margin-top: 22px;
-  padding: 20px 12px 0;
-  border: 1.5px solid rgba(255, 255, 255, 0.34);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.07);
+  --chamfer: 16px;
+  --edge: #5FAEFF;
+  --hw-y: #FFD21F;
+  --hw-navy: #0F2F7A;
+  position: relative; isolation: isolate;
+  width: 100%; max-width: 320px; margin-top: 30px;
+  padding: 30px 12px 0;
+  color: #fff;
 }
+.rwd__plaque::before,
+.rwd__plaque::after {
+  content: ''; position: absolute; z-index: -1;
+  clip-path: polygon(
+    var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer),
+    100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%,
+    var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer));
+}
+.rwd__plaque::before {
+  inset: 0;
+  background:
+    linear-gradient(135deg, var(--hw-y) 0 7%, transparent 7% 93%, var(--hw-y) 93%),
+    linear-gradient(45deg, var(--hw-y) 0 7%, transparent 7% 93%, var(--hw-y) 93%),
+    var(--edge);
+}
+.rwd__plaque::after {
+  inset: 2px;
+  background:
+    linear-gradient(90deg, rgba(10, 71, 168, 0.35) 0, #0A47A8 22%, #0A47A8 78%, rgba(10, 71, 168, 0.35) 100%),
+    repeating-conic-gradient(rgba(255, 255, 255, 0.06) 0 25%, transparent 0 50%) 0 0 / 30px 30px,
+    linear-gradient(180deg, #0B4DB3 0%, #093F98 100%);
+}
+/* The ribbon over the top edge: yellow, heavy italic, a chequer at each end,
+   with its folded ends dropping behind the panel. */
 .rwd__tab {
-  position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%);
-  padding: 5px 18px; border-radius: 999px;
-  background: var(--yellow); color: var(--ink);
-  font-size: var(--f-2xs); font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase;
+  position: absolute; left: 50%; top: 0; transform: translate(-50%, -40%);
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 6px 22px 7px;
+  background: var(--hw-y); color: var(--hw-navy);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 10px 100%);
+  font-size: var(--f-md); font-weight: 900; font-style: italic;
+  letter-spacing: 0.02em; text-transform: uppercase;
   white-space: nowrap;
 }
-/* The run against the best ever. One line, two weights. */
+/* The run against the best ever, when this run was not the best. */
 .rwd__best {
-  margin-top: 4px;
-  font-size: var(--f-md); font-weight: 500; color: rgba(255, 255, 255, 0.78);
+  margin-top: 6px;
+  font-size: var(--f-md); font-weight: 500; color: #A9D5FF;
 }
 .rwd__best b { font-weight: 800; color: #fff; }
+/* A chequered flag block, as on the ribbon's ends. */
+.rwd__chk {
+  display: block; width: 22px; height: 12px;
+  background: repeating-conic-gradient(var(--hw-navy) 0 25%, transparent 0 50%) 0 0 / 8px 6px;
+  transform: skewX(-18deg);
+}
+/* The design's single-colour icons, masked so they take currentColor. */
+.rwd__sic {
+  display: block; width: 22px; height: 22px;
+  background: currentColor;
+  -webkit-mask: var(--src) center / contain no-repeat;
+  mask: var(--src) center / contain no-repeat;
+}
+.rwd__sic--crown { width: 18px; height: 16px; }
 
 /* ---------- who is ahead ----------
    The only thing that answers the question a score raises. It was a screen you
@@ -2789,7 +2859,10 @@ input, select, textarea { font: inherit; color: inherit; }
      entirely above the card with its base resting on the top edge, so the
      card's own space belongs to its content rather than to the artwork sitting
      on it. */
-  margin-top: 82px;
+  /* 90 leaves 12px between "Check your reward" and the top of the podium
+     artwork as drawn (the image has ~7px of empty space above the trophy),
+     which rides above this card's edge. */
+  margin-top: 90px; margin-bottom: 18px;
   padding: 22px 14px 20px; border-radius: 18px;
   background: #fff; color: var(--ink);
 }
@@ -3348,6 +3421,30 @@ input, select, textarea { font: inherit; color: inherit; }
   color: #fff; text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
 }
 .gatecue.is-now .gatecue__k { color: #FFD400; font-size: var(--f-sm); letter-spacing: 0.1em; }
+/* Chevrons stacked above the rings, lighting bottom to top in a loop so they
+   read as "up". Same corners as the jump cue's arrows, a size larger. */
+.gatecue__up {
+  grid-area: 1 / 1;
+  align-self: start;
+  margin-top: -58px;
+  display: grid; justify-items: center; gap: 2px;
+}
+.gatecue__up i {
+  display: block; width: 18px; height: 18px;
+  border-top: 4px solid #FFD400;
+  border-right: 4px solid #FFD400;
+  border-radius: 2px;
+  transform: rotate(-45deg);
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
+  animation: jumpArrow 0.9s ease-in-out infinite;
+}
+.gatecue__up i:nth-child(1) { animation-delay: 0.3s; }
+.gatecue__up i:nth-child(2) { animation-delay: 0.15s; }
+.gatecue__up i:nth-child(3) { animation-delay: 0s; }
+.gatecue.is-now .gatecue__up i { animation-duration: 0.45s; }
+@media (prefers-reduced-motion: reduce) {
+  .gatecue__up i { animation: none; opacity: 0.9; }
+}
 .gatecue.is-late .gatecue__k { color: #FF7A7A; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3373,18 +3470,8 @@ input, select, textarea { font: inherit; color: inherit; }
   .arboost__verdict { animation: none; }
 }
 
-.arov__drive {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  gap: clamp(8px, 3vw, 12px); pointer-events: none;
-}
-/* Six controls and a GO button have to fit one row inside the viewport. At
-   fixed sizes they summed to 380px on a 375px screen, so GO was clipped off
-   the right edge. Sized against the viewport instead, they come to ~346 at
-   375px and grow back to the original figures on anything wider. */
-.arov__steer, .arov__drivec {
-  display: flex; align-items: flex-end; gap: clamp(6px, 2vw, 8px);
-  pointer-events: auto;
-}
+/* Round translucent pads — the 3D race's horn, mute and drift buttons. The AR
+   race has no on-screen controls any more; tilt steers it. */
 .arov__pad {
   width: clamp(48px, 14.5vw, 62px); height: clamp(48px, 14.5vw, 62px); flex: none;
   display: grid; place-items: center;
@@ -3407,18 +3494,6 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .arov__pad--gas:active { background: #266f2a; }
 
-/* handbrake + horn cluster, sat above the steering hint in the 3D race */
-.steer__acts {
-  /* Clear of the steering pad below it, and derived from it rather than
-     guessed: .steer__pads sits at safe-b + 44px and its pads are 68px tall, so
-     the top of the right-hand one is at safe-b + 112px. At the old safe-b +
-     58px this column started 54px BELOW that line while sharing the same
-     right: 12px — so once the drift button appeared at launch, it materialised
-     inside the right steering pad. 12px of air on top of the pad's own height
-     is what keeps them apart. */
-  position: absolute; right: 12px; bottom: calc(var(--safe-b) + 44px + 68px + 12px);
-  display: flex; flex-direction: column; gap: 10px; pointer-events: auto;
-}
 
 /* ---------- tilt steering prompt ---------- */
 /* A strip along the top, clear of the car and the steering pads. It used to be
@@ -3456,9 +3531,6 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-xs); font-weight: 700; padding: 2px 6px; border-radius: var(--r-xs);
 }
 
-/* Tilt has the wheel in AR — the steering pads would only compete with it. */
-.arov__drive.is-tilt .arov__pad--sm:first-child,
-.arov__drive.is-tilt .arov__pad--sm:nth-child(2) { display: none; }
 
 /* proximity warning — only on an actual hit, never as a permanent readout */
 .arov__chip--warn {

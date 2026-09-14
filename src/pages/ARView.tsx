@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Button } from '../design/elements';
-import type React from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
 import { HERO_CARS } from '../data/catalog';
@@ -17,10 +16,8 @@ import {
 } from '../lib/three/arSession';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import {
-  IconAR, IconBrake, IconChevronLeft, IconChevronRight, IconClose,
-  IconDrift, IconFlag, IconHorn, IconInfo, IconMinus, IconPlus, IconRotate,
+  IconAR, IconClose, IconFlag, IconInfo, IconMinus, IconPlus, IconRotate,
 } from '../design/elements/Icons';
-import { horn as playHorn, primeAudio } from '../lib/horn';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
@@ -283,15 +280,13 @@ export default function ARView() {
   }, [phase]);
 
   /* ---------- driving while racing in AR ---------- */
-  const [drift, setDrift] = useState(false);
   /* Tilt steering, same module the 3D race uses. In AR it matters more: you are
      already holding the phone up at the scene, so reaching for on-screen pads
      means taking a hand off the thing you are aiming. Motion permission is
      already granted by this point — the camera session requests it during
      launch — so there is no second prompt here. */
   const tilt = useRef<TiltSteer | null>(null);
-  const [tiltState, setTiltState] = useState<TiltState>(() => initialTiltState());
-  const tiltDriving = tiltState === 'active';
+  const [, setTiltState] = useState<TiltState>(() => initialTiltState());
 
   useEffect(() => {
     if (phase !== 'racing') return;
@@ -310,51 +305,24 @@ export default function ARView() {
     };
   }, [phase]);
 
+  /* The car drives itself. With the on-screen pads gone nothing ever calls
+     setThrottle, so the engine stays in the self-driving mode the 3D race
+     uses — the only input is the tilt, plus the lift or swipe for jumps. */
+
   const press = useCallback((dir: number) => handle.current?.setSteer(dir), []);
   const release = useCallback(() => handle.current?.setSteer(0), []);
-  const gas = useCallback((on: boolean) => handle.current?.setThrottle(on ? 1 : 0), []);
-  const brake = useCallback((on: boolean) => handle.current?.setBrake(on ? 1 : 0), []);
-  const slide = useCallback((on: boolean) => {
-    setDrift(on);
-    handle.current?.setDrift(on);
-  }, []);
-  const hornNow = useCallback(() => {
-    primeAudio();
-    playHorn();
-  }, []);
 
-  const hold = useCallback(
-    (set: (on: boolean) => void) => ({
-      onPointerDown: (e: React.PointerEvent<HTMLButtonElement>) => {
-        e.currentTarget.setPointerCapture(e.pointerId);
-        set(true);
-      },
-      onPointerUp: (e: React.PointerEvent<HTMLButtonElement>) => {
-        e.currentTarget.releasePointerCapture?.(e.pointerId);
-        set(false);
-      },
-      onPointerCancel: () => set(false),
-    }),
-    [],
-  );
-
+  /* Keyboard stays for testing on a laptop: arrows steer, up or space jumps. */
   useEffect(() => {
     if (phase !== 'racing') return;
     const key = (e: KeyboardEvent) => {
       if (e.repeat) return;
       if (e.key === 'ArrowLeft' || e.key === 'a') press(-1);
       if (e.key === 'ArrowRight' || e.key === 'd') press(1);
-      if (e.key === 'ArrowUp' || e.key === 'w') gas(true);
-      if (e.key === 'ArrowDown' || e.key === 's') brake(true);
-      if (e.key === ' ') slide(true);
-      if (e.key === 'h') hornNow();
       if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') handle.current?.jumpNow();
     };
     const keyUp = (e: KeyboardEvent) => {
       if (['ArrowLeft', 'ArrowRight', 'a', 'd'].includes(e.key)) release();
-      if (e.key === 'ArrowUp' || e.key === 'w') gas(false);
-      if (e.key === 'ArrowDown' || e.key === 's') brake(false);
-      if (e.key === ' ') slide(false);
     };
     window.addEventListener('keydown', key);
     window.addEventListener('keyup', keyUp);
@@ -362,7 +330,7 @@ export default function ARView() {
       window.removeEventListener('keydown', key);
       window.removeEventListener('keyup', keyUp);
     };
-  }, [phase, press, release, gas, brake, slide, hornNow]);
+  }, [phase, press, release]);
 
   /* How far the launcher is drawn back, 0..1 — reported by the scene.
 
@@ -672,64 +640,8 @@ export default function ARView() {
               </p>
             )}
 
-            {/* In-race driving controls */}
-            {phase === 'racing' && (
-              <div className={'arov__drive' + (tiltDriving ? ' is-tilt' : '')}>
-                <div className="arov__steer">
-                  <button
-                    type="button"
-                    className="arov__pad"
-                    aria-label="Steer left"
-                    {...hold((on) => (on ? press(-1) : release()))}
-                  >
-                    <IconChevronLeft size={26} />
-                  </button>
-                  <button
-                    type="button"
-                    className="arov__pad"
-                    aria-label="Steer right"
-                    {...hold((on) => (on ? press(1) : release()))}
-                  >
-                    <IconChevronRight size={26} />
-                  </button>
-                </div>
-                <div className="arov__drivec">
-                  <button
-                    type="button"
-                    className="arov__pad arov__pad--sm"
-                    aria-label="Horn"
-                    onClick={hornNow}
-                  >
-                    <IconHorn size={22} />
-                  </button>
-                  <button
-                    type="button"
-                    className={'arov__pad arov__pad--sm' + (drift ? ' is-on' : '')}
-                    aria-label="Drift"
-                    aria-pressed={drift}
-                    {...hold(slide)}
-                  >
-                    <IconDrift size={22} />
-                  </button>
-                  <button
-                    type="button"
-                    className="arov__pad arov__pad--sm"
-                    aria-label="Brake"
-                    {...hold(brake)}
-                  >
-                    <IconBrake size={22} />
-                  </button>
-                  <button
-                    type="button"
-                    className="arov__pad arov__pad--gas"
-                    aria-label="Accelerate"
-                    {...hold(gas)}
-                  >
-                    GO
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* No on-screen driving controls: the car drives itself and the
+                phone's tilt steers it, so the camera view stays clear. */}
 
             {/* Action buttons */}
             <div className="arov__acts">
@@ -841,7 +753,7 @@ export default function ARView() {
                   <li><b>Inspect</b>: Once a car is placed, drag to turn it and pinch to zoom in on it.</li>
                   <li><b>Adjust</b>: Pinch to resize the circuit, drag to reposition.</li>
                   <li><b>Score</b>: Groceries on the track add points, debris takes them away.</li>
-                  <li><b>Drive</b>: Hold GO and tilt the phone to steer. No thumbs on the screen.</li>
+                  <li><b>Drive</b>: The car drives itself. Tilt the phone to steer. No thumbs on the screen.</li>
                 </>
               )}
             </ul>
