@@ -2708,21 +2708,22 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative;
   width: 100%; max-width: 320px;
   /* Room above for the part of the podium that sits outside the card. */
-  margin-top: 60px;
-  padding: 46px 14px 8px; border-radius: 18px;
+  margin-top: 70px;
+  padding: 50px 14px 8px; border-radius: 18px;
   background: #fff; color: var(--ink);
 }
+/* The subtitle is gone, so the heading carries the gap to the rows itself
+   rather than inheriting one from a line that is no longer there. */
 .rwd__toph {
-  margin: 0; text-align: center;
+  margin: 0 0 8px; text-align: center;
   font-size: var(--f-lg); font-weight: 800; letter-spacing: -0.2px;
 }
-.rwd__tops { margin: 1px 0 10px; text-align: center; font-size: var(--f-xs); color: var(--mut); }
 /* The campaign's own podium, where MushakGo puts a trophy, breaking the card's
    top edge by half its height so it reads as sitting ON the card rather than
    inside it. */
 .rwd__topim {
   position: absolute; left: 50%; top: 0; transform: translate(-50%, -62%);
-  width: 94px; height: 94px; object-fit: contain;
+  width: 112px; height: 112px; object-fit: contain;
 }
 /* The rows are .lrow, the leaderboard's own. Two things change: the gutter,
    because they were written to run edge to edge on a page and these sit in a

@@ -241,7 +241,6 @@ export function RaceResult({
       <div className="rwd__top">
         <img className="rwd__topim" src="/icons/leaderboard.webp" alt="" />
         <p className="rwd__toph">Top racers</p>
-        <p className="rwd__tops">This week in your city</p>
         <div className="rwd__board">
           {LEADERBOARD.slice(0, 3).map((r, i) => (
             <div className="lrow" key={r.name}>
