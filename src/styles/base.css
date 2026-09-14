@@ -5452,14 +5452,20 @@ input, select, textarea { font: inherit; color: inherit; }
    floor, so it gets the room to SHOW what that looks like — the campaign's own
    AR renders, with the interface drawn over them and animated. The photograph
    carries the promise, the overlay carries the instruction. */
+/* Two rows: everything that is read, centred in the space it has, and then the
+   button on the line every other bottom button in the app sits on. It was one
+   centred stack, which floated Continue in the middle of the screen. */
 .arin {
   position: fixed; inset: 0; z-index: 240;
-  display: grid; align-content: center; justify-items: center;
-  gap: 18px;
-  padding: calc(var(--safe-t) + 20px) var(--gut) calc(var(--safe-b) + 20px);
+  display: grid; grid-template-rows: 1fr auto; justify-items: center;
+  padding: calc(var(--safe-t) + 20px) var(--gut) calc(10px + var(--safe-b));
   text-align: center; color: #fff;
   background: linear-gradient(180deg, var(--rwd-bg-top) 0%, #0062B8 48%, var(--rwd-bg-bot) 100%);
   animation: coach-in 260ms ease-out both;
+}
+.arin__body {
+  display: grid; align-content: center; justify-items: center;
+  gap: 18px;
 }
 .arin__kick {
   margin: 0; font-size: var(--f-sm); font-weight: 800;
@@ -5543,7 +5549,18 @@ input, select, textarea { font: inherit; color: inherit; }
   filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
 }
 
-.arin__say { display: grid; gap: 6px; max-width: 300px; animation: arin-swap 320ms ease-out both; }
+/* The card's own width, so a line cannot run wider than the picture it is
+   about, and two lines of room held whatever the beat says — otherwise the
+   dots and the button step up and down as the copy changes length. */
+.arin__say {
+  display: grid; gap: 6px; align-content: start;
+  width: min(78vw, 268px);
+  animation: arin-swap 320ms ease-out both;
+}
+/* Two lines on every beat, measured at this width. The copy is written to
+   land on two rather than padded out to them, and the reserve keeps the dots
+   and the button still if one ever comes up short. */
+.arin__say small { min-height: 2.8em; }
 .arin__say b { font-size: var(--f-2xl); font-weight: 800; letter-spacing: -0.01em; }
 .arin__say small { font-size: var(--f-md); font-weight: 500; color: rgba(255, 255, 255, 0.78); line-height: 1.4; }
 @keyframes arin-swap {
@@ -5557,7 +5574,7 @@ input, select, textarea { font: inherit; color: inherit; }
   transition: background 200ms ease, width 200ms ease;
 }
 .arin__dots i.is-on { width: 20px; border-radius: 4px; background: var(--yellow); }
-.arin .btn { max-width: 300px; }
+.arin .btn { width: min(78vw, 268px); }
 
 /* The timelines are Motion's, in ARIntro.tsx. What is left here is the resting
    state each of them animates FROM, so a device that has asked for less motion

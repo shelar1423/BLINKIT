@@ -622,7 +622,7 @@ function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasText
       paint();
       onReady();
     };
-    img.src = '/brand/hot-wheels.svg';
+    img.src = '/brand/hot-wheels-logo.webp';
     paint();
   } else {
     paint();
@@ -704,7 +704,13 @@ function coBrandTexture(): THREE.CanvasTexture {
     ctx.font = '700 54px system-ui, -apple-system, sans-serif';
     ctx.fillText('\u00D7', W * 0.5, midY);
 
-    // Hot Wheels, right of it — the real mark when it arrives
+    /* Hot Wheels, right of it — the real mark when it arrives.
+
+       The raster, not the SVG. The shipped SVG draws into a canvas on some
+       engines and not others, and when it does not there is no error to catch:
+       the fallback below paints a lettered stand-in that looks enough like the
+       mark to survive a glance and is not the mark. A brand's own logo is not
+       a thing to approximate on the one panel of the set that names them. */
     if (logo) {
       const lw = W * 0.38;
       const lh = lw * (logo.height / logo.width);
@@ -730,7 +736,7 @@ function coBrandTexture(): THREE.CanvasTexture {
     paint(img);
     tex.needsUpdate = true;
   };
-  img.src = '/brand/hot-wheels.svg';
+  img.src = '/brand/hot-wheels-logo.webp';
   return tex;
 }
 
@@ -788,7 +794,7 @@ function leverMarkTexture(): THREE.CanvasTexture {
     paint(img);
     tex.needsUpdate = true;
   };
-  img.src = '/brand/hot-wheels.svg';
+  img.src = '/brand/hot-wheels-logo.webp';
   return tex;
 }
 

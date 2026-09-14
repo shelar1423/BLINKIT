@@ -456,7 +456,7 @@ function create3DStartBanner() {
      when it arrives, so a slow decode never leaves the sprite blank. */
   const logo = new Image();
   logo.onload = () => paint(logo);
-  logo.src = '/brand/hot-wheels.svg';
+  logo.src = '/brand/hot-wheels-logo.webp';
 
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
   const sprite = new THREE.Sprite(mat);

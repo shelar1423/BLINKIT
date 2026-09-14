@@ -106,7 +106,7 @@ const BEATS = [
     src: '/howto/surface.webp',
     alt: 'A clear polished floor in a hallway',
     title: 'Find a surface',
-    body: 'Point the phone at a clear patch of floor or a table',
+    body: 'Point the phone at a clear patch of floor, or a table',
     /* The viewfinder reading the room, and the sweep that says it is reading. */
     overlay: (
       <>
@@ -119,7 +119,7 @@ const BEATS = [
     src: '/howto/surface.webp',
     alt: 'The Hot Wheels circuit standing on that floor',
     title: 'Drop the track',
-    body: 'One press puts the whole circuit in the room with you',
+    body: 'One press puts the whole circuit down in your room',
     /* The same floor, and what lands on it. The ring goes down first, then the
        circuit arrives into it. */
     overlay: (
@@ -213,8 +213,10 @@ function timeline(beat: number, root: HTMLElement): AnimationPlaybackControls | 
       /* it arrives already moving: in from the near edge, settling into the
          frame, rather than fading up from nothing on the spot */
       [car, { opacity: [0, 1], x: [-26, 0], scale: [1.08, 1] }, { duration: 1.1, at: '-0.85', ...LAND }],
-      /* and carries on, out of the far side, so the loop reads as a lap */
-      [car, { opacity: [1, 1, 0], x: [0, 30], scale: [1, 0.94] }, { duration: 1.3, at: '+0.9', ease: 'easeIn' }],
+      /* and goes where it stands. It used to slide off to the right, which
+         read as the track itself being dragged out of the room rather than the
+         beat ending. */
+      [car, { opacity: [1, 0] }, { duration: 0.6, at: '+1.1', ease: 'easeIn' }],
     ],
     { repeat: Infinity, repeatDelay: 0.2 },
   );
@@ -254,6 +256,10 @@ export function ARIntro({ onDone }: { onDone: () => void }) {
 
   return (
     <div className="arin" role="dialog" aria-label="How AR works">
+      {/* Everything that is read sits in here and is centred in the space
+          above the button; the button itself keeps the seat every other bottom
+          button in the app has. */}
+      <div className="arin__body">
       <p className="arin__kick">Race in your space</p>
 
       {/* Keyed on the beat so each card is mounted fresh and its timeline
@@ -272,6 +278,8 @@ export function ARIntro({ onDone }: { onDone: () => void }) {
         {BEATS.map((s, i) => (
           <i key={s.title} className={i === beat ? 'is-on' : undefined} />
         ))}
+      </div>
+
       </div>
 
       <Button variant="hwBlue" size="lg" block type="button" onClick={onDone}>
