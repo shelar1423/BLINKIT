@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
    A second after the car leaves the line — long enough that the launch has
    landed, soon enough that the first corner has not — an animated guide plays
-   for a few seconds and then leaves on its own:
+   one full cycle and then leaves on its own:
 
      tilt   a phone rocking left and right, the arrow on that side lighting as
             it leans, captioned "Tilt left to go left" / "Tilt right to go right"
@@ -27,7 +27,12 @@ import { useEffect, useState } from 'react';
    ============================================================ */
 
 const DELAY_MS = 1000;
-const SHOW_MS = 4200;
+/* Exactly one turn of the loop: left half, right half, gone. It ran for two
+   cycles, which is two seconds of a race spent repeating something already
+   understood — and the race is standing still for all of it. The CSS loops in
+   base.css are 2s to match; changing one without the other cuts the guide off
+   mid-gesture. */
+const SHOW_MS = 2000;
 const FADE_MS = 300;
 
 export function SteerCue({

@@ -1321,8 +1321,8 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-md); font-weight: 800; color: #fff; white-space: nowrap;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
 }
-.stcue__say--l { animation: stcueHalfL 2.4s ease-in-out infinite; }
-.stcue__say--r { animation: stcueHalfR 2.4s ease-in-out infinite; }
+.stcue__say--l { animation: stcueHalfL 2s ease-in-out infinite; }
+.stcue__say--r { animation: stcueHalfR 2s ease-in-out infinite; }
 @keyframes stcueHalfL { 0%, 46% { opacity: 1; } 54%, 100% { opacity: 0; } }
 @keyframes stcueHalfR { 0%, 46% { opacity: 0; } 54%, 100% { opacity: 1; } }
 
@@ -1336,7 +1336,7 @@ input, select, textarea { font: inherit; color: inherit; }
   width: 36px; height: 62px; border-radius: 9px;
   border: 3px solid #fff; background: rgba(255, 255, 255, 0.14);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), inset 0 -6px 0 -3px rgba(255, 255, 255, 0.55);
-  animation: stcueRock 2.4s ease-in-out infinite;
+  animation: stcueRock 2s ease-in-out infinite;
 }
 @keyframes stcueRock {
   0%, 6% { transform: rotate(0deg); }
@@ -1350,8 +1350,8 @@ input, select, textarea { font: inherit; color: inherit; }
   border-top: 4px solid #FFD400; border-right: 4px solid #FFD400; border-radius: 2px;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
 }
-.stcue__arrow--l { transform: rotate(-135deg); animation: stcueHalfL 2.4s ease-in-out infinite; }
-.stcue__arrow--r { transform: rotate(45deg); animation: stcueHalfR 2.4s ease-in-out infinite; }
+.stcue__arrow--l { transform: rotate(-135deg); animation: stcueHalfL 2s ease-in-out infinite; }
+.stcue__arrow--r { transform: rotate(45deg); animation: stcueHalfR 2s ease-in-out infinite; }
 
 /* press: a ring pulsing over each steering pad (.steer__pads) in turn */
 .stcue__ring {
@@ -1361,8 +1361,8 @@ input, select, textarea { font: inherit; color: inherit; }
   transform: translate(-50%, 50%);
   box-shadow: 0 0 18px rgba(255, 212, 0, 0.55);
 }
-.stcue__ring--l { left: calc(12px + 34px); animation: stcuePulseL 2.4s ease-out infinite; }
-.stcue__ring--r { left: calc(100% - 12px - 34px); animation: stcuePulseR 2.4s ease-out infinite; }
+.stcue__ring--l { left: calc(12px + 34px); animation: stcuePulseL 2s ease-out infinite; }
+.stcue__ring--r { left: calc(100% - 12px - 34px); animation: stcuePulseR 2s ease-out infinite; }
 @keyframes stcuePulseL {
   0% { opacity: 1; transform: translate(-50%, 50%) scale(0.9); }
   40% { opacity: 0; transform: translate(-50%, 50%) scale(1.45); }
