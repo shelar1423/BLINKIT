@@ -5496,12 +5496,12 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .arin__reticle {
   fill: rgba(255, 255, 255, 0.08); stroke: #fff; stroke-width: 1.6;
-  vector-effect: non-scaling-stroke; transform-origin: 50% 86%;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 78%;
   filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.45));
 }
 .arin__ripple {
   fill: none; stroke: var(--hw-o); stroke-width: 1.6;
-  vector-effect: non-scaling-stroke; transform-origin: 50% 86%; opacity: 0;
+  vector-effect: non-scaling-stroke; transform-origin: 50% 78%; opacity: 0;
 }
 /* The circuit itself, rendered out of the race engine on a transparent
    ground, standing on the floor of the photograph behind it. The shadow is
@@ -5516,7 +5516,10 @@ input, select, textarea { font: inherit; color: inherit; }
      resolves to the intrinsic size and `right` is simply dropped — which is
      why the circuit was coming out full-bleed and hanging 35px off the right
      edge of the card instead of the 74% the offsets asked for. */
-  position: absolute; left: 13%; width: 74%; bottom: 8%;
+  /* Further back and larger: at 74% and sitting on the bottom edge it read
+     as a toy held up to the lens rather than a circuit standing across the
+     room. 7% of clear air each side, so nothing is cropped. */
+  position: absolute; left: 7%; width: 86%; bottom: 22%;
   opacity: 0;
   filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
 }

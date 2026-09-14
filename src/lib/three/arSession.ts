@@ -1325,6 +1325,17 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     gyro = false;
   }
 
+  /* Both, or neither.
+     Without the gyro this session is a camera feed with a track pinned to the
+     middle of it: the reticle cannot be aimed, the circuit cannot be put
+     anywhere, and the placement screen is a dead end that looks like it
+     works. Refusing here sends the player back to the gate screen with a
+     button that can ask again, which is the only way back — iOS will not
+     re-prompt for motion once it has been answered in a session. */
+  if (!gyro) {
+    throw new Error('Motion access is needed to aim the camera. Allow Motion & Orientation and try again.');
+  }
+
   /* Rear camera: the point of placing the circuit is that it sits on your real
      surface, which only the rear camera can show. */
   const stream = await navigator.mediaDevices.getUserMedia({

@@ -861,6 +861,18 @@ export default function ARView() {
           onDone={() => {
             markARIntroSeen();
             setIntro(false);
+            /* Opened from THIS press, not from an effect watching `intro`.
+
+               iOS only hands out motion access from inside the user gesture
+               that asked for it, and an effect firing after a state change is
+               a new task with no gesture behind it — so the motion prompt was
+               silently denied while the camera prompt (which Safari is looser
+               about) still appeared. That is the whole "it asks for the camera
+               and then the track will not move" bug: the session opened with
+               no gyro at all. Calling launch here keeps the chain intact,
+               because nothing is awaited before the permission is asked for. */
+            triedAuto.current = true;
+            void launch();
           }}
         />
       )}

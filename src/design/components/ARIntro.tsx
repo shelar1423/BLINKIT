@@ -125,8 +125,8 @@ const BEATS = [
     overlay: (
       <>
         <svg className="arin__ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          <ellipse data-p="ripple" className="arin__ripple" cx="50" cy="86" rx="33" ry="7" />
-          <ellipse data-p="reticle" className="arin__reticle" cx="50" cy="86" rx="33" ry="7" />
+          <ellipse data-p="ripple" className="arin__ripple" cx="50" cy="78" rx="38" ry="8" />
+          <ellipse data-p="reticle" className="arin__reticle" cx="50" cy="78" rx="38" ry="8" />
         </svg>
         <img data-p="circuit" className="arin__circuit" src="/howto/circuit.webp" alt="" />
       </>
