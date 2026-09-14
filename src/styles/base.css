@@ -2707,9 +2707,12 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__top {
   position: relative;
   width: 100%; max-width: 320px;
-  /* Room above for the part of the podium that sits outside the card. */
-  margin-top: 70px;
-  padding: 50px 14px 8px; border-radius: 18px;
+  /* 24px of air over the heading, which is what sets the card's top padding.
+     The podium is not part of that measurement: it rides almost entirely above
+     the card with its base resting on the top edge, so the card's own space
+     belongs to its content rather than to the artwork sitting on it. */
+  margin-top: 82px;
+  padding: 24px 14px 8px; border-radius: 18px;
   background: #fff; color: var(--ink);
 }
 /* The subtitle is gone, so the heading carries the gap to the rows itself
@@ -2722,7 +2725,7 @@ input, select, textarea { font: inherit; color: inherit; }
    top edge by half its height so it reads as sitting ON the card rather than
    inside it. */
 .rwd__topim {
-  position: absolute; left: 50%; top: 0; transform: translate(-50%, -62%);
+  position: absolute; left: 50%; top: 0; transform: translate(-50%, -86%);
   width: 112px; height: 112px; object-fit: contain;
 }
 /* The rows are .lrow, the leaderboard's own. Two things change: the gutter,
