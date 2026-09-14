@@ -19,8 +19,10 @@ import { useEffect, useRef, useState } from 'react';
    else it counts something.
    ============================================================ */
 
-/** How long each figure holds. Four steps: 3, 2, 1, GO. */
+/** How long each figure holds. Three of them: 3, 2, 1. */
 const STEP_MS = 620;
+/** And GO's own beat, which the car leaves during rather than after. */
+const GO_MS = 900;
 
 export function useLaunchCount({
   /** 0..1 of the sled's travel. The count starts once it is really moving. */
@@ -50,6 +52,11 @@ export function useLaunchCount({
   arm.current = onArm;
 
   const counting = step !== null;
+  /* GO fires the launcher, and firing it makes `launched` true, which is also
+     the signal to stop counting. Without this the two raced each other and
+     GO was cleared in the same tick it appeared — the count read 3, 2, 1 and
+     then nothing, with the car leaving on a blank screen. */
+  const fired = useRef(false);
 
   /* The scene is told the moment the count starts, not the moment it ends: a
      player who lets the lever go on "3" has to be held back, and the scene is
@@ -66,20 +73,30 @@ export function useLaunchCount({
   }, [pull, launched, counting]);
 
   useEffect(() => {
+    if (step === null) {
+      fired.current = false;
+      return;
+    }
+    if (step === 0) {
+      /* The car goes on GO, and GO stays up while it does: the launch is the
+         thing GO is announcing, so hiding it on the same frame hides the
+         announcement. Once per count, whatever re-runs this. */
+      if (!fired.current) {
+        fired.current = true;
+        go.current(Math.max(0.35, live.current));
+      }
+      const id = window.setTimeout(() => setStep(null), GO_MS);
+      return () => window.clearTimeout(id);
+    }
+    /* Launched some other way mid-count — the keyboard, a tap — so there is
+       nothing left to count down to. */
     if (launched) {
       setStep(null);
       return;
     }
-    if (step === null) return;
-    if (step === 0) {
-      /* GO holds on screen for its own beat, and the launcher goes with it. */
-      go.current(Math.max(0.35, live.current));
-      const id = window.setTimeout(() => setStep(null), STEP_MS);
-      return () => window.clearTimeout(id);
-    }
     const id = window.setTimeout(() => setStep((n) => (n === null ? null : n - 1)), STEP_MS);
     return () => window.clearTimeout(id);
-  }, [step, launched]);
+  }, [step, launched, counting]);
 
   return step;
 }
