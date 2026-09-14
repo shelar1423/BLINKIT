@@ -76,7 +76,7 @@ export default function RacePlay() {
   useEffect(() => {
     if (racesLeft <= 0) {
       toast('No races left today');
-      nav('/invite', { replace: true });
+      nav('/', { replace: true });
     }
   }, [racesLeft, nav, toast]);
 
@@ -278,7 +278,7 @@ export default function RacePlay() {
       /* Space was a free boost, which is a cheat rather than a control. It is
          the jump now, alongside the arrow and W, per the brief's fallbacks. */
       if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w') handle.current?.jumpNow();
-      if (e.key === 'Escape') nav('/campaign');
+      if (e.key === 'Escape') nav('/');
       if (tiltDriving) return;
       if (e.key === 'ArrowLeft' || e.key === 'a') handle.current?.engine.setSteer(-1);
       if (e.key === 'ArrowRight' || e.key === 'd') handle.current?.engine.setSteer(1);
@@ -361,7 +361,7 @@ export default function RacePlay() {
               <b className="t-num">{mm}:{String(ss).padStart(2, '0')}</b>
               <span>TIME LEFT</span>
             </div>
-            <button className="hud__x" type="button" aria-label="Leave race" onClick={() => nav('/campaign')}>
+            <button className="hud__x" type="button" aria-label="Leave race" onClick={() => nav('/')}>
               <IconClose size={17} />
             </button>
           </div>
@@ -501,10 +501,10 @@ export default function RacePlay() {
           toast={toast}
           onRaceAgain={() => window.location.reload()}
           onShop={() => nav('/hot-wheels')}
-          onRewards={() => nav('/rewards')}
+          onRewards={() => nav('?campaign=1')}
           onViewCar={() => nav(`/hot-wheels/${car.id}`)}
-          onExit={() => nav('/campaign')}
-          exitLabel="Campaign"
+          onExit={() => nav('/')}
+          exitLabel="Done"
         />
       )}
     </div>

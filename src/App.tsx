@@ -1,7 +1,8 @@
 import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 const Diag = lazy(() => import('./pages/Diag'));
 import { BottomNav } from './design/components/BottomNav';
+import { CampaignSheet } from './design/components/CampaignSheet';
 import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DriftLoader } from './design/components/DriftLoader';
@@ -10,12 +11,8 @@ import { primeAudio } from './lib/horn';
 import Home from './pages/Home';
 import HotWheels from './pages/HotWheels';
 const Product = lazy(() => import('./pages/Product'));
-import Campaign from './pages/Campaign';
 const RacePlay = lazy(() => import('./pages/RacePlay'));
 const ARView = lazy(() => import('./pages/ARView'));
-import Rewards from './pages/Rewards';
-import Leaderboard from './pages/Leaderboard';
-import Invite from './pages/Invite';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import OrderSuccess from './pages/OrderSuccess';
@@ -34,6 +31,7 @@ const NO_NAV = [/^\/hot-wheels\/[^/]+$/, /^\/cart$/, /^\/checkout$/, /^\/ar(\/|$
 export default function App() {
   const [msg, setMsg] = useState<string | null>(null);
   const loc = useLocation();
+  const nav = useNavigate();
 
   const toast = useCallback((m: string) => {
     setMsg(m);
@@ -76,13 +74,9 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/hot-wheels" element={<HotWheels />} />
           <Route path="/hot-wheels/:id" element={<Product />} />
-          <Route path="/campaign" element={<Campaign />} />
           <Route path="/race/play" element={<RacePlay />} />
           <Route path="/ar" element={<ARView />} />
           <Route path="/ar/:id" element={<ARView />} />
-          <Route path="/rewards" element={<Rewards />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route path="/invite" element={<Invite />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-success" element={<OrderSuccess />} />
@@ -93,6 +87,13 @@ export default function App() {
         </Suspense>
         </ErrorBoundary>
         {!hideNav && <BottomNav />}
+        {/* The campaign, everywhere, owned by nobody.
+            On a query param rather than in a page's state so any screen can
+            offer it, the back gesture closes it, and it can be linked to. */}
+        <CampaignSheet
+          open={new URLSearchParams(loc.search).has('campaign')}
+          onClose={() => nav(-1)}
+        />
       </div>
       {msg && (
         <div className="toast" role="status" aria-live="polite">

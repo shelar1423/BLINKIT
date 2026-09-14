@@ -257,7 +257,10 @@ export default function ARView() {
     if (!arKnown || arWorks || inspect) return;
     toast('This device does not support AR. Playing in 3D instead.');
     selectCar(car.id);
-    startRace();
+    /* force3d, and it has to be. startRace picks AR whenever the device
+       claims to support it, so bailing out of AR without saying so sends the
+       player straight back into AR and round again. */
+    startRace({ force3d: true });
   }, [arKnown, arWorks, inspect, toast, selectCar, car.id, nav]);
 
   useEffect(() => {
@@ -807,7 +810,7 @@ export default function ARView() {
               type="button"
               onClick={() => {
                 selectCar(car.id);
-                startRace();
+                startRace({ force3d: true });
               }}
             >
               <IconFlag size={16} />
@@ -879,7 +882,7 @@ export default function ARView() {
             void launch();
           }}
           onShop={() => nav('/hot-wheels')}
-          onRewards={() => nav('/rewards')}
+          onRewards={() => nav('?campaign=1')}
           onViewCar={() => nav(`/hot-wheels/${car.id}`)}
           onExit={() => nav('/hot-wheels')}
           exitLabel="Shop cars"
