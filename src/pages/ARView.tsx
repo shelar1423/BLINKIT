@@ -23,7 +23,6 @@ import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
 import { SteerCue } from '../design/components/SteerCue';
 import { RaceCoach } from '../design/components/RaceCoach';
-import { PlaceCoach } from '../design/components/PlaceCoach';
 import { clearARSurfaces } from '../lib/three/arSurfaces';
 import { Poppers } from '../design/components/Poppers';
 import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
@@ -70,9 +69,6 @@ export default function ARView() {
   const autoStart = search.get('go') === '1';
   const triedAuto = useRef(false);
   const [coached, setCoached] = useState(false);
-  /* The placement briefing, once per session: it is the part of AR nobody has
-     done before, and it is over the moment the track is down. */
-  const [placeCoached, setPlaceCoached] = useState(false);
   const [phase, setPhase] = useState<ARPhase | null>(null);
   const [busy, setBusy] = useState(false);
   /* Announces each 500-point boundary once; a ref so it outlives the renders
@@ -349,10 +345,8 @@ export default function ARView() {
      overlay and a tap on the dim reaches the canvas underneath, which starts
      the race while the player is still reading how to drive it. */
   useEffect(() => {
-    const briefing =
-      (phase === 'ready' && !placeCoached) || (phase === 'placed' && !coached);
-    handle.current?.setHeld(briefing && !inspect);
-  }, [phase, coached, placeCoached, inspect]);
+    handle.current?.setHeld(phase === 'placed' && !coached && !inspect);
+  }, [phase, coached, inspect]);
 
   /* The car drives itself. With the on-screen pads gone nothing ever calls
      setThrottle, so the engine stays in the self-driving mode the 3D race
@@ -853,12 +847,6 @@ export default function ARView() {
           thing on this screen you have to be able to press. In a WebXR session
           the headset composites only that overlay, so this is a camera-mode
           briefing; WebXR is not a path any phone in this campaign takes. */}
-      {/* Two pages of the same briefing: how to get the track down, then how
-          to drive it. The first is over before the second appears. */}
-      {phase === 'ready' && !placeCoached && !outcome && !inspect && (
-        <PlaceCoach onDone={() => setPlaceCoached(true)} />
-      )}
-
       {phase === 'placed' && !coached && !outcome && !inspect && (
         <RaceCoach mode="ar" onDone={() => setCoached(true)} />
       )}

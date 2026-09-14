@@ -4708,59 +4708,13 @@ input, select, textarea { font: inherit; color: inherit; }
   62%, 74% { transform: rotate(17deg); }
 }
 
-/* ---- the placement drawings ----
-   The same idea one screen earlier: aiming, dropping and shifting are all
-   movements, so all three are drawn moving. */
-.cg-floor {
-  fill: none; stroke: rgba(255, 255, 255, 0.34); stroke-width: 2; stroke-linecap: round;
-}
-.cg-press { fill: #fff; opacity: 0.9; }
-/* The phone tips down about its top corner, holds where it is pointing, and
-   comes back — the aim itself, rather than a phone waving about. */
-.cg-aim { transform-origin: 12px 9px; animation: cg-aim 2.4s ease-in-out infinite; }
-@keyframes cg-aim {
-  0%, 10%   { transform: rotate(0deg); }
-  42%, 70%  { transform: rotate(26deg); }
-  95%, 100% { transform: rotate(0deg); }
-}
-/* The landing ring arrives with the aim and fades when it leaves, so the ring
-   reads as the CONSEQUENCE of pointing rather than as scenery. */
-.cg-land { animation: cg-land 2.4s ease-in-out infinite; transform-origin: 31px 39px; }
-@keyframes cg-land {
-  0%, 26%   { opacity: 0; transform: scale(0.5); }
-  46%, 70%  { opacity: 1; transform: scale(1); }
-  92%, 100% { opacity: 0; transform: scale(0.5); }
-}
-/* The press, and then the circuit dropping into the ring a beat behind it. */
-.cg-press { animation: cg-press 2.4s ease-in-out infinite; transform-origin: 24px 14px; }
-@keyframes cg-press {
-  0%, 14%   { transform: translateY(-4px); opacity: 0.35; }
-  26%, 34%  { transform: translateY(2px); opacity: 1; }
-  60%, 100% { transform: translateY(-4px); opacity: 0.35; }
-}
-.cg-fall { animation: cg-fall 2.4s cubic-bezier(0.3, 1.4, 0.5, 1) infinite; }
-@keyframes cg-fall {
-  0%, 30%   { transform: translateY(-13px); opacity: 0; }
-  46%, 88%  { transform: translateY(0); opacity: 1; }
-  100%      { transform: translateY(-13px); opacity: 0; }
-}
-/* Side to side, pausing at each end so both directions register — the same
-   beat the steering drawing uses, because it is the same kind of gesture. */
-.cg-shift { animation: cg-shift 2.6s ease-in-out infinite; }
-@keyframes cg-shift {
-  0%, 100% { transform: translateX(0); }
-  22%, 34% { transform: translateX(-5px); }
-  62%, 74% { transform: translateX(5px); }
-}
-
 @keyframes coach-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .coach { animation-duration: 1ms; }
-  .cg-lever, .cg-tip, .cg-swipe, .cg-rock,
-  .cg-aim, .cg-land, .cg-press, .cg-fall, .cg-shift { animation: none; }
+  .cg-lever, .cg-tip, .cg-swipe, .cg-rock { animation: none; }
 }
 
 /* The exit button borrows the 3D race's HUD, and .arov is pointer-events:none

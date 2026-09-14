@@ -1092,7 +1092,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   setPhase('ready');
 
   session.addEventListener('select', () => {
-    if (phase === 'ready' && !held) place();
+    if (phase === 'ready') place();
     /* Never in inspect mode: a second select there is someone looking closer
        at their car, not asking to race it. */
     else if (phase === 'placed' && !inspect && !held) startRace();
