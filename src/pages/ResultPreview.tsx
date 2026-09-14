@@ -18,7 +18,8 @@ import { useToast } from '../App';
      2500 — ₹25 Blinkit Cash
      5000 — ₹50 Blinkit Cash
      8000 — District Pass
-   `?car=` picks the car by id, `?best=` sets the highest score to sit against.
+   `?car=` picks the car by id, `?best=` sets the highest score to sit against,
+  `?races=0` shows the screen with the day's races spent.
    Everything else is plausible filler, and nothing here is written to the
    store: opening this cannot touch a real score or a real reward.
    ============================================================ */
@@ -31,11 +32,14 @@ export default function ResultPreview() {
   const score = Number(params.get('score') ?? 3000);
   const best = Number(params.get('best') ?? Math.round(score * 1.2));
   const car = SHOP_CARS.find((c) => c.id === params.get('car')) ?? SHOP_CARS[0];
+  /* `?races=0` is the spent state, where Race again becomes the invite. */
+  const races = Number(params.get('races') ?? 2);
 
   const set = (s: number) => {
     const next: Record<string, string> = { score: String(s) };
     if (params.get('car')) next.car = params.get('car')!;
     if (params.get('best')) next.best = params.get('best')!;
+    if (params.get('races')) next.races = params.get('races')!;
     setParams(next);
   };
 
@@ -48,9 +52,10 @@ export default function ResultPreview() {
         isBest={score >= best}
         bestScore={best}
         totalPoints={score}
-        racesLeft={2}
+        racesLeft={races}
         inviteUrl={`${window.location.origin}/?ref=PREVIEW`}
         onRaceAgain={() => toast('Preview only')}
+        onInvited={() => toast('Preview only')}
         onShop={() => nav('/hot-wheels')}
         onRewards={() => nav('?rewards=1')}
         onExit={() => nav('/')}

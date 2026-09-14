@@ -34,6 +34,7 @@ export default function LastResult() {
   const bestScore = useStore((s) => s.bestScore);
   const totalPoints = useStore((s) => s.totalPoints);
   const racesLeft = useStore((s) => s.racesLeft);
+  const grantExtraRace = useStore((s) => s.grantExtraRace);
   const selectedCarId = useStore((s) => s.selectedCarId);
 
   /* Straight past it for anyone who has never finished a race. The gate in
@@ -64,6 +65,7 @@ export default function LastResult() {
       racesLeft={racesLeft}
       inviteUrl={`${window.location.origin}/?ref=RACE`}
       onRaceAgain={() => startRace({ skipStanding: true })}
+      onInvited={grantExtraRace}
       onShop={() => nav('/hot-wheels')}
       onRewards={() => nav('?rewards=1')}
       onExit={() => nav('/')}

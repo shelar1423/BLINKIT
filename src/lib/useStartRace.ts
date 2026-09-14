@@ -41,6 +41,7 @@ export function useStartRace() {
   const nav = useNavigate();
   const selectedCarId = useStore((s) => s.selectedCarId);
   const hasRaced = useStore((s) => !!s.lastResult);
+  const racesLeft = useStore((s) => s.racesLeft);
   /* null while the check is still running, and treated as yes: a phone that
      can do AR should not be sent to the 3D race because the answer arrived a
      frame late. */
@@ -50,6 +51,16 @@ export function useStartRace() {
 
   return useCallback(
     (opts?: { force3d?: boolean; skipStanding?: boolean }) => {
+      /* Out of races for the day. Every entry point runs through here, so this
+         is the one place the three-a-day rule has to hold — and the standing
+         screen is where it should land them: it is the screen that says how
+         many are left and carries the invite that earns another. */
+      if (racesLeft <= 0 && hasRaced) {
+        standingShown = true;
+        nav('/race/result');
+        return;
+      }
+
       /* The return visit's first Race. `skipStanding` is what the standing
          screen's own Race again button passes, so the one screen that is
          already showing it does not offer it again. */
@@ -66,6 +77,6 @@ export function useStartRace() {
       if (arOk && !opts?.force3d) nav(`/ar/${car.id}?go=1`);
       else nav('/race/play');
     },
-    [arOk, car.glb, car.id, hasRaced, nav],
+    [arOk, car.glb, car.id, hasRaced, racesLeft, nav],
   );
 }

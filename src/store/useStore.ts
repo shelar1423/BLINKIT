@@ -72,9 +72,13 @@ export type Order = {
 /**
  * Testing switch: races never run out, but the counter still shows the real
  * daily allowance so every screen reads exactly as it would in production.
- * Set to false to enforce the real three-a-day rule.
+ *
+ * OFF. Three a day is the rule the campaign is built on — it is what makes an
+ * invite worth sending, and with this on the result screen could never reach
+ * the state where it asks for one. Set it back to true only to demo the race
+ * itself back to back.
  */
-const UNLIMITED_RACES = true;
+const UNLIMITED_RACES = false;
 
 const MAX_RACES = 3;
 

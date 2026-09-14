@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { LEADERBOARD, rupees, type Product } from '../../data/catalog';
-import { REWARD_TIERS, type RewardTier } from '../../store/useStore';
+import { MAX_RACE_ATTEMPTS, REWARD_TIERS, type RewardTier } from '../../store/useStore';
 import type { RaceOutcome } from '../../lib/three/raceEngine';
 import { shareScore } from '../../lib/shareCard';
 import { Button } from '../elements';
@@ -58,6 +58,8 @@ export type RaceResultProps = {
   totalPoints: number;
   racesLeft: number;
   onRaceAgain: () => void;
+  /** A successful share is a challenge, and a challenge earns a race. */
+  onInvited?: () => void;
   /** Where the reward gets spent. */
   onShop: () => void;
   onRewards: () => void;
@@ -77,7 +79,7 @@ const SHARE_TIP_MS = 4000;
 
 export function RaceResult({
   outcome, car, tier, isBest, bestScore, totalPoints, racesLeft, inviteUrl,
-  onRaceAgain, onShop, onRewards, onExit, exitLabel, toast,
+  onRaceAgain, onInvited, onShop, onRewards, onExit, exitLabel, toast,
 }: RaceResultProps) {
   /* The number counts up. A score that is simply present reads as a fact; one
      that arrives reads as something you earned. */
@@ -141,8 +143,12 @@ export function RaceResult({
       inviteUrl,
     );
     setSharing(false);
-    if (how === 'copied') toast('Score copied to share');
-    if (how === 'link') toast('Shared');
+    if (how === 'copied' || how === 'link') {
+      /* The tip on this screen has always promised a race for a challenge, and
+         nothing ever paid it. It does now, from either way of sharing. */
+      onInvited?.();
+      toast(how === 'copied' ? 'Link copied. +1 race' : 'Challenge sent. +1 race');
+    }
   };
 
   return (
@@ -200,10 +206,14 @@ export function RaceResult({
         )}
 
         <div className="rwd__stub">
+          {/* Races left, not laps. Every race is two laps, so that figure was
+              the same 2/2 on every result anyone will ever see — a stat with
+              no news in it. What the player actually wants to know here is
+              whether they can go again. */}
           <div className="rwd__stat">
             <i className="rwd__sic" style={figIcon('racetrack')} aria-hidden="true" />
-            <b className="t-num">{outcome.finished ? '2/2' : 'DNF'}</b>
-            <span>Laps</span>
+            <b className="t-num">{racesLeft}/{MAX_RACE_ATTEMPTS}</b>
+            <span>Races left</span>
           </div>
           <div className="rwd__stat">
             <i className="rwd__sic" style={figIcon('stopwatch')} aria-hidden="true" />
@@ -279,10 +289,30 @@ export function RaceResult({
           and Done were a row of exits under the one button that mattered, and
           the reward link now lives on the ticket where the reward is. */}
       <div className="rwd__foot rwd__foot--pair">
-        <Button variant="yellow" size="lg" type="button" disabled={racesLeft <= 0} onClick={onRaceAgain}>
-          <IconFlag size={16} />
-          {racesLeft > 0 ? 'Race again' : 'No races'}
-        </Button>
+        {/* Out of races, the yellow goes out and the button changes job
+            rather than going dead. "No races" was a disabled button naming the
+            problem and offering nothing; there IS a way to get another one,
+            and this is where the player is standing when they need it. */}
+        {racesLeft > 0 ? (
+          <Button variant="yellow" size="lg" type="button" onClick={onRaceAgain}>
+            <IconFlag size={16} />
+            Race again
+          </Button>
+        ) : (
+          <Button
+            variant="ghostDark"
+            size="lg"
+            type="button"
+            disabled={sharing}
+            onClick={() => {
+              setTip(false);
+              void share();
+            }}
+          >
+            <IconShare size={15} />
+            Invite a friend
+          </Button>
+        )}
         <Button variant="primary" size="lg" type="button" onClick={onShop}>
           Shop now
         </Button>

@@ -49,6 +49,7 @@ export default function ARView() {
   const selectCar = useStore((s) => s.selectCar);
   const finishRace = useStore((s) => s.finishRace);
   const racesLeft = useStore((s) => s.racesLeft);
+  const grantExtraRace = useStore((s) => s.grantExtraRace);
 
   const car = HERO_CARS.find((c) => c.id === (id ?? selectedCarId)) ?? HERO_CARS[0];
 
@@ -869,6 +870,7 @@ export default function ARView() {
             setOutcome(null);
             void launch();
           }}
+          onInvited={grantExtraRace}
           onShop={() => nav('/hot-wheels')}
           onRewards={() => nav('?rewards=1')}
           onExit={() => nav('/hot-wheels')}

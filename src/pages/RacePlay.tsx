@@ -33,6 +33,7 @@ export default function RacePlay() {
   const selectedCarId = useStore((s) => s.selectedCarId);
   const racesLeft = useStore((s) => s.racesLeft);
   const finishRace = useStore((s) => s.finishRace);
+  const grantExtraRace = useStore((s) => s.grantExtraRace);
   const car = HERO_CARS.find((c) => c.id === selectedCarId) ?? HERO_CARS[0];
 
   const host = useRef<HTMLDivElement>(null);
@@ -430,9 +431,10 @@ export default function RacePlay() {
           bestScore={useStore.getState().bestScore}
           totalPoints={useStore.getState().totalPoints}
           inviteUrl={`${window.location.origin}/?ref=${useStore.getState().referralCode}`}
-          racesLeft={useStore.getState().racesLeft}
+          racesLeft={racesLeft}
           toast={toast}
           onRaceAgain={() => window.location.reload()}
+          onInvited={grantExtraRace}
           onShop={() => nav('/hot-wheels')}
           onRewards={() => nav('?rewards=1')}
           onExit={() => nav('/')}
