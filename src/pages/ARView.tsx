@@ -16,7 +16,7 @@ import {
 } from '../lib/three/arSession';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import {
-  IconAR, IconClose, IconFlag, IconInfo, IconMinus, IconPlus, IconRotate,
+  IconAR, IconChevronLeft, IconClose, IconFlag, IconInfo, IconMinus, IconPlus, IconRotate,
 } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
@@ -528,6 +528,16 @@ export default function ARView() {
             {raceHud ? (
               <>
                 <div className="hud__top">
+                  {/* The delivery screen's round chevron, in the corner it
+                      puts it in. */}
+                  <button
+                    className="hud__back"
+                    type="button"
+                    onClick={() => handle.current?.end()}
+                    aria-label="Exit AR"
+                  >
+                    <IconChevronLeft size={22} />
+                  </button>
                   <div className="hud__c">
                     <b className="t-num">{(stats?.score ?? 0).toLocaleString('en-IN')}</b>
                     <span>POINTS</span>
@@ -536,17 +546,6 @@ export default function ARView() {
                     <b className="t-num">{arMM}:{arSS}</b>
                     <span>TIME LEFT</span>
                   </div>
-                  <button
-                    className="hud__x"
-                    type="button"
-                    onClick={() => handle.current?.end()}
-                    aria-label="Exit AR"
-                  >
-                    <IconClose size={17} />
-                  </button>
-                </div>
-                <div className="hud__bar" aria-hidden="true">
-                  <i style={{ width: `${(stats?.progress ?? 0) * 100}%` }} />
                 </div>
               </>
             ) : (

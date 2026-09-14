@@ -8,7 +8,7 @@ import { createRaceScene, type RaceHandle } from '../lib/three/raceScene';
 import { RACE_SECONDS, type BoostQuality, type JumpQuality } from '../lib/raceInteractions';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
-import { IconChevronLeft, IconChevronRight, IconClose } from '../design/elements/Icons';
+import { IconChevronLeft, IconChevronRight } from '../design/elements/Icons';
 import { RaceResult } from '../design/components/RaceResult';
 import { GateCue } from '../design/components/GateCue';
 import { SteerCue } from '../design/components/SteerCue';
@@ -330,6 +330,13 @@ export default function RacePlay() {
       {loaded && !outcome && (
         <div className="stage__ui">
           <div className="hud__top">
+            {/* The way out is the same round chevron the delivery screen puts
+                in its corner, in the corner it puts it in. A close X in a
+                corner of its own read as dismissing the app rather than
+                leaving the race. */}
+            <button className="hud__back" type="button" aria-label="Leave race" onClick={() => nav('/')}>
+              <IconChevronLeft size={22} />
+            </button>
             <div className="hud__c">
               <b className="t-num">{stats.score.toLocaleString('en-IN')}</b>
               <span>POINTS</span>
@@ -338,12 +345,6 @@ export default function RacePlay() {
               <b className="t-num">{mm}:{String(ss).padStart(2, '0')}</b>
               <span>TIME LEFT</span>
             </div>
-            <button className="hud__x" type="button" aria-label="Leave race" onClick={() => nav('/')}>
-              <IconClose size={17} />
-            </button>
-          </div>
-          <div className="hud__bar" aria-hidden="true">
-            <i style={{ width: `${stats.progress * 100}%` }} />
           </div>
 
           <ScorePops pops={pops} />

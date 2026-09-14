@@ -1239,10 +1239,14 @@ input, select, textarea { font: inherit; color: inherit; }
   position: absolute; top: calc(var(--safe-t) + 22px); left: 12px; right: 12px;
   display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
 }
-/* Source order is POINTS, TIME LEFT, close — the reading order, and the one a
-   screen reader should keep. These place them across the row without changing
-   it: the clock to the far right, the close button into the gap. */
-.hud__c + .hud__c { order: 2; }
+/* The score sits off the corner, not in it: the chevron owns that, and a chip
+   hard against it would read as one control with two halves. */
+/* 16 plus the row's own 8px gap: 24px of clear air between the chevron and
+   the score. */
+.hud__c { margin-left: 16px; margin-right: auto; }
+/* The clock keeps the far corner; the auto margin above it is what pushes it
+   there, so the score does not drift into the middle of the row. */
+.hud__c + .hud__c { margin-left: 0; margin-right: 0; }
 /* The campaign's own two colours, not a smoked-glass chip. Over a camera feed
    or a track the dark translucent version took whatever was behind it: on the
    wooden floor of a living room it read brown, and the score was white text on
@@ -1259,17 +1263,22 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The label sits back from the figure without leaving it: the same black,
    carrying less weight, rather than a third colour on the chip. */
 .hud__c span { font-size: var(--f-2xs); font-weight: 700; letter-spacing: 0.12em; color: rgba(31, 31, 31, 0.68); }
-.hud__x {
-  order: 1;
-  width: 36px; height: 36px; border-radius: 50%;
-  background: rgba(10,6,18,0.6); border: 1px solid rgba(255,255,255,0.14);
-  color: #fff; display: grid; place-items: center;
+/* The same round chevron the delivery screen puts in its corner, and the same
+   white disc, so leaving a race looks like leaving any other screen in the
+   app. It replaced a close X, which in a corner of its own read as dismissing
+   the app rather than stepping back out of the race. */
+.hud__back {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #fff; border: 1px solid var(--line);
+  color: var(--ink); display: grid; place-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.28);
 }
-.hud__bar {
-  position: absolute; top: calc(var(--safe-t) + 66px); left: 12px; right: 12px;
-  height: 5px; border-radius: var(--r-xs); background: rgba(0,0,0,0.45); overflow: hidden;
-}
-.hud__bar i { display: block; height: 100%; background: var(--yellow); }
+.hud__back:active { background: var(--surface-2); }
+/* The lap bar is gone. It was a black strip pinned under the chips, and once
+   the row moved down it sat close enough to read as a rule drawn across the
+   scene — a breaker between the HUD and the race, which is the one thing a
+   HUD over a race must not look like. The lap is already on the chips: the
+   clock counts down and the score counts up. */
 /* Score changes, lifting off the car. Placed in the lower third because that
    is where the chase camera holds the car — a number that appears at the
    vertical centre reads as a HUD message rather than as something the car just
