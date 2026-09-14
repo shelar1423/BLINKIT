@@ -143,12 +143,15 @@ export function RaceResult({
       inviteUrl,
     );
     setSharing(false);
-    if (how === 'copied' || how === 'link') {
-      /* The tip on this screen has always promised a race for a challenge, and
-         nothing ever paid it. It does now, from either way of sharing. */
-      onInvited?.();
-      toast(how === 'copied' ? 'Link copied. +1 race' : 'Challenge sent. +1 race');
-    }
+    /* The tip on this screen has always promised a race for a challenge, and
+       nothing ever paid it. It does now — and from either button, because both
+       are the same share: the invite in the footer is the icon in the corner
+       with a label on it, not a second thing that behaves differently. The
+       count on the card is the confirmation, so the message stays what it has
+       always been. */
+    if (how === 'copied' || how === 'link') onInvited?.();
+    if (how === 'copied') toast('Score copied to share');
+    if (how === 'link') toast('Shared');
   };
 
   return (
