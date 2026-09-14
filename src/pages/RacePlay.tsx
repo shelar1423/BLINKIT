@@ -249,7 +249,13 @@ export default function RacePlay() {
     if (!stage) return;
     let holding = false;
     let swipeFrom: number | null = null;
+    /* A press that lands on a control is that control's, not the wheel's. The
+       HUD's way out sits in the top corner, and steering to wherever it is
+       yanked the car sideways on the way out of the race. */
+    const onControl = (e: PointerEvent) =>
+      !!(e.target as HTMLElement | null)?.closest?.('button,a,input,[role="button"]');
     const down = (e: PointerEvent) => {
+      if (onControl(e)) return;
       holding = true;
       swipeFrom = e.clientY;
       /* Steering still works through a gate. The engine eases the car back to
