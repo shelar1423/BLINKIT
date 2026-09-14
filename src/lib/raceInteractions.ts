@@ -60,7 +60,17 @@ export const raceInteraction = {
      These are the midpoints of the second and fourth straights, measured from
      that same map. At the boosted top speed of 34 the flight spans 0.205-0.296
      and 0.705-0.796, so ramp and landing are both still on tarmac. */
-  boostGates: [0.2505, 0.96],
+  /* The first ring moved from 0.2505 to 0.48: at 0.2505 it arrived 4.7s after
+     the launch, which is before a first-time player has finished working out
+     which way the car is pointing. It is on the THIRD straight now rather than
+     the second, and it had to be — the ask was two seconds later, and two
+     seconds is 0.112 of a lap at racing pace, which lands at 0.36, squarely in
+     the corner between those two straights. There is no legal slot in between:
+     the flight spans 0.091 of a lap at the boosted top speed, so the earliest
+     gate the third straight can carry with both takeoff and landing on tarmac
+     is 0.474. 0.48 is that, with a little room. It reads as about four seconds
+     later, and the second straight is now clear running. */
+  boostGates: [0.48, 0.96],
   /* The last ring moved from the middle of the fourth straight to the end of
      the lap, ~12 units short of the finish line, so the jump is the last thing
      the race asks of you. The start straight runs 0.928-1.073 and the launcher

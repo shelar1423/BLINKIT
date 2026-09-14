@@ -18,15 +18,23 @@ import { Button } from '../elements';
    It plays itself through rather than asking for a press between each one —
    the three together are shorter than the paragraph they replace — and
    Continue is live from the first frame, so nobody who has done this before
-   has to sit through it. Once per device, and `?intro=1` brings it back for a
-   demo.
+   has to sit through it. It is on EVERY session while this is being tested:
+   see ALWAYS_SHOW. With that off it plays once per device, and `?intro=1`
+   brings it back.
    ============================================================ */
 
 const SEEN_KEY = 'rih-ar-intro-seen';
+/**
+ * Testing switch: the intro plays on every AR session rather than once per
+ * device. Set to false for the real behaviour, where a player who has already
+ * been shown how this works is not shown again.
+ */
+const ALWAYS_SHOW = true;
 /** How long each beat holds before the next one takes over. */
 const BEAT_MS = 2800;
 
 export function arIntroSeen() {
+  if (ALWAYS_SHOW) return false;
   try {
     return localStorage.getItem(SEEN_KEY) === '1';
   } catch {
