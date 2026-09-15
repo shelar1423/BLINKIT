@@ -3060,7 +3060,16 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd__board .lrow { padding-inline: 6px; gap: 9px; }
 .rwd__board .lrow .grow { min-width: 0; }
 .rwd__board .lrow:last-child { border-bottom: 0; }
-.rwd__board .lrow.is-me { border-radius: 10px; }
+/* The player's own row, marked. On a white card a cream tint is barely a
+   change of colour; a blue ground with the campaign's yellow round it is the
+   one row you find without reading. The outline is an inset shadow rather
+   than a border so the row keeps its height and the board keeps its rhythm. */
+.rwd__board .lrow.is-me {
+  border-radius: 10px;
+  /* A tint of the screen's own blue, not a generic pale blue. */
+  background: #EAF2FE;
+  box-shadow: inset 0 0 0 1.5px var(--yellow);
+}
 
 /* ---------- the claimable reward, as a ticket ----------
    RESTORED. These were deleted with the old race-result block when that screen
