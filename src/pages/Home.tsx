@@ -7,7 +7,7 @@ import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useDrop } from '../data/useDrop';
 import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
-import { IconChevronRight, IconFlag, IconHeart } from '../design/elements/Icons';
+import { IconChevronRight, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import { preloadCar } from '../lib/three/modelLoader';
@@ -164,17 +164,23 @@ export default function Home() {
                 your best run — and the race itself is one press further in.
                 Jumping straight to the grid skipped everything the campaign is
                 keeping score of. */}
+            {/* The campaign's own racing banner rather than a rounded pill: a
+                skewed block with the chequered flag running off its leading
+                edge and the word set heavy and italic, which is the lockup the
+                design file uses everywhere this campaign signs its name. In
+                the campaign's yellow and black rather than the file's red and
+                white. */}
             <Button
-              variant="hwTrack"
-              className="mystery__go"
+              variant="yellow"
+              className="mystery__go racebar"
               disabled={launching}
               onClick={() => {
                 setLaunching(true);
                 window.setTimeout(() => startRace(), LOADER_MS);
               }}
             >
-              <IconFlag className="mystery__flag" size={20} aria-hidden="true" />
-              Race now
+              <span className="racebar__cheq" aria-hidden="true" />
+              <span className="racebar__t">Race now</span>
             </Button>
           </div>
 

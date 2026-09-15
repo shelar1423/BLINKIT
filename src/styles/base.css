@@ -989,6 +989,7 @@ input, select, textarea { font: inherit; color: inherit; }
      it needs to be block-level first, and sized to its content so it does not
      stretch edge to edge. */
   display: flex; width: fit-content;
+  position: relative; overflow: hidden;
   /* Was -42px, which hauled the button up over the mystery plate that used to
      sit above it. The plate is gone, so the pull was just jamming the CTA into
      the countdown's labels. 16px of air, as the reference has. */
@@ -1001,16 +1002,55 @@ input, select, textarea { font: inherit; color: inherit; }
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
 }
 .mystery__go:active { transform: scale(0.97); }
-/* Black type on the orange, led by the chequered flag — leaning right, towards
-   the words, the way it is waved at the line. */
-.mystery__go.btn--hwTrack { color: var(--ink); gap: 8px; }
-.mystery__flag { flex: none; transform: rotate(14deg); }
+/* ---- Race now, as the campaign's racing banner ----
+   The design file signs this campaign with a skewed block, the chequered flag
+   running off its leading edge and the word set heavy and italic. That lockup
+   is on the hero, the flags and the plate; the one place it was NOT was the
+   button those all point at, which was a rounded pill with an icon.
+
+   The file draws it red on white. This is yellow on black, which is the pair
+   the rest of the campaign's controls already use. */
+.mystery__go.racebar {
+  /* The parallelogram. The whole control leans; the label leans back out of it
+     and takes a real italic instead, because skewed glyphs are a smear and an
+     italic is a typeface. */
+  transform: skewX(-12deg);
+  border-radius: 3px;
+  min-width: 212px; height: 46px;
+  padding: 0 22px 0 0;
+  gap: 0;
+  overflow: hidden;
+  color: var(--ink);
+  box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
+}
+.mystery__go.racebar:active { transform: skewX(-12deg) scale(0.97); }
+/* The flag, running the full height off the leading edge and cut by it. Drawn
+   in two gradients, the same chequer the leaderboard's own band uses. */
+.racebar__cheq {
+  flex: none; align-self: stretch; width: 74px;
+  /* Transparent gaps, not a yellow of its own: the button's ground is the
+     button's to choose, and a second yellow painted over it is one repaint
+     away from not matching. */
+  background-color: transparent;
+  background-image:
+    linear-gradient(45deg, #1F1F1F 25%, transparent 25% 75%, #1F1F1F 75%),
+    linear-gradient(45deg, #1F1F1F 25%, transparent 25% 75%, #1F1F1F 75%);
+  background-size: 15.4px 15.4px;
+  background-position: 0 0, 7.7px 7.7px;
+}
+.racebar__t {
+  transform: skewX(12deg);
+  padding-left: 18px;
+  font-style: italic; font-weight: 900;
+  font-size: var(--f-lg); letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
 /* "Sparkle like the logo (shiny reflective surface)". A highlight travelling
    across the face, so the button reads as the same chrome-and-flame material
    as the lettering above it rather than a flat orange rectangle sitting under
-   it. Clipped to the button, skewed so it rakes rather than wipes, and most of
-   the cycle is the wait — the sweep is a moment, not a loop. */
-.mystery__go { position: relative; overflow: hidden; }
+   it. Clipped to the button, and most of the cycle is the wait — the sweep is
+   a moment, not a loop. (`position: relative` and `overflow: hidden` are on
+   the main .mystery__go block above, where they belong.) */
 .mystery__go::after {
   content: '';
   position: absolute; top: -60%; bottom: -60%; left: -40%;
@@ -1021,7 +1061,9 @@ input, select, textarea { font: inherit; color: inherit; }
     rgba(255, 255, 255, 0.62) 50%,
     rgba(255, 255, 255, 0) 100%
   );
-  transform: skewX(-18deg);
+  /* The banner already leans; a second skew on the sweep inside it reads
+     as a fold rather than a highlight. */
+  transform: skewX(0deg);
   animation: goSheen 3.4s ease-in-out 1.2s infinite;
   pointer-events: none;
 }
@@ -1750,7 +1792,9 @@ input, select, textarea { font: inherit; color: inherit; }
     rgba(255, 255, 255, 0.78) 50%,
     rgba(255, 255, 255, 0) 100%
   );
-  transform: skewX(-18deg);
+  /* The banner already leans; a second skew on the sweep inside it reads
+     as a fold rather than a highlight. */
+  transform: skewX(0deg);
   animation: goSheen 3.4s ease-in-out 1.2s infinite;
   pointer-events: none;
 }
