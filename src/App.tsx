@@ -8,6 +8,7 @@ const ResultPreview = lazy(() => import('./pages/ResultPreview'));
 const IntroPreview = lazy(() => import('./pages/IntroPreview'));
 import { BottomNav } from './design/components/BottomNav';
 import { RewardsSheet } from './design/components/RewardsSheet';
+import { BackToTop } from './design/components/BackToTop';
 import { IconCheck } from './design/elements/Icons';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DriftLoader } from './design/components/DriftLoader';
@@ -109,6 +110,11 @@ export default function App() {
         </Suspense>
         </ErrorBoundary>
         {!hideNav && <BottomNav />}
+        {/* Only where the tab bar is. The screens that hide it — the sheet,
+            the cart, the checkout, a race — either have their own sticky bar
+            in that corner or are not a page you scroll through looking for the
+            top of. */}
+        {!hideNav && <BackToTop />}
         {/* The campaign, everywhere, owned by nobody.
             On a query param rather than in a page's state so any screen can
             offer it, the back gesture closes it, and it can be linked to. */}
