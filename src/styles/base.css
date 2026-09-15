@@ -2165,8 +2165,16 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-sm); color: var(--mut); margin-top: 4px;
 }
 .pdp__stock { display: inline-flex; align-items: center; gap: 4px; }
+/* "MRP ₹179", as Blinkit sets it: one line, one size, and the weight doing all
+   of the separating — the label regular, the figure bold. The gap between them
+   is a word space, not the 8px this row uses before a struck price. */
 .pdp__price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
-.pdp__price b { font-size: var(--f-3xl); font-weight: 800; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+.pdp__mrpl {
+  font-size: var(--f-3xl); font-weight: 400; color: var(--ink);
+  letter-spacing: -0.5px;
+  margin-right: -2px;
+}
+.pdp__price b { font-size: var(--f-3xl); font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
 /* "MRP ₹799" — the label is not struck through, only the number is. */
 .pdp__mrp { font-size: var(--f-sm); color: var(--mut); }
 .pdp__mrp s { color: var(--mut); }
