@@ -1017,11 +1017,11 @@ input, select, textarea { font: inherit; color: inherit; }
   transform: skewX(-12deg);
   border-radius: 3px;
   /* The countdown's own width, measured: its two cells span 130px on screen.
-     A skewed box is wider on screen than in layout by height x tan(12deg), so
-     the layout width is 130 minus that — and the lean means TRIMMING the
-     height widens the box, which is why this number moves when the height
-     does. At 40 the overhang is 8.5px. */
-  width: 121.5px; min-width: 0; height: 40px;
+     Smaller than the countdown now rather than matched to it: the clock is a
+     figure to read and this is a thing to press, and at the same width the
+     two read as one block. A skewed box is wider on screen than in layout by
+     height x tan(12deg) — at 36 that is 7.7px, so 104 of layout paints 112. */
+  width: 104px; min-width: 0; height: 36px;
   padding: 0 6px 0 0;
   gap: 0;
   /* Hard left, so the flag starts ON the leading edge. Centred content in a
@@ -1037,7 +1037,7 @@ input, select, textarea { font: inherit; color: inherit; }
    in two gradients, the same chequer the leaderboard's own band uses. */
 .racebar__cheq {
   /* Two columns of it, and only two. */
-  flex: none; align-self: stretch; width: 30px;
+  flex: none; align-self: stretch; width: 26px;
   /* Transparent gaps, not a yellow of its own: the button's ground is the
      button's to choose, and a second yellow painted over it is one repaint
      away from not matching. */
@@ -1045,14 +1045,14 @@ input, select, textarea { font: inherit; color: inherit; }
   background-image:
     linear-gradient(45deg, #1F1F1F 25%, transparent 25% 75%, #1F1F1F 75%),
     linear-gradient(45deg, #1F1F1F 25%, transparent 25% 75%, #1F1F1F 75%);
-  background-size: 15px 15px;
-  background-position: 0 0, 7.5px 7.5px;
+  background-size: 13px 13px;
+  background-position: 0 0, 6.5px 6.5px;
 }
 .racebar__t {
   transform: skewX(12deg);
-  padding-left: 8px;
+  padding-left: 7px;
   font-style: italic; font-weight: 900;
-  font-size: var(--f-sm); letter-spacing: 0.01em;
+  font-size: var(--f-xs); letter-spacing: 0.01em;
   text-transform: uppercase; white-space: nowrap;
 }
 /* "Sparkle like the logo (shiny reflective surface)". A highlight travelling
@@ -1122,13 +1122,16 @@ input, select, textarea { font: inherit; color: inherit; }
    At a third of the column each they stood 155 tall and the row finished 659
    down an 812 screen — which is inside the viewport here and under the browser
    chrome on a real phone, so the one row that says what the campaign sells was
-   the row you had to scroll for. Capped at 96 they are 134 tall and the row
-   closes with room to spare; the artwork carries its own titles, so it is the
-   whole tile that scales rather than a layout that reflows. */
+   the row you had to scroll for. Capped, they close the fold with room to
+   spare; the artwork carries its own titles, so it is the whole tile that
+   scales rather than a layout that reflows.
+
+   The gap is wide enough to read as three separate cards. At 9px they were a
+   strip with seams in it, and each of these is its own thing to press. */
 .cshelf {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 96px));
+  display: grid; grid-template-columns: repeat(3, minmax(0, 102px));
   justify-content: center;
-  gap: 9px;
+  gap: 15px;
   padding: 14px 0 4px;
 }
 /* White at the top where the type sits, cooling to a pale blue behind the art.
