@@ -1935,6 +1935,11 @@ input, select, textarea { font: inherit; color: inherit; }
   pointer-events: none;
 }
 .pdp__stage > img { position: relative; z-index: 1; width: 100%; height: 100%; object-fit: contain; padding: 20px; }
+/* The model's whole layer, hidden between photographs rather than unmounted.
+   `visibility` and not `display: none`: a renderer in a box with no size loses
+   its drawing buffer's dimensions, and comes back the wrong shape. */
+.pdp__3dwrap { position: absolute; inset: 0; z-index: 2; }
+.pdp__3dwrap.is-off { visibility: hidden; pointer-events: none; }
 .pdp__3d { position: absolute; inset: var(--shdr-h) 0 0; }
 .pdp__tools { position: absolute; right: 10px; bottom: 10px; display: grid; gap: 6px; z-index: 3; }
 .pdp__tool { width: 36px; height: 36px; border-radius: var(--r); background: rgba(255,255,255,0.94);

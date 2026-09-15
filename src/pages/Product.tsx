@@ -444,6 +444,14 @@ export default function Product() {
   }
 
   const has3D = Boolean(product.glb);
+  /* The same photographs the listing card flicks through, in the same order.
+     The sheet showed one — the hero — so a card that had three views lost two
+     of them the moment it was opened, which is the wrong way round: the sheet
+     is where somebody has decided to look properly. */
+  const shots = product.views?.length ? product.views : [product.image];
+  /* Page 0 is the model when there is one, and the photographs follow it. */
+  const pages = has3D ? shots.length + 1 : shots.length;
+  const shot = shots[has3D ? view - 1 : view] ?? product.image;
   const alsoLike = CARS.filter((c) => c.id !== product.id && !c.mystery).slice(0, 6);
 
   const share = async () => {
@@ -533,8 +541,12 @@ export default function Product() {
               studio treatment Blinkit gives every product, rather than a lit
               set that only suits the five rendered cars. */}
           <div className="pdp__stage">
-            {has3D && view === 0 ? (
-              <>
+            {/* The model is mounted for the whole life of the sheet and HIDDEN
+                between photographs rather than unmounted. Taking it out took
+                its canvas with it, and the viewer is built once per product —
+                so coming back to the model landed on an empty stage. */}
+            {has3D && (
+              <div className={'pdp__3dwrap' + (view === 0 ? '' : ' is-off')}>
                 <div className="pdp__3d" ref={host} />
                 {!ready && !err && (
                   <div className="loadbox" style={{ position: 'absolute', inset: 0 }}>
@@ -557,28 +569,31 @@ export default function Product() {
                   </button>
                 </div>
                 {ready && <p className="pdp__hint">DRAG TO ROTATE · PINCH TO ZOOM</p>}
-              </>
-            ) : (
-              <img src={product.image} alt={product.name} />
+              </div>
             )}
+            {(!has3D || view > 0) && <img src={shot} alt={product.name} />}
           </div>
 
           <div className="pdp__herofoot">
-          {/* Two real views — the interactive model and the studio shot. No filler
-              dots: a car without a GLB has one image and gets no pager. */}
-          {has3D && (
+          {/* One dot per real view: the model, then every photograph the
+              listing card has. No filler — a car with one image and no model
+              gets no pager at all. */}
+          {pages > 1 && (
             <div className="pdp__pager" role="tablist" aria-label="Product views">
-              {['3D model', 'Photo'].map((label, i) => (
-                <button
-                  key={label}
-                  role="tab"
-                  aria-selected={view === i}
-                  aria-label={label}
-                  className={'pdp__dot' + (view === i ? ' is-on' : '')}
-                  type="button"
-                  onClick={() => setView(i)}
-                />
-              ))}
+              {Array.from({ length: pages }, (_, i) => {
+                const label = has3D && i === 0 ? '3D model' : `Photo ${has3D ? i : i + 1}`;
+                return (
+                  <button
+                    key={label}
+                    role="tab"
+                    aria-selected={view === i}
+                    aria-label={label}
+                    className={'pdp__dot' + (view === i ? ' is-on' : '')}
+                    type="button"
+                    onClick={() => setView(i)}
+                  />
+                );
+              })}
             </div>
           )}
 
