@@ -1018,8 +1018,10 @@ input, select, textarea { font: inherit; color: inherit; }
   border-radius: 3px;
   /* The countdown's own width, measured: its two cells span 130px on screen.
      A skewed box is wider on screen than in layout by height x tan(12deg), so
-     the layout width is 130 minus that 9px — what lines up is what you see. */
-  width: 121px; min-width: 0; height: 44px;
+     the layout width is 130 minus that — and the lean means TRIMMING the
+     height widens the box, which is why this number moves when the height
+     does. At 40 the overhang is 8.5px. */
+  width: 121.5px; min-width: 0; height: 40px;
   padding: 0 6px 0 0;
   gap: 0;
   /* Hard left, so the flag starts ON the leading edge. Centred content in a
