@@ -7,7 +7,6 @@ import { tierFor, useStore } from '../store/useStore';
 import { useStartRace } from '../lib/useStartRace';
 import {
   detectAR,
-  startARSession,
   startCameraSession,
   canAutoStart,
   type ARHandle,
@@ -214,7 +213,31 @@ export default function ARView() {
     const startedAt = performance.now();
     setBusy(true);
     try {
-      const start = support?.kind === 'webxr' ? startARSession : startCameraSession;
+      /* One session, both phones.
+
+         Android reports WebXR and used to get it, and every difference
+         between the two platforms came out of that one branch. WebXR hands
+         the camera to the system, and this race needs to MOVE the camera —
+         down behind the sled for the launcher, then onto the car's tail for
+         the race. Neither shot can be taken from a pose you do not own, so
+         the XR path had to drag the track to the phone instead, and a circuit
+         that follows the handset is a circuit with no lever you can find, no
+         chase camera, and no floor it stays on. On top of that the browser
+         takes the overlay fullscreen, lays its own exit-fullscreen toast over
+         the controls, and composites nothing but that overlay — which is how
+         Android ended up with no briefing and no 3, 2, 1 either.
+
+         What WebXR would buy is real surface tracking, and this screen gave
+         that up a while ago: the track goes where you point, and there is
+         nothing left to hit-test for. So it buys nothing and costs the whole
+         race. The camera session — real video, gyro for bearing, the shot
+         composed by us — is what iOS has always run, and it runs on Android
+         Chrome unchanged.
+
+         `startARSession` is still exported from arSession.ts and still
+         correct. Re-importing it is the whole of putting this back, if
+         surface tracking ever earns its place again. */
+      const start = startCameraSession;
       handle.current = await start({
         glbUrl: car.glb,
         overlayRoot: overlay.current,
@@ -580,20 +603,7 @@ export default function ARView() {
       {/* `outcome` forces idle as well as `phase`. Relying on phase alone left
           the driving overlay stacked over the result when teardown and render
           raced each other — and .arov sits above .result in the stack. */}
-      {/* `is-xr` is not cosmetic. In a WebXR session Chrome takes this element
-          fullscreen as the dom-overlay root, and puts its own "drag from the
-          top to exit full screen" toast across the bottom of the screen —
-          straight over Place track here. The bottom column moves up above it,
-          and only there: on iOS this is an ordinary fixed overlay with nothing
-          sitting under it. */}
-      <div
-        className={
-          'arov' +
-          (phase && !outcome ? '' : ' is-idle') +
-          (support?.kind === 'webxr' ? ' is-xr' : '')
-        }
-        ref={overlay}
-      >
+      <div className={'arov' + (phase && !outcome ? '' : ' is-idle')} ref={overlay}>
         {phase && !outcome && (
           <>
             {/* Inside the overlay, not beside it: in a WebXR session the DOM
@@ -833,19 +843,6 @@ export default function ARView() {
               )}
             </div>
             </div>
-
-            {/* Both of these used to sit outside .arov, on the reasoning that
-                WebXR was not a path any phone in this campaign takes. Android
-                takes it. In a dom-overlay session this element is the ONLY DOM
-                the browser composites over the camera, so a briefing and a
-                countdown rendered beside it simply do not exist: the track
-                went down with nothing explaining it, and the lever fired with
-                no 3, 2, 1 in front of it. */}
-            {count !== null && !inspect && <LaunchCount step={count} />}
-
-            {phase === 'placed' && !coached && !inspect && (
-              <RaceCoach mode="ar" onDone={() => setCoached(true)} />
-            )}
           </>
         )}
       </div>
@@ -960,6 +957,17 @@ export default function ARView() {
             void launch();
           }}
         />
+      )}
+
+      {/* Outside .arov, which is pointer-events:none — the briefing is the one
+          thing on this screen you have to be able to press. They would have to
+          move INSIDE it for a WebXR session, which composites that overlay and
+          nothing else; see the note on `start` above for why there is no
+          longer such a session. */}
+      {count !== null && !inspect && !outcome && <LaunchCount step={count} />}
+
+      {phase === 'placed' && !coached && !outcome && !inspect && (
+        <RaceCoach mode="ar" onDone={() => setCoached(true)} />
       )}
 
       {cheering && <Poppers />}
