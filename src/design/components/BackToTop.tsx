@@ -22,6 +22,7 @@ const SLOP = 6;
 export function BackToTop() {
   const [show, setShow] = useState(false);
   const last = useRef(0);
+  const el = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     last.current = window.scrollY;
@@ -53,8 +54,19 @@ export function BackToTop() {
     };
   }, []);
 
+  /* Under whatever header is stuck to the top of THIS page, measured rather
+     than assumed: the storefront's header and the listing's are different
+     heights, and a hard-coded offset is right on one of them. */
+  useEffect(() => {
+    if (!show || !el.current) return;
+    const hdr = document.querySelector('.bhdr');
+    const top = hdr ? hdr.getBoundingClientRect().bottom : 0;
+    el.current.style.setProperty('--b2t-top', `${Math.max(12, Math.round(top) + 10)}px`);
+  }, [show]);
+
   return (
     <button
+      ref={el}
       type="button"
       className={'b2t' + (show ? ' is-on' : '')}
       /* Out of the tab order and off the screen reader when it is not offered:

@@ -5794,23 +5794,28 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ---------- back to top ----------
-   A floating pill, white on whatever it is over, above the tab bar. It is only
-   on screen when somebody is deep in a page AND heading back up (see
-   BackToTop), so it can afford to sit over the content rather than take a
-   permanent corner. */
+   A floating pill, white on whatever it is over. It hangs from the TOP, just
+   under the stuck header — which is where Blinkit puts it, and it is the right
+   corner for it: this control is about the top of the page, and it appears
+   only while somebody is already travelling that way, so it meets them where
+   they are heading rather than waiting at the end they are leaving.
+
+   Small, too. It arrives over content nobody asked it to cover, so it takes as
+   little of it as it can and still be pressable. */
 .b2t {
-  position: fixed; left: 50%; bottom: calc(var(--nav-block) + 10px);
+  position: fixed; left: 50%; top: var(--b2t-top, 137px);
   z-index: 60;
-  display: flex; align-items: center; gap: 9px;
-  padding: 9px 18px 9px 13px;
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 14px 6px 8px;
   border: 0; border-radius: 999px;
   background: #fff; color: var(--ink);
-  font-size: var(--f-md); font-weight: 700; letter-spacing: -0.1px;
+  font-size: var(--f-sm); font-weight: 700; letter-spacing: -0.1px;
   box-shadow: 0 6px 20px rgba(16, 20, 24, 0.22), 0 1px 3px rgba(16, 20, 24, 0.12);
   /* Away by default, and out of the way of taps while it is: `visibility`
-     rather than `display` so it has something to animate from. */
+     rather than `display` so it has something to animate from. It drops in
+     from above, because that is the edge it belongs to. */
   visibility: hidden; opacity: 0; pointer-events: none;
-  transform: translate(-50%, 10px);
+  transform: translate(-50%, -10px);
   transition: opacity 180ms ease, transform 220ms cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 200ms;
 }
 .b2t.is-on {
@@ -5820,8 +5825,8 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .b2t:active { background: var(--surface-2); }
 .b2t svg {
-  width: 26px; height: 26px; flex: none;
-  fill: none; stroke: var(--ink); stroke-width: 1.6;
+  width: 20px; height: 20px; flex: none;
+  fill: none; stroke: var(--ink); stroke-width: 1.7;
   stroke-linecap: round; stroke-linejoin: round;
 }
 @media (prefers-reduced-motion: reduce) {
