@@ -3076,10 +3076,15 @@ input, select, textarea { font: inherit; color: inherit; }
   margin-inline: -14px;
   padding-inline: 22px 20px;
   border-radius: 0;
-  background: #FFF4EA;
+  /* No fill. Explicitly, because the generic .lrow.is-me tints itself and the
+     card is already the right colour underneath: the rule and the flag are
+     the mark, and a wash behind them only muddies the card. */
+  background: transparent;
   /* The rule, as an inset shadow rather than a border: a real 2px border adds
-     4px of height and pushes this row taller than the three above it. */
-  box-shadow: inset 0 0 0 2px var(--hw-b);
+     4px of height and pushes this row taller than the three above it. The
+     scorecard's own light blue, which is the campaign's edge colour rather
+     than its ground. */
+  box-shadow: inset 0 0 0 2px #5FAEFF;
 }
 /* The chequer itself: two columns of it, drawn rather than imported, so it
    stays crisp at any density and costs nothing. Inset by the rule's own width
