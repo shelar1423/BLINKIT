@@ -656,7 +656,13 @@ export default function Product() {
               the two facts that decide the purchase — then the name, the pack
               and the price. The drop tags moved onto the stage: on the real PDP
               this first row is the ETA and the stars, nothing else. */}
-          <section className="card pdp__info">
+          {/* The facts and the brand row are ONE card, joined by a perforation
+              with a notch bitten out of each edge — a coupon, which is how
+              Blinkit joins these two. They were two cards with a gap, and the
+              gap said they were unrelated when the second one is the first
+              one's shelf. */}
+          <div className="pdpjoin">
+          <section className="pdp__info">
             <div className="pdp__meta">
               <span className="pdp__eta">
                 <IconClock size={13} />
@@ -702,7 +708,9 @@ export default function Product() {
             </div>
           </section>
 
-          <button className="card rowcard" type="button" onClick={() => nav('/hot-wheels')}>
+          <span className="pdpjoin__perf" aria-hidden="true" />
+
+          <button className="rowcard" type="button" onClick={() => nav('/hot-wheels')}>
             <span className="rowcard__brand">
               <img src="/brand/hot-wheels-logo.webp" alt="" />
             </span>
@@ -712,6 +720,7 @@ export default function Product() {
             </span>
             <IconChevronRight size={18} />
           </button>
+          </div>
 
           {has3D && (
             <button

@@ -2160,23 +2160,27 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag--rare { background: var(--yellow-tint); color: var(--gold-ink); border: 1px solid #F0DFA4; }
 
 .pdp__name { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
-/* One fact, so it is set as a fact rather than as a caption: semibold, and in
-   the ink the rest of the block is in. */
+/* One fact, so it is set as a fact rather than as a caption: bold, and in the
+   same ink as the name above it. */
 .pdp__unit {
   display: flex; align-items: center; gap: 8px;
-  font-size: var(--f-sm); font-weight: 600; color: var(--mut); margin-top: 4px;
+  font-size: var(--f-sm); font-weight: 700; color: var(--ink); margin-top: 4px;
 }
 .pdp__stock { display: inline-flex; align-items: center; gap: 4px; }
 /* "MRP ₹179", as Blinkit sets it: one line, one size, and the weight doing all
    of the separating — the label regular, the figure bold. The gap between them
-   is a word space, not the 8px this row uses before a struck price. */
+   is a word space, not the 8px this row uses before a struck price.
+
+   Set at the product name's size, so the sheet's three lines — name, pack,
+   price — are one block read top to bottom rather than a headline with the
+   price shouting over it. */
 .pdp__price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
 .pdp__mrpl {
-  font-size: var(--f-3xl); font-weight: 400; color: var(--ink);
-  letter-spacing: -0.5px;
+  font-size: var(--f-xl); font-weight: 400; color: var(--ink);
+  letter-spacing: -0.3px;
   margin-right: -2px;
 }
-.pdp__price b { font-size: var(--f-3xl); font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+.pdp__price b { font-size: var(--f-xl); font-weight: 700; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; }
 /* "MRP ₹799" — the label is not struck through, only the number is. */
 .pdp__mrp { font-size: var(--f-sm); color: var(--mut); }
 .pdp__mrp s { color: var(--mut); }
@@ -5846,4 +5850,72 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   .b2t { transition-duration: 1ms; }
+}
+
+/* ---------- the coupon join ----------
+   The facts and the brand row as ONE card, cut across by a perforation with a
+   notch bitten out of each edge. Two separate cards with a gap said the two
+   were unrelated, when the second is the first one's shelf — and this is how
+   Blinkit joins them.
+
+   The notches are solid circles in the page's own ground rather than a mask:
+   a mask has to resolve percentages against a box whose height changes with
+   the product name's line count, and one that gets it wrong puts the bite
+   somewhere there is no perforation. A circle pinned to the rule cannot be
+   anywhere else. */
+.pdpjoin {
+  position: relative;
+  width: calc(100% - var(--gut) * 2);
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: #fff;
+  box-shadow: var(--sh-2);
+  /* NOT hidden: the notches hang over both edges. The radius still clips
+     nothing that needs clipping — the children are square-cornered. */
+  overflow: visible;
+}
+.pdpjoin .pdp__info,
+.pdpjoin .rowcard {
+  width: 100%;
+  border: 0; border-radius: 0; background: none;
+}
+/* The perforation: a hairline inset from both edges, with the notches sitting
+   on the edges it stops short of. Fainter than the card's own border — it
+   separates two halves of one thing, where the border separates the thing
+   from the page. Set as a colour rather than with `opacity`, which would take
+   the notches down with it. */
+.pdpjoin__perf {
+  position: relative; display: block;
+  height: 1px; margin: 0 13px;
+  background: rgba(31, 31, 31, 0.09);
+}
+/* The cut, with the card's own edge falling into it: an inset shadow round the
+   circle reads as the paper having depth where it was bitten, the same way the
+   card's shadow reads along its outer edge. */
+.pdpjoin__perf::before,
+.pdpjoin__perf::after {
+  content: '';
+  position: absolute; top: 50%;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--appbase);
+  box-shadow: inset 0 0 5px rgba(31, 31, 31, 0.13);
+  transform: translateY(-50%);
+}
+/* Centred exactly on the card's edge — 13px of rule inset plus its 1px border,
+   then half the circle back — and then CLIPPED to the half that falls inside.
+   Left whole, the outer half's shadow drew a ring against the page and the
+   bite read as a disc sitting next to the card rather than a piece taken out
+   of it. */
+/* Clipped a shade PAST half, so the two pixels of overhang sit on the card's
+   own border and erase it across the mouth of the bite. At exactly half the
+   border ran straight down the flat side and closed the semicircle back into a
+   shape with a lid on it. */
+.pdpjoin__perf::before {
+  left: -23px;
+  clip-path: inset(0 0 0 calc(50% - 2px));
+}
+.pdpjoin__perf::after {
+  right: -23px;
+  clip-path: inset(0 calc(50% - 2px) 0 0);
 }
