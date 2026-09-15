@@ -2168,18 +2168,20 @@ input, select, textarea { font: inherit; color: inherit; }
 /* MRP, then the figure. The gap between them is the label's own, tighter than
    the one before a struck price. */
 .pdp__price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
-/* Same size as the figure, and only the weight tells them apart: "MRP ₹179" is
-   one phrase, and a label set smaller than the number it introduces reads as a
-   footnote attached to it rather than as the first half of a line. */
+/* The product name's size, and so is the figure. The price was set two steps
+   above the thing it is the price OF, which put the loudest type on the sheet
+   under the quieter line naming what you are buying. Level, the name leads on
+   weight and the price answers it — and the label stays level with the figure,
+   since a label set smaller than the number it introduces reads as a footnote
+   attached to it rather than as the first half of a line. */
 .pdp__mrpl {
-  font-size: var(--f-3xl); font-weight: 500; color: var(--ink);
-  letter-spacing: -0.5px;
+  font-size: var(--f-xl); font-weight: 500; color: var(--ink);
+  letter-spacing: -0.3px;
   margin-right: -2px;
 }
-/* 600, down from 800 by way of 700. At the same size as its label the figure
-   does not need weight to lead — it only needs to be the heavier of the two,
-   and one step apart is enough to read as emphasis rather than as a shout. */
-.pdp__price b { font-size: var(--f-3xl); font-weight: 600; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+/* 600: at the same size as its label the figure does not need weight to lead,
+   it only needs to be the heavier of the two. */
+.pdp__price b { font-size: var(--f-xl); font-weight: 600; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; }
 /* "MRP ₹799" — the label is not struck through, only the number is. */
 .pdp__mrp { font-size: var(--f-sm); color: var(--mut); }
 .pdp__mrp s { color: var(--mut); }
