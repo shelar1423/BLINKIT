@@ -745,6 +745,15 @@ input, select, textarea { font: inherit; color: inherit; }
   width: 100%; height: 74%;
   object-fit: cover; object-position: 50% 42%;
   z-index: 0;
+  /* Held back, so it is a setting rather than a competitor. At full strength
+     the city and its loops carried as much contrast as the logotype standing
+     on them, and the banner and the tiles had to fight the skyline behind
+     them. At 0.6 the section's own orange and red gradients come through it
+     and everything that is meant to be read sits clearly in front.
+
+     Opacity is safe on this one: it is an <img> with no children, so there is
+     nothing underneath it to fade by accident. */
+  opacity: 0.6;
   -webkit-mask-image: linear-gradient(180deg, #000 58%, transparent 99%);
   mask-image: linear-gradient(180deg, #000 58%, transparent 99%);
 }
