@@ -2168,11 +2168,13 @@ input, select, textarea { font: inherit; color: inherit; }
 /* MRP, then the figure. The gap between them is the label's own, tighter than
    the one before a struck price. */
 .pdp__price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
-/* The label is a qualifier on the number, so it is set as one: medium, and at
-   reading size rather than price size. */
+/* Same size as the figure, and only the weight tells them apart: "MRP ₹179" is
+   one phrase, and a label set smaller than the number it introduces reads as a
+   footnote attached to it rather than as the first half of a line. */
 .pdp__mrpl {
-  font-size: var(--f-lg); font-weight: 500; color: var(--ink);
-  margin-right: -3px;
+  font-size: var(--f-3xl); font-weight: 500; color: var(--ink);
+  letter-spacing: -0.5px;
+  margin-right: -2px;
 }
 /* 700, not 800. At 800 against a medium label the figure read as shouting the
    answer to a question nobody had asked quietly. */
