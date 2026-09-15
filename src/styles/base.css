@@ -2176,9 +2176,10 @@ input, select, textarea { font: inherit; color: inherit; }
   letter-spacing: -0.5px;
   margin-right: -2px;
 }
-/* 700, not 800. At 800 against a medium label the figure read as shouting the
-   answer to a question nobody had asked quietly. */
-.pdp__price b { font-size: var(--f-3xl); font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+/* 600, down from 800 by way of 700. At the same size as its label the figure
+   does not need weight to lead — it only needs to be the heavier of the two,
+   and one step apart is enough to read as emphasis rather than as a shout. */
+.pdp__price b { font-size: var(--f-3xl); font-weight: 600; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
 /* "MRP ₹799" — the label is not struck through, only the number is. */
 .pdp__mrp { font-size: var(--f-sm); color: var(--mut); }
 .pdp__mrp s { color: var(--mut); }
