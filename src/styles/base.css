@@ -1016,9 +1016,16 @@ input, select, textarea { font: inherit; color: inherit; }
      italic is a typeface. */
   transform: skewX(-12deg);
   border-radius: 3px;
-  min-width: 212px; height: 46px;
-  padding: 0 22px 0 0;
+  /* The countdown's own width, measured: its two cells span 130px on screen.
+     A skewed box is wider on screen than in layout by height x tan(12deg), so
+     the layout width is 130 minus that 9px — what lines up is what you see. */
+  width: 121px; min-width: 0; height: 44px;
+  padding: 0 6px 0 0;
   gap: 0;
+  /* Hard left, so the flag starts ON the leading edge. Centred content in a
+     box wider than it left a sliver of yellow before the first square, which
+     is the one thing a chequered edge must not have. */
+  justify-content: flex-start;
   overflow: hidden;
   color: var(--ink);
   box-shadow: 0 8px 22px rgba(6, 30, 70, 0.5);
@@ -1027,7 +1034,8 @@ input, select, textarea { font: inherit; color: inherit; }
 /* The flag, running the full height off the leading edge and cut by it. Drawn
    in two gradients, the same chequer the leaderboard's own band uses. */
 .racebar__cheq {
-  flex: none; align-self: stretch; width: 74px;
+  /* Two columns of it, and only two. */
+  flex: none; align-self: stretch; width: 30px;
   /* Transparent gaps, not a yellow of its own: the button's ground is the
      button's to choose, and a second yellow painted over it is one repaint
      away from not matching. */
@@ -1035,15 +1043,15 @@ input, select, textarea { font: inherit; color: inherit; }
   background-image:
     linear-gradient(45deg, #1F1F1F 25%, transparent 25% 75%, #1F1F1F 75%),
     linear-gradient(45deg, #1F1F1F 25%, transparent 25% 75%, #1F1F1F 75%);
-  background-size: 15.4px 15.4px;
-  background-position: 0 0, 7.7px 7.7px;
+  background-size: 15px 15px;
+  background-position: 0 0, 7.5px 7.5px;
 }
 .racebar__t {
   transform: skewX(12deg);
-  padding-left: 18px;
+  padding-left: 8px;
   font-style: italic; font-weight: 900;
-  font-size: var(--f-lg); letter-spacing: 0.01em;
-  text-transform: uppercase;
+  font-size: var(--f-sm); letter-spacing: 0.01em;
+  text-transform: uppercase; white-space: nowrap;
 }
 /* "Sparkle like the logo (shiny reflective surface)". A highlight travelling
    across the face, so the button reads as the same chrome-and-flame material
