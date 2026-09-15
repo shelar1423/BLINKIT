@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Button } from '../design/elements';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { PageHeader } from '../design/components/Chrome';
 import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import { useStartRace } from '../lib/useStartRace';
 import {
   detectAR,
+  startARSession,
   startCameraSession,
   TRACK_M,
   canAutoStart,
@@ -16,7 +16,7 @@ import {
 } from '../lib/three/arSession';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import {
-  IconAR, IconArrowLeft, IconClose, IconFlag, IconInfo, IconMinus, IconPlus, IconRotate,
+  IconAR, IconArrowLeft, IconClose, IconMinus, IconPlus, IconRotate,
 } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
@@ -78,6 +78,8 @@ export default function ARView() {
   const [coached, setCoached] = useState(false);
   const [phase, setPhase] = useState<ARPhase | null>(null);
   const [busy, setBusy] = useState(false);
+  /* The automatic camera start was refused (Safari wants a gesture). */
+  const [autoFailed, setAutoFailed] = useState(false);
   /* Announces each 500-point boundary once; a ref so it outlives the renders
      the score causes. */
   const powerUp = useRef(makePowerUpWatcher(500));
@@ -235,10 +237,12 @@ export default function ARView() {
          composed by us — is what iOS has always run, and it runs on Android
          Chrome unchanged.
 
-         `startARSession` is still exported from arSession.ts and still
-         correct. Re-importing it is the whole of putting this back, if
-         surface tracking ever earns its place again. */
-      const start = startCameraSession;
+         The one exception is the car viewer on a phone with WebXR (Android
+         Chrome). "View in your space" never moves the camera, so none of the
+         above applies to it — and there surface tracking earns its place: the
+         car is stood on the real table or floor the phone detects and stays
+         put as you walk round it, instead of floating with the camera. */
+      const start = inspect && support?.kind === 'webxr' ? startARSession : startCameraSession;
       handle.current = await start({
         glbUrl: car.glb,
         overlayRoot: overlay.current,
@@ -326,7 +330,11 @@ export default function ARView() {
          happened in the previous one — so this failing is expected, not an
          error to report. The gate is already rendered underneath; letting the
          user see it is the whole fallback. */
-      if (silent) return;
+      /* The backdrop's tap button takes over from here. */
+      if (silent) {
+        setAutoFailed(true);
+        return;
+      }
       const msg = e instanceof Error ? e.message : 'AR could not start';
       toast(msg.includes('denied') || msg.includes('NotAllowed') ? 'Camera permission was denied' : msg);
       setPhase(null);
@@ -363,7 +371,14 @@ export default function ARView() {
      race. Only on the racing route — the product page's inspect view has its
      own way back. */
   useEffect(() => {
-    if (!arKnown || arWorks || inspect) return;
+    if (!arKnown || arWorks) return;
+    /* The car viewer has no 3D fallback here: back to the product, where its
+       own 3D view already is — not a gate screen with a disabled button. */
+    if (inspect) {
+      toast('This device does not support AR');
+      nav(-1);
+      return;
+    }
     toast('This device does not support AR. Playing in 3D instead.');
     selectCar(car.id);
     /* force3d, and it has to be. startRace picks AR whenever the device
@@ -567,25 +582,6 @@ export default function ARView() {
   const arSS = String(Math.floor(arLeft % 60)).padStart(2, '0');
   const arLow = arLeft <= 10;
 
-  const statusCard = () => {
-    if (!support) return { cls: '', title: 'Checking device…', body: 'Seeing whether this phone can do AR.' };
-    if (arWorks)
-      return {
-        cls: 'is-ok',
-        title: 'AR ready',
-        body: inspect
-          ? 'Opens your camera and stands the car in front of you at true 1:64 scale.'
-          : 'Opens your camera and drops the Hot Wheels circuit where you point.',
-      };
-    if (support.kind === 'insecure')
-      return { cls: 'is-bad', title: 'Needs HTTPS', body: 'Browsers require HTTPS for camera and AR.' };
-    return {
-      cls: 'is-bad',
-      title: 'This device does not support AR',
-      body: inspect ? 'Use the 3D viewer on the product page instead.' : 'Taking you to the 3D race. It is the same race.',
-    };
-  };
-  const s = statusCard();
   /* Arriving with ?go=1, the camera is about to open on its own. Cover the
      moment before it does — the support check still running, the launch not yet
      called — with the same loader, so the intro screen never flashes up
@@ -594,11 +590,46 @@ export default function ARView() {
     autoStart && !triedAuto.current && !phase && !outcome && !(intro && !inspect) &&
     (support === null || (arWorks && !!car.glb && canAutoStart()));
 
+  /* There is no gate screen any more. Whenever nothing else owns the screen —
+     before the camera opens, after a session ends and before the route
+     changes, between a race and the next — the loader's campaign backdrop is
+     what shows, never a page of buttons flashing up for a few frames. */
+  const baseCover = !phase && !outcome && !(intro && !inspect);
+  /* The one case that needs a tap: iOS only grants motion access from a real
+     gesture, so when that grant is not already in hand (or a silent start was
+     refused) the backdrop carries a single button that opens the camera. */
+  const needsTap =
+    baseCover && !busy && !pendingAuto && arWorks && !!car.glb &&
+    (!autoStart || autoFailed || !canAutoStart());
+
   return (
     <>
       {/* The wait, with something in it. Sits above everything, including the
           AR overlay, because it is covering the moment that overlay appears. */}
-      {(busy || pendingAuto) && <DriftLoader lines={inspect ? ['Getting your car ready', 'Opening your camera'] : AR_LOADER_LINES} />}
+      {(busy || pendingAuto || baseCover) && (
+        <DriftLoader lines={inspect ? ['Getting your car ready', 'Opening your camera'] : AR_LOADER_LINES} />
+      )}
+      {needsTap && (
+        <div className="artap">
+          <Button
+            variant="hwBlue"
+            size="lg"
+            block
+            type="button"
+            onClick={() => {
+              setAutoFailed(false);
+              triedAuto.current = true;
+              void launch();
+            }}
+          >
+            <IconAR size={17} />
+            {inspect ? 'Open camera' : 'Start camera race'}
+          </Button>
+          <button type="button" className="artap__back" onClick={() => (inspect ? nav(-1) : nav('/'))}>
+            Go back
+          </button>
+        </div>
+      )}
 
       {/* the DOM overlay lives outside the page so WebXR & Camera mode can adopt it */}
       {/* `outcome` forces idle as well as `phase`. Relying on phase alone left
@@ -848,92 +879,6 @@ export default function ARView() {
         )}
       </div>
 
-      <PageHeader title={inspect ? 'View in your space' : 'Race in your space'} subtitle={car.name} onBack={() => nav(-1)} />
-      <main className="page">
-        <div className="shell" style={{ paddingTop: 12, display: 'grid', gap: 12 }}>
-          <img
-            src="/campaign/banner-ar.webp"
-            alt="A Hot Wheels car placed on a table in AR"
-            /* 2.4:1, the shape the supplied banner is drawn at — the old 4:3
-               crop cut its top and bottom off. */
-            style={{ width: '100%', aspectRatio: '2.4 / 1', objectFit: 'cover', borderRadius: 'var(--r-lg)' }}
-          />
-
-          <div className={'arstat ' + s.cls}>
-            <span className="arstat__d" />
-            <div>
-              <b>{s.title}</b>
-              <span>{s.body}</span>
-            </div>
-          </div>
-
-          <Button variant="hwBlue" size="lg" block
-            type="button"
-            disabled={!arWorks || busy}
-            onClick={() => launch()}
-          >
-            <IconAR size={17} />
-            {busy
-              ? 'Starting camera…'
-              : inspect
-              ? 'View in your space'
-              : support?.kind === 'camera'
-              ? 'Open Camera Race'
-              : 'Race in your space'}
-          </Button>
-
-          {inspect ? (
-            <Button variant="outline" block type="button" onClick={() => nav(-1)}>
-              Back to product
-            </Button>
-          ) : (
-            <Button variant="outline" block
-              type="button"
-              onClick={() => {
-                selectCar(car.id);
-                startRace({ force3d: true, skipStanding: true });
-              }}
-            >
-              <IconFlag size={16} />
-              Play 3D Browser Race instead
-            </Button>
-          )}
-
-          <div className="card" style={{ padding: 12 }}>
-            <div className="row" style={{ gap: 8, marginBottom: 6 }}>
-              <span style={{ color: 'var(--mut)' }}>
-                <IconInfo size={16} />
-              </span>
-              <b style={{ fontSize: 'var(--f-md)' }}>{inspect ? 'How it works' : 'How to Play in AR'}</b>
-            </div>
-            <ul className="howto">
-              {inspect ? (
-                <>
-                  <li><b>Open camera</b>: Works directly in Safari on iPhone, or Chrome on Android.</li>
-                  <li><b>Scan</b>: Point at a table or floor. A dotted grid spreads across the surface once it is found.</li>
-                  <li><b>Place</b>: Tap &apos;Place car here&apos; to stand it on that spot.</li>
-                  <li><b>Look</b>: Pinch to resize, drag to move, and walk around it. It renders at true 1:64 scale, about 7 cm long.</li>
-                </>
-              ) : (
-                <>
-                  <li><b>Open Camera</b>: Works directly in Safari on iPhone (or Chrome on Android).</li>
-                  <li><b>Drop Track</b>: Point at the floor and press &apos;Place track here&apos;. The ring is always in the middle of the screen.</li>
-                  <li><b>Inspect</b>: Once a car is placed, drag to turn it and pinch to zoom in on it.</li>
-                  <li><b>Adjust</b>: Pinch to resize the circuit, drag to reposition.</li>
-                  <li><b>Score</b>: Groceries on the track add points, debris takes them away.</li>
-                  <li><b>Drive</b>: The car drives itself. Tilt the phone to steer. No thumbs on the screen.</li>
-                </>
-              )}
-            </ul>
-          </div>
-
-          <p className="t-xs" style={{ lineHeight: 1.6, color: 'var(--mut)' }}>
-            {inspect
-              ? 'The real die-cast model, rendered at true 1:64 scale: about 7 cm long, the size it is in the box.'
-              : 'Rendered with high-detail 3D Hot Wheels scale model, road asphalt textures, and interactive chase camera tracking.'}
-          </p>
-        </div>
-      </main>
 
       {/* Outside .arov, which goes visibility:hidden the moment the result
           arrives — and the paper is still in the air for a second after it. */}

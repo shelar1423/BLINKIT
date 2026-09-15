@@ -415,13 +415,24 @@ export default function Product() {
     setReady(false);
     setErr(null);
     setPct(0);
+    /* A model that never reports ready left "Getting your car ready…" up for
+       good. After 20s, fall back to the photo with a line saying why. */
+    const slow = window.setTimeout(() => setErr('3D is taking too long to load'), 20000);
     const v = createProductViewer(host.current, product.glb, {
       onProgress: (p) => setPct(p < 0 ? 0 : p),
-      onReady: () => setReady(true),
-      onError: (m) => setErr(m),
+      onReady: () => {
+        window.clearTimeout(slow);
+        setErr(null);
+        setReady(true);
+      },
+      onError: (m) => {
+        window.clearTimeout(slow);
+        setErr(m);
+      },
     });
     viewer.current = v;
     return () => {
+      window.clearTimeout(slow);
       v.dispose();
       viewer.current = null;
     };

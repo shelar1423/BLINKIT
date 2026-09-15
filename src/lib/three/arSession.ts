@@ -1162,7 +1162,10 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
      start AR at any quality. The track no longer needs a detected surface: it
      goes where you are pointing, so there is nothing to require. */
   const base: XRSessionInit = {
-    optionalFeatures: ['local-floor', 'light-estimation'],
+    /* hit-test is OPTIONAL: asked for so "View in your space" can stand the car
+       on a real detected surface, never required, so a device without it still
+       gets a session (see `aimAtSurface`). */
+    optionalFeatures: ['local-floor', 'light-estimation', 'hit-test'],
   };
   try {
     session = await xr.requestSession('immersive-ar', {
@@ -1182,8 +1185,21 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   await renderer.xr.setSession(session);
 
-  await session.requestReferenceSpace('local');
+  const localSpace = await session.requestReferenceSpace('local');
   hitSource = null;
+  /* Surface detection for the car viewer. The race does not use it — its
+     circuit goes where you point — but a car stood in your room should sit ON
+     the table or floor you are looking at, and stay there as you walk round
+     it. WebXR tracks the room either way; the hit test is what finds the
+     surface. Silently absent where the device cannot do it. */
+  if (inspect) {
+    try {
+      const viewerSpace = await session.requestReferenceSpace('viewer');
+      hitSource = (await session.requestHitTestSource?.({ space: viewerSpace })) ?? null;
+    } catch {
+      hitSource = null;
+    }
+  }
   /* Ready from the first frame. There is nothing to search for any more, so
      there is no 'searching' phase to sit in and no way to be stuck in it. */
   setPhase('ready');
@@ -1261,12 +1277,37 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     reticle.visible = true;
   }
 
-  renderer.setAnimationLoop((now) => {
+  /** The reticle on the surface the phone is looking at, from this frame's hit
+   *  test. False when there is no hit source or nothing was found this frame,
+   *  and the fixed-distance aim takes over — so the reticle never vanishes
+   *  while a surface is being found. `place` reads the reticle, so placing
+   *  drops the car exactly where the surface was detected. */
+  function aimAtSurface(frame?: XRFrame): boolean {
+    if (!hitSource || !frame) return false;
+    const pose = frame.getHitTestResults(hitSource)[0]?.getPose(localSpace);
+    if (!pose) return false;
+    const cam = renderer.xr.getCamera();
+    cam.getWorldQuaternion(_q);
+    _fwd.set(0, 0, -1).applyQuaternion(_q);
+    const m = pose.transform.matrix;
+    _target.set(m[12], m[13], m[14]);
+    reticle.matrix.compose(
+      _target,
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.atan2(_fwd.x, _fwd.z), 0)),
+      new THREE.Vector3(1, 1, 1),
+    );
+    const bp = reticle.getObjectByName('blueprint');
+    if (bp) bp.scale.setScalar(sizeM);
+    reticle.visible = true;
+    return true;
+  }
+
+  renderer.setAnimationLoop((now, frame) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
 
     if (phase === 'ready') {
-      aimReticle();
+      if (!aimAtSurface(frame)) aimReticle();
 
       const pulse = reticle.getObjectByName('pulseRing') as THREE.Mesh;
       if (pulse) {

@@ -365,6 +365,17 @@ export default function RacePlay() {
     };
   }, [nav, tiltDriving]);
 
+  /* A load that never reports ready is a loader that never ends. After 25s,
+     say so and offer the way out, rather than spinning forever. */
+  useEffect(() => {
+    if (loaded || err) return;
+    const t = window.setTimeout(
+      () => setErr('The race is taking too long to load. Check your connection and try again.'),
+      25000,
+    );
+    return () => window.clearTimeout(t);
+  }, [loaded, err]);
+
   const tier = outcome ? tierFor(outcome.score) : null;
   const mm = Math.floor(stats.timeLeft / 60);
   const ss = Math.floor(stats.timeLeft % 60);

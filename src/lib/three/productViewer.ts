@@ -206,11 +206,16 @@ export function createProductViewer(container: HTMLElement, glbUrl: string, opts
     if (w === lastW && h === lastH) return;
     lastW = w;
     lastH = h;
-    if (roPending) return;
-    roPending = requestAnimationFrame(() => {
+    /* Settled, not per frame. The product sheet animates its gutters when you
+       scroll off the top, which resizes this container on every frame of the
+       transition — and reallocating the WebGL drawing buffer each time made
+       that transition stutter. The canvas is CSS-stretched meanwhile, so it
+       still fills the box; the buffer catches up once the size stops moving. */
+    window.clearTimeout(roPending);
+    roPending = window.setTimeout(() => {
       roPending = 0;
       frame();
-    });
+    }, 140);
   });
   ro.observe(container);
   frame();
@@ -242,7 +247,7 @@ export function createProductViewer(container: HTMLElement, glbUrl: string, opts
       disposed = true;
       renderer.setAnimationLoop(null);
       ro.disconnect();
-      if (roPending) cancelAnimationFrame(roPending);
+      if (roPending) window.clearTimeout(roPending);
       el.removeEventListener('pointerdown', onDown);
       el.removeEventListener('pointermove', onMove);
       el.removeEventListener('pointerup', onUp);

@@ -1429,6 +1429,21 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .steer__pad:active { background: rgba(255,255,255,0.24); }
 
+/* ---------- AR: the one tap the camera needs ----------
+   Over the loader's backdrop (.driftload is 400), pinned to the bottom, when
+   the camera cannot open without a gesture. Replaces the old gate screen. */
+.artap {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 401;
+  display: grid; gap: 10px;
+  padding: 16px var(--gut) calc(18px + var(--safe-b));
+}
+.artap__back {
+  justify-self: center;
+  padding: 8px 14px; border: 0; background: none;
+  color: #fff; font-size: var(--f-md); font-weight: 700;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
+}
+
 /* ---------- steering guide (SteerCue) ----------
    Plays once, a second into the race. Both versions run one 2.4s loop split
    into a left half and a right half, so the arrow, the ring and the caption
