@@ -3071,11 +3071,18 @@ input, select, textarea { font: inherit; color: inherit; }
 
    Full width means out past the board's own gutter AND the card's padding, so
    it reads as a band laid across the card rather than a chip sitting on it. */
-.rwd__board .lrow.is-me {
+.rwd__board .lrow.is-me:last-child {
   position: relative;
   margin-inline: -14px;
+  /* Down onto the card's bottom edge as well as out to its sides: the card's
+     own 20px of bottom padding left a band of white under the band, which
+     read as the row having come loose from the card it belongs to. The
+     corners take the card's radius so the two edges finish together, and
+     overflow keeps the chequer inside them. */
+  margin-bottom: -20px;
   padding-inline: 22px 20px;
-  border-radius: 0;
+  border-radius: 0 0 18px 18px;
+  overflow: hidden;
   /* No fill. Explicitly, because the generic .lrow.is-me tints itself and the
      card is already the right colour underneath: the rule and the flag are
      the mark, and a wash behind them only muddies the card. */
