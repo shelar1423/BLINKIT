@@ -1118,10 +1118,18 @@ input, select, textarea { font: inherit; color: inherit; }
 .dpicks .prail { padding-bottom: 4px; }
 
 /* ---- the three ways in, on the band's own ground ---- */
+/* Three tiles, capped rather than stretched.
+   At a third of the column each they stood 155 tall and the row finished 659
+   down an 812 screen — which is inside the viewport here and under the browser
+   chrome on a real phone, so the one row that says what the campaign sells was
+   the row you had to scroll for. Capped at 96 they are 134 tall and the row
+   closes with room to spare; the artwork carries its own titles, so it is the
+   whole tile that scales rather than a layout that reflows. */
 .cshelf {
-  display: grid; grid-template-columns: repeat(3, 1fr);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 96px));
+  justify-content: center;
   gap: 9px;
-  padding: 22px 0 4px;
+  padding: 14px 0 4px;
 }
 /* White at the top where the type sits, cooling to a pale blue behind the art.
    The art needs a ground to stand on and the badge needs one to read against,
