@@ -2165,8 +2165,18 @@ input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--f-sm); color: var(--mut); margin-top: 4px;
 }
 .pdp__stock { display: inline-flex; align-items: center; gap: 4px; }
+/* MRP, then the figure. The gap between them is the label's own, tighter than
+   the one before a struck price. */
 .pdp__price { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-top: 9px; }
-.pdp__price b { font-size: var(--f-3xl); font-weight: 800; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+/* The label is a qualifier on the number, so it is set as one: medium, and at
+   reading size rather than price size. */
+.pdp__mrpl {
+  font-size: var(--f-lg); font-weight: 500; color: var(--ink);
+  margin-right: -3px;
+}
+/* 700, not 800. At 800 against a medium label the figure read as shouting the
+   answer to a question nobody had asked quietly. */
+.pdp__price b { font-size: var(--f-3xl); font-weight: 700; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
 /* "MRP ₹799" — the label is not struck through, only the number is. */
 .pdp__mrp { font-size: var(--f-sm); color: var(--mut); }
 .pdp__mrp s { color: var(--mut); }
