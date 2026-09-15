@@ -22,6 +22,25 @@ import { primeAudio, skid } from '../horn';
    Both hand back the same ARHandle, so the UI does not branch.
    ============================================================ */
 
+/**
+ * How wide the circuit lands, in metres.
+ *
+ * 2.4 was a circuit you could not see all of while you were aiming at it. The
+ * placement plan is drawn at the size the track really arrives, on the floor,
+ * at whatever distance you are pointing — and the camera is 65 degrees
+ * vertical on a portrait phone, so a natural aim about forty degrees down sees
+ * a patch of floor roughly 1.2m across. A 2.4m plan was twice the width of the
+ * frame it had to be read in, and the two road edges simply ran off both
+ * sides.
+ *
+ * Nothing about the race changes with this. The chase camera and the launcher
+ * shot are both placed in track units and scaled by the same factor, so the
+ * road fills exactly as much of the screen as it did; what shrinks is the
+ * circuit's footprint against the real room, which is the one thing that was
+ * wrong.
+ */
+export const TRACK_M = 1.6;
+
 export type ARPhase = 'searching' | 'ready' | 'placed' | 'racing';
 
 export type ARSupport =
@@ -381,7 +400,12 @@ function fitText(ctx: CanvasRenderingContext2D, text: string, max: number, start
   return size;
 }
 
-function create3DStartBanner() {
+/**
+ * @param k the circuit's size as a fraction of the 2.4m it was composed
+ *          against, so the plaque keeps its place in the shot at any track
+ *          size rather than growing relative to the track as that shrinks.
+ */
+function create3DStartBanner(k = 1) {
   /* 2x the old resolution: this sprite is held close to the lens in AR, and at
      512px the type was visibly soft. */
   const W = 1024;
@@ -463,12 +487,12 @@ function create3DStartBanner() {
 
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
   const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(1.3, 1.3 * (H / W), 1);
+  sprite.scale.set(1.3 * k, 1.3 * k * (H / W), 1);
   /* Lower than it was. At 1.2m above the track it sat above the top of the
      frame whenever the circuit was dropped close to you — which is exactly
      when you most want to read it. 0.62m keeps it clear of the car and inside
      the picture at every placement distance. */
-  sprite.position.set(0, 0.62, 0);
+  sprite.position.set(0, 0.62 * k, 0);
   sprite.name = 'startBanner';
   sprite.visible = false;
   return sprite;
@@ -886,7 +910,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   const camera = new THREE.PerspectiveCamera(70, 1, 0.01, 40);
   lights(scene);
 
-  const reticle = makeReticle(opts.mode === 'inspect' ? 0 : (opts.trackSize ?? 2.4));
+  const reticle = makeReticle(opts.mode === 'inspect' ? 0 : (opts.trackSize ?? TRACK_M));
   reticle.matrixAutoUpdate = false;
   reticle.visible = false;
   scene.add(reticle);
@@ -942,7 +966,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
      thing in the box. The circuit's 2.4 m footprint is meaningless here. */
   /* See the note in the camera session: 1:64 is 7.4cm and reads as a thumbnail
      at arm's length. Opens larger; pinch still rules. */
-  let sizeM = inspect ? 0.19 : (opts.trackSize ?? 2.4);
+  let sizeM = inspect ? 0.19 : (opts.trackSize ?? TRACK_M);
   const inspectRoot = new THREE.Group();
 
   const applySize = () =>
@@ -955,7 +979,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   };
   applySize();
 
-  const startBanner = create3DStartBanner();
+  const startBanner = create3DStartBanner(sizeM / 2.4);
   if (inspect) {
     anchor.add(inspectRoot);
   } else {
@@ -1468,7 +1492,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.01, 60);
   lights(scene);
 
-  const reticle = makeReticle(opts.mode === 'inspect' ? 0 : (opts.trackSize ?? 2.4));
+  const reticle = makeReticle(opts.mode === 'inspect' ? 0 : (opts.trackSize ?? TRACK_M));
   scene.add(reticle);
 
   const anchor = new THREE.Group();
@@ -1532,7 +1556,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      thumbnail you cannot see the details of — which is the whole point of
      standing it in front of you. It opens at about 2.5x life size instead;
      pinch still takes it anywhere from 3cm to 1.2m. */
-  let sizeM = inspect ? 0.19 : (opts.trackSize ?? 2.4);
+  let sizeM = inspect ? 0.19 : (opts.trackSize ?? TRACK_M);
   const inspectRoot = new THREE.Group();
   const applySize = () =>
     inspect
@@ -1548,7 +1572,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     }
   };
   applySize();
-  const startBanner = create3DStartBanner();
+  const startBanner = create3DStartBanner(sizeM / 2.4);
   if (inspect) {
     anchor.add(inspectRoot);
   } else {

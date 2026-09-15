@@ -8,6 +8,7 @@ import { useStartRace } from '../lib/useStartRace';
 import {
   detectAR,
   startCameraSession,
+  TRACK_M,
   canAutoStart,
   type ARHandle,
   type ARPhase,
@@ -241,7 +242,7 @@ export default function ARView() {
       handle.current = await start({
         glbUrl: car.glb,
         overlayRoot: overlay.current,
-        trackSize: 2.4,
+        trackSize: TRACK_M,
         mode: inspect ? 'inspect' : 'race',
         /* The engine runs while the car is driving and not before: in AR the
            gap between opening the camera and actually racing is the whole

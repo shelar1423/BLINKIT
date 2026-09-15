@@ -5878,8 +5878,19 @@ input, select, textarea { font: inherit; color: inherit; }
 .pdpjoin .pdp__info,
 .pdpjoin .rowcard {
   width: 100%;
+  /* The margins have to go with the width.
+
+     `.rowcard` carries `margin: 8px 12px 0` from its life as a card of its
+     own. Overriding the width alone left that 12px in place, so the brand row
+     started 12px inside the coupon's left edge and ran 11px PAST its right
+     one — the panel it is supposed to be part of, overflowing the panel. The
+     8px on top pushed it off the perforation as well. */
+  margin: 0;
   border: 0; border-radius: 0; background: none;
 }
+/* And the gap the perforation sits in is even: twelve above, twelve below.
+   The row's own nine would have left the rule riding high in its own gutter. */
+.pdpjoin .rowcard { padding-top: 12px; padding-bottom: 12px; }
 /* The perforation: a hairline inset from both edges, with the notches sitting
    on the edges it stops short of. Fainter than the card's own border — it
    separates two halves of one thing, where the border separates the thing
