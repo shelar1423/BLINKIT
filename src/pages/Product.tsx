@@ -454,6 +454,46 @@ export default function Product() {
   const shot = shots[has3D ? view - 1 : view] ?? product.image;
   const alsoLike = CARS.filter((c) => c.id !== product.id && !c.mystery).slice(0, 6);
 
+  /* Swipe between the photographs.
+
+     The stage is not a scroller — it swaps what it is showing — so there was
+     nothing for a finger to drag and the dots were the only way through. They
+     are a destination control, not a way to walk the strip, and on a phone
+     nobody reaches for them first.
+
+     The MODEL is the one page this does not cover, and deliberately: a drag
+     there rotates the car, which is what the hint under it says and the whole
+     reason that page exists. So the swipe walks the photographs, and the
+     model stays a page you tap to. Gating on `view` rather than on what was
+     touched is what keeps the two apart cleanly — on a photograph the 3D
+     layer is already `pointer-events: none`, and on the model it takes the
+     gesture first and this never runs.
+
+     Down and up positions, with no drag-follow: the gesture has to survive
+     the browser taking the stream away mid-scroll, and comparing two points
+     does that where tracking a transform does not. */
+  /** Far enough that it is a swipe and not a tap that wandered. */
+  const SWIPE_MIN = 40;
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+  /** The first page a swipe may land on: the photographs, never the model. */
+  const firstShot = has3D ? 1 : 0;
+
+  const onStageDown = (e: React.PointerEvent) => {
+    if (view < firstShot || pages <= firstShot + 1) return;
+    swipe.current = { x: e.clientX, y: e.clientY };
+  };
+  const onStageUp = (e: React.PointerEvent) => {
+    const from = swipe.current;
+    swipe.current = null;
+    if (!from) return;
+    const dx = e.clientX - from.x;
+    const dy = e.clientY - from.y;
+    /* Horizontal, and decisively so. Without the second test a scroll that
+       drifts sideways pages the carousel on the way past. */
+    if (Math.abs(dx) < SWIPE_MIN || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+    setView((v) => Math.max(firstShot, Math.min(pages - 1, v + (dx < 0 ? 1 : -1))));
+  };
+
   const share = async () => {
     const url = window.location.href;
     try {
@@ -540,7 +580,14 @@ export default function Product() {
           {/* White, with the car standing on its own soft shadow — the same
               studio treatment Blinkit gives every product, rather than a lit
               set that only suits the five rendered cars. */}
-          <div className="pdp__stage">
+          <div
+            className="pdp__stage"
+            onPointerDown={onStageDown}
+            onPointerUp={onStageUp}
+            onPointerCancel={() => {
+              swipe.current = null;
+            }}
+          >
             {/* The model is mounted for the whole life of the sheet and HIDDEN
                 between photographs rather than unmounted. Taking it out took
                 its canvas with it, and the viewer is built once per product —
