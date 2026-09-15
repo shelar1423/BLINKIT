@@ -3064,9 +3064,10 @@ input, select, textarea { font: inherit; color: inherit; }
 
    A pale ground on a white card is barely a change of colour, and a coloured
    outline round one row of a list reads as a form field. This is a race
-   result, so the row is a BAND across the whole card with the chequered flag
-   standing at its edge: the only motif on the screen that means "this one"
-   without a word, and the one both brands already own.
+   result, so the row is a BAND across the whole card, ruled in the campaign's
+   blue, with the chequered flag standing inside its left edge: the only motif
+   on the screen that means "this one" without a word, and the one both brands
+   already own.
 
    Full width means out past the board's own gutter AND the card's padding, so
    it reads as a band laid across the card rather than a chip sitting on it. */
@@ -3076,26 +3077,22 @@ input, select, textarea { font: inherit; color: inherit; }
   padding-inline: 22px 20px;
   border-radius: 0;
   background: #FFF4EA;
-  box-shadow: none;
+  /* The rule, as an inset shadow rather than a border: a real 2px border adds
+     4px of height and pushes this row taller than the three above it. */
+  box-shadow: inset 0 0 0 2px var(--hw-b);
 }
 /* The chequer itself: two columns of it, drawn rather than imported, so it
-   stays crisp at any density and costs nothing. */
+   stays crisp at any density and costs nothing. Inset by the rule's own width
+   so the blue closes round it rather than crossing it. */
 .rwd__board .lrow.is-me::before {
   content: '';
-  position: absolute; left: 0; top: 0; bottom: 0; width: 10px;
+  position: absolute; left: 2px; top: 2px; bottom: 2px; width: 9px;
   background-color: #fff;
   background-image:
     linear-gradient(45deg, #1F1F1F 25%, transparent 25% 75%, #1F1F1F 75%),
     linear-gradient(45deg, #1F1F1F 25%, transparent 25% 75%, #1F1F1F 75%);
-  background-size: 10px 10px;
-  background-position: 0 0, 5px 5px;
-}
-/* And a flame-orange edge closing it on the right, so the band has two ends
-   rather than trailing off into the card. */
-.rwd__board .lrow.is-me::after {
-  content: '';
-  position: absolute; right: 0; top: 0; bottom: 0; width: 3px;
-  background: var(--hw-o);
+  background-size: 9px 9px;
+  background-position: 0 0, 4.5px 4.5px;
 }
 
 /* ---------- the claimable reward, as a ticket ----------
