@@ -5,7 +5,6 @@ import { AppHeader, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
 import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useDrop } from '../data/useDrop';
-import { FlipClock } from '../design/components/FlipClock';
 import { Button } from '../design/elements';
 import { IconChevronRight, IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
@@ -87,6 +86,22 @@ export default function Home() {
               catches the parts of the band nothing else is using. A button
               cannot contain a button, which is why it is a sibling rather than
               a wrapper. */}
+          {/* The drop's clock, as a rule across the top of the band.
+              It was a split-flap in the middle of the hero: three stacked rows
+              of centred type, the tallest thing between the lockup and the
+              button, and the reason the tiles fell past the fold. A deadline
+              is a line of small print, not a mechanism — so it is one strip,
+              edge to edge, above everything it is counting down for. */}
+          <p className="ctake__ends">
+            <b>{drop.phase === 'ended' ? 'Drop ended' : 'Ends in'}</b>
+            {drop.phase !== 'ended' && (
+              <span className="t-num">
+                {parts.days}d : {String(parts.hours).padStart(2, '0')}h :{' '}
+                {String(parts.mins).padStart(2, '0')}m
+              </span>
+            )}
+          </p>
+
           <button
             className="ctake__tap"
             type="button"
@@ -144,16 +159,6 @@ export default function Home() {
               <span className="ctake__shine" aria-hidden="true" />
             </span>
           </h2>
-
-          {/* The countdown is the headline. A row of numbers that merely
-              changes is a readout; a split-flap is a mechanism, and the
-              seconds flap turns once a second whether or not anyone is
-              watching. The hinge is set as a chequer — the one place the flag
-              motif costs nothing. */}
-          <FlipClock
-            parts={parts}
-            lead={drop.phase === 'ended' ? 'Drop ended' : drop.lead}
-          />
 
           {/* The concealed car is gone: the band now shows the campaign's own
               artwork instead of a cloth over something withheld, so there is

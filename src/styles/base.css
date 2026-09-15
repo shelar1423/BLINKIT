@@ -664,12 +664,38 @@ input, select, textarea { font: inherit; color: inherit; }
 .ctake {
   position: relative;
   margin-top: -1px;
-  padding: 28px var(--gut) 12px;
+  /* Named, so the strip above can pull itself back out of it. */
+  --ctake-pt: 28px;
+  /* Nothing at the foot. View all Hot Wheels is the band's own last line and
+     closes it; 12px under it left the band running on past the thing that
+     ends it, which reads as a seam rather than an edge. */
+  padding: var(--ctake-pt) var(--gut) 0;
 }
+/* The drop's deadline, as a rule across the top of the band.
+   Full width and flush to the top edge: it is not a thing in the layout, it is
+   the line the band is under. Small, because a deadline is small print — what
+   makes it read is that it is yellow and it is first, not that it is big. The
+   negative margins take it out past the band's own gutter and its top padding,
+   which is what makes it a strip rather than a pill. */
+.ctake__ends {
+  position: relative; z-index: 2; overflow: visible;
+  /* Real air under it. The rule is the first thing on the band and the
+     lockup is the point of it: they are two statements, not one block. */
+  margin: calc(var(--ctake-pt, 16px) * -1) calc(var(--gut) * -1) 26px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 5px 12px;
+  background: var(--yellow); color: var(--ink);
+  font-size: var(--f-2xs); font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.ctake__ends b { font-weight: 800; }
+.ctake__ends span { font-weight: 800; letter-spacing: 0.08em; }
+
 /* Without the track divider overhead there is nothing to clear, so the band
    starts where the header ends and the two read as one surface. */
 .ctake--flat {
-  padding-top: 16px;
+  --ctake-pt: 16px;
+  padding-top: var(--ctake-pt);
   /* The reference storefronts all sit on one saturated colour — hot pink for
      Promise Day, deep red for Diwali, a bright blue for the ice cream. This
      was a muted navy, which is why it read as pale. */
@@ -990,10 +1016,10 @@ input, select, textarea { font: inherit; color: inherit; }
      stretch edge to edge. */
   display: flex; width: fit-content;
   position: relative; overflow: hidden;
-  /* Was -42px, which hauled the button up over the mystery plate that used to
-     sit above it. The plate is gone, so the pull was just jamming the CTA into
-     the countdown's labels. 16px of air, as the reference has. */
-  margin: 16px auto 0;
+  /* The clock left the middle of the band, so what is left up there is the
+     lockup and this — and two things with room between them read as two
+     things. 26 above, and the shelf below takes the same. */
+  margin: 26px auto 0;
   position: relative; z-index: 2;
   /* A curved rectangle, not a pill. */
   min-width: 158px; height: 40px;
@@ -1129,10 +1155,15 @@ input, select, textarea { font: inherit; color: inherit; }
    The gap is wide enough to read as three separate cards. At 9px they were a
    strip with seams in it, and each of these is its own thing to press. */
 .cshelf {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 102px));
+  /* Capped rather than stretched to the band. At the full width they were 107
+     and the row was the loudest thing under the lockup; these are a way IN to
+     the catalogue, not the catalogue. Centred, with the gap left alone. */
+  display: grid; grid-template-columns: repeat(3, minmax(0, 98px));
   justify-content: center;
   gap: 15px;
-  padding: 14px 0 4px;
+  /* 50: the button needs more room under it than over it. Above it there is
+     only the lockup; below it are three things to press. */
+  padding: 50px 0 4px;
 }
 /* White at the top where the type sits, cooling to a pale blue behind the art.
    The art needs a ground to stand on and the badge needs one to read against,
@@ -1212,7 +1243,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .cshop {
   display: flex; align-items: center; justify-content: center; gap: 6px;
   width: calc(100% + var(--gut) * 2);
-  margin: 14px calc(var(--gut) * -1) 0;
+  /* 30 over it, not 14: it is a full-bleed bar closing the band, and a bar
+     that close to the tiles read as their footer rather than as the band's
+     own last line. */
+  margin: 30px calc(var(--gut) * -1) 0;
   padding: 14px var(--gut);
   background: rgba(255, 255, 255, 0.1);
   border: 0; border-top: 1px solid rgba(255, 255, 255, 0.16);
