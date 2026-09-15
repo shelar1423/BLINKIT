@@ -1592,6 +1592,18 @@ input, select, textarea { font: inherit; color: inherit; }
   max-height: calc(100% - var(--safe-t) - 74px);
   pointer-events: none;
 }
+/* A WebXR session on Android is this element taken fullscreen by the browser,
+   and Chrome lays its own "drag from the top to exit full screen" toast across
+   the bottom of the screen while it is — right over Place track here, which is
+   the one control the placement screen has. The column lifts clear of it.
+
+   Only under WebXR: on iOS this is an ordinary fixed overlay over a camera
+   feed, with nothing of the browser's sitting on top of it, and 18px is where
+   the button has been all along. */
+.arov.is-xr .arov__bottom {
+  bottom: calc(var(--safe-b) + 64px);
+  max-height: calc(100% - var(--safe-t) - 120px);
+}
 .arov__hint {
   text-align: center; color: #fff; font-size: var(--f-lg); font-weight: 800;
   text-shadow: 0 2px 10px rgba(0,0,0,0.65);
@@ -5780,7 +5792,12 @@ input, select, textarea { font: inherit; color: inherit; }
    under it. Over the launcher rather than centred on the screen — the lever is
    what the count belongs to, and the eye is already down there. */
 .lcount {
-  position: absolute; inset: 0; z-index: 210;
+  /* Fixed, not absolute. The count now renders inside .arov so that a WebXR
+     dom-overlay session composites it at all, and .arov is 100dvh — absolute
+     would have re-resolved these insets against that box and moved the figure
+     up by half a URL bar. Fixed keeps it on the viewport, which is the block
+     it was already being measured against out at the page root. */
+  position: fixed; inset: 0; z-index: 210;
   display: grid; place-items: center; align-content: center;
   pointer-events: none;
 }

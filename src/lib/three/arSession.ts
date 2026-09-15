@@ -1002,6 +1002,10 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   const fpCamPos = new THREE.Vector3();
   const fpCamLook = new THREE.Vector3();
   let fpInited = false;
+  /* The launcher framing, shared with the 3D race and the camera session.
+     Used once, at placement — see `place`. */
+  const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  const UP_Y = new THREE.Vector3(0, 1, 0);
 
   function startRace() {
     if (inspect || held || phase !== 'placed') return;
@@ -1055,6 +1059,38 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       // Drop to floor level in front of user
       anchor.position.copy(pos).addScaledVector(fwd, 1.35).setY(pos.y - 1.25);
       anchor.rotation.set(0, Math.atan2(fwd.x, fwd.z), 0);
+    }
+    /* Stand the player at the launcher.
+
+       The 3D race and the camera session both open on the same shot — down
+       the launch straight, from just behind the sled — by moving the CAMERA
+       to it. Under WebXR the camera IS the phone and cannot be moved, so the
+       circuit moves instead: it is turned to run away along the way the phone
+       is facing, then shifted so the point that shot is taken from lands
+       exactly on the phone.
+
+       Without this Android dropped the circuit on the floor and left the
+       player standing over a lever a few centimetres long, off in the corner
+       of a track they were looking down at. The track was placed and nothing
+       else ever happened, which is precisely how it read. It is also what the
+       racing branch below already does with the chase camera, so the race no
+       longer jumps at the moment it starts. */
+    if (!inspect) {
+      const scale = engine.root.scale.x || (sizeM / engine.trackExtent);
+      engine.launcherCameraTarget(lnTarget);
+      const dir = lnTarget.look.clone().sub(lnTarget.pos).setY(0);
+      /* The shot's own bearing inside the track, taken back out of the yaw:
+         what has to face the way the phone faces is the SHOT, not the
+         circuit's own axis. */
+      anchor.rotation.y -= Math.atan2(dir.x, dir.z);
+      const eye = new THREE.Vector3();
+      (renderer.xr.isPresenting ? renderer.xr.getCamera() : camera).getWorldPosition(eye);
+      anchor.position
+        .copy(eye)
+        .addScaledVector(
+          lnTarget.pos.clone().multiplyScalar(scale).applyAxisAngle(UP_Y, anchor.rotation.y),
+          -1,
+        );
     }
     anchor.visible = true;
     reticle.visible = false;
@@ -1130,9 +1166,11 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   session.addEventListener('select', () => {
     if (phase === 'ready') place();
-    /* Never in inspect mode: a second select there is someone looking closer
-       at their car, not asking to race it. */
-    else if (phase === 'placed' && !inspect && !held) startRace();
+    /* And nothing else. A tap used to start the race from `placed`, which on
+       Android meant the first touch anywhere — including the one that grabs
+       the lever — sent the car off with no pull behind it and no count in
+       front of it. The launcher is the only way into a race here, exactly as
+       it is in the camera session and the 3D race. */
   });
   session.addEventListener('end', cleanup);
   opts.overlayRoot.addEventListener('beforexrselect', blockSelect);
@@ -1183,6 +1221,19 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
       new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)),
       new THREE.Vector3(k, k, k),
     );
+    /* The plan is the one part of the reticle that must NOT hold a constant
+       apparent size: its whole job is to outline the ground the circuit will
+       really take, and the circuit arrives at sizeM whatever the distance. It
+       sits inside the reticle for its position and rotation alone, so it
+       cancels the k it would otherwise inherit.
+
+       This is what made the track look enormous on Android before it was even
+       placed. k runs to 2.4, so a 2.4m circuit was being outlined at nearly
+       six metres across, and the two road edges ran clean off both sides of
+       the screen. The camera session has always cancelled it; this path never
+       did. */
+    const bp = reticle.getObjectByName('blueprint');
+    if (bp) bp.scale.setScalar(sizeM / k);
     reticle.visible = true;
   }
 
