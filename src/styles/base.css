@@ -471,11 +471,12 @@ input, select, textarea { font: inherit; color: inherit; }
    land on --f-xl / --f-lg / --f-base exactly — so they are taken from the scale
    rather than hardcoded, and the card grows with everything else at 768px
    instead of staying still while the page around it steps up. */
-/* 4px down and a touch tighter. At +4 on --f-xl the figure was the loudest
-   thing on the card — louder than the name it belongs to — and a rupee sign
-   set at that size next to tabular digits opens a gap that reads as a space
-   between the currency and the number. */
-.pcard__price { font-size: var(--f-xl); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.045em; }
+/* Two down from where it started, not four. At +4 on --f-xl the figure was
+   the loudest thing on the card, louder than the name it belongs to; at --f-xl
+   flat it had stopped leading the block at all. The tracking stays tight: a
+   rupee sign beside tabular digits opens a gap at this size that reads as a
+   space between the currency and the number. */
+.pcard__price { font-size: calc(var(--f-xl) + 2px); font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: -0.045em; }
 /* The locked car has no price yet, and saying so in price-sized bold made it
    read as a product whose data failed to load. Smaller, lighter, and carrying
    the campaign's red, it reads as a state instead of a value. */
