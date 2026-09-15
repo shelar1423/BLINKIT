@@ -606,6 +606,9 @@ function makeEngine(
       engine.awardJump(points);
       opts.onJumpCue?.(false, canLift());
       opts.onJumpResult?.({ quality, points });
+      /* And the engine wants to know: a miss rolls off the lip instead of
+         flying. */
+      return quality !== 'miss';
     },
     onBulletTime: opts.onBulletTime,
     onFinishCue: opts.onFinishCue,

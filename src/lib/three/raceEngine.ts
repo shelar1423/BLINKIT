@@ -74,7 +74,14 @@ export type EngineOpts = {
   /** The ramp is coming; the lift window is open from here. */
   onJumpArm?: () => void;
   /** Wheels have left the ramp. */
-  onJumpTakeoff?: () => void;
+  /**
+   * The car has reached the lip of the ramp.
+   *
+   * Returns whether the player actually lifted for it. A ramp is a ramp, not a
+   * catapult: without the gesture the car rolls off the end and drops, and the
+   * jump is something you did rather than something that happened to you.
+   */
+  onJumpTakeoff?: () => boolean;
   /** Back on the road. */
   onJumpLand?: () => void;
   /**
@@ -3240,11 +3247,25 @@ export class RaceEngine {
       pitchTarget = RAMP_ANGLE;
       if (this.rampU >= 1) {
         this.rampU = -1;
+        /* Asked BEFORE the arc is set, because the answer decides which arc.
+           The car used to be thrown into the full jump at the lip whatever the
+           player did, and the lift only changed the score — so the one
+           mechanic the ramp exists for could be ignored and the car still flew
+           the same. */
+        const lifted = this.opts.onJumpTakeoff?.() ?? true;
         this.airT = 0;
-        this.airTime = raceInteraction.jumpAirtime;
-        this.airPeak = raceInteraction.jumpHeight;
         this.airFrom = RAMP_RISE; // it leaves the road at the lip's height
-        this.opts.onJumpTakeoff?.();
+        if (lifted) {
+          this.airTime = raceInteraction.jumpAirtime;
+          this.airPeak = raceInteraction.jumpHeight;
+        } else {
+          /* No lift: it keeps going straight off the lip and falls. Short
+             enough to read as dropping rather than jumping, and still an arc
+             rather than a snap back to the road, because a car that teleports
+             down off a ramp looks broken. */
+          this.airTime = raceInteraction.jumpDropTime;
+          this.airPeak = RAMP_RISE * 1.1;
+        }
       }
     }
 

@@ -214,6 +214,14 @@ export const raceInteraction = {
    * and flight — fits inside the straight even at full boost.
    */
   jumpAirtime: 0.8,
+  /**
+   * And the airtime of a ramp taken WITHOUT a lift: off the lip, and down.
+   *
+   * Short, because this is not a jump — it is the car running out of ramp.
+   * Long enough to be an arc rather than a snap, which is what stops it
+   * looking like the car fell through the road.
+   */
+  jumpDropTime: 0.34,
   /** Peak height above the road, in engine units. */
   jumpHeight: 7.5,
 
