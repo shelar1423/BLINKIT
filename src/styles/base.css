@@ -2137,7 +2137,26 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* The card's first line: how fast it lands, how it is rated, and the campaign
    flags in the space the real PDP leaves empty. */
-.pdp__meta { display: flex; align-items: center; gap: 8px; min-height: 20px; }
+/* Wraps, and that is the whole of it.
+
+   Every item in this row is unshrinkable: the delivery time and the rating are
+   `white-space: nowrap`, and the flags are `flex: none` so they cannot be
+   squeezed into ellipsis. So the row has a hard minimum width, and below it
+   something has to leave the box — which is what the NEW DROP flag was doing,
+   2px past the card at 375 and further on a 360.
+
+   It only shows at rest, which is why it took a while to see: the sheet keeps
+   19px gutters until you scroll, and `.pdpdeck.is-wide` then hands them back.
+   Every measurement taken scrolled looks fine.
+
+   Wrapping costs a line only on the widths where the alternative is an
+   overflow, and the flags keep `margin-left: auto` either way — right-aligned
+   at the end of the first line where they fit, right-aligned on their own
+   line where they do not. The flags live on the right in both. */
+.pdp__meta {
+  display: flex; align-items: center; gap: 8px; min-height: 20px;
+  flex-wrap: wrap; row-gap: 6px;
+}
 .pdp__sep { width: 1px; height: 12px; background: var(--line-2); flex: none; }
 .pdp__eta {
   display: inline-flex; align-items: center; gap: 5px;
