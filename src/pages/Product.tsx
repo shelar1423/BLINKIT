@@ -150,7 +150,6 @@ function PeekSheet({ product, side }: { product: ProductT; side: 'next' | 'prev'
           <h2 className="pdp__name">{product.name}</h2>
           <p className="pdp__unit">{product.unit}</p>
           <div className="pdp__price">
-            {!product.mrp && <span className="pdp__mrpl">MRP</span>}
             <b>{rupees(product.price)}</b>
             {product.mrp && (
               <span className="pdp__mrp">
@@ -696,11 +695,6 @@ export default function Product() {
             </p>
 
             <div className="pdp__price">
-              {/* Labelled, the way Blinkit labels it — but only when this IS
-                  the MRP. Where a product carries a struck one below, the
-                  figure here is what you pay rather than what it lists at, and
-                  calling both MRP would be saying it twice and wrong once. */}
-              {!product.mrp && <span className="pdp__mrpl">MRP</span>}
               <b>{rupees(product.price)}</b>
               {product.mrp && (
                 <span className="pdp__mrp">
