@@ -2160,9 +2160,11 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag--rare { background: var(--yellow-tint); color: var(--gold-ink); border: 1px solid #F0DFA4; }
 
 .pdp__name { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
+/* One fact, so it is set as a fact rather than as a caption: semibold, and in
+   the ink the rest of the block is in. */
 .pdp__unit {
   display: flex; align-items: center; gap: 8px;
-  font-size: var(--f-sm); color: var(--mut); margin-top: 4px;
+  font-size: var(--f-sm); font-weight: 600; color: var(--mut); margin-top: 4px;
 }
 .pdp__stock { display: inline-flex; align-items: center; gap: 4px; }
 /* "MRP ₹179", as Blinkit sets it: one line, one size, and the weight doing all

@@ -17,7 +17,6 @@ import {
   IconRotate,
   IconSearch,
   IconShare,
-  IconStock,
 } from '../design/elements/Icons';
 import { ProductCard, Stars, Stepper } from '../design/components/ProductCard';
 import { CartPill } from '../design/components/CartPill';
@@ -682,18 +681,11 @@ export default function Product() {
 
             <h1 className="pdp__name">{product.name}</h1>
 
-            <p className="pdp__unit">
-              {product.unit}
-              {product.stock ? (
-                <>
-                  <i className="pdp__sep" aria-hidden="true" />
-                  <span className="pdp__stock">
-                    <IconStock size={13} />
-                    {product.stock} left
-                  </span>
-                </>
-              ) : null}
-            </p>
+            {/* The pack size, and nothing else. "die-cast" is already one of
+                the spec chips above this, and how many are left is on the
+                listing card where it changes a decision — here it was three
+                facts on one line where the line only has one job. */}
+            <p className="pdp__unit">{product.unit}</p>
 
             <div className="pdp__price">
               {/* Labelled, the way Blinkit labels it — but only when this IS
