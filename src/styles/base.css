@@ -2155,7 +2155,6 @@ input, select, textarea { font: inherit; color: inherit; }
    line where they do not. The flags live on the right in both. */
 .pdp__meta {
   display: flex; align-items: center; gap: 8px; min-height: 20px;
-  flex-wrap: wrap; row-gap: 6px;
 }
 .pdp__sep { width: 1px; height: 12px; background: var(--line-2); flex: none; }
 .pdp__eta {

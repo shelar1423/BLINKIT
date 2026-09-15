@@ -724,11 +724,27 @@ export default function Product() {
                   </span>
                 </>
               )}
-              {/* The campaign's own flags. The real PDP leaves the right of this
-                  row empty, so they cost no extra line. */}
+              {/* The campaign's own flag, in the space the real PDP leaves
+                  empty at the right of this row, so it costs no extra line.
+
+                  ONE of them, not both. Every item in this row is
+                  unshrinkable — the time and the rating are nowrap, the flags
+                  are flex: none — so the row has a hard minimum width, and
+                  two flags put it 30px over the 272 the sheet gives at rest
+                  on a 360. The overflow was NEW DROP leaving the card.
+
+                  The one to drop is the generic one. "Limited Drop" is
+                  hardcoded on every product; the badge is what THIS product
+                  is. Side by side they were two flags making the same kind of
+                  claim, and the specific one wins — which is why the row now
+                  fits with about 50px to spare rather than by shaving gaps
+                  down to nothing. */}
               <span className="pdp__tags">
-                <span className="tag tag--blue">Limited Drop</span>
-                {product.badge && <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>}
+                {product.badge ? (
+                  <span className={`tag tag--${BADGE_TONE[product.badge]}`}>{product.badge}</span>
+                ) : (
+                  <span className="tag tag--blue">Limited Drop</span>
+                )}
               </span>
             </div>
 
