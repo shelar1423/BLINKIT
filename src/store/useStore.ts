@@ -78,7 +78,7 @@ export type Order = {
  * the state where it asks for one. Set it back to true only to demo the race
  * itself back to back.
  */
-const UNLIMITED_RACES = false;
+const UNLIMITED_RACES = true;
 
 const MAX_RACES = 3;
 
@@ -342,7 +342,9 @@ export const useStore = create<State>()(
         const safe: Partial<State> = {};
         if (p.cart && typeof p.cart === 'object') safe.cart = p.cart;
         if (Array.isArray(p.saved)) safe.saved = p.saved.filter((x) => typeof x === 'string');
-        if (typeof p.racesLeft === 'number' && p.racesLeft >= 0) safe.racesLeft = p.racesLeft;
+        /* While races are unlimited, a stored zero from an earlier build would
+           still lock the player out — so the count is taken fresh. */
+        if (!UNLIMITED_RACES && typeof p.racesLeft === 'number' && p.racesLeft >= 0) safe.racesLeft = p.racesLeft;
         if (typeof p.totalPoints === 'number' && p.totalPoints >= 0) safe.totalPoints = p.totalPoints;
         if (typeof p.bestScore === 'number') safe.bestScore = p.bestScore;
         if (Array.isArray(p.unlockedRewards)) safe.unlockedRewards = p.unlockedRewards;

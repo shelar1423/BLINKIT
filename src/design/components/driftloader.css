@@ -1,6 +1,8 @@
 /* The race loader: a full-bleed hold over whatever launched it. */
 .driftload {
   position: fixed; inset: 0; z-index: 400;
+  /* See .stage: inset:0 alone leaves a strip of page under it on iOS. */
+  height: 100dvh;
   display: grid; align-content: center; justify-items: center; gap: 18px;
   /* the Hot Wheels city in campaign blue; skyline anchored to the bottom, and
      the flat sky colour behind it for screens taller than the artwork */
@@ -24,7 +26,8 @@
 .trackload {
   width: min(34vw, 128px); height: auto; display: block;
   overflow: visible;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+  /* No drop-shadow. Safari rasterises the filter against the SVG's own box, so
+     what showed under the ring was a dark rectangle rather than a soft shadow. */
 }
 /* inside a page, e.g. the PDP's 3D stage while the model loads */
 .trackload--sm { width: 56px; filter: none; }

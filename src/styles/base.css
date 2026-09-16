@@ -61,7 +61,13 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* ---------- app shell ---------- */
 .app {
+  /* svh, not dvh. dvh GROWS as Safari's toolbar retracts, so the shell got
+     taller mid-scroll and the extra height came out as empty page under the
+     bottom nav — scrollable white at the end of every feed. svh is the height
+     with the toolbar up, which is the smallest the viewport ever is, so the
+     shell never gains height it has nothing to put in. */
   min-height: 100dvh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   max-width: 520px;          /* mobile-content width on desktop, NOT a phone frame */
@@ -1334,6 +1340,10 @@ input, select, textarea { font: inherit; color: inherit; }
 /* ---------- fullscreen surfaces (race / AR) ---------- */
 .stage {
   position: fixed; inset: 0; z-index: 100;
+  /* Tracks the visible viewport: a fixed inset:0 box is sized against the
+     LAYOUT viewport, which is shorter than the screen once Safari hides its
+     toolbar — so the page showed through underneath. */
+  height: 100dvh;
   background: #140c26; overflow: hidden;
   touch-action: none; overscroll-behavior: none;
 }
@@ -1782,8 +1792,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .bfoot__line span { white-space: nowrap; }
 .bfoot__heart {
   display: inline-block; vertical-align: -0.14em; margin-left: 0.2em;
-  /* Scales with the line rather than staying at its 52px attribute. */
-  width: 0.72em; height: 0.72em;
+  /* Scales with the line rather than staying at its 52px attribute, plus the
+     16px asked for on top. */
+  width: calc(0.72em + 16px); height: calc(0.72em + 16px);
   color: #FF6B5A; fill: currentColor; stroke: none;
 }
 .bfoot__rule { border: 0; border-top: 1px solid #E4E4E6; margin: 26px 0 22px; }
@@ -2770,6 +2781,10 @@ input, select, textarea { font: inherit; color: inherit; }
 .rwd {
   /* above .arov (200): the AR overlay must never stack over the result */
   position: fixed; inset: 0; z-index: 260;
+  /* Tracks the visible viewport: a fixed inset:0 box is sized against the
+     LAYOUT viewport, which is shorter than the screen once Safari hides its
+     toolbar — so the page showed through underneath. */
+  height: 100dvh;
   /* x hidden: nothing here should ever make the screen draggable sideways. */
   overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
   display: flex; flex-direction: column; align-items: center;
@@ -4853,6 +4868,10 @@ input, select, textarea { font: inherit; color: inherit; }
    (260) because a result must never arrive behind a briefing. */
 .coach {
   position: fixed; inset: 0; z-index: 230;
+  /* Tracks the visible viewport: a fixed inset:0 box is sized against the
+     LAYOUT viewport, which is shorter than the screen once Safari hides its
+     toolbar — so the page showed through underneath. */
+  height: 100dvh;
   pointer-events: auto;
   overscroll-behavior: none; touch-action: none;
   display: grid; place-items: center;
@@ -5017,6 +5036,10 @@ input, select, textarea { font: inherit; color: inherit; }
    riding on the button. */
 .cko {
   position: fixed; inset: 0;
+  /* Tracks the visible viewport: a fixed inset:0 box is sized against the
+     LAYOUT viewport, which is shorter than the screen once Safari hides its
+     toolbar — so the page showed through underneath. */
+  height: 100dvh;
   display: grid;
   /* BOTH axes constrained. Rows alone leaves the implicit column at `auto`,
      which is max-content — so the suggestion shelf, three cards wide, sized
@@ -5667,6 +5690,10 @@ input, select, textarea { font: inherit; color: inherit; }
    centred stack, which floated Continue in the middle of the screen. */
 .arin {
   position: fixed; inset: 0; z-index: 240;
+  /* Tracks the visible viewport: a fixed inset:0 box is sized against the
+     LAYOUT viewport, which is shorter than the screen once Safari hides its
+     toolbar — so the page showed through underneath. */
+  height: 100dvh;
   display: grid; grid-template-rows: 1fr auto; justify-items: center;
   padding: calc(var(--safe-t) + 20px) var(--gut) calc(18px + var(--safe-b));
   text-align: center; color: #fff;
