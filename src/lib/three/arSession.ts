@@ -1753,7 +1753,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     anchor.rotation.y = 0;
     /* A fresh drop re-composes the shot; see shotFixed. */
     shotFixed = false;
-    placedAt = performance.now();
     gyroRefSet = false;
     anchor.visible = true;
     reticle.visible = false;
@@ -1837,6 +1836,17 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      AR simply never called it, which is the whole reason 3D zoomed to the
      launcher and AR did not. */
   const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
+  /* Where the AR camera stands when the circuit lands, in track units along
+     the launch axis, measured from the 3D race's own camera spot (26 back, 16
+     up). Forward 6 puts it 20 behind the start line — just off the back of the
+     sled — and 4.2 up is eye height for a car that size. It looks 10 units
+     past the line, so the lane is the subject and the sled fills the bottom of
+     the frame. */
+  const AR_CAM_FWD = 6;
+  const AR_CAM_Y = 4.2;
+  const AR_LOOK_FWD = 36;
+  const AR_LOOK_Y = 1.2;
+
   const camHome = new THREE.Vector3(0, 0, 0);
   const lookM = new THREE.Matrix4();
   const qBase = new THREE.Quaternion();
@@ -1851,7 +1861,6 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      settled it stops chasing, and a gesture moves the circuit in front of a
      camera that stays put. */
   let shotFixed = false;
-  let placedAt = 0;
   const shotPos = new THREE.Vector3();
   const shotQ = new THREE.Quaternion();
   const UP = new THREE.Vector3(0, 1, 0);
@@ -1960,26 +1969,28 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     if (phase === 'placed' && !inspect) {
       if (!held) engine.tickIdle(dt);
       if (!shotFixed) {
+        /* The AR shot, composed from the launcher's own axis rather than
+           borrowed from the 3D race: low and square behind the sled, looking
+           straight up the lane. The race's shot stands 26 units back and 16
+           up, which is a view OF the circuit; in a room that reads as a toy
+           on the far side of the table. */
         engine.launcherCameraTarget(lnTarget);
-        const wp = engine.root.localToWorld(lnTarget.pos.clone());
-        const wl = engine.root.localToWorld(lnTarget.look.clone());
-        /* Closer in than the 3D race stands. That shot is composed for a
-           full-screen track; in the room the same distance left the circuit a
-           toy on the floor across the table. 40% of the way to what it is
-           looking at puts the launcher near enough to read the sled and the
-           lights on it. */
-        wp.lerp(wl, 0.4);
-        camera.position.lerp(wp, chase(2.4, dt));
-
+        const tanL = lnTarget.look.clone().sub(lnTarget.pos).setY(0).normalize();
+        const camL = lnTarget.pos.clone().addScaledVector(tanL, AR_CAM_FWD);
+        camL.y = AR_CAM_Y;
+        const lookL = lnTarget.pos.clone().addScaledVector(tanL, AR_LOOK_FWD);
+        lookL.y = AR_LOOK_Y;
+        const wp = engine.root.localToWorld(camL);
+        const wl = engine.root.localToWorld(lookL);
+        /* Snapped, not eased. An eased move that gets frozen part-way is a
+           different shot every time — high and off to one side if the phone
+           happened to be far from where the circuit landed. */
+        camera.position.copy(wp);
         lookM.lookAt(camera.position, wl, UP);
         qBase.setFromRotationMatrix(lookM);
-        /* Long enough for the lerp above to arrive. After that the shot is
-           what it is, and adjusting the track no longer moves the camera. */
-        if (now - placedAt > 900) {
-          shotFixed = true;
-          shotPos.copy(camera.position);
-          shotQ.copy(qBase);
-        }
+        shotFixed = true;
+        shotPos.copy(camera.position);
+        shotQ.copy(qBase);
       } else {
         camera.position.copy(shotPos);
         qBase.copy(shotQ);
