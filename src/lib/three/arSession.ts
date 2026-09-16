@@ -1837,15 +1837,15 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
      launcher and AR did not. */
   const lnTarget = { pos: new THREE.Vector3(), look: new THREE.Vector3() };
   /* Where the AR camera stands when the circuit lands, in track units along
-     the launch axis, measured from the 3D race's own camera spot (26 back, 16
-     up). Forward 6 puts it 20 behind the start line — just off the back of the
-     sled — and 4.2 up is eye height for a car that size. It looks 10 units
-     past the line, so the lane is the subject and the sled fills the bottom of
-     the frame. */
-  const AR_CAM_FWD = 6;
-  const AR_CAM_Y = 4.2;
-  const AR_LOOK_FWD = 36;
-  const AR_LOOK_Y = 1.2;
+     the launch axis, measured from the 3D race's own camera spot — which is
+     the shot this is meant to be: 26 units behind the line and 16 up, looking
+     8 past it. Standing closer (20 back, 4 up) put the lens inside the sled,
+     with the co-brand plate filling half the frame. Forward 0 and 16 up IS
+     that shot; the numbers stay here because they are the whole framing. */
+  const AR_CAM_FWD = 0;
+  const AR_CAM_Y = 16;
+  const AR_LOOK_FWD = 34;
+  const AR_LOOK_Y = 0.8;
 
   const camHome = new THREE.Vector3(0, 0, 0);
   const lookM = new THREE.Matrix4();
