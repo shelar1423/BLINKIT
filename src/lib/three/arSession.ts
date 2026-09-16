@@ -808,10 +808,22 @@ function adjustGestures(
         anchor.rotation.y -= dx * 6.2;
         anchor.rotation.x = Math.max(-0.62, Math.min(0.62, anchor.rotation.x + dy * 3.4));
       } else {
-        // slide the circuit across its own plane, relative to where you look
+        /* Slide the circuit across its own plane, relative to where you look.
+           `fwd x up` already points to screen RIGHT for a camera looking down
+           -Z; negating it sent the track the opposite way to the finger. */
         const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).setY(0).normalize();
-        const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize().negate();
-        anchor.position.addScaledVector(right, dx * 1.6).addScaledVector(fwd, -dy * 1.6);
+        const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize();
+        anchor.position.addScaledVector(right, dx * 0.9).addScaledVector(fwd, -dy * 0.9);
+        /* And it stays in front of the shot. The camera holds still now, so a
+           long drag used to carry the whole circuit off the side of the frame
+           — or behind the lens, where it simply vanished. Held between 45cm
+           and 4m ahead, and within 1.6m either side of the lane. */
+        const rel = anchor.position.clone().sub(camera.position);
+        const ahead = Math.max(0.45, Math.min(4, rel.dot(fwd)));
+        const side = Math.max(-1.6, Math.min(1.6, rel.dot(right)));
+        const y = anchor.position.y;
+        anchor.position.copy(camera.position).addScaledVector(fwd, ahead).addScaledVector(right, side);
+        anchor.position.y = y;
       }
     }
   };
@@ -1951,6 +1963,12 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
         engine.launcherCameraTarget(lnTarget);
         const wp = engine.root.localToWorld(lnTarget.pos.clone());
         const wl = engine.root.localToWorld(lnTarget.look.clone());
+        /* Closer in than the 3D race stands. That shot is composed for a
+           full-screen track; in the room the same distance left the circuit a
+           toy on the floor across the table. 40% of the way to what it is
+           looking at puts the launcher near enough to read the sled and the
+           lights on it. */
+        wp.lerp(wl, 0.4);
         camera.position.lerp(wp, chase(2.4, dt));
 
         lookM.lookAt(camera.position, wl, UP);
