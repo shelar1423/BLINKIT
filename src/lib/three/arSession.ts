@@ -787,8 +787,17 @@ function adjustGestures(
     if (p.length === 2 && base.dist > 0) {
       const d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
       setSize(base.size * (d / base.dist));
+      /* A pinch is two fingers converging, and two fingers almost never stay
+         on a perfect line: every zoom carried a few degrees of twist with it,
+         which swung the whole shot round the track. Past the dead zone the
+         turn is deliberate, and it starts from zero there so the track does
+         not jump the moment it is crossed. */
       const a = Math.atan2(p[1].y - p[0].y, p[1].x - p[0].x);
-      anchor.rotation.y = base.rot - (a - base.ang);
+      const twist = a - base.ang;
+      const TWIST_DEAD = 0.14;
+      if (Math.abs(twist) > TWIST_DEAD) {
+        anchor.rotation.y = base.rot - (twist - Math.sign(twist) * TWIST_DEAD);
+      }
     } else if (p.length === 1) {
       const dx = (e.clientX - prev.x) / window.innerWidth;
       const dy = (e.clientY - prev.y) / window.innerHeight;
@@ -1730,6 +1739,10 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     // to — a provisional aim is still a perfectly good place to drop the track.
     anchor.position.copy(aim().point);
     anchor.rotation.y = 0;
+    /* A fresh drop re-composes the shot; see shotFixed. */
+    shotFixed = false;
+    placedAt = performance.now();
+    gyroRefSet = false;
     anchor.visible = true;
     reticle.visible = false;
     startBanner.visible = true;
@@ -1818,6 +1831,17 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   const qDelta = new THREE.Quaternion();
   const qWant = new THREE.Quaternion();
   const gyroRef = new THREE.Quaternion();
+  /* The launcher shot, composed once when the track lands and then HELD.
+     It used to be re-derived every frame from the launcher's world position,
+     so moving or resizing the circuit dragged the camera with it: a pinch
+     swung the shot round and a slide sent the room sideways. The shot is a
+     place you stand, not something that follows the track — so once it has
+     settled it stops chasing, and a gesture moves the circuit in front of a
+     camera that stays put. */
+  let shotFixed = false;
+  let placedAt = 0;
+  const shotPos = new THREE.Vector3();
+  const shotQ = new THREE.Quaternion();
   const UP = new THREE.Vector3(0, 1, 0);
   let gyroRefSet = false;
 
@@ -1923,13 +1947,25 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
        turn thirty degrees. */
     if (phase === 'placed' && !inspect) {
       if (!held) engine.tickIdle(dt);
-      engine.launcherCameraTarget(lnTarget);
-      const wp = engine.root.localToWorld(lnTarget.pos.clone());
-      const wl = engine.root.localToWorld(lnTarget.look.clone());
-      camera.position.lerp(wp, chase(2.4, dt));
+      if (!shotFixed) {
+        engine.launcherCameraTarget(lnTarget);
+        const wp = engine.root.localToWorld(lnTarget.pos.clone());
+        const wl = engine.root.localToWorld(lnTarget.look.clone());
+        camera.position.lerp(wp, chase(2.4, dt));
 
-      lookM.lookAt(camera.position, wl, UP);
-      qBase.setFromRotationMatrix(lookM);
+        lookM.lookAt(camera.position, wl, UP);
+        qBase.setFromRotationMatrix(lookM);
+        /* Long enough for the lerp above to arrive. After that the shot is
+           what it is, and adjusting the track no longer moves the camera. */
+        if (now - placedAt > 900) {
+          shotFixed = true;
+          shotPos.copy(camera.position);
+          shotQ.copy(qBase);
+        }
+      } else {
+        camera.position.copy(shotPos);
+        qBase.copy(shotQ);
+      }
       if (haveOrientation) {
         if (!gyroRefSet) {
           gyroRef.copy(q);
@@ -1952,15 +1988,15 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
       engine.update(dt);
       race.tickLift();
 
-
-      const scale = engine.root.scale.x || (sizeM / engine.trackExtent);
-
       // FPP chase camera: override gyro and set camera directly behind the car
       engine.cameraTarget(fpTarget);
 
       // Convert from track-local coords to world coords through the anchor
-      const worldFPPos = fpTarget.pos.clone().multiplyScalar(scale).add(anchor.position);
-      const worldFPLook = fpTarget.look.clone().multiplyScalar(scale).add(anchor.position);
+      /* Through the track's own matrix, not scale-and-offset: that ignored the
+         anchor's rotation, so a circuit the player had turned was chased from
+         the angle it would have had unturned. */
+      const worldFPPos = engine.root.localToWorld(fpTarget.pos.clone());
+      const worldFPLook = engine.root.localToWorld(fpTarget.look.clone());
 
       if (!fpInited || fpTarget.snap) {
         fpCamPos.copy(worldFPPos);
@@ -1996,6 +2032,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     isProximityAlert: () => false,
     reset() {
       anchor.visible = false;
+      shotFixed = false;
       // undo the chase cam: orientation alone drives the camera outside a race
       camera.position.set(0, 0, 0);
       fpInited = false;
