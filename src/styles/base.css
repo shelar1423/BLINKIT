@@ -2212,7 +2212,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .tag--limited { background: #EAF2FD; color: var(--hw-b); }
 .tag--rare { background: var(--yellow-tint); color: var(--gold-ink); border: 1px solid #F0DFA4; }
 
-.pdp__name { font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
+.pdp__name { font-size: var(--f-xl); font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; margin-top: 7px; }
 /* One fact, so it is set as a fact rather than as a caption: bold, and in the
    same ink as the name above it. */
 .pdp__unit {
