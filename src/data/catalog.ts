@@ -44,7 +44,7 @@ export const ETA_MINS = 8;
  * page title, so it is declared once — two copies drift the moment either is
  * edited, and the whole point of repeating it is that they agree.
  */
-export const DELIVERY_ADDRESS = { label: 'Home', line: 'h.no 9-1-62/2, dubaigate, Hyderabad 500008' };
+export const DELIVERY_ADDRESS = { label: 'Home', line: 'Flat 12B, Palm Grove Residency, Whitefield, Bengaluru 560066' };
 
 /**
  * One tone per badge, declared once.

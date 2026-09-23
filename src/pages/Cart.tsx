@@ -62,7 +62,7 @@ const INSTRUCTIONS: { id: string; icon: string; label: string }[] = [
 /** The small filled play-triangle Blinkit puts after a link. */
 const Tri = () => <i className="ckotri" aria-hidden="true" />;
 
-/** "#307, Mi Casa Premium Stay, Rahinj Nagar, Near MIT…" -> the first three parts and an ellipsis. */
+/** "#307, Sunrise Residency, 3rd Cross, Near City College…" -> the first three parts and an ellipsis. */
 function shortAddress(line: string) {
   const parts = line.split(',').map((p) => p.trim());
   return parts.length > 3 ? `${parts.slice(0, 3).join(', ')}…` : line;

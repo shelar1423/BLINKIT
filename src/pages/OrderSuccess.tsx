@@ -56,7 +56,7 @@ const TRIP_S = 10;
 const TRIP_MIN = 7;
 
 const PARTNER = 'Sangram';
-const ACCOUNT = { name: 'Aarav Mehta', first: 'Aarav', phone: '9620964510' };
+const ACCOUNT = { name: 'Aarav Mehta', first: 'Aarav', phone: '9000000001' };
 
 /** Blinkit prints the last five digits as X, and so does this. */
 const mask = (p: string) => p.slice(0, 5) + 'XXXXX';

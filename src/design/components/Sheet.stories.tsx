@@ -50,7 +50,7 @@ export const WithFooterAction: Story = {
   render: () => (
     <Demo
       title="Confirm your address"
-      body={<p className="t-sm" style={{ lineHeight: 1.6 }}>h.no 9-1-62/2, dubaigate, Hyderabad</p>}
+      body={<p className="t-sm" style={{ lineHeight: 1.6 }}>Flat 12B, Palm Grove Residency, Whitefield, Bengaluru</p>}
       footer={<Button variant="primary" block>Deliver here</Button>}
     />
   ),

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '../design/elements';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../design/components/Chrome';
-import { rupees } from '../data/catalog';
+import { DELIVERY_ADDRESS, rupees } from '../data/catalog';
 import { REWARD_TIERS, useCartLines, useStore, useTotals } from '../store/useStore';
 import { IconBolt, IconCheck, IconPin, IconTicket } from '../design/elements/Icons';
 
@@ -44,8 +44,8 @@ export default function Checkout() {
           <div className="card" style={{ padding: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             <span style={{ color: 'var(--green)' }}><IconPin size={18} /></span>
             <div className="grow">
-              <p style={{ fontSize: 'var(--f-md)', fontWeight: 700 }}>Work</p>
-              <p className="t-xs">h.no 9-1-62/2, dubaigate, Hyderabad 500008</p>
+              <p style={{ fontSize: 'var(--f-md)', fontWeight: 700 }}>{DELIVERY_ADDRESS.label}</p>
+              <p className="t-xs">{DELIVERY_ADDRESS.line}</p>
             </div>
             <button className="sec__a" type="button" onClick={() => nav('/cart')}>Change</button>
           </div>

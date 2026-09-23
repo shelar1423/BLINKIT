@@ -7,6 +7,9 @@
    that label, a phone number, and how far it is from where the phone thinks
    you are.
 
+   Every address, name and number here is invented. The build is public, so
+   nothing in it points at a real doorstep or a real handset.
+
    `distanceKm` is null for the address you are standing in. That is not a
    missing value: the real sheet shows "You're here" in place of a distance for
    exactly one entry, so the absence IS the state.
@@ -29,32 +32,32 @@ export const ADDRESSES: Address[] = [
     id: 'hostel',
     label: 'Hostel',
     kind: 'pin',
-    line: '#307, Mi Casa Premium Stay, Rahinj Nagar, Near MIT ADT, Loni Kalbhor, Pune, Maharashtra, Loni Kalbhor, India',
-    phone: '9620964510',
+    line: '#307, Sunrise Residency, 3rd Cross, Near City College, Indiranagar, Bengaluru, Karnataka, India',
+    phone: '9000000001',
     distanceKm: null,
   },
   {
-    id: 'kirti',
-    label: 'Kirti Gupta',
+    id: 'friend',
+    label: 'Riya Sharma',
     kind: 'people',
-    line: 'R-103, Fourth Floor, Star Heights Apartments, Loni Kalbhor, Pune, Maharashtra , Kadamwak Wasti, India',
-    phone: '9636046132',
+    line: 'R-103, Fourth Floor, Lakeview Apartments, 5th Sector, HSR Layout, Bengaluru, Karnataka, India',
+    phone: '9000000002',
     distanceKm: 1.32,
   },
   {
     id: 'other',
     label: 'Other',
     kind: 'pin',
-    line: 'Sambhaji Nagar, 202, Radhakrishna Apartment, Near Angel High School, Loni Kalbhor, India',
-    phone: '9620964510',
+    line: '202, Green Meadows, Near Model High School, 7th Block, Koramangala, Bengaluru, India',
+    phone: '9000000001',
     distanceKm: 2.04,
   },
   {
     id: 'home',
     label: 'Home',
     kind: 'home',
-    line: 'Sabari PG for ladies, Thanisandra Main Road, Bengaluru, Karnataka, India',
-    phone: '9620964510',
+    line: 'Flat 12B, Palm Grove Residency, Whitefield Main Road, Bengaluru, Karnataka, India',
+    phone: '9000000001',
     distanceKm: 842,
   },
 ];
