@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { tagARSurface } from './arSurfaces';
 import { color } from '../../design/constants';
-import { chase, circuitPlan, RaceEngine, type RaceStats, type RaceOutcome } from './raceEngine';
+import { chase, circuitPlan, RaceEngine, type RaceStats, type RaceOutcome, BRANDED } from './raceEngine';
 import { RACE_SECONDS, jumpPoints, raceInteraction, type BoostQuality, type JumpQuality } from '../raceInteractions';
 import { cameraPitchDeg, makeDeviceAim, makeJumpInput, makeLeverDrag } from './raceInput';
 
@@ -460,7 +460,7 @@ function create3DStartBanner(k = 1) {
     /* Three bands down the sprite, each clear of the next: the logotype from
        70, the headline's cap-height starting around 165, the sub-line at 270.
        Sized so the mark cannot land on top of the words under it. */
-    if (logo) {
+    if (logo && BRANDED) {
       const lw = Math.min(210, inner * 0.24);
       const lh = (logo.height / logo.width) * lw;
       ctx.drawImage(logo, (W - lw) / 2, 70, lw, lh);
@@ -483,7 +483,7 @@ function create3DStartBanner(k = 1) {
      when it arrives, so a slow decode never leaves the sprite blank. */
   const logo = new Image();
   logo.onload = () => paint(logo);
-  logo.src = '/brand/hot-wheels-logo.webp';
+  if (BRANDED) logo.src = '/brand/hot-wheels-logo.webp';
 
   const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
   const sprite = new THREE.Sprite(mat);

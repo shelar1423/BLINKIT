@@ -202,6 +202,19 @@ export function chase(rate: number, dt: number) {
   return 1 - Math.exp(-rate * dt);
 }
 
+/**
+ * Whether the track and the launcher wear the campaign's marks.
+ *
+ * Off on this branch so the race can be filmed without either logo in frame.
+ * It gates three things and nothing else: the trackside pennants, the
+ * co-brand plate on the back of the launcher, and the mark on the lever
+ * paddle. Geometry, colour and the chequered livery are untouched, so the
+ * circuit still reads as a toy track rather than as a stripped one.
+ *
+ * Set it back to true to restore the branded build.
+ */
+export const BRANDED = false;
+
 const ROAD_W = 9;
 
 /* How far the travelling pool of light reaches, in track units. Longer ahead
@@ -575,6 +588,13 @@ function bannerTexture(kind: 'hw' | 'bk', onReady: () => void): THREE.CanvasText
     ctx.textBaseline = 'middle';
 
     const runLen = H - TAIL;
+
+    if (!BRANDED) {
+      /* Plain cloth. A blank pennant beside a chequered one still reads as
+         trackside dressing, which is what the flags are there to do. */
+      ctx.restore();
+      return;
+    }
 
     if (kind === 'hw') {
       if (logo) {
@@ -2107,6 +2127,7 @@ export class RaceEngine {
     const brandGeo = new THREE.PlaneGeometry(LW * 2 - 1.5, (LW * 2 - 1.5) / 3);
     this.disposables.push(plateTex, plateMat, brandGeo);
     const brandPlate = new THREE.Mesh(brandGeo, plateMat);
+    brandPlate.visible = BRANDED;
     /* Just proud of the stop's rear face so it cannot z-fight with it, and
        tipped back to meet the camera. The launch view looks down at about 31
        degrees; a plate standing vertical presents almost none of itself to
@@ -2186,6 +2207,7 @@ export class RaceEngine {
     const markGeo = new THREE.PlaneGeometry(1.6, 0.8);
     this.disposables.push(markTex, markMat, markGeo);
     const mark = new THREE.Mesh(markGeo, markMat);
+    mark.visible = BRANDED;
     mark.position.set(0, 0, 0.81);
     pad.add(mark);
     /* The hinge, shown. A lever with no visible pivot reads as a post that
