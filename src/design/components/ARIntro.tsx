@@ -280,6 +280,8 @@ export function ARIntro({ onDone }: { onDone: () => void }) {
         ))}
       </div>
 
+      <p className="arin__sound-note">Turn off Silent Mode to hear game audio.</p>
+
       </div>
 
       <Button variant="hwBlue" size="lg" block type="button" onClick={onDone}>

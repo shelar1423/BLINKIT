@@ -131,6 +131,8 @@ export function RaceCoach({ mode, onDone }: { mode: 'ar' | '3d'; onDone: () => v
           ))}
         </ol>
 
+        <p className="coach__sound-note">Turn off Silent Mode to hear game audio.</p>
+
         <Button variant="hwBlue" block type="button" onClick={onDone}>
           Got it, let’s race
         </Button>

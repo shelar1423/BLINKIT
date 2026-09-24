@@ -4910,6 +4910,13 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 .coach__steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.coach__sound-note {
+  margin: 0;
+  text-align: center;
+  font-size: var(--f-sm);
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.72);
+}
 .coach__step {
   display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px;
   align-items: center;
@@ -5811,6 +5818,12 @@ input, select, textarea { font: inherit; color: inherit; }
   transition: background 200ms ease, width 200ms ease;
 }
 .arin__dots i.is-on { width: 20px; border-radius: 4px; background: var(--yellow); }
+.arin__sound-note {
+  margin: 0;
+  font-size: var(--f-sm);
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.72);
+}
 /* Inset 4px inside the card on each side, and sitting 8px above the seat the
    app's other bottom buttons take: a full-width button under a card reads as
    the base of the card rather than as its own control. */
