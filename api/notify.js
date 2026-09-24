@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from: 'Race It Home <onboarding@resend.dev>',
-        to: ['digvijayux@gmail.com'],
+        to: ['digvijayshelar@gmail.com'],
         subject: 'Someone opened the Race It Home link',
         text: `The link was opened at ${when} (IST).`,
       }),
