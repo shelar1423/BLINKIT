@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { animate, stagger, type AnimationPlaybackControls } from 'motion';
 import { Button } from '../elements';
+import { IconSound } from '../elements/Icons';
 
 /* ============================================================
    The first time somebody opens AR.
@@ -280,7 +281,7 @@ export function ARIntro({ onDone }: { onDone: () => void }) {
         ))}
       </div>
 
-      <p className="arin__sound-note">Turn off Silent Mode to hear game audio.</p>
+      <p className="arin__sound-note"><IconSound size={17} />Game audio: turn off Silent Mode</p>
 
       </div>
 
