@@ -115,8 +115,9 @@ export default function App() {
         {/* Only where the tab bar is. The screens that hide it — the sheet,
             the cart, the checkout, a race — either have their own sticky bar
             in that corner or are not a page you scroll through looking for the
-            top of. */}
-        {!hideNav && <BackToTop />}
+            top of. Not the Hot Wheels listing either: its category rail and
+            filter bar already stay pinned, and the pill sat on top of them. */}
+        {!hideNav && loc.pathname !== '/hot-wheels' && <BackToTop />}
         {/* The campaign, everywhere, owned by nobody.
             On a query param rather than in a page's state so any screen can
             offer it, the back gesture closes it, and it can be linked to. */}

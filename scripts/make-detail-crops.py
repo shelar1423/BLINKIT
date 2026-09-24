@@ -27,12 +27,18 @@ CARS = {
     'metallic': '09-11-rare-metallic-edition',
     'premium': '09-12-premium-limited-racer',
     'featured': 'featured-drop-diecast',
+    'phantom': 'phantom-diecast',
 }
 
 # fraction of the car's width each crop keeps, from the left and from the right
 KEEP = 0.62
 
+import sys
+ONLY = sys.argv[1:]
+
 for cid, stem in CARS.items():
+    if ONLY and cid not in ONLY:
+        continue
     im = Image.open(f'{SRC}/{stem}.webp').convert('RGBA')
     x0, y0, x1, y1 = im.getchannel('A').getbbox()
     w, h = x1 - x0, y1 - y0
