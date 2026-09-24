@@ -35,8 +35,7 @@ export default async function handler(req, res) {
       }),
     });
     if (!r.ok) {
-      const detail = await r.text().catch(() => '');
-      res.status(200).json({ ok: false, reason: 'send-failed', status: r.status, detail });
+      res.status(200).json({ ok: false, reason: 'send-failed' });
       return;
     }
   } catch {
