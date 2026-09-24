@@ -4885,6 +4885,20 @@ input, select, textarea { font: inherit; color: inherit; }
      only taking the room's contrast down so the lit step reads. */
   background: rgba(0, 0, 0, 0.34);
 }
+.coachprev {
+  position: fixed; inset: 0;
+  overflow: hidden;
+  background: #1f2634;
+}
+.coachprev__room {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+}
+.coachprev__track {
+  position: absolute; left: 50%; bottom: 7%;
+  width: min(92vw, 850px);
+  transform: translateX(-50%);
+}
 .coach__panel {
   position: relative;
   width: min(100%, 380px);
@@ -5829,7 +5843,9 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .arin__dots i.is-on { width: 20px; border-radius: 4px; background: var(--yellow); }
 .arin .arin__sound-note {
-  width: min(90vw, 340px);
+  width: min(78vw, 268px);
+  padding-inline: 8px;
+  font-size: var(--f-sm);
 }
 /* Inset 4px inside the card on each side, and sitting 8px above the seat the
    app's other bottom buttons take: a full-width button under a card reads as

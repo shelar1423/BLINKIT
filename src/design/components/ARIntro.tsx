@@ -281,7 +281,7 @@ export function ARIntro({ onDone }: { onDone: () => void }) {
         ))}
       </div>
 
-      <p className="arin__sound-note"><IconSound size={17} />Game audio: turn off Silent Mode</p>
+      <p className="arin__sound-note"><IconSound size={17} />Game audio needs Silent Mode off.</p>
 
       </div>
 
