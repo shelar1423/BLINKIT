@@ -5,7 +5,7 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/((?!assets/|brand/|models/|cars/|grocery/|rewards/|decor/|campaign/|fonts/|favicon).*)",
+      "source": "/((?!api/|assets/|brand/|models/|cars/|grocery/|rewards/|decor/|campaign/|fonts/|favicon).*)",
       "destination": "/index.html"
     }
   ],
