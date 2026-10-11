@@ -4,8 +4,8 @@ import { Button } from '../design/elements';
 import { PageHeader } from '../design/components/Chrome';
 import { Sheet } from '../design/components/Sheet';
 import { ProductCard } from '../design/components/ProductCard';
-import { HERO_CARS, MYSTERY_CAR, REVEALED_CAR, SHOP_CARS, rupees, type Product } from '../data/catalog';
-import { useStore } from '../store/useStore';
+import { RacerBar, RacerTimer } from '../design/components/RacerDealChrome';
+import { HERO_CARS, SHOP_CARS, rupees, type Product } from '../data/catalog';
 import {
   IconCaretDown,
   IconCheck,
@@ -86,9 +86,9 @@ const FILTER_TABS: { id: FilterTab; label: string }[] = [
 
 export default function HotWheels() {
   const nav = useNavigate();
-  const mysteryUnlocked = useStore((s) => s.mysteryUnlocked);
-  const mystery = mysteryUnlocked ? REVEALED_CAR : MYSTERY_CAR;
-  const all = useMemo(() => [...HERO_CARS, ...SHOP_CARS, mystery], [mystery]);
+  /* Every car on sale. The locked mystery car is out of the drop: a card with
+     no price and a points gate in the middle of a shopping grid. */
+  const all = useMemo(() => [...HERO_CARS, ...SHOP_CARS], []);
 
   const [group, setGroup] = useState('all');
   const [sort, setSort] = useState<SortId>('featured');
@@ -280,14 +280,18 @@ export default function HotWheels() {
               </button>
             </p>
           ) : (
+            <>
+            <RacerTimer />
             <div className="catgrid">
               {shown.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
             </div>
+            </>
           )}
         </div>
       </main>
+      <RacerBar />
 
       <Sheet
         open={sheet === 'sort'}

@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { AGE_RATING, BADGE_TONE, ETA_MINS, rupees, type Product } from '../../data/catalog';
+import { racerPrice, useRacerDeal } from '../../lib/racerDeal';
+import { RacerLine } from './RacerDealChrome';
+import './racerDeal.css';
 import { IconClock, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
 
 /** How long the rocker takes to tip and settle, and the digit to roll. */
@@ -207,6 +210,7 @@ function SaveButton({ product }: { product: Product }) {
 export function ProductCard({ product }: { product: Product }) {
   const nav = useNavigate();
   const points = useStore((s) => s.totalPoints);
+  const deal = useRacerDeal();
 
   if (product.mystery) {
     const need = product.revealAt ?? 5000;
@@ -330,13 +334,27 @@ export function ProductCard({ product }: { product: Product }) {
         </span>
       </div>
 
-      <div className="pcard__prow">
-        <b className="pcard__price">{rupees(product.price)}</b>
-        {product.mrp && <s className="pcard__mrp">{rupees(product.mrp)}</s>}
-      </div>
+      {deal ? (
+        /* The race reward, in Blinkit's own best-price ticket; shelf price struck beside it. */
+        <div className="pcard__prow">
+          <b className="rtk t-num">{rupees(racerPrice(product.price, deal.pct))}</b>
+          <s className="pcard__mrp">{rupees(product.price)}</s>
+        </div>
+      ) : (
+        <div className="pcard__prow">
+          <b className="pcard__price">{rupees(product.price)}</b>
+          {product.mrp && <s className="pcard__mrp">{rupees(product.mrp)}</s>}
+        </div>
+      )}
       {/* Only when there is a real discount. Every car now sells at its MRP,
-          so an always-rendered row left a blank line under every price. */}
-      {off > 0 && <p className="pcard__off">{`${off}% OFF on MRP`}</p>}
+          so an always-rendered row left a blank line under every price.
+          With a race reward on, the line says why the ticket is there, where
+          Blinkit writes "Lowest in 30 days" under its own. */}
+      {deal ? (
+        <RacerLine className="pcard__off" short />
+      ) : (
+        off > 0 && <p className="pcard__off">{`${off}% OFF on MRP`}</p>
+      )}
       <p className="pcard__nm">{product.name}</p>
       <span className="pcard__specs">
         <span className="pcard__spec">{product.age ?? AGE_RATING}</span>

@@ -25,6 +25,9 @@ import { Sheet } from '../design/components/Sheet';
 import { TrackRing } from '../design/components/DriftLoader';
 import { useToast } from '../App';
 import { useARSupport } from '../lib/useARSupport';
+import { racerPrice, useRacerDeal } from '../lib/racerDeal';
+import { RacerLine } from '../design/components/RacerDealChrome';
+import '../design/components/racerDeal.css';
 
 /** Blinkit's PDP opens as a sheet: dismiss chevron left, utilities right, no title. */
 function SheetHeader({
@@ -224,6 +227,10 @@ export default function Product() {
   const toggleSaved = useStore((s) => s.toggleSaved);
   const markViewed = useStore((s) => s.markViewed);
   const product = productById(id, mysteryUnlocked);
+  /* The race reward on this car's price, as the listing shows it. Not on a car
+     that is still locked: it has no price yet. */
+  const racerDeal = useRacerDeal();
+  const deal = product && !product.mystery ? racerDeal : null;
 
   const host = useRef<HTMLDivElement>(null);
   const viewer = useRef<ViewerHandle | null>(null);
@@ -772,14 +779,27 @@ export default function Product() {
                   the MRP. Where a product carries a struck one below, the
                   figure here is what you pay rather than what it lists at, and
                   calling both MRP would be saying it twice and wrong once. */}
-              {!product.mrp && <span className="pdp__mrpl">MRP</span>}
-              <b>{rupees(product.price)}</b>
-              {product.mrp && (
-                <span className="pdp__mrp">
-                  MRP <s>{rupees(product.mrp)}</s>
-                </span>
+              {deal ? (
+                /* The race reward, in the same yellow ticket the listing card wears. */
+                <>
+                  <b className="rtk t-num">{rupees(racerPrice(product.price, deal.pct))}</b>
+                  <span className="pdp__mrp">
+                    MRP <s>{rupees(product.price)}</s>
+                  </span>
+                </>
+              ) : (
+                <>
+                  {!product.mrp && <span className="pdp__mrpl">MRP</span>}
+                  <b>{rupees(product.price)}</b>
+                  {product.mrp && (
+                    <span className="pdp__mrp">
+                      MRP <s>{rupees(product.mrp)}</s>
+                    </span>
+                  )}
+                </>
               )}
             </div>
+            {deal && <RacerLine className="pdp__rnote" />}
           </section>
 
           <span className="pdpjoin__perf" aria-hidden="true" />
@@ -858,8 +878,12 @@ export default function Product() {
           <div className="ab__price">
             <p className="ab__unit">{product.unit}</p>
             <p className="ab__amt">
-              <b className="t-num">{rupees(product.price)}</b>
-              {product.mrp && (
+              <b className={'t-num' + (deal ? ' rtk rtk--sm' : '')}>{rupees(deal ? racerPrice(product.price, deal.pct) : product.price)}</b>
+              {deal ? (
+                <span className="pdp__mrp">
+                  MRP <s>{rupees(product.price)}</s>
+                </span>
+              ) : product.mrp && (
                 <span className="pdp__mrp">
                   MRP <s>{rupees(product.mrp)}</s>
                 </span>
@@ -893,7 +917,7 @@ export default function Product() {
           <div className="actionbar pdd__foot">
             <div className="ab__price">
               <p className="ab__unit">{product.unit.split(' · ')[0]}</p>
-              <p className="ab__amt"><b className="t-num">{rupees(product.price)}</b></p>
+              <p className="ab__amt"><b className={'t-num' + (deal ? ' rtk rtk--sm' : '')}>{rupees(deal ? racerPrice(product.price, deal.pct) : product.price)}</b></p>
               <p className="ab__tax">Inclusive of all taxes</p>
             </div>
             {cartControl}

@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { LEADERBOARD, rupees, type Product } from '../../data/catalog';
-import { MAX_RACE_ATTEMPTS, REWARD_TIERS, type RewardTier } from '../../store/useStore';
+import { LEADERBOARD, type Product } from '../../data/catalog';
+import { MAX_RACE_ATTEMPTS, racerPctFor, rankFor, REWARD_TIERS, type RewardTier } from '../../store/useStore';
 import type { RaceOutcome } from '../../lib/three/raceEngine';
 import { shareScore } from '../../lib/shareCard';
 import { Button } from '../elements';
@@ -14,36 +14,6 @@ import { IconClose, IconFlag, IconShare } from '../elements/Icons';
    button.
    ============================================================ */
 
-/** The prize, phrased for a ticket: a headline you can read across the room. */
-function prize(tier: RewardTier) {
-  /* Named perks are tested first. Every tier carries free delivery, and
-     District Pass has no cash value, so the `freeDelivery && !value` branch
-     below would otherwise swallow it and announce the top reward of the drop
-     as "FREE DELIVERY". */
-  if (tier.perk) {
-    /* The one prize that is not Blinkit's. District is its own brand with its
-       own colour, so the headline wears that instead of the action green every
-       other tier is paid in. */
-    return {
-      head: 'District Pass',
-      sub: '1 Month',
-      fine: `${tier.perk}, plus free delivery on Blinkit for a month. Yours now.`,
-      line: 'District Pass',
-      pass: true,
-    };
-  }
-  if (tier.freeDelivery && tier.value === 0) {
-    return { head: 'Free', sub: 'Delivery', line: 'free delivery', fine: 'Already on your order. It comes off at checkout.' };
-  }
-  return {
-    head: `${rupees(tier.value)} Off`,
-    sub: 'Blinkit Cash',
-    /* Named for the sentence it lands in: "Your ₹25 Off is here" is not a
-       thing anybody says. */
-    line: `${rupees(tier.value)} Blinkit Cash`,
-    fine: `In your Blinkit Cash now. It comes off at checkout on any order above ${rupees(tier.value * 2)}.`,
-  };
-}
 
 export type RaceResultProps = {
   /** The sharer's referral link, so a share is also an invite. */
@@ -123,10 +93,10 @@ export function RaceResult({
     return () => cancelAnimationFrame(raf);
   }, [outcome.score]);
 
-  const next = REWARD_TIERS.find((t) => totalPoints < t.min);
   /* Where this total sits on the board, worked out from the board itself. */
-  const myRank = LEADERBOARD.filter((r) => r.points > totalPoints).length + 1;
-  const won = tier ? prize(tier) : null;
+  const myRank = rankFor(totalPoints);
+  const lockPct = racerPctFor(totalPoints);
+  const firstStep = REWARD_TIERS[0];
 
   const share = async () => {
     setSharing(true);
@@ -241,23 +211,24 @@ export function RaceResult({
           reward is already on the order, so the card was a picture of a thing
           that had already happened; what is left to say is what it is and
           where to look at it. */}
-      {won ? (
-        <p className="rwd__cpn">
-          Your{' '}
-          <b className={'pass' in won ? 'is-pass' : undefined}>{won.line}</b>{' '}
-          is here.
-          <button type="button" className="rwd__check" onClick={onRewards}>
-            Check your reward
-          </button>
-        </p>
-      ) : (
-        <p className="rwd__cpn">
-          {next ? 'No rewards yet.' : 'Every tier cleared.'}
-          <button type="button" className="rwd__check" onClick={onRewards}>
-            {next ? 'See what is next' : 'See your rewards'}
-          </button>
-        </p>
-      )}
+      {/* Points set a racer price on every Hot Wheels car, for a day.
+          This is the moment the race turns into a reason to buy, so it is said
+          here, next to Shop now, and in the terms the shelf will use. The
+          ladder of steps is a tap away. */}
+      <p className="rwd__cpn">
+        {lockPct ? (
+          <>
+            <b>{lockPct}% off</b> Hot Wheels for 24 hours
+          </>
+        ) : (
+          <>
+            <b>{(firstStep.min - totalPoints).toLocaleString('en-IN')} pts</b> to {firstStep.pct}% off Hot Wheels
+          </>
+        )}
+        <button type="button" className="rwd__check" onClick={onRewards}>
+          See rewards
+        </button>
+      </p>
 
       {/* ---- who is ahead ----
           The board was a screen you left this one to reach, then a section in

@@ -85,7 +85,7 @@ export function BillRows({
       )}
       {t.rewardValue > 0 && (
         <div className="ckobill__r">
-          <span className="ckobill__l ckobill__l--plain">Racing reward</span>
+          <span className="ckobill__l ckobill__l--plain">{t.racerPct ? `Race reward · ${t.racerPct}% off` : 'Racing reward'}</span>
           <b>
             <em className="ckobill__free">− {rupees(t.rewardValue)}</em>
           </b>

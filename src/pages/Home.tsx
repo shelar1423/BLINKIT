@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStartRace } from '../lib/useStartRace';
 import { AppHeader, SectionHeader } from '../design/components/Chrome';
 import { ProductCard } from '../design/components/ProductCard';
+import { RacerSheet } from '../design/components/RacerDealChrome';
 import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useDrop } from '../data/useDrop';
 import { Button } from '../design/elements';
@@ -279,6 +280,7 @@ export default function Home() {
           <p className="bfoot__mark">blinkit</p>
         </footer>
       </main>
+      <RacerSheet />
 
     </>
   );

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { CARS, type Product } from '../data/catalog';
+import { CARS, LEADERBOARD, type Product } from '../data/catalog';
 
 export type RewardTier = {
   id: string;
@@ -14,13 +14,20 @@ export type RewardTier = {
      month's membership whose headline benefit is a cinema ticket, so it
      carries `value: 0` and says what it is here instead. */
   perk?: string;
+  /** Percentage off every Hot Wheels car at this step. */
+  pct: number;
 };
 
+/* One reward system: points climb a discount ladder on Hot Wheels. Each step
+   is a percentage off every car, active for 24 hours from the race that
+   reached it. (It replaced a cash ladder of free delivery, ₹25 and ₹50
+   Blinkit Cash and a District Pass: two reward systems on one sheet, and
+   cash that had nothing to do with the cars the race was selling.) */
 export const REWARD_TIERS: RewardTier[] = [
-  { id: 'start', min: 1000, label: 'Free Delivery', value: 0, freeDelivery: true },
-  { id: 'check', min: 2500, label: '₹25 Blinkit Cash', value: 25, freeDelivery: true },
-  { id: 'pit', min: 5000, label: '₹50 Blinkit Cash', value: 50, freeDelivery: true },
-  { id: 'podium', min: 8000, label: 'District Pass, 1 month', value: 0, freeDelivery: true, perk: '1 free movie ticket' },
+  { id: 'start', min: 1000, label: '5% off', value: 0, freeDelivery: false, pct: 5 },
+  { id: 'check', min: 2500, label: '10% off', value: 0, freeDelivery: false, pct: 10 },
+  { id: 'pit', min: 5000, label: '15% off', value: 0, freeDelivery: false, pct: 15 },
+  { id: 'podium', min: 8000, label: '20% off', value: 0, freeDelivery: false, pct: 20 },
 ];
 
 /**
@@ -40,6 +47,36 @@ export function tierFor(score: number): RewardTier | null {
   for (const t of REWARD_TIERS) if (score >= t.min) best = t;
   return best;
 }
+
+/* ------------------------------------------------------------------
+   The racer price.
+
+   Points set it, not rank. Total points climb the ladder above, and the step
+   reached is a percentage off every Hot Wheels car for 24 hours. A live rank
+   moves every time anyone races, so a price tied to it would change under the
+   player mid-basket and could not be budgeted; points only ever go up, and
+   only the player moves them.
+
+   - Reaching a higher step starts a fresh 24 hours at the new percentage.
+   - Racing again on the same step does not extend it: the clock is a reason
+     to buy, not to grind.
+   - Once it runs out, the next race brings it back at whatever step the
+     points are on.
+   The city leaderboard stays as the competition, settled once, when the
+   three-day drop closes (see FINAL_PRIZE), so the board can move all it likes
+   while it runs.
+   ------------------------------------------------------------------ */
+export type RacerLock = { pct: number; until: number };
+export const RACER_LOCK_MS = 24 * 60 * 60 * 1000;
+export const rankFor = (points: number) => LEADERBOARD.filter((r) => r.points > points).length + 1;
+/** The step a points total has reached, as a percentage; 0 below the first. */
+export const racerPctFor = (points: number) =>
+  [...REWARD_TIERS].reverse().find((t) => points >= t.min)?.pct ?? 0;
+/** What a racer price takes off one unit of a car, in whole rupees. */
+export const racerOff = (price: number, pct: number) => Math.round((price * pct) / 100);
+export const lockActive = (l: RacerLock | null | undefined, now = Date.now()): l is RacerLock => Boolean(l && l.until > now);
+/** The leaderboard's own prize: settled when the drop closes, never mid-race. */
+export const FINAL_PRIZE = { top: 3, label: 'District Pass, 1 month' };
 
 export type RaceResult = {
   score: number;
@@ -90,6 +127,8 @@ export const DELIVERY_FEE = 30;
 export type Totals = {
   items: number; mrp: number; savings: number; delivery: number;
   handling: number; rewardValue: number; toPay: number;
+  /** The racer-price percentage behind rewardValue, or 0 when it is cash. */
+  racerPct: number;
   /** What the player chose to add on top: a tip, and a donation. */
   tip: number; donation: number;
   /** rupees still needed for free delivery; 0 once unlocked */
@@ -106,10 +145,17 @@ export function computeTotals(
      does, and a bill that computed them itself would be deciding for them. */
   tip = 0,
   donation = 0,
+  /* An active racer price comes off every car, per unit, exactly as the cards
+     showed it. One reward per order: while it is on, it stands in for the
+     ladder's cash; the ladder's free delivery still applies. */
+  racer: { pct: number } | null = null,
 ): Totals {
   const items = lines.reduce((a, l) => a + l.product.price * l.qty, 0);
   const mrp = lines.reduce((a, l) => a + (l.product.mrp ?? l.product.price) * l.qty, 0);
-  const rewardValue = claimed?.value ?? 0;
+  const racerPctOn = racer?.pct ?? 0;
+  const rewardValue = racerPctOn
+    ? lines.reduce((a, l) => a + racerOff(l.product.price, racerPctOn) * l.qty, 0)
+    : claimed?.value ?? 0;
   const freeDel = Boolean(claimed?.freeDelivery) || items >= FREE_DELIVERY_MIN;
   const delivery = items === 0 ? 0 : freeDel ? 0 : DELIVERY_FEE;
   const handling = items === 0 ? 0 : 9;
@@ -122,7 +168,7 @@ export function computeTotals(
   const freeDeliveryShortfall = freeDel ? 0 : Math.max(0, FREE_DELIVERY_MIN - items);
   const freeDeliveryProgress = freeDel ? 1 : Math.min(1, items / FREE_DELIVERY_MIN);
   return {
-    items, mrp, savings, delivery, handling, rewardValue, toPay,
+    items, mrp, savings, delivery, handling, rewardValue, toPay, racerPct: racerPctOn,
     tip: tipDue, donation: donationDue, freeDeliveryShortfall, freeDeliveryProgress,
   };
 }
@@ -152,6 +198,8 @@ type State = {
   lastResult: RaceResult | null;
   unlockedRewards: string[];
   claimedReward: { id: string; value: number; freeDelivery: boolean } | null;
+  /** The racer price from the last race, until it runs out or is spent. */
+  racerLock: RacerLock | null;
   mysteryUnlocked: boolean;
   referralCode: string;
   invitedCount: number;
@@ -195,6 +243,53 @@ function makeCode() {
   return 'RACE' + Math.random().toString(36).slice(2, 7).toUpperCase();
 }
 
+/* ------------------------------------------------------------------
+   Preview seed, for the reward-states comparison page only.
+
+   `?seed=1` runs the store from memory instead of localStorage, starting from
+   the state named in the URL, so several phones on one page can each show a
+   different cart and reward without overwriting one another:
+     pts=3240           total points
+     reward=check|pit|start|none   which ladder tier is riding on the next order
+     lock=0             no racer price;  left=5  hours left on it (0 = ran out)
+     cart=muscle:2,retro:1         cart lines
+   Without `seed`, this returns null and nothing changes.
+   ------------------------------------------------------------------ */
+function previewStorage(): Storage | null {
+  if (typeof window === 'undefined') return null;
+  const q = new URLSearchParams(window.location.search);
+  if (q.get('seed') !== '1') return null;
+  const tier = REWARD_TIERS.find((t) => t.id === q.get('reward'));
+  const cart: Record<string, number> = {};
+  for (const part of (q.get('cart') ?? '').split(',').filter(Boolean)) {
+    const [id, n] = part.split(':');
+    cart[id] = Number(n) || 1;
+  }
+  const state = {
+    totalPoints: Number(q.get('pts') ?? 3240),
+    bestScore: Number(q.get('pts') ?? 3240),
+    cart,
+    claimedReward: tier ? { id: tier.id, value: tier.value, freeDelivery: tier.freeDelivery } : null,
+    /* lock=0 for none; left=hours remaining (0 = already ran out). */
+    racerLock:
+      q.get('lock') === '0'
+        ? null
+        : (() => {
+            const pct = racerPctFor(Number(q.get('pts') ?? 3240));
+            return pct ? { pct, until: Date.now() + Number(q.get('left') ?? 24) * 3600 * 1000 - 60 * 1000 } : null;
+          })(),
+  };
+  const mem = new Map<string, string>([['blinkit-hw-v1', JSON.stringify({ state, version: 0 })]]);
+  return {
+    get length() { return mem.size; },
+    clear: () => mem.clear(),
+    getItem: (k) => mem.get(k) ?? null,
+    key: (i) => [...mem.keys()][i] ?? null,
+    removeItem: (k) => void mem.delete(k),
+    setItem: (k, v) => void mem.set(k, v),
+  };
+}
+
 export const useStore = create<State>()(
   persist(
     (set, get) => ({
@@ -210,6 +305,7 @@ export const useStore = create<State>()(
       lastResult: null,
       unlockedRewards: [],
       claimedReward: null,
+      racerLock: null,
       mysteryUnlocked: false,
       referralCode: makeCode(),
       invitedCount: 0,
@@ -242,14 +338,29 @@ export const useStore = create<State>()(
       cartCount: () => Object.values(get().cart).reduce((a, b) => a + b, 0),
       cartLines: () => linesFromCart(get().cart),
 
-      totals: () => computeTotals(linesFromCart(get().cart), get().claimedReward),
+      totals: () => {
+        const l = get().racerLock;
+        return computeTotals(linesFromCart(get().cart), get().claimedReward, 0, 0, lockActive(l) ? l : null);
+      },
 
       selectCar: (id) => set({ selectedCarId: id }),
 
       finishRace: (r) => {
         const tier = tierFor(r.score);
         const result: RaceResult = { ...r, rewardId: tier?.id ?? null, at: Date.now() };
-        set((s) => ({
+        set((s) => {
+          /* The racer price: the rank after this race sets it, and it is
+             locked for 24 hours from now. A better one still running is not
+             replaced by a smaller one. */
+          const now = Date.now();
+          const pct = racerPctFor(s.totalPoints + r.score);
+          const running = lockActive(s.racerLock, now) ? s.racerLock : null;
+          /* A higher step starts a fresh 24 hours; the same step keeps its clock;
+             nothing running and a step reached starts one. */
+          const racerLock =
+            pct === 0 ? running : running && running.pct >= pct ? running : { pct, until: now + RACER_LOCK_MS };
+          return {
+          racerLock,
           /* UNLIMITED_RACES keeps the daily limit visible in the UI — it still
              reads "3 of 3 races left today" — while never actually running out,
              so the build can be demoed and tested back to back. Flip it to
@@ -272,12 +383,11 @@ export const useStore = create<State>()(
            * rides on an order at a time, so a better one replaces a smaller
            * one that has not been spent, and a smaller one does not displace a
            * better one already waiting. */
-          claimedReward:
-            tier && (!s.claimedReward || tier.value > s.claimedReward.value)
-              ? { id: tier.id, value: tier.value, freeDelivery: tier.freeDelivery }
-              : s.claimedReward,
+          /* No cash reward any more: the ladder pays out as the racer price. */
+          claimedReward: null,
           mysteryUnlocked: s.mysteryUnlocked || s.totalPoints + r.score >= MYSTERY_UNLOCK_POINTS,
-        }));
+          };
+        });
         return result;
       },
 
@@ -308,7 +418,15 @@ export const useStore = create<State>()(
           placedAt: Date.now(),
           bill: t,
         };
-        set((s) => ({ order, cart: {}, claimedReward: null, totalPoints: s.totalPoints + 250 }));
+        /* A racer price is spent by the order it came off; the ladder's
+           reward is spent only when it was the one applied. */
+        set((s) => ({
+          order,
+          cart: {},
+          claimedReward: t.racerPct ? s.claimedReward : null,
+          racerLock: t.racerPct ? null : s.racerLock,
+          totalPoints: s.totalPoints + 250,
+        }));
         return order;
       },
 
@@ -326,6 +444,7 @@ export const useStore = create<State>()(
           lastResult: null,
           unlockedRewards: [],
           claimedReward: null,
+          racerLock: null,
           mysteryUnlocked: false,
           invitedCount: 0,
           order: null,
@@ -335,7 +454,7 @@ export const useStore = create<State>()(
     }),
     {
       name: 'blinkit-hw-v1',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => previewStorage() ?? localStorage),
       // guard against corrupt/stale localStorage
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<State>;
@@ -354,6 +473,7 @@ export const useStore = create<State>()(
         if (typeof p.invitedCount === 'number') safe.invitedCount = p.invitedCount;
         if (typeof p.soundOn === 'boolean') safe.soundOn = p.soundOn;
         if (p.claimedReward && typeof p.claimedReward === 'object') safe.claimedReward = p.claimedReward;
+        if (p.racerLock && typeof p.racerLock === 'object' && typeof p.racerLock.until === 'number') safe.racerLock = p.racerLock;
         if (p.lastResult && typeof p.lastResult === 'object') safe.lastResult = p.lastResult;
         if (p.order && typeof p.order === 'object') safe.order = p.order;
         return { ...current, ...safe };
@@ -385,11 +505,12 @@ export function useCartLines() {
 export function useTotals(): Totals {
   const cart = useStore((s) => s.cart);
   const claimed = useStore((s) => s.claimedReward);
+  const lock = useStore((s) => s.racerLock);
   const tip = useStore((s) => s.tip);
   const donation = useStore((s) => s.donation);
   return useMemo(
-    () => computeTotals(linesFromCart(cart), claimed, tip, donation),
-    [cart, claimed, tip, donation],
+    () => computeTotals(linesFromCart(cart), claimed, tip, donation, lockActive(lock) ? lock : null),
+    [cart, claimed, lock, tip, donation],
   );
 }
 

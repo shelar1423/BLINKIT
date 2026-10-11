@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Racer price flows</title>
+<style>
+  :root { --ink: #10131a; --mut: #5b6170; --line: #e3e6ec; --blue: #0B5FD0; --bg: #f4f5f8; --warn: #9a5b00; --warn-bg: #fff3dd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Inter', sans-serif; }
+  header { padding: 28px 32px 4px; max-width: 1100px; }
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -0.02em; }
+  header p { margin: 0 0 10px; color: var(--mut); }
+  .rules { margin: 0 0 6px; padding: 12px 16px; background: #fff; border: 1px solid var(--line); border-radius: 12px; font-size: 14px; }
+  .rules b { font-weight: 700; }
+  .rules ol { margin: 6px 0 0; padding-left: 20px; }
+  section { padding: 18px 32px 6px; }
+  h2 { margin: 0 0 2px; font-size: 18px; }
+  section > p { margin: 0 0 14px; color: var(--mut); font-size: 14px; max-width: 900px; }
+  .row { display: flex; gap: 24px; overflow-x: auto; padding-bottom: 18px; }
+  figure { margin: 0; flex: none; width: 375px; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: var(--blue); color: #fff; }
+  .tag.is-flag { background: var(--warn-bg); color: var(--warn); }
+  figcaption h3 { margin: 8px 0 2px; font-size: 16px; }
+  figcaption p { margin: 0 0 12px; color: var(--mut); font-size: 13.5px; min-height: 42px; }
+  .phone { width: 375px; height: 760px; border-radius: 34px; border: 8px solid #10131a; overflow: hidden; background: #fff; box-shadow: 0 20px 40px -20px rgba(16,19,26,.45); }
+  iframe { width: 100%; height: 100%; border: 0; display: block; }
+  a { color: var(--blue); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Racer price flows</h1>
+  <p>Built on the current design to answer the Zomato feedback: the result decides a reward you can feel at the shelf, on the car, for a limited time. Each phone is the live app with its own state; tap inside any of them.</p>
+  <div class="rules">
+    <b>The rules</b>
+    <ol>
+      <li>Points climb one discount ladder: 1,000 → 5%, 2,500 → 10%, 5,000 → 15%, 8,000 → 20% off every Hot Wheels car, for 24 hours from the race that reached it. The leaderboard has its own prize: top 3 in each city when the 3-day drop ends win a District Pass.</li>
+      <li>Cards: racer price in Blinkit's yellow ticket, shelf price struck, and a blue line turning between "10% off · Race reward" and "#9 on city leaderboard". The bill takes off the same, per car.</li>
+      <li>Time left: one strip above the listing, not on every card.</li>
+      <li>First landing after the race: listing with an empty cart → the bar; with items → no bar; home → the sheet. Once.</li>
+      <li>After 24 hours, or once an order uses it, everything goes.</li>
+    </ol>
+  </div>
+</header>
+<div id="board"></div>
+<script>
+  /* Every phone runs from its own seeded state (`seed=1`), so none of this touches the app's real storage. */
+  const S = (path, q) => `${path}?seed=1&${q}`;
+  const GROUPS = [
+    { title: '1 · The race ends', note: 'One line, beside Shop now.', frames: [
+      { tag: '3,240 pts', title: 'Step 2: 10% off', note: '"10% off Hot Wheels for 24 hours", then See rewards. The board below shows the rank; it does not set the price.', src: '/preview/result?score=3240' },
+      { tag: '15,000 pts', title: 'Top step: 20% off', note: 'Same line, bigger number.', src: '/preview/result?score=15000' },
+      { tag: 'See rewards', title: 'The Rewards sheet', note: 'One system. What is on now (10% OFF, ends in 23h 58m), then the discount ladder 5/10/15/20% by points with your step marked, then the leaderboard prize, decided once when the 3-day drop ends.', src: S('/preview/result', 'score=3240&rewards=1&reward=check') },
+    ]},
+    { title: '2 · Tapped Shop now', note: 'The listing confirms it once, lightly.', frames: [
+      { tag: 'Cart empty', title: 'Bar + timer', note: 'Bar: "10% off on Hot Wheels · Race reward applied". Timer strip above the grid: "Race reward ends in 23h 59m".', src: S('/hot-wheels', 'still=1') },
+      { tag: 'Cart has items', title: 'No bar', note: 'The cart pill keeps its spot. Timer and tickets only.', src: S('/hot-wheels', 'cart=muscle:1,retro:1') },
+    ]},
+    { title: '3 · Left for home instead', note: 'Home tells them once. The listing after it stays quiet.', frames: [
+      { tag: 'Home', title: 'The sheet', note: 'Reads as one sentence: "You earned" / 10% OFF in the yellow ticket / "on Hot Wheels for 24 hours". Shop now.', src: S('/', '') },
+      { tag: 'Then the listing', title: 'Quiet listing', note: 'No bar. Timer and tickets.', src: S('/hot-wheels', 'seen=1') },
+    ]},
+    { title: '4 · Any visit after that', note: 'Each card: the racer price in the yellow ticket, shelf price struck. The blue line under it turns between "10% off · Race reward" and "#9 on city leaderboard". The time left lives once, in the strip.', frames: [
+      { tag: 'Later visit', title: 'Listing', note: '₹179 → ₹161 on the basic cars.', src: S('/hot-wheels', 'seen=1') },
+      { tag: 'Later visit', title: 'Pricier cars', note: 'Scrolled down: ₹399 → ₹359, ₹599 → ₹539.', src: S('/hot-wheels', 'seen=1'), scroll: 'bottom' },
+      { tag: '3h left', title: 'Running out', note: 'Only the strip changes: "ends in 2h 59m".', src: S('/hot-wheels', 'seen=1&left=3') },
+    ]},
+    { title: '5 · Points decide the price', note: 'The ladder: 1,000 pts → 5%, 2,500 → 10%, 5,000 → 15%, 8,000 → 20%.', frames: [
+      { tag: '8,000+ pts', title: '20% off', note: '₹179 → ₹143.', src: S('/hot-wheels', 'seen=1&pts=15000') },
+      { tag: '2,500+ pts', title: '10% off', note: '₹179 → ₹161.', src: S('/hot-wheels', 'seen=1') },
+    ]},
+    { title: '6 · When it ends', note: 'After 24 hours, or once an order uses it, everything goes.', frames: [
+      { tag: 'Ended', title: 'After 24 hours', note: 'The normal listing.', src: S('/hot-wheels', 'left=0') },
+    ]},
+    { title: '7 · Down the funnel', note: 'The product page and the bill take off exactly what the card showed.', frames: [
+      { tag: 'Product page', title: 'A ₹599 car', note: '₹539 in the ticket, MRP ₹599 struck, "10% off · Race reward".', src: S('/hot-wheels/premium', 'seen=1') },
+      { tag: 'Cart', title: 'Two ₹179 cars', note: 'Cards said ₹161 each. Bill: "Race reward · 10% off" −₹36.', src: S('/cart', 'cart=muscle:2') },
+    ]},
+  ];
+
+  const board = document.getElementById('board');
+  for (const g of GROUPS) {
+    const sec = document.createElement('section');
+    sec.innerHTML = `<h2>${g.title}</h2><p>${g.note}</p><div class="row"></div>`;
+    const row = sec.querySelector('.row');
+    for (const f of g.frames) {
+      const fig = document.createElement('figure');
+      fig.innerHTML = `
+        <figcaption>
+          <span class="tag${f.flag ? ' is-flag' : ''}">${f.tag}</span>
+          <h3>${f.title}</h3>
+          <p>${f.note}</p>
+        </figcaption>
+        <div class="phone"><iframe title="${f.title}"></iframe></div>
+        <p><a href="${f.src}" target="_blank">Open on its own ↗</a></p>`;
+      const frame = fig.querySelector('iframe');
+      if (f.scroll === 'bottom') {
+        frame.addEventListener('load', () => {
+          setTimeout(() => {
+            const d = frame.contentDocument;
+            if (!d) return;
+            const el = [...d.querySelectorAll('*')].find((n) => n.scrollHeight > n.clientHeight + 200 && /(auto|scroll)/.test(getComputedStyle(n).overflowY) && n.querySelector('.pcard'));
+            (el || d.scrollingElement).scrollTop = 99999;
+          }, 1500);
+        });
+      }
+      frame.src = f.src;
+      row.appendChild(fig);
+    }
+    board.appendChild(sec);
+  }
+</script>
+</body>
+</html>

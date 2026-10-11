@@ -1,0 +1,113 @@
+/* Racer pricing on the listing: Blinkit's yellow price ticket on the card, and
+   one note for a player who comes back later. */
+
+/* ---------- the price ticket: Blinkit's scalloped best-price stub ---------- */
+.rtk {
+  display: inline-block; padding: 1px 9px; line-height: 1.35;
+  font-size: var(--f-xl); font-weight: 800; letter-spacing: -0.3px;
+  background: var(--yellow); color: var(--ink);
+  --edge: radial-gradient(circle 2.5px at 0 50%, #0000 96%, #000) left / 51% 7px repeat-y,
+          radial-gradient(circle 2.5px at 100% 50%, #0000 96%, #000) right / 51% 7px repeat-y;
+  -webkit-mask: var(--edge); mask: var(--edge);
+}
+/* The blue line under the ticket, where Blinkit writes "Lowest in 30 days". */
+/* It turns over between two lines the way Blinkit's does: hold, roll up, hold,
+   roll up, with the third line repeating the first so the loop is seamless. */
+.rline { color: var(--hw-b); font-weight: 700; height: 1.35em; line-height: 1.35em; overflow: hidden; }
+.rline__track { display: flex; flex-direction: column; animation: rRoll 6s cubic-bezier(0.6, 0, 0.3, 1) infinite; }
+.rline__track > span { display: block; height: 1.35em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@keyframes rRoll {
+  0%, 42% { transform: translateY(0); }
+  50%, 92% { transform: translateY(-1.35em); }
+  100% { transform: translateY(-2.7em); }
+}
+
+/* The reward's end time, once for the whole listing. */
+.rtimer {
+  display: flex; align-items: center; gap: 6px; margin: 10px 10px 0; padding: 7px 10px;
+  border-radius: 8px; background: var(--yellow-tint); color: var(--ink);
+  font-size: var(--f-sm); font-weight: 500; box-shadow: inset 0 0 0 1px #F6E3A6;
+}
+.rtimer svg { flex: none; color: var(--gold-ink); }
+.rtimer b { font-weight: 800; }
+
+.rpop { --chq: repeating-conic-gradient(#fff 0 25%, #10131a 0 50%) 0 0 / 6px 6px; }
+
+/* ---------- P1: the sheet ---------- */
+.rpop__k { font-size: var(--f-md); font-weight: 600; color: var(--mut); }
+.rpop { position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end; justify-content: center; }
+.rpop__scrim { position: absolute; inset: 0; background: rgba(10, 14, 24, 0.5); animation: rFade 0.3s both; }
+.rpop__card {
+  position: relative; width: 100%; max-width: 480px; padding: 22px 18px 18px; text-align: center;
+  border-radius: 18px 18px 0 0; background: #fff; color: var(--ink); overflow: hidden;
+  animation: rUp 0.4s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.rpop__flag { position: absolute; top: 0; left: 0; right: 0; height: 6px; background: var(--chq); }
+.rpop__x { position: absolute; top: 14px; right: 12px; width: 28px; height: 28px; border-radius: 50%; border: 0; background: #f1f3f6; color: var(--ink); display: grid; place-items: center; }
+.rpop__art { display: block; width: 64px; height: 64px; object-fit: contain; margin: 2px auto 6px; }
+.rpop__demo { display: flex; justify-content: center; margin: 6px 0 6px; }
+.rpop__demo .rtk { font-size: 26px; padding: 2px 14px; animation: rIn 0.45s 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+.rpop__s { font-size: var(--f-md); font-weight: 600; color: var(--ink); margin-bottom: 16px; }
+.rpop__go { width: 100%; height: 44px; border: 0; border-radius: 10px; background: var(--green-2); color: #fff; font-weight: 700; font-size: var(--f-md); }
+
+/* ---------- P2: a floating bar, shaped like Blinkit's cart pill ---------- */
+.rsnack {
+  position: fixed; left: 50%; transform: translateX(-50%); z-index: 60;
+  bottom: calc(var(--nav-block) + 12px);
+  width: min(calc(100% - 24px), 380px);
+  display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 6px;
+  border-radius: 999px; background: #fff; color: var(--ink);
+  box-shadow: 0 4px 16px rgba(31, 31, 31, 0.14), 0 0 0 1px rgba(31, 31, 31, 0.06);
+  animation: rUpX 0.4s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+.rsnack__art {
+  flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--yellow-tint);
+  display: grid; place-items: center; box-shadow: inset 0 0 0 1px #F6E3A6;
+}
+.rsnack__art img { width: 30px; height: 30px; object-fit: contain; }
+.rsnack__txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rsnack__txt b { font-size: var(--f-md); font-weight: 700; line-height: 1.25; }
+.rsnack__txt span { font-size: var(--f-xs); color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rsnack button { flex: none; width: 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; color: var(--mut); display: grid; place-items: center; }
+
+@keyframes rIn { from { transform: scale(0.6); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rUp { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rFade { from { opacity: 0; } }
+@keyframes rUpX { from { transform: translate(-50%, 24px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rpop__card, .rpop__scrim, .rpop__demo .rtk, .rsnack, .rline__track { animation: none; } }
+
+/* the ticket at the product page's action-bar size */
+.rtk--sm { font-size: var(--f-lg); padding: 0 8px; }
+.pdp__rnote { margin-top: 4px; font-size: var(--f-xs); font-weight: 700; }
+
+/* The cart's "add more" shelf runs narrower cards (97px against 118px); the
+   line steps down a size there rather than losing its second half. */
+.ckosugg__g .rline { font-size: calc(var(--f-xs) * 0.8); }
+
+/* ---------- the Rewards sheet: one discount ladder ---------- */
+.rrw { display: grid; gap: 16px; }
+.rrw__now {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 14px;
+  background: var(--yellow-tint); box-shadow: inset 0 0 0 1px #F6E3A6;
+}
+.rrw__now .rtk { flex: none; font-size: 22px; padding: 2px 12px; }
+.rrw__now .grow { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rrw__now.is-off { background: #F6F7F9; box-shadow: inset 0 0 0 1px var(--line); }
+.rrw__now.is-off .rtk { background: #E3E6EB; color: var(--mut); }
+.rrw__t { font-size: var(--f-md); font-weight: 700; color: var(--ink); }
+.rrw__s { font-size: var(--f-sm); color: var(--mut); }
+.rrw__s b { color: var(--ink); font-weight: 800; }
+.rlad { display: grid; gap: 10px; }
+/* The ladder's art is the same ticket the shelf uses, at row size. */
+.rtk--art { flex: none; width: 74px; text-align: center; font-size: var(--f-md); padding: 3px 0; }
+.rtk--art.is-locked { background: #E3E6EB; color: var(--mut); }
+.rwstop.is-now .rwstop__t { color: var(--ink); }
+.rwstop__done { font-size: var(--f-xs); font-weight: 600; color: var(--mut); }
+.rwk {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 14px;
+  background: #fff; box-shadow: inset 0 0 0 1px var(--line);
+}
+.rwk img { flex: none; width: 40px; height: 40px; object-fit: contain; }
+.rwk .grow { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rwk b { font-size: var(--f-md); font-weight: 700; }
+.rwk span { font-size: var(--f-xs); color: var(--mut); }

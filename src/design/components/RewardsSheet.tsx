@@ -1,175 +1,94 @@
-import { useEffect, useState, type CSSProperties } from 'react';
 import { Sheet } from './Sheet';
-import { rupees } from '../../data/catalog';
-import { hasReached, REWARD_TIERS, useStore, type RewardTier } from '../../store/useStore';
-import { IconCheck, IconLock, IconTrophy } from '../elements/Icons';
+import { FINAL_PRIZE, REWARD_TIERS, useStore } from '../../store/useStore';
+import { useDrop } from '../../data/useDrop';
+import { useRacerDeal } from '../../lib/racerDeal';
+import { useLeft } from './RacerDealChrome';
+import { IconCheck, IconLock } from '../elements/Icons';
+import './racerDeal.css';
 
 /* ============================================================
-   The rewards ladder, as a sheet.
+   Rewards, as one system.
 
-   It replaces the rewards screen, and for a while it replaced the campaign
-   hub, the leaderboard and the invite screen too. That made it a hub one
-   surface lower. It is only the ladder now: it opens off "Check your reward",
-   so the reward is the only thing it owes an answer about. The board lives on
-   the result screen, where a score is what raises the question.
+   Points climb a single discount ladder on Hot Wheels: 5%, 10%, 15%, 20%.
+   The step reached is the racer price, on every car, for 24 hours. The sheet
+   says three things, in this order:
 
-   It opens on `?rewards=1`, which means any screen can offer it without owning
-   it, the phone's back gesture closes it, and it can be linked to.
+   1. what is on right now, and until when;
+   2. the ladder, with the player's step marked and the gap to the next;
+   3. the city leaderboard's own prize, settled once when the drop closes.
+
+   It used to stack a cash ladder (free delivery, ₹25, ₹50, District Pass)
+   under a discount card: two reward systems that answered the same question
+   differently. There is one now.
+
+   It opens on `?rewards=1`, so any screen can offer it without owning it.
    ============================================================ */
 
-/* Each of the four has artwork for the exact reward it names: the scooter for
-   free delivery, the notes for each cash tier. The top tier is a partner's
-   product, so it carries that partner's own mark. */
-const ART: Record<string, string> = {
-  start: '/icons/free-delivery.webp',
-  check: '/icons/cash-25.webp',
-  pit: '/icons/cash-50.webp',
-  podium: '/icons/district-pass.webp',
-};
-/* Rewards whose art is a brand's own tile rather than a cut-out illustration.
-   The others sit on a tinted disc; a tile is the mark itself and has to fill
-   its slot edge to edge or it reads as a small purple square in a circle. */
-const TILE_ART = new Set(['podium']);
+function Now() {
+  const deal = useRacerDeal();
+  const left = useLeft(deal?.until);
+  const points = useStore((s) => s.totalPoints);
+  const first = REWARD_TIERS[0];
 
-/** Points as a milestone label: 3000 → "3k", 2500 → "2.5k", 750 → "750". */
-const shortPts = (n: number) => (n >= 1000 ? `${Number((n / 1000).toFixed(2))}k` : String(n));
+  if (deal) {
+    return (
+      <div className="rrw__now">
+        <b className="rtk t-num">{deal.pct}% OFF</b>
+        <div className="grow">
+          <b className="rrw__t">On every Hot Wheels car</b>
+          <p className="rrw__s">
+            Ends in <b className="t-num">{left}</b>
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="rrw__now is-off">
+      <b className="rtk t-num">{first.pct}% OFF</b>
+      <div className="grow">
+        <b className="rrw__t">{points >= first.min ? 'Race again to turn it on' : 'Unlocks at 1,000 pts'}</b>
+        <p className="rrw__s">On every Hot Wheels car, for 24 hours</p>
+      </div>
+    </div>
+  );
+}
 
-/**
- * The reward ladder, as the rewards screen drew it.
- *
- * The lane first: the gap to the next tier as a leg of track rather than a
- * sentence. "2,350 more for District Pass" is a fact; a car part of the way
- * down a lane with the prize at the end is the same fact in the campaign's own
- * language, and it says where you are as well as how far is left. The lane
- * spans the CURRENT leg, so the car moves a visible amount for every race
- * rather than crawling across a track scaled to the whole drop.
- *
- * Then the track itself, whose rail fills to the points earned, so the list is
- * also the progress bar rather than sitting under one.
- *
- * What is NOT here is the claim coupon. Rewards apply themselves now, so a
- * button to accept one would be a step with nothing behind it.
- */
 function Ladder() {
-  const totalPoints = useStore((s) => s.totalPoints);
-  const unlockedRewards = useStore((s) => s.unlockedRewards);
-  const claimed = useStore((s) => s.claimedReward);
-
+  const points = useStore((s) => s.totalPoints);
+  const deal = useRacerDeal();
+  const reached = REWARD_TIERS.filter((t) => points >= t.min);
+  const step = reached[reached.length - 1];
   const top = REWARD_TIERS[REWARD_TIERS.length - 1].min;
-  const next = REWARD_TIERS.find((t) => totalPoints < t.min);
-  const isUnlocked = (t: RewardTier) => hasReached(t, totalPoints, unlockedRewards);
-  const earned = REWARD_TIERS.filter(isUnlocked).length;
-
-  /* Measured from the tier last cleared rather than from zero: scaled to the
-     whole drop, a race worth 400 points would move the car a pixel and a half. */
-  const legFrom = [...REWARD_TIERS].reverse().find((t) => totalPoints >= t.min)?.min ?? 0;
-  const legTo = next?.min ?? legFrom;
-  const progress = legTo > legFrom ? Math.min(1, Math.max(0, (totalPoints - legFrom) / (legTo - legFrom))) : 1;
-
-  /* Checkpoints along the leg, so the lane says how far is left in points and
-     not only as a distance. They sit on round numbers — multiples of 250, 500
-     or 1,000, whichever gives the leg between two and five marks — so the
-     2,500–5,000 leg reads 3k and 4k rather than 3.5k and 4.5k. */
-  const span = legTo - legFrom;
-  const inner = (s: number) => {
-    const out: number[] = [];
-    for (let m = Math.floor(legFrom / s) * s + s; m < legTo; m += s) out.push(m);
-    return out;
-  };
-  const marks = [1000, 500, 250].map(inner).find((m) => m.length >= 2 && m.length <= 5) ?? [];
-
-  /* It drives there rather than starting there. One frame so the empty lane
-     paints first and the transition has something to move from. */
-  const [lanePos, setLanePos] = useState(0);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setLanePos(progress));
-    return () => cancelAnimationFrame(id);
-  }, [progress]);
 
   return (
-    <>
-      <div className="rwhero rwhero--sheet">
-        <span className="rwhero__chequer" aria-hidden="true" />
-        <p className="rwhero__k">Your points</p>
-        <p className="rwhero__v t-num">{totalPoints.toLocaleString('en-IN')}</p>
-        {next ? (
-          <div className="rwlane" style={{ '--p': lanePos } as CSSProperties}>
-            <div className="rwlane__road">
-              <span className="rwlane__done" />
-            </div>
-            {/* Milestones: a tick across the road and its points under it, at
-                the same scale the car travels, so the car passes each one
-                exactly when the points do. The two ends are the leg itself. */}
-            <div className="rwlane__marks" aria-hidden="true">
-              {[legFrom, ...marks, legTo].map((m, i, all) => (
-                <span
-                  key={m}
-                  className={
-                    'rwlane__mark' +
-                    (totalPoints >= m ? ' is-passed' : '') +
-                    (i === 0 ? ' is-start' : i === all.length - 1 ? ' is-end' : '')
-                  }
-                  style={{ '--at': span > 0 ? (m - legFrom) / span : 0 } as CSSProperties}
-                >
-                  <i />
-                  <em>{shortPts(m)}</em>
-                </span>
-              ))}
-            </div>
-            <img className="rwlane__car" src="/cars/lane-car.webp" alt="" />
-            {/* The drop's top prize stands at the end of the lane whatever the
-                next tier is, so the finish line always shows what the whole
-                track is racing towards. */}
-            <img className="rwlane__prize is-tile" src={ART.podium} alt="" />
-            <p className="rwlane__l">
-              <b>{(next.min - totalPoints).toLocaleString('en-IN')}</b> points to {next.label}
-            </p>
-          </div>
-        ) : (
-          <p className="rwhero__s rwhero__s--done">
-            <IconTrophy size={16} /> Every tier unlocked
-          </p>
-        )}
-      </div>
-
+    <section className="rlad">
       <div className="seccount">
-        <h2 className="seccount__t">Your rewards</h2>
-        <span className="seccount__n">
-          {earned} of {REWARD_TIERS.length} unlocked
-        </span>
+        <h2 className="seccount__t">Discount ladder</h2>
+        <span className="seccount__n t-num">{points.toLocaleString('en-IN')} pts</span>
       </div>
-
       <div className="rwtrack">
-        <span
-          className="rwtrack__fill"
-          style={{ height: `${Math.min(100, (totalPoints / top) * 100)}%` }}
-          aria-hidden="true"
-        />
+        <span className="rwtrack__fill" style={{ height: `${Math.min(100, (points / top) * 100)}%` }} aria-hidden="true" />
         {REWARD_TIERS.map((t) => {
-          const unlocked = isUnlocked(t);
-          const riding = claimed?.id === t.id;
+          const on = points >= t.min;
+          const current = t === step;
           return (
-            <div key={t.id} className={'rwstop' + (unlocked ? ' is-on' : '')}>
+            <div key={t.id} className={'rwstop' + (on ? ' is-on' : '') + (current ? ' is-now' : '')}>
               <span className="rwstop__pin" aria-hidden="true">
-                {unlocked ? <IconCheck size={12} /> : <IconLock size={11} />}
+                {on ? <IconCheck size={12} /> : <IconLock size={11} />}
               </span>
-              <span className={'rwstop__art' + (TILE_ART.has(t.id) ? ' is-tile' : '')}>
-                <img src={ART[t.id]} alt="" loading="lazy" />
-              </span>
+              <b className={'rtk rtk--art t-num' + (on ? '' : ' is-locked')}>{t.pct}% OFF</b>
+              {/* The ticket says the percentage; the row only owes the price of it. */}
               <div className="grow">
-                <b className="rwstop__t">{t.label}</b>
-                <span className="rwstop__s">
-                  {t.min.toLocaleString('en-IN')} pts
-                  {t.value > 0 ? ` · ${rupees(t.value)} off` : t.perk ? ` · ${t.perk}` : ''}
-                </span>
+                <b className="rwstop__t t-num">{t.min.toLocaleString('en-IN')} pts</b>
               </div>
-              {riding ? (
-                <span className="chip chip--live">On your order</span>
-              ) : unlocked ? (
-                <span className="chip chip--on">Earned</span>
+              {current ? (
+                <span className="chip chip--live">{deal ? 'Active' : 'Reached'}</span>
+              ) : on ? (
+                <span className="rwstop__done">Passed</span>
               ) : (
                 <span className="rwstop__gap t-num">
-                  {(t.min - totalPoints).toLocaleString('en-IN')}
+                  {(t.min - points).toLocaleString('en-IN')}
                   <small>to go</small>
                 </span>
               )}
@@ -177,23 +96,37 @@ function Ladder() {
           );
         })}
       </div>
-    </>
+    </section>
+  );
+}
+
+/**
+ * The leaderboard's prize. The drop runs three days, so the board is settled
+ * once, when it closes: whoever is top 3 in their city then wins. Until then it
+ * only reports where you stand and how long is left.
+ */
+function Finale() {
+  const { status } = useDrop();
+  const over = !status.remaining;
+  return (
+    <div className="rwk">
+      <img src="/icons/leaderboard.webp" alt="" />
+      <div className="grow">
+        {/* An invitation, not a status report: what to do, then when it counts. */}
+        <b>{over ? 'Final leaderboard is in' : `Finish top ${FINAL_PRIZE.top} to win a District Pass`}</b>
+        <span>{over ? 'Top 3 in each city win a District Pass' : `Final leaderboard when the drop ends · ${status.remaining}`}</span>
+      </div>
+    </div>
   );
 }
 
 export function RewardsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
-    /* Just the ladder.
-     *
-     * It carried a tally, a city board and an invite as well, which made it a
-     * campaign hub in a sheet: the same collection of everything the hub
-     * screen was, one surface lower. This opens off "Check your reward", so
-     * the reward is the only thing it owes an answer about. The board lives on
-     * the result screen where a score raises the question, and the points are
-     * already at the top of the lane. */
     <Sheet open={open} onClose={onClose} title="Rewards">
-      <div className="cmp">
+      <div className="cmp rrw">
+        <Now />
         <Ladder />
+        <Finale />
       </div>
     </Sheet>
   );

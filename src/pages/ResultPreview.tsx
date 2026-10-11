@@ -13,11 +13,11 @@ import { useToast } from '../App';
    is the one you cannot ask for.
 
    /preview/result?score=3000 renders it at that score, which fixes the tier:
-     under 1000 — nothing won
-     1000 — Free Delivery
-     2500 — ₹25 Blinkit Cash
-     5000 — ₹50 Blinkit Cash
-     8000 — District Pass
+     under 1000 points — no step yet
+     1000 — 5% off Hot Wheels
+     2500 — 10% off
+     5000 — 15% off
+     8000 — 20% off
    `?car=` picks the car by id, `?best=` sets the highest score to sit against,
   `?races=0` shows the screen with the day's races spent.
    Everything else is plausible filler, and nothing here is written to the
@@ -65,6 +65,8 @@ export default function ResultPreview() {
 
       {/* The tier switcher, floated over the top. Not part of the screen being
           previewed: it is the thing that makes previewing it useful. */}
+      {/* `?clean=1` drops it, for screenshots of the screen itself. */}
+      {params.get('clean') !== '1' && (
       <div className="rprev">
         {[0, ...REWARD_TIERS.map((t) => t.min)].map((s) => (
           <button key={s} type="button" className={'rprev__b' + (score === s ? ' is-on' : '')} onClick={() => set(s)}>
@@ -72,6 +74,7 @@ export default function ResultPreview() {
           </button>
         ))}
       </div>
+      )}
     </div>
   );
 }
