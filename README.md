@@ -77,13 +77,29 @@ exceptions, and these campaign events:
 Completion means an actual engine result, not opening a results-preview page. `ar` includes
 the app's camera-backed race. No frame-by-frame events, camera footage, or motion samples
 are sent. URLs omit query strings and hashes, and autocapture masks text and attributes.
-Session replay is off unless explicitly enabled; canvas/camera recording is not enabled.
+Session replay samples 10% of visitor sessions. The project keeps recordings of at least
+10 seconds for 30 days. Video and canvas elements are blocked, so replays show interface
+interactions without recording the camera feed or the rendered 3D scene. Inputs are masked;
+network headers and bodies are not recorded. Web Vitals and console logs are enabled.
+
+Heatmap capture is limited to three paths: `/`, `/hot-wheels`, and `/race/play`.
+Owner browsers do not record replays or heatmaps. The
+[Hot Wheels Overview](https://us.posthog.com/project/660986/dashboard/2201977) shows visitors,
+sessions, devices, referrers, repeat visits, race completion, shopping clicks and page performance.
+Its charts use the production hostname and exclude internal/test users.
+
+The account remains on PostHog's free plan with no payment method or paid upgrade. Its
+monthly caps are 1 million analytics events, 5,000 replays, 100,000 exceptions and 500 AI
+credits; heatmaps cover three pages. Reaching a free limit stops that product's collection
+for the billing period. Sampling reduces usage but cannot guarantee collection throughout
+an unexpectedly busy month. No paid AI service or recurring AI analysis is configured.
 
 Optional settings are listed in `.env.example`. Copy it to `.env.local` for local overrides,
 or set `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` in Vercel and rebuild. Missing overrides use
 the Hot Wheels account, not the portfolio account. Development tracking is off unless
 `VITE_POSTHOG_ENABLE_DEV=true`; those events are marked internal/test. A browser marked by
-the app's existing `?me=1` owner switch is also marked internal/test in PostHog.
+the `?me=1` owner switch is also marked internal/test in PostHog. The switch persists in
+that browser. Visit-open email notifications and their server endpoint have been removed.
 
 To verify a deployment, open it, navigate to the cars and complete a race, then check
 [PostHog activity](https://us.posthog.com/project/660986/activity/events). Filter the campaign

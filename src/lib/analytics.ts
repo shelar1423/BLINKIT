@@ -9,11 +9,23 @@ const enabled = Boolean(projectKey) &&
 let client: PostHogInterface | null = null;
 let loading: Promise<void> | null = null;
 const pending: { event: string; properties: Properties }[] = [];
+const heatmapPaths = new Set(['/', '/hot-wheels', '/race/play']);
+
+function isInternalBrowser(): boolean {
+  try {
+    if (new URLSearchParams(window.location.search).get('me') === '1') {
+      localStorage.setItem('rih_owner', '1');
+    }
+    return import.meta.env.DEV || localStorage.getItem('rih_owner') === '1';
+  }
+  catch { return import.meta.env.DEV; }
+}
 
 /** Keep referral codes, preview state and other query values out of analytics. */
 export function analyticsUrl(value: string): string {
   try {
     const url = new URL(value, window.location.origin);
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return '';
     return url.origin + url.pathname;
   } catch {
     return '';
@@ -24,6 +36,7 @@ export function initAnalytics(): void {
   if (!enabled || loading) return;
   // A separate chunk keeps the analytics SDK out of the initial app bundle.
   loading = import('posthog-js').then(({ default: posthog }) => {
+    const internal = isInternalBrowser();
     posthog.init(projectKey!, {
       api_host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com',
       ui_host: import.meta.env.VITE_POSTHOG_HOST?.includes('eu.i.posthog.com')
@@ -35,9 +48,33 @@ export function initAnalytics(): void {
       person_profiles: 'identified_only',
       mask_all_text: true,
       mask_all_element_attributes: true,
-      disable_session_recording: import.meta.env.VITE_POSTHOG_SESSION_REPLAY !== 'true',
-      session_recording: { maskAllInputs: true },
+      capture_heatmaps: { flush_interval_milliseconds: 5000 },
+      capture_performance: { web_vitals: true, network_timing: false },
+      enable_recording_console_log: true,
+      // Sample 10% of visitor sessions; owner/development browsers never record.
+      disable_session_recording: internal || import.meta.env.VITE_POSTHOG_SESSION_REPLAY === 'false',
+      session_recording: {
+        sampleRate: 0.1,
+        maskAllInputs: true,
+        blockSelector: 'video, canvas',
+        recordHeaders: false,
+        recordBody: false,
+        captureCanvas: { recordCanvas: false },
+      },
       before_send: (event) => {
+        if (event?.event === '$$heatmap') {
+          if (internal) return null;
+          const data = event.properties?.$heatmap_data as Record<string, unknown[]> | undefined;
+          const allowed: Record<string, unknown[]> = {};
+          for (const [url, points] of Object.entries(data || {})) {
+            const clean = analyticsUrl(url);
+            if (clean && Array.isArray(points) && heatmapPaths.has(new URL(clean).pathname)) {
+              allowed[clean] = [...(allowed[clean] || []), ...points];
+            }
+          }
+          if (!Object.keys(allowed).length) return null;
+          event.properties.$heatmap_data = allowed;
+        }
         if (event?.properties) {
           for (const key of ['$current_url', '$referrer', '$initial_current_url', '$initial_referrer']) {
             if (typeof event.properties[key] === 'string') {
@@ -50,10 +87,10 @@ export function initAnalytics(): void {
         return event;
       },
       loaded: (sdk) => {
-        sdk.register({ app: 'hotwheels', environment: import.meta.env.MODE });
-        // Reuse the app's existing owner marker; dev analytics are also test traffic.
+        sdk.register({ app: 'hotwheels', environment: import.meta.env.MODE, $internal_or_test_user: internal });
+        // Owner browsers and development analytics are test traffic.
         try {
-          if (import.meta.env.DEV || localStorage.getItem('rih_owner') === '1') {
+          if (internal) {
             sdk.setInternalOrTestUser();
           }
         } catch { /* Storage can be blocked; analytics must not interrupt play. */ }
