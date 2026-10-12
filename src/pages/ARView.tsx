@@ -4,6 +4,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { HERO_CARS } from '../data/catalog';
 import { tierFor, useStore } from '../store/useStore';
 import { useStartRace } from '../lib/useStartRace';
+import { track } from '../lib/analytics';
 import {
   detectAR,
   startARSession,
@@ -192,6 +193,7 @@ export default function ARView() {
 
   const onFinish = useCallback(
     (o: RaceOutcome) => {
+      track('race_completed', { mode: 'ar', car_id: car.id, score: o.score, groceries: o.groceries, seconds: o.seconds });
       /* Explicitly, because this sets the phase directly rather than through
          onPhase — so the handler that would otherwise cut the engine never
          sees the race end. */
@@ -208,7 +210,7 @@ export default function ARView() {
       setPhase(null);
       setStats(null);
     },
-    [finishRace],
+    [car.id, finishRace],
   );
 
   const launch = useCallback(async (silent = false) => {
@@ -258,7 +260,10 @@ export default function ARView() {
           /* Fresh briefing each time a circuit goes down: re-placing a track
              is the one moment somebody is most likely to want it again. */
           if (p === 'placed') setCoached(false);
-          if (p === 'racing') engineStart();
+          if (p === 'racing') {
+            if (!inspect) track('race_started', { mode: 'ar', car_id: car.id });
+            engineStart();
+          }
           else engineStop();
         },
         onTick: (st) => {
@@ -935,7 +940,7 @@ export default function ARView() {
             void launch();
           }}
           onInvited={grantExtraRace}
-          onShop={() => nav('/hot-wheels')}
+          onShop={() => { track('race_shop_clicked', { mode: 'ar', car_id: car.id }); nav('/hot-wheels'); }}
           onRewards={() => nav('?rewards=1')}
           onExit={() => nav('/hot-wheels')}
           exitLabel="Shop cars"

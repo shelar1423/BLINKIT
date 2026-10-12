@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { Button } from '../design/elements';
+import { trackException } from '../lib/analytics';
 
 type Props = { children: ReactNode };
 type State = { error: Error | null };
@@ -13,6 +14,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
+    trackException(error);
     // Surface for debugging without ever showing a stack trace to the user.
     console.error('Route crashed:', error, info.componentStack);
   }

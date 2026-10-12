@@ -55,6 +55,41 @@ npm run dev
 Opens on `http://localhost:5180`, and Vite also prints a `Network:` URL you can open on your phone
 on the same Wi-Fi. `npm run build` → `npm run preview` for the production bundle.
 
+## PostHog analytics
+
+The `flow-2` app sends production analytics to the separate Hot Wheels PostHog account,
+[project 660986](https://us.posthog.com/project/660986). Its public, write-only project token
+is configured in `src/lib/analytics.ts`; no personal API key is included. The live app is
+https://blinkit-hot-wheels.vercel.app. Pushing this branch only updates deployments that
+Vercel has configured to build `flow-2`.
+
+The SDK loads in a separate chunk and does not hold up rendering or racing. Analytics failures
+are ignored. Tracking includes route pageviews, page exits, masked click autocapture, browser
+exceptions, and these campaign events:
+
+| Event | Trigger | Properties |
+|---|---|---|
+| `race_started` | The car launches | mode (`ar` or `3d`), car_id |
+| `race_completed` | The engine reports a result | mode, car_id, score, groceries, seconds |
+| `race_3d_fallback` | Race entry routes to 3D | reason, car_id |
+| `race_shop_clicked` | Shop cars on the race result | mode, car_id |
+
+Completion means an actual engine result, not opening a results-preview page. `ar` includes
+the app's camera-backed race. No frame-by-frame events, camera footage, or motion samples
+are sent. URLs omit query strings and hashes, and autocapture masks text and attributes.
+Session replay is off unless explicitly enabled; canvas/camera recording is not enabled.
+
+Optional settings are listed in `.env.example`. Copy it to `.env.local` for local overrides,
+or set `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` in Vercel and rebuild. Missing overrides use
+the Hot Wheels account, not the portfolio account. Development tracking is off unless
+`VITE_POSTHOG_ENABLE_DEV=true`; those events are marked internal/test. A browser marked by
+the app's existing `?me=1` owner switch is also marked internal/test in PostHog.
+
+To verify a deployment, open it, navigate to the cars and complete a race, then check
+[PostHog activity](https://us.posthog.com/project/660986/activity/events). Filter the campaign
+events to build a start → completion → shop funnel. Checkout is a prototype, so these
+events do not claim real purchases.
+
 ## Architecture
 
 React owns the app, routing and state. The three 3D surfaces are **vanilla three.js** mounted into

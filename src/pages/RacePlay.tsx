@@ -24,6 +24,7 @@ import {
 } from '../lib/raceAudio';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 import { useToast } from '../App';
+import { track } from '../lib/analytics';
 
 
 export default function RacePlay() {
@@ -97,11 +98,12 @@ export default function RacePlay() {
   const onFinish = useCallback(
     (o: RaceOutcome) => {
       engineStop();
+      track('race_completed', { mode: '3d', car_id: car.id, score: o.score, groceries: o.groceries, seconds: o.seconds });
       setIsBest(o.score > useStore.getState().bestScore);
       finishRace({ score: o.score, groceries: o.groceries, seconds: o.seconds });
       setOutcome(o);
     },
-    [finishRace],
+    [car.id, finishRace],
   );
 
   /* A race that cannot start has to SAY so.
@@ -141,6 +143,7 @@ export default function RacePlay() {
            gone. */
         onFinishCue: () => setCheering(true),
         onLaunched: () => {
+          track('race_started', { mode: '3d', car_id: car.id });
           setLaunched(true);
           engineStart();
         },
@@ -496,7 +499,7 @@ export default function RacePlay() {
           toast={toast}
           onRaceAgain={() => window.location.reload()}
           onInvited={grantExtraRace}
-          onShop={() => nav('/hot-wheels')}
+          onShop={() => { track('race_shop_clicked', { mode: '3d', car_id: car.id }); nav('/hot-wheels'); }}
           onRewards={() => nav('?rewards=1')}
           onExit={() => nav('/')}
           exitLabel="Done"

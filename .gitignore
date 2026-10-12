@@ -11,5 +11,6 @@ models-original/
 art-originals/
 *.tsbuildinfo
 .env*
+!.env.example
 # built storybook output
 storybook-static

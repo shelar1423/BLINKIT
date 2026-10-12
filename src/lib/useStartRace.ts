@@ -4,6 +4,7 @@ import { HERO_CARS } from '../data/catalog';
 import { preloadCar } from './three/modelLoader';
 import { useStore } from '../store/useStore';
 import { useARSupport } from './useARSupport';
+import { track } from './analytics';
 
 /* ============================================================
    One way into a race.
@@ -75,7 +76,10 @@ export function useStartRace() {
          the download overlaps the loader instead of the countdown. */
       if (car.glb) preloadCar(car.glb);
       if (arOk && !opts?.force3d) nav(`/ar/${car.id}?go=1`);
-      else nav('/race/play');
+      else {
+        track('race_3d_fallback', { reason: opts?.force3d ? 'camera_start_failed' : 'ar_unsupported', car_id: car.id });
+        nav('/race/play');
+      }
     },
     [arOk, car.glb, car.id, hasRaced, racesLeft, nav],
   );
