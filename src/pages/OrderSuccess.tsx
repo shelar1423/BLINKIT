@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../design/elements';
 import { ARRIVE_U, DeliveryMap, DONE_U } from '../design/components/DeliveryMap';
 import { BillRows } from '../design/components/BillDetails';
@@ -24,6 +24,7 @@ import {
   IconShieldCheck,
 } from '../design/elements/Icons';
 import { useToast } from '../App';
+import { useStartRace } from '../lib/useStartRace';
 
 /* ============================================================
    Order tracking.
@@ -47,11 +48,12 @@ import { useToast } from '../App';
  * still read five minutes — the text and the picture saying different things,
  * which is the one thing this screen must never do.
  *
- * So the trip IS the drive: ten seconds, start to door. The ETA is computed
+ * So the trip IS the drive: twenty seconds, start to door — long enough to
+ * read the screen and tap into the race while the order is still on its way. The ETA is computed
  * from the car's own position on the route, so it counts down continuously
  * while the car moves and reaches its last minute exactly as the car reaches
  * the house. */
-const TRIP_S = 10;
+const TRIP_S = 20;
 /** What the ETA reads as the car pulls away from the store. */
 const TRIP_MIN = 7;
 
@@ -80,6 +82,8 @@ const NOTES = ['Leave at the door', 'Do not ring the bell', 'Call on arrival', '
 export default function OrderSuccess() {
   const nav = useNavigate();
   const { toast } = useToast();
+  const startRace = useStartRace();
+  const loc = useLocation();
   const order = useStore((s) => s.order);
   const addressId = useStore((s) => s.addressId);
   const address = ADDRESSES.find((a) => a.id === addressId) ?? ADDRESSES[0];
@@ -87,6 +91,8 @@ export default function OrderSuccess() {
   /** Seconds since the order was placed. Everything on this screen reads it. */
   const [elapsed, setElapsed] = useState(0);
   const [mapOpen, setMapOpen] = useState(true);
+  /** The takeover's mini map, opened up into the full live map. */
+  const [mapExpanded, setMapExpanded] = useState(false);
   const [notesOpen, setNotesOpen] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -132,6 +138,14 @@ export default function OrderSuccess() {
      whenever the car does. */
   const drive = Math.min(1, u / ARRIVE_U);
   const minsLeft = Math.max(1, Math.ceil((1 - drive) * TRIP_MIN));
+  /* Which of Blinkit's two order-screen ad slots the race takes, decided when
+     the order was placed: the takeover on the first order, the in-feed card
+     after it. Never both — one race ad per screen leaves the other slot for
+     another brand. ?ad=takeover or ?ad=card overrides it for a demo. Either
+     one goes once the order has arrived. */
+  const adParam = new URLSearchParams(loc.search).get('ad');
+  const slot = adParam === 'takeover' || adParam === 'card' ? adParam : order.adSlot ?? 'card';
+  const takeover = !done && slot === 'takeover';
 
   const said = done
     ? 'I have handed over your order. Thanks for ordering!'
@@ -151,37 +165,93 @@ export default function OrderSuccess() {
     <main className="page trk">
       {done && watching && <Poppers />}
 
-      {/* ---- the green bar ---- */}
-      {/* Once it is delivered there is no ETA left to carry, so the green bar
-          steps aside for a plain white one and the arrival card below takes
-          over its job. */}
-      <header className={'trk__top' + (done ? ' trk__top--done' : '')}>
-        <button className="trk__back" type="button" aria-label="Back" onClick={() => nav('/')}>
-          {done ? <IconArrowLeft size={22} /> : <IconChevronLeft size={22} />}
-        </button>
-        {!done && (
-          <>
-            <p className="trk__k">Order is on the way</p>
-            <h1 className="trk__eta">{`Arriving in ${minsLeft} minute${minsLeft > 1 ? 's' : ''}`}</h1>
-          </>
-        )}
-      </header>
-
-      {/* Shown by default, always. The shrink button is the way to put it away
-          once you have stopped caring where the car is — it is never something
-          you have to press to see the map in the first place. */}
-      {done ? null : mapOpen ? (
-        <DeliveryMap
-          u={u}
-          onCollapse={() => setMapOpen(false)}
-          onShare={() => toast('Location sharing is out of scope for this prototype')}
-          label={done ? 'Your order has arrived' : `${PARTNER} is ${minsLeft} minutes away`}
-        />
+      {/* ---- the takeover ----
+          Blinkit's "Order Screen Takeover" from its ad media kit: the brand's
+          creative runs full bleed from the top of the screen, and the order's
+          own ETA card rides up over its bottom edge, so the order is still the
+          first thing that reads as information. Here the creative is the race:
+          the car on a real table, and one white pill to play it. */}
+      {takeover && !mapExpanded ? (
+        <section className="trkto">
+          <div className="trkto__hero">
+            <button className="trkto__back" type="button" aria-label="Back" onClick={() => nav('/')}>
+              <IconArrowLeft size={22} />
+            </button>
+            <img className="trkto__brand" src="/brand/hot-wheels-logo.webp" alt="Hot Wheels" />
+            <div className="trkto__copy">
+              <h2 className="trkto__t">Race It Home</h2>
+              <p className="trkto__s">Race while your order arrives</p>
+            </div>
+            <img className="trkto__art" src="/cars/12-product-detail-hero.webp" alt="" />
+            <p className="trkto__v">Win up to 20% off on Hot Wheels*</p>
+            <p className="trkto__tc">*Valid for 24 hours after your race. T&amp;C apply</p>
+            <button type="button" className="trkto__cta" onClick={() => startRace({ skipStanding: true })}>
+              Race now
+            </button>
+            <span className="trkto__dots" aria-hidden="true">
+              <i className="is-on" />
+              <i />
+              <i />
+              <i />
+            </span>
+          </div>
+          <div className="trkto__eta">
+            <span className="grow">
+              <small>Order is on the way</small>
+              <b>{`Arriving in ${minsLeft} minute${minsLeft > 1 ? 's' : ''}`}</b>
+            </span>
+            {/* The thumbnail is the live map, shrunk, with the expand mark
+                Blinkit's own takeover shows on it. Tapping it opens the full
+                map; its shrink button brings the takeover back. The ad never
+                stands between someone and where their order is. */}
+            <button
+              type="button"
+              className="trkto__map"
+              aria-label="Show live map"
+              onClick={() => setMapExpanded(true)}
+            >
+              <DeliveryMap u={u} onCollapse={() => {}} onShare={() => {}} label="" />
+              <span className="trkto__expand" aria-hidden="true">
+                <IconExpand size={13} />
+              </span>
+            </button>
+          </div>
+        </section>
       ) : (
-        <button type="button" className="trk__showmap" onClick={() => setMapOpen(true)}>
-          <IconExpand size={17} />
-          Show live map
-        </button>
+        <>
+      {/* ---- the green bar ---- */}
+        {/* Once it is delivered there is no ETA left to carry, so the green bar
+            steps aside for a plain white one and the arrival card below takes
+            over its job. */}
+        <header className={'trk__top' + (done ? ' trk__top--done' : '')}>
+          <button className="trk__back" type="button" aria-label="Back" onClick={() => nav('/')}>
+            {done ? <IconArrowLeft size={22} /> : <IconChevronLeft size={22} />}
+          </button>
+          {!done && (
+            <>
+              <p className="trk__k">Order is on the way</p>
+              <h1 className="trk__eta">{`Arriving in ${minsLeft} minute${minsLeft > 1 ? 's' : ''}`}</h1>
+            </>
+          )}
+        </header>
+
+        {/* Shown by default, always. The shrink button is the way to put it away
+            once you have stopped caring where the car is — it is never something
+            you have to press to see the map in the first place. */}
+        {done ? null : mapOpen ? (
+          <DeliveryMap
+            u={u}
+            onCollapse={() => (takeover ? setMapExpanded(false) : setMapOpen(false))}
+            onShare={() => toast('Location sharing is out of scope for this prototype')}
+            label={done ? 'Your order has arrived' : `${PARTNER} is ${minsLeft} minutes away`}
+          />
+        ) : (
+          <button type="button" className="trk__showmap" onClick={() => setMapOpen(true)}>
+            <IconExpand size={17} />
+            Show live map
+          </button>
+        )}
+        </>
       )}
 
       <div className="trk__body">
@@ -228,6 +298,34 @@ export default function OrderSuccess() {
               </div>
             </div>
           </section>
+        )}
+
+        {/* ---- race while you wait ----
+            Blinkit's order screen already sells a slot here: the "Order
+            Screen - Static Banner" in its ad media kit is one card in this
+            same stack, just under the ETA and above the partner card — a brand
+            logo in a disc, a bold line, a grey line and a green link. So the
+            race takes that slot in that shape, and reads as one more card in
+            the list rather than a campaign dropped on top of the order. The
+            wait is the one moment nobody is trying to buy anything, and the
+            card goes when the order arrives: the door always wins. */}
+        {!done && !takeover && (
+          <button
+            type="button"
+            className="trkc trkc__hd trkc--link trkrace"
+            onClick={() => startRace({ skipStanding: true })}
+          >
+            <span className="trkc__ic trkrace__logo">
+              <img src="/brand/hot-wheels-logo.webp" alt="" />
+            </span>
+            <span className="trkc__t">
+              <b>Waiting for your order?</b>
+              <small>Race a Hot Wheels car and win up to 20% off</small>
+              <span className="trkrace__go">
+                Race now <IconChevronRight size={13} />
+              </span>
+            </span>
+          </button>
         )}
 
         {/* ---- who has the order ---- */}

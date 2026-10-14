@@ -96,6 +96,14 @@ export type Order = {
   rewardValue: number;
   placedAt: number;
   /**
+   * Which of Blinkit's order-screen ad slots the race took on this order's
+   * tracking screen: the full takeover on the first order of the drop, when
+   * reach matters most, and the in-feed card on every order after it. Fixed
+   * when the order is placed, so coming back to the same order shows the same
+   * screen.
+   */
+  adSlot?: 'takeover' | 'card';
+  /**
    * The bill exactly as it stood when the order was placed.
    *
    * Kept rather than recomputed, because by the time anyone looks at it the
@@ -204,6 +212,8 @@ type State = {
   referralCode: string;
   invitedCount: number;
   order: Order | null;
+  /** Orders placed during the drop. Decides each order's ad slot. */
+  ordersPlaced: number;
   soundOn: boolean;
   /** Wishlisted product ids. The heart on a card has to keep its state, or it
    *  is a control that lies every time the list re-renders. */
@@ -310,6 +320,7 @@ export const useStore = create<State>()(
       referralCode: makeCode(),
       invitedCount: 0,
       order: null,
+      ordersPlaced: 0,
       soundOn: true,
       saved: [],
       viewed: [],
@@ -417,11 +428,13 @@ export const useStore = create<State>()(
           rewardValue: t.rewardValue,
           placedAt: Date.now(),
           bill: t,
+          adSlot: get().ordersPlaced === 0 ? 'takeover' : 'card',
         };
         /* A racer price is spent by the order it came off; the ladder's
            reward is spent only when it was the one applied. */
         set((s) => ({
           order,
+          ordersPlaced: s.ordersPlaced + 1,
           cart: {},
           claimedReward: t.racerPct ? s.claimedReward : null,
           racerLock: t.racerPct ? null : s.racerLock,
@@ -448,6 +461,7 @@ export const useStore = create<State>()(
           mysteryUnlocked: false,
           invitedCount: 0,
           order: null,
+          ordersPlaced: 0,
           saved: [],
           viewed: [],
         }),
@@ -476,6 +490,7 @@ export const useStore = create<State>()(
         if (p.racerLock && typeof p.racerLock === 'object' && typeof p.racerLock.until === 'number') safe.racerLock = p.racerLock;
         if (p.lastResult && typeof p.lastResult === 'object') safe.lastResult = p.lastResult;
         if (p.order && typeof p.order === 'object') safe.order = p.order;
+        if (typeof p.ordersPlaced === 'number' && p.ordersPlaced >= 0) safe.ordersPlaced = p.ordersPlaced;
         return { ...current, ...safe };
       },
     },

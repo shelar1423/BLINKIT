@@ -2621,6 +2621,61 @@ input, select, textarea { font: inherit; color: inherit; }
 .trkc__row.trkc__row--sep b { font-weight: 400; }
 .trkc__shield { flex: none; color: var(--green); display: grid; place-items: center; }
 
+/* ---------- race while you wait ----------
+   The order screen's static banner card: the stack's own head row, with the
+   brand's logo in the disc where the other cards keep a grey icon, and the
+   green text link Blinkit puts under a sponsored line. */
+.trkrace { align-items: flex-start; }
+.trkrace__logo { background: #fff; border: 1px solid var(--line); overflow: hidden; }
+.trkrace__logo img { width: 34px; height: auto; display: block; }
+.trkrace__go {
+  display: inline-flex; align-items: center; gap: 2px; margin-top: 6px;
+  font-size: var(--f-md); font-weight: 700; color: var(--green);
+}
+
+/* ---------- race takeover ----------
+   The takeover slot: creative full bleed under the status bar, copy centred
+   at its foot over a soft dark fade, a white pill, carousel dots, and the ETA
+   card overlapping the bottom edge. The mini map is the live map, shrunk, so
+   the thumbnail moves with the ETA. */
+.trkto { position: relative; }
+.trkto__hero {
+  position: relative; display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: calc(var(--safe-t) + 60px) 24px 56px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFFFFF 40%, #E9ECF1 100%); color: var(--ink);
+}
+.trkto__back {
+  position: absolute; top: calc(var(--safe-t) + 12px); left: var(--gut);
+  width: 40px; height: 40px; display: grid; place-items: center; color: var(--ink);
+}
+.trkto__brand { position: absolute; top: calc(var(--safe-t) + 18px); right: var(--gut); height: 26px; width: auto; }
+.trkto__copy { display: flex; flex-direction: column; gap: 4px; }
+.trkto__t { font-size: calc(var(--f-2xl) + 6px); font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+.trkto__s { font-size: var(--f-lg); font-weight: 600; color: var(--ink-2); }
+.trkto__art { width: 78%; max-width: 300px; aspect-ratio: 496 / 400; object-fit: cover; object-position: center 35%; margin: 4px 0 6px; }
+.trkto__v { font-size: var(--f-md); font-weight: 700; color: var(--ink); }
+.trkto__tc { margin-top: 2px; font-size: 10px; color: var(--mut); }
+.trkto__cta { margin-top: 10px; background: var(--ink); color: #fff; font-size: var(--f-md); font-weight: 700; padding: 9px 20px; border-radius: 8px; }
+.trkto__dots { display: flex; gap: 4px; margin-top: 12px; }
+.trkto__dots i { width: 6px; height: 3px; border-radius: 2px; background: rgba(31, 31, 31, 0.25); }
+.trkto__dots i.is-on { width: 18px; background: var(--ink); }
+.trkto__eta {
+  position: relative; z-index: 3; display: flex; align-items: center; gap: 12px;
+  margin: -40px var(--gut) 0; padding: 14px 12px 14px 16px;
+  background: var(--surface); border-radius: 16px; box-shadow: var(--sh-1);
+}
+.trkto__eta small { display: block; font-size: var(--f-md); color: var(--mut); }
+.trkto__eta b { display: block; margin-top: 2px; font-size: calc(var(--f-xl) + 1px); font-weight: 800; line-height: 1.2; color: var(--green); letter-spacing: -0.3px; }
+.trkto__map { position: relative; flex: 0 0 116px; display: block; border-radius: 10px; }
+.trkto__map .trkmap__svg { pointer-events: none; }
+.trkto__expand {
+  position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center; background: #fff; color: var(--ink);
+  box-shadow: 0 1px 4px rgba(16, 20, 24, 0.2);
+}
+.trkto__map .trkmap { margin: 0; border-radius: 10px; box-shadow: none; }
+.trkto__map .trkmap__zoom, .trkto__map .trkmap__share { display: none; }
+
 /* ---------- delivered ----------
    The green bar gives way to a plain white one with just the back button, and
    this card takes the top of the stack: a mint band saying it has arrived,
