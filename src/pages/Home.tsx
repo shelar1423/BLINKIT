@@ -161,6 +161,16 @@ export default function Home() {
             </span>
           </h2>
 
+          {/* The partner line under the lettering, the way Blinkit signs its
+              brand-funded bands: Diwali's "Powered by" Cadbury and Haldiram's,
+              Scream for Ice Cream's Kwality Wall's and Amul. Small caps and the
+              brand's own mark, so it credits Mattel without competing with the
+              campaign name above it. */}
+          <p className="ctake__by">
+            <span>Powered by</span>
+            <img src="/brand/mattel-white.svg" alt="Mattel" />
+          </p>
+
           {/* The concealed car is gone: the band now shows the campaign's own
               artwork instead of a cloth over something withheld, so there is
               nothing left for a reveal plate to conceal. */}

@@ -1015,6 +1015,19 @@ input, select, textarea { font: inherit; color: inherit; }
    Full-bleed inside the band. The artwork is already feathered to transparent
    at every edge, so it needs no frame and no card — a border here would put
    back exactly the rectangle the feathering exists to remove. */
+/* ---- the partner line ----
+   Blinkit's festive bands credit the brand in one quiet row under the
+   lettering: spaced small caps, then the partner's own mark. */
+.ctake__by {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 6px;
+  font-size: var(--f-2xs); font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+  pointer-events: none;
+}
+.ctake__by img { height: 22px; width: auto; display: block; }
+
 .mystery {
   width: calc(100% + var(--gut) * 2);
   margin: 22px calc(var(--gut) * -1) 0;
