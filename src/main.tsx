@@ -6,6 +6,14 @@ import { Analytics } from './components/Analytics';
 import './styles/tokens.css';
 import './styles/base.css';
 
+/* Inside the case study's phone frame the page scrollbar reads as a grey bar down the
+   screen. Mark embedded runs so base.css can hide it there and nowhere else. */
+try {
+  if (window.self !== window.top) document.documentElement.classList.add('is-embedded');
+} catch {
+  document.documentElement.classList.add('is-embedded');
+}
+
 const el = document.getElementById('root');
 if (!el) throw new Error('#root missing');
 

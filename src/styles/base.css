@@ -35,6 +35,9 @@ body, #root { min-height: 100%; }
    coloured by the theme-color meta in index.html, which is the only lever
    Safari actually reads. */
 html { background: var(--status-bg); }
+/* Embedded in the case study's phone frame: scroll still works, the bar is hidden. */
+html.is-embedded, html.is-embedded body { scrollbar-width: none; }
+html.is-embedded::-webkit-scrollbar, html.is-embedded body::-webkit-scrollbar { display: none; }
 body {
   margin: 0;
   background: var(--surface);
