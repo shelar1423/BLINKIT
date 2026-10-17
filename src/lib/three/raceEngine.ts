@@ -2506,7 +2506,13 @@ export class RaceEngine {
         const ul = dl * this.curveLen;
         if (ul > -(raceInteraction.loopLeadIn + 6) && ul < 14) lapTwo = true;
       }
-      const lateral = [-2.6, 0, 2.6, -1.3, 1.3][i % 5];
+      /* Mostly off the centre line. The car collects anything within 1.7 of its
+         lane, and this used to be [-2.6, 0, 2.6, -1.3, 1.3]: three in five sat
+         inside that reach of the middle, so a car left to drive itself banked
+         about a thousand points without a single steer. Now only one in five
+         is on the line it drives by default; the rest are a lane away and
+         have to be steered for. */
+      const lateral = [-2.6, 2.3, 0, -2.3, 2.6][i % 5];
       this.pickups.push({ sprite, t, lateral, points: def.points, name: def.name, alive: !lapTwo, pop: 0, lapTwo });
       if (lapTwo) sprite.visible = false;
       this.root.add(sprite);
