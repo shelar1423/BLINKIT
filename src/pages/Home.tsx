@@ -7,7 +7,7 @@ import { RacerSheet } from '../design/components/RacerDealChrome';
 import { CATEGORIES, HERO_CARS, SHOP_CARS } from '../data/catalog';
 import { useDrop } from '../data/useDrop';
 import { Button } from '../design/elements';
-import { IconChevronRight, IconHeart } from '../design/elements/Icons';
+import { IconHeart } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
 import { preloadCar } from '../lib/three/modelLoader';
@@ -220,14 +220,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Back under the tiles, where it was before they replaced it. The
-              tiles are three ways into three parts of the catalogue; this is
-              the way into all of it, and removing it left no route to the full
-              listing from the band at all. */}
-          <button className="cshop" type="button" onClick={() => nav('/hot-wheels')}>
-            <span>View all Hot Wheels</span>
-            <IconChevronRight size={16} />
-          </button>
 
         </section>
 

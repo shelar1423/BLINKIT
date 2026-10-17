@@ -695,7 +695,7 @@ input, select, textarea { font: inherit; color: inherit; }
   position: relative; z-index: 2; overflow: visible;
   /* Real air under it. The rule is the first thing on the band and the
      lockup is the point of it: they are two statements, not one block. */
-  margin: calc(var(--ctake-pt, 16px) * -1) calc(var(--gut) * -1) 26px;
+  margin: calc(var(--ctake-pt, 16px) * -1) calc(var(--gut) * -1) 14px;
   display: flex; align-items: center; justify-content: center; gap: 10px;
   padding: 5px 12px;
   background: var(--yellow); color: var(--ink);
@@ -1033,7 +1033,7 @@ input, select, textarea { font: inherit; color: inherit; }
 
 .mystery {
   width: calc(100% + var(--gut) * 2);
-  margin: 22px calc(var(--gut) * -1) 0;
+  margin: 14px calc(var(--gut) * -1) 0;
 }
 .mystery__plate {
   display: block; width: 100%;
@@ -1199,7 +1199,7 @@ input, select, textarea { font: inherit; color: inherit; }
   gap: 15px;
   /* 50: the button needs more room under it than over it. Above it there is
      only the lockup; below it are three things to press. */
-  padding: 50px 0 4px;
+  padding: 22px 0 18px;
 }
 /* White at the top where the type sits, cooling to a pale blue behind the art.
    The art needs a ground to stand on and the badge needs one to read against,
