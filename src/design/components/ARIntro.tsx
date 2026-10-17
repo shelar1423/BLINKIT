@@ -57,18 +57,17 @@ import { IconSound } from '../elements/Icons';
 
    It plays itself through rather than asking for a press between each one, and
    Continue is live from the first frame, so nobody who has done this before
-   has to sit through it. It is on EVERY session while this is being tested:
-   see ALWAYS_SHOW. With that off it plays once per device, and `?intro=1`
-   brings it back.
+   has to sit through it. It plays once per device, before the first race;
+   Race again goes straight in. `?intro=1` brings it back for a demo.
    ============================================================ */
 
 const SEEN_KEY = 'rih-ar-intro-seen';
 /**
- * Testing switch: the intro plays on every AR session rather than once per
- * device. Set to false for the real behaviour, where a player who has already
- * been shown how this works is not shown again.
+ * Testing switch: true plays the intro on every AR session rather than once
+ * per device. Off for the real behaviour, where a player who has already been
+ * shown how this works is not shown again.
  */
-const ALWAYS_SHOW = true;
+const ALWAYS_SHOW = false;
 /** How long each beat holds before the next one takes over. */
 const BEAT_MS = 3600;
 
