@@ -1093,7 +1093,7 @@ function spriteTexture(url: string) {
 }
 
 /** What clipping a chunk of debris costs. */
-const DEBRIS_PENALTY = 100;
+const DEBRIS_PENALTY = 40;
 
 export class RaceEngine {
   readonly root = new THREE.Group();
@@ -2459,7 +2459,7 @@ export class RaceEngine {
       const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
       this.disposables.push(mat);
       const sprite = new THREE.Sprite(mat);
-      const size = def.points >= 500 ? 2.6 : def.points >= 250 ? 2.2 : 1.9;
+      const size = def.points >= 200 ? 2.6 : def.points >= 100 ? 2.2 : 1.9;
       sprite.scale.set(size, size, 1);
       /* Spread along the loop on the ODD half-steps, which is what leaves the
          even ones free for debris — the two are laid against the same ruler so
@@ -3198,7 +3198,7 @@ export class RaceEngine {
         p.pop = 0;
         p.sprite.visible = true;
         p.sprite.material.opacity = 1;
-        const sz = p.points >= 500 ? 2.6 : p.points >= 250 ? 2.2 : 1.9;
+        const sz = p.points >= 200 ? 2.6 : p.points >= 100 ? 2.2 : 1.9;
         p.sprite.scale.set(sz, sz, 1);
       }
     }
@@ -3519,9 +3519,9 @@ export class RaceEngine {
           p.pop = 0.001;
           this.score += p.points;
           this.groceries += 1;
-          // short haptic tick per grocery; longer for the 500pt Blinkit bag
+          // short haptic tick per grocery; longer for the 200pt Blinkit bag
           {
-            haptic(p.points >= 500 ? [18, 36, 18] : p.points >= 250 ? 22 : 12);
+            haptic(p.points >= 200 ? [18, 36, 18] : p.points >= 100 ? 22 : 12);
           }
           this.opts.onPickup?.(p.points, p.name);
         } else {
@@ -3532,7 +3532,7 @@ export class RaceEngine {
         // brief pop-out, then hide
         p.pop += dt;
         const k = Math.min(1, p.pop / 0.26);
-        const s = (p.points >= 500 ? 2.6 : 2.0) * (1 + k * 0.7);
+        const s = (p.points >= 200 ? 2.6 : 2.0) * (1 + k * 0.7);
         p.sprite.scale.set(s, s, 1);
         p.sprite.material.opacity = 1 - k;
         p.sprite.position.y = 1.15 + k * 1.5;

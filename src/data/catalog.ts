@@ -183,15 +183,20 @@ export function productById(id: string, mysteryUnlocked = false): Product | unde
 /** Grocery pickups used by the race — real supplied artwork. */
 export type Pickup = { id: string; name: string; image: string; points: number };
 
+/* Scaled so the discount ladder (1,000 / 2,500 / 5,000 / 8,000 points, built up
+   over the three-day drop) is a climb rather than a formality. A perfect race is
+   about 3,300 points and an ordinary one 1,500-2,000, so the first race usually
+   reaches the 5% step, while 20% takes three near-perfect races in a day or a
+   steady run across two days. Before, one race could score 8,300. */
 export const PICKUPS: Pickup[] = [
-  { id: 'banana', name: 'Banana', image: '/grocery/24-01-banana-pickup.webp', points: 100 },
-  { id: 'milk', name: 'Milk', image: '/grocery/24-02-milk-carton-pickup.webp', points: 100 },
-  { id: 'chips', name: 'Chips', image: '/grocery/24-03-chips-packet-pickup.webp', points: 100 },
-  { id: 'cola', name: 'Cola', image: '/grocery/24-04-cola-bottle-pickup.webp', points: 100 },
-  { id: 'cereal', name: 'Cereal', image: '/grocery/24-05-cereal-box-pickup.webp', points: 250 },
-  { id: 'icecream', name: 'Ice cream', image: '/grocery/24-06-ice-cream-pickup.webp', points: 250 },
-  { id: 'fruit', name: 'Fruit basket', image: '/grocery/24-08-fruit-basket-pickup.webp', points: 250 },
-  { id: 'bag', name: 'Blinkit bag', image: '/grocery/24-07-grocery-delivery-bag-pickup.webp', points: 500 },
+  { id: 'banana', name: 'Banana', image: '/grocery/24-01-banana-pickup.webp', points: 40 },
+  { id: 'milk', name: 'Milk', image: '/grocery/24-02-milk-carton-pickup.webp', points: 40 },
+  { id: 'chips', name: 'Chips', image: '/grocery/24-03-chips-packet-pickup.webp', points: 40 },
+  { id: 'cola', name: 'Cola', image: '/grocery/24-04-cola-bottle-pickup.webp', points: 40 },
+  { id: 'cereal', name: 'Cereal', image: '/grocery/24-05-cereal-box-pickup.webp', points: 100 },
+  { id: 'icecream', name: 'Ice cream', image: '/grocery/24-06-ice-cream-pickup.webp', points: 100 },
+  { id: 'fruit', name: 'Fruit basket', image: '/grocery/24-08-fruit-basket-pickup.webp', points: 100 },
+  { id: 'bag', name: 'Blinkit bag', image: '/grocery/24-07-grocery-delivery-bag-pickup.webp', points: 200 },
 ];
 
 /** Blinkit's own category artwork. */

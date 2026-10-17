@@ -185,8 +185,9 @@ export const raceInteraction = {
   /** How early a lift may come and still be flown — held for the takeoff point. */
   gateEarlySec: 0.75,
 
-  scoreBoostGood: 250,
-  scoreBoostPerfect: 500,
+  /* Scaled with the groceries; see PICKUPS in data/catalog. */
+  scoreBoostGood: 100,
+  scoreBoostPerfect: 200,
 
   /* ---- the jump ----
      On the long straight at 0.428-0.573, placed so the climb AND the landing
@@ -225,8 +226,8 @@ export const raceInteraction = {
   /** Peak height above the road, in engine units. */
   jumpHeight: 7.5,
 
-  scoreJumpGood: 200,
-  scoreJumpPerfect: 400,
+  scoreJumpGood: 80,
+  scoreJumpPerfect: 160,
 } as const;
 
 export type JumpQuality = 'perfect' | 'good' | 'miss';
