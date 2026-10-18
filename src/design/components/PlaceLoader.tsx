@@ -49,3 +49,45 @@ export function PlaceLoader({ car = false }: { car?: boolean }) {
     </div>
   );
 }
+
+/**
+ * The two things the camera cannot fix by itself: a room too dark to see the
+ * floor in, and no connection to load the track over. Same line work as the
+ * placing loader, so every AR state reads as one family.
+ */
+export function ARNotice({ kind }: { kind: 'dark' | 'offline' }) {
+  const dark = kind === 'dark';
+  return (
+    <div className="placeload placeload--notice" role="status" aria-live="polite">
+      <svg className="placeload__art" viewBox="0 0 96 96" aria-hidden="true">
+        <g fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          {dark ? (
+            <>
+              <path className="placeload__edge e1" pathLength={100} d="M48 22 C36 22 28 31 28 42 C28 50 33 55 37 60 C39 62 40 65 40 68 H56 C56 65 57 62 59 60 C63 55 68 50 68 42 C68 31 60 22 48 22 Z" />
+              <path className="placeload__edge e2" pathLength={100} d="M41 75 H55 M43 81 H53" />
+              <g className="placeload__rays" strokeWidth="1.4">
+                <path d="M48 10 V15 M25 19 L28.5 22.5 M71 19 L67.5 22.5 M16 42 H21 M80 42 H75" />
+              </g>
+            </>
+          ) : (
+            <>
+              <path className="placeload__edge e1" pathLength={100} d="M22 46 C38 32 58 32 74 46" />
+              <path className="placeload__edge e2" pathLength={100} d="M31 55 C41 47 55 47 65 55" />
+              <path className="placeload__edge e3" pathLength={100} d="M40 64 C45 60 51 60 56 64" />
+              <circle cx="48" cy="72" r="2.4" fill="#fff" stroke="none" />
+              <path className="placeload__slash" pathLength={100} d="M26 24 L70 78" strokeWidth="2" />
+            </>
+          )}
+        </g>
+      </svg>
+      <p>
+        {dark ? 'It’s too dark in here' : 'You’re offline'}
+        <small>
+          {dark
+            ? 'Turn on a light or move somewhere brighter, so the camera can see your floor.'
+            : 'Reconnect to load your track. It carries on by itself once you’re back.'}
+        </small>
+      </p>
+    </div>
+  );
+}

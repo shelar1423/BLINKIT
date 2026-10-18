@@ -39,7 +39,7 @@ import {
 } from '../lib/raceAudio';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
 import { AR_LOADER_LINES, DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
-import { PlaceLoader } from '../design/components/PlaceLoader';
+import { ARNotice, PlaceLoader } from '../design/components/PlaceLoader';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 /** Coverage at which the surface is considered read well enough to brief on. */
@@ -98,6 +98,25 @@ export default function ARView() {
      that actually works — leaving and re-entering gives the camera a clean
      start, which is why the second attempt always behaved. */
   const [stuck, setStuck] = useState(false);
+  /* The camera says the room is too dark to see the floor in. */
+  const [dark, setDark] = useState(false);
+  /* No connection: the track and car are fetched, so say so rather than hang. */
+  const [online, setOnline] = useState(() => (typeof navigator === 'undefined' ? true : navigator.onLine));
+  useEffect(() => {
+    const up = () => setOnline(true);
+    const down = () => setOnline(false);
+    window.addEventListener('online', up);
+    window.addEventListener('offline', down);
+    return () => {
+      window.removeEventListener('online', up);
+      window.removeEventListener('offline', down);
+    };
+  }, []);
+  /* ?sim=dark or ?sim=offline shows either state on demand, for demos and
+     screenshots, without having to switch the lights off or the Wi-Fi. */
+  const sim = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('sim');
+  const showOffline = !online || sim === 'offline';
+  const showDark = !showOffline && (dark || sim === 'dark');
   /* What the briefing line says. The scan keeps refining every frame, so the
      live count ticks 126, 124, 131… while you are trying to read the sentence
      it sits in — which reads as broken rather than as live. The number is
@@ -305,6 +324,7 @@ export default function ARView() {
         onFinishCue: () => setCheering(true),
         onFinish,
         onError: (m) => toast(m),
+        onLight: setDark,
         onObstacleHit: (hit) => {
           const msg =
             hit.type === 'room'
@@ -719,7 +739,13 @@ export default function ARView() {
             {/* While the track is being built after "Place track here": white
                 line work drawing the circuit in the middle of the camera view,
                 so a slow build reads as working rather than stuck. */}
-            {phase === 'ready' && placing && <PlaceLoader car={inspect} />}
+            {showOffline ? (
+              <ARNotice kind="offline" />
+            ) : phase === 'ready' && placing ? (
+              <PlaceLoader car={inspect} />
+            ) : showDark && (phase === 'ready' || phase === 'placed') ? (
+              <ARNotice kind="dark" />
+            ) : null}
 
             {/* The gate's timing gauge. There is no crosshair any more: the
                 hoop hangs above the road and the car goes under it unless it

@@ -126,6 +126,11 @@ type Opts = {
   onPenalty?: (points: number) => void;
   onFinish: (o: RaceOutcome) => void;
   onError: (msg: string) => void;
+  /**
+   * The room is too dark for the camera to see the floor, or light again.
+   * Reported with a delay either way so a passing shadow does not flicker it.
+   */
+  onLight?: (dark: boolean) => void;
   onEnd: () => void;
   onObstacleHit?: (info: { type: string; pointsLost: number }) => void;
   /**
@@ -496,6 +501,31 @@ function create3DStartBanner(k = 1) {
   sprite.name = 'startBanner';
   sprite.visible = false;
   return sprite;
+}
+
+/**
+ * Turns a stream of brightness readings (0 = black, 1 = white) into a steady
+ * dark / not-dark signal. Dark has to hold for a beat before it is reported,
+ * and the room has to be clearly brighter before it is cleared, so a hand
+ * passing in front of the lens never flashes the warning.
+ */
+function darkness(report?: (dark: boolean) => void) {
+  let dark = false;
+  let since = 0;
+  return (lum: number, now: number) => {
+    if (!report) return;
+    const want = dark ? lum < 0.24 : lum < 0.16;
+    if (want === dark) {
+      since = 0;
+      return;
+    }
+    if (!since) since = now;
+    if (now - since > (want ? 1200 : 600)) {
+      dark = want;
+      since = 0;
+      report(dark);
+    }
+  };
 }
 
 function lights(scene: THREE.Scene) {
@@ -1206,6 +1236,18 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
 
   await renderer.xr.setSession(session);
 
+  /* Light estimation was always asked for; this reads it. The probe reports
+     how bright the room's main light is, which is what tells a dim room from
+     a lit one. Absent on devices without it, and then there is simply no
+     low-light warning. */
+  const seeLight = darkness(opts.onLight);
+  let lightProbe: { readonly [k: string]: unknown } | null = null;
+  try {
+    lightProbe = (await (session as unknown as { requestLightProbe?: () => Promise<{ readonly [k: string]: unknown }> }).requestLightProbe?.()) ?? null;
+  } catch {
+    lightProbe = null;
+  }
+
   const localSpace = await session.requestReferenceSpace('local');
   hitSource = null;
   /* Surface detection for the car viewer. The race does not use it — its
@@ -1326,6 +1368,14 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
   renderer.setAnimationLoop((now, frame) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
+
+    if (lightProbe && frame) {
+      const est = (frame as unknown as { getLightEstimate?: (p: unknown) => { primaryLightIntensity: DOMPointReadOnly } | null }).getLightEstimate?.(lightProbe);
+      if (est) {
+        const i = est.primaryLightIntensity;
+        seeLight(0.2126 * i.x + 0.7152 * i.y + 0.0722 * i.z, now);
+      }
+    }
 
     if (phase === 'ready') {
       if (!aimAtSurface(frame)) aimReticle();
@@ -1899,10 +1949,33 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
   };
   window.addEventListener('resize', onResize);
 
+  /* Low light, read straight off the camera: a thumbnail of the feed a few
+     times a second, averaged. Cheap enough to run beside the race. */
+  const seeLight = darkness(opts.onLight);
+  const probe = document.createElement('canvas');
+  probe.width = 24;
+  probe.height = 18;
+  const probeCtx = probe.getContext('2d', { willReadFrequently: true });
+  let lastProbe = 0;
+  const sampleLight = (now: number) => {
+    if (!opts.onLight || !probeCtx || now - lastProbe < 400 || video.readyState < 2) return;
+    lastProbe = now;
+    try {
+      probeCtx.drawImage(video, 0, 0, probe.width, probe.height);
+      const px = probeCtx.getImageData(0, 0, probe.width, probe.height).data;
+      let sum = 0;
+      for (let k = 0; k < px.length; k += 4) sum += 0.2126 * px[k] + 0.7152 * px[k + 1] + 0.0722 * px[k + 2];
+      seeLight(sum / (px.length / 4) / 255, now);
+    } catch {
+      /* a frame that cannot be read is skipped, not reported */
+    }
+  };
+
   let last = performance.now();
   renderer.setAnimationLoop((now) => {
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
+    sampleLight(now);
     /* The phone's pose drives the camera for every phase except the race.
 
        It briefly did not during `placed`, so the launcher could be framed
