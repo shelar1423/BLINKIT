@@ -44,6 +44,22 @@ import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } fro
 
 /** Coverage at which the surface is considered read well enough to brief on. */
 
+/** How long the placing loader is on screen before the track goes down. */
+const PLACE_MS = 1200;
+
+/* ?sim=dark / ?sim=offline, remembered for the visit (main.tsx stores it), so
+   the switch survives the navigation from the home screen into AR. */
+function readSim(): string | null {
+  if (typeof window === 'undefined') return null;
+  const q = new URLSearchParams(window.location.search).get('sim');
+  if (q) return q === 'off' ? null : q;
+  try {
+    return window.sessionStorage.getItem('rih-sim');
+  } catch {
+    return null;
+  }
+}
+
 export default function ARView() {
   const { id } = useParams();
   const nav = useNavigate();
@@ -93,6 +109,8 @@ export default function ARView() {
   const [placing, setPlacing] = useState(false);
   /** Safety net for a build that never reports back; cleared on every press. */
   const placeGuard = useRef(0);
+  const placeDelay = useRef(0);
+  useEffect(() => () => window.clearTimeout(placeDelay.current), []);
   /* Twelve seconds pointing at the floor without placing anything means it is
      not going where they want. Rather than leave them guessing, say the thing
      that actually works — leaving and re-entering gives the camera a clean
@@ -114,7 +132,7 @@ export default function ARView() {
   }, []);
   /* ?sim=dark or ?sim=offline shows either state on demand, for demos and
      screenshots, without having to switch the lights off or the Wi-Fi. */
-  const sim = typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('sim');
+  const sim = readSim();
   const showOffline = !online || sim === 'offline';
   const showDark = !showOffline && (dark || sim === 'dark');
   /* What the briefing line says. The scan keeps refining every frame, so the
@@ -884,9 +902,16 @@ export default function ARView() {
                        loader never appeared and a slow build looked stuck. The
                        loader fades in after 250ms (CSS), so a fast drop still
                        reads as instant; the timeout is only a safety net. */
+                    if (placing) return;
+                    /* The drop itself is instant, so the loader gets a deliberate
+                       beat on screen first: the circuit is drawn, then laid.
+                       Placing straight away left no moment to show it, and the
+                       first frame of the new track (the GPU compiling it) is
+                       a freeze that cannot animate anything. */
                     setPlacing(true);
-                    handle.current?.placeNow();
                     window.clearTimeout(placeGuard.current);
+                    window.clearTimeout(placeDelay.current);
+                    placeDelay.current = window.setTimeout(() => handle.current?.placeNow(), PLACE_MS);
                     placeGuard.current = window.setTimeout(() => setPlacing(false), 20000);
                   }}
                 >

@@ -17,6 +17,16 @@ try {
 const el = document.getElementById('root');
 if (!el) throw new Error('#root missing');
 
+/* ?sim=dark or ?sim=offline previews the AR edge states for a demo; ?sim=off
+   clears it. Kept for the visit so it survives navigating into the race. */
+try {
+  const sim = new URLSearchParams(window.location.search).get('sim');
+  if (sim === 'off') window.sessionStorage.removeItem('rih-sim');
+  else if (sim) window.sessionStorage.setItem('rih-sim', sim);
+} catch {
+  /* storage blocked: the URL still works on the AR screen itself */
+}
+
 createRoot(el).render(
   <StrictMode>
     <BrowserRouter>
