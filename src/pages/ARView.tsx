@@ -17,7 +17,7 @@ import {
 } from '../lib/three/arSession';
 import type { RaceOutcome, RaceStats } from '../lib/three/raceEngine';
 import {
-  IconAR, IconArrowLeft, IconClose, IconMinus, IconPlus, IconRotate,
+  IconAR, IconArrowLeft, IconChevronLeft, IconChevronRight, IconClose, IconMinus, IconPlus, IconRotate,
 } from '../design/elements/Icons';
 import { useToast } from '../App';
 import { RaceResult } from '../design/components/RaceResult';
@@ -457,7 +457,7 @@ export default function ARView() {
      already granted by this point — the camera session requests it during
      launch — so there is no second prompt here. */
   const tilt = useRef<TiltSteer | null>(null);
-  const [, setTiltState] = useState<TiltState>(() => initialTiltState());
+  const [tiltState, setTiltState] = useState<TiltState>(() => initialTiltState());
 
   useEffect(() => {
     if (phase !== 'racing') return;
@@ -468,7 +468,9 @@ export default function ARView() {
     tilt.current = t;
     // the AR launch flow has already raised the iOS motion prompt
     void t.enable().then((st) => {
-      if (st === 'active') t.start();
+      /* ?sim=notilt leaves the sensor off, so the pads can be shown on demand. */
+      if (st === 'active' && readSim() !== 'notilt') t.start();
+      else if (readSim() === 'notilt') setTiltState('unsupported');
     });
     return () => {
       t.stop();
@@ -490,6 +492,27 @@ export default function ARView() {
   /* The steering guide stops the race while it plays. It appears a second
      after the launch and takes about four and a half seconds; the car stands
      still for exactly that, so the guide is read instead of raced through. */
+  /* Offline: nothing placed in the room is worth showing when the track cannot
+     load, so the scene is hidden and a race in progress waits. Both come
+     back by themselves when the connection does. */
+  useEffect(() => {
+    const h = handle.current;
+    if (!h || !phase) return;
+    h.setSceneVisible(!showOffline);
+    if (phase !== 'racing') return;
+    if (showOffline) {
+      h.engine?.pause();
+      engineStop();
+    } else {
+      h.engine?.resume();
+      engineStart();
+    }
+  }, [showOffline, phase]);
+
+  /* Tilt has the wheel only once it is live; anything else (no sensor, no
+     permission, no signal) gets the pads. */
+  const tiltDriving = tiltState === 'active' && sim !== 'notilt';
+
   const holdForCue = useCallback((held: boolean) => {
     const e = handle.current?.engine;
     if (!e) return;
@@ -695,7 +718,7 @@ export default function ARView() {
                 The car name and the grocery count are gone with the chips.
                 Neither is something you read mid-race, and every pickup
                 already announces itself as a number lifting off the car. */}
-            {raceHud ? (
+            {raceHud && !showOffline ? (
               <>
                 <div className="hud__top">
                   {/* The delivery screen's own round back button, in the
@@ -743,16 +766,38 @@ export default function ARView() {
             </div>
             )}
 
-            {phase === 'ready' && stuck && (
+            {phase === 'ready' && stuck && !showOffline && (
               <p className="arov__help">
                 Not dropping where you want it?
                 <small>Close this, press Race in your space again, and it picks up your camera cleanly.</small>
               </p>
             )}
 
-            {phase === 'racing' && <ScorePops pops={pops} />}
-            {/* How to steer, a second into the race. AR has no pads: tilt only. */}
-            {phase === 'racing' && <SteerCue mode="tilt" onHold={holdForCue} />}
+            {phase === 'racing' && !showOffline && <ScorePops pops={pops} />}
+            {/* How to steer, a second into the race: tilt when the phone reports
+                it, otherwise the same left and right pads as the 3D race. */}
+            {phase === 'racing' && !showOffline && <SteerCue mode={tiltDriving ? 'tilt' : 'press'} onHold={holdForCue} />}
+            {phase === 'racing' && !showOffline && !tiltDriving && (
+              <div className="steer__pads arov__steer">
+                {([-1, 1] as const).map((dir) => (
+                  <button
+                    key={dir}
+                    type="button"
+                    className="steer__pad"
+                    aria-label={dir < 0 ? 'Steer left' : 'Steer right'}
+                    onPointerDown={(e) => {
+                      e.currentTarget.setPointerCapture?.(e.pointerId);
+                      handle.current?.setSteer(dir);
+                    }}
+                    onPointerUp={() => handle.current?.setSteer(0)}
+                    onPointerCancel={() => handle.current?.setSteer(0)}
+                    onLostPointerCapture={() => handle.current?.setSteer(0)}
+                  >
+                    {dir < 0 ? <IconChevronLeft size={22} /> : <IconChevronRight size={22} />}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* While the track is being built after "Place track here": white
                 line work drawing the circuit in the middle of the camera view,
@@ -850,7 +895,7 @@ export default function ARView() {
             {/* Placement guidance. There is no surface to scan any more — the
                 track goes where you point, so the only instruction is where to
                 point. */}
-            {phase === 'ready' && !placing && (
+            {phase === 'ready' && !placing && !showOffline && (
               <p className="arov__hint">
                 {placing ? 'Building your track…' : inspect ? 'Point at a table or floor' : 'Point at the floor'}
                 <small>
@@ -888,7 +933,7 @@ export default function ARView() {
                 phone's tilt steers it, so the camera view stays clear. */}
 
             {/* Action buttons */}
-            <div className="arov__acts">
+            <div className="arov__acts" style={showOffline ? { visibility: 'hidden' } : undefined}>
               {phase === 'ready' && (
                 <Button
                   variant="hwBlue"

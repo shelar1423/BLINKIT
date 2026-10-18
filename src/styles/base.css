@@ -1649,6 +1649,10 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .arov__hint small { display: block; font-weight: 500; font-size: var(--f-sm); color: rgba(255,255,255,0.82); margin-top: 4px; }
 .arov__acts { display: grid; gap: 8px; pointer-events: auto; }
+/* The 3D race's steering pads, over the camera, for a phone whose tilt never
+   reports. Fixed so they sit on the camera view rather than in the overlay's flow. */
+.arov__steer { position: fixed; z-index: 210; bottom: calc(var(--safe-b) + 32px); }
+.arov__steer .steer__pad { touch-action: none; -webkit-user-select: none; user-select: none; }
 
 /* AR capability card */
 .arstat { display: flex; gap: 11px; align-items: flex-start; border: 1px solid var(--line); border-radius: var(--r-lg); padding: 12px 13px; }

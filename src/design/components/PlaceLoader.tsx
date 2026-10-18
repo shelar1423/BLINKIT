@@ -84,8 +84,8 @@ export function ARNotice({ kind }: { kind: 'dark' | 'offline' }) {
         {dark ? 'It’s too dark in here' : 'You’re offline'}
         <small>
           {dark
-            ? 'Turn on a light or move somewhere brighter, so the camera can see your floor.'
-            : 'Reconnect to load your track. It carries on by itself once you’re back.'}
+            ? 'Turn on a light or move somewhere brighter.'
+            : 'Reconnect to load your track.'}
         </small>
       </p>
     </div>

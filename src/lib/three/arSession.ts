@@ -84,6 +84,9 @@ export type ARHandle = {
   /** Freeze the placed scene while the briefing is over it: the car stops
    *  idling and nothing behind the overlay can start the race. */
   setHeld: (on: boolean) => void;
+  /** Hide or show everything placed in the room (track, launcher, car).
+   *  The camera feed behind it is untouched. */
+  setSceneVisible: (on: boolean) => void;
   /** While true, letting the lever go banks the pull instead of launching:
    *  the car leaves on the start line's GO. */
   startLine: (on: boolean) => void;
@@ -1460,6 +1463,7 @@ export async function startARSession(opts: Opts): Promise<ARHandle> {
     launch,
     armLaunch,
     setHeld: (on: boolean) => { held = on; },
+    setSceneVisible: (on: boolean) => { scene.visible = on; },
     startLine: (on: boolean) => {
       startLine = on;
       if (!on) heldPower = null;
@@ -2144,6 +2148,7 @@ export async function startCameraSession(opts: Omit<Opts, 'trackSize'> & { track
     launch,
     armLaunch,
     setHeld: (on: boolean) => { held = on; },
+    setSceneVisible: (on: boolean) => { scene.visible = on; },
     startLine: (on: boolean) => {
       startLine = on;
       if (!on) heldPower = null;
