@@ -38,7 +38,8 @@ import {
   stopRaceAudio,
 } from '../lib/raceAudio';
 import { ScorePops, useScorePops } from '../design/components/ScorePops';
-import { AR_LOADER_LINES, DriftLoader, LOADER_MS, TrackRing } from '../design/components/DriftLoader';
+import { AR_LOADER_LINES, DriftLoader, LOADER_MS } from '../design/components/DriftLoader';
+import { PlaceLoader } from '../design/components/PlaceLoader';
 import { createTiltSteer, initialTiltState, type TiltState, type TiltSteer } from '../lib/tiltSteer';
 
 /** Coverage at which the surface is considered read well enough to brief on. */
@@ -715,15 +716,10 @@ export default function ARView() {
             {/* How to steer, a second into the race. AR has no pads: tilt only. */}
             {phase === 'racing' && <SteerCue mode="tilt" onHold={holdForCue} />}
 
-            {/* While the track is being built after "Place track here": the
-                campaign's track loader in the middle of the camera view, so a
-                slow build reads as working rather than stuck. */}
-            {phase === 'ready' && placing && (
-              <div className="arov__building" role="status" aria-live="polite">
-                <TrackRing className="trackload trackload--ar" />
-                <p>{inspect ? 'Placing your car…' : 'Building your track…'}</p>
-              </div>
-            )}
+            {/* While the track is being built after "Place track here": white
+                line work drawing the circuit in the middle of the camera view,
+                so a slow build reads as working rather than stuck. */}
+            {phase === 'ready' && placing && <PlaceLoader car={inspect} />}
 
             {/* The gate's timing gauge. There is no crosshair any more: the
                 hoop hangs above the road and the car goes under it unless it
@@ -810,7 +806,7 @@ export default function ARView() {
             {/* Placement guidance. There is no surface to scan any more — the
                 track goes where you point, so the only instruction is where to
                 point. */}
-            {phase === 'ready' && (
+            {phase === 'ready' && !placing && (
               <p className="arov__hint">
                 {placing ? 'Building your track…' : inspect ? 'Point at a table or floor' : 'Point at the floor'}
                 <small>

@@ -3969,27 +3969,60 @@ input, select, textarea { font: inherit; color: inherit; }
   .arboost__verdict { animation: none; }
 }
 
-/* The AR track build. Centred over the camera on a soft dark disc so the
-   orange ring reads on any floor, and faded in after 250ms so a build that
-   finishes instantly never flashes a loader. */
-.arov__building {
+/* The AR track build. Thin white line work straight over the camera, the
+   way Zomato's AR dish view loads: no card, just a soft shade behind it so the
+   lines read on any floor. Fades in after 250ms, so a build that finishes
+   instantly never flashes a loader. */
+.placeload {
   position: fixed; left: 50%; top: 42%; z-index: 215;
   transform: translate(-50%, -50%);
-  display: grid; justify-items: center; gap: 12px;
-  padding: 22px 26px 18px; border-radius: 22px;
-  background: rgba(8, 12, 22, 0.62);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  display: grid; justify-items: center; gap: 10px;
+  width: min(300px, 80vw); padding: 28px 12px;
   color: #fff; text-align: center; pointer-events: none;
-  animation: arBuildIn 220ms ease-out 250ms both;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.38), rgba(0, 0, 0, 0));
+  animation: placeIn 260ms ease-out 250ms both;
 }
-.arov__building p { margin: 0; font-size: var(--f-md); font-weight: 800; }
-.trackload--ar { width: 76px; }
-@keyframes arBuildIn {
-  from { opacity: 0; transform: translate(-50%, -46%); }
-  to { opacity: 1; transform: translate(-50%, -50%); }
+.placeload__art { width: 120px; height: 120px; overflow: visible; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45)); }
+.placeload p {
+  margin: 0; font-size: var(--f-md); font-weight: 700; line-height: 1.35;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
 }
+.placeload p small { display: block; font-size: var(--f-sm); font-weight: 500; opacity: 0.85; }
+.placeload__floor {
+  fill: none; stroke: rgba(255, 255, 255, 0.5); stroke-width: 1;
+  transform-box: fill-box; transform-origin: center;
+  animation: placeFloor 1.8s ease-out infinite;
+}
+.placeload__lay {
+  stroke-dasharray: 100; stroke-dashoffset: 100;
+  animation: placeLay 1.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.placeload__lay--in { opacity: 0.55; animation-delay: 120ms; }
+.placeload__start { opacity: 0; animation: placeFade 1.8s ease infinite; }
+.placeload__car { opacity: 0; animation: placeCar 1.8s ease infinite; }
+.placeload__edge {
+  stroke-dasharray: 100; stroke-dashoffset: 100;
+  animation: placeEdge 2.2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.placeload__edge.e2 { animation-name: placeEdge2; }
+.placeload__edge.e3 { animation-name: placeEdge3; }
+.placeload__box { transform-box: fill-box; transform-origin: center; animation: placeFloat 2.2s ease-in-out infinite; }
+@keyframes placeIn { from { opacity: 0; transform: translate(-50%, -46%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+/* lay the track down, hold it, then pick it back up from the start line */
+@keyframes placeLay { 0% { stroke-dashoffset: 100; } 55%, 78% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -100; } }
+@keyframes placeFade { 0%, 30% { opacity: 0; } 45%, 80% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes placeCar { 0%, 50% { opacity: 0; } 58%, 82% { opacity: 1; } 95%, 100% { opacity: 0; } }
+@keyframes placeFloor { 0% { opacity: 0.7; transform: scale(0.72); } 100% { opacity: 0; transform: scale(1.12); } }
+@keyframes placeEdge { 0% { stroke-dashoffset: 100; opacity: 1; } 50%, 82% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes placeEdge2 { 0%, 8% { stroke-dashoffset: 100; opacity: 1; } 58%, 82% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes placeEdge3 { 0%, 16% { stroke-dashoffset: 100; opacity: 1; } 66%, 82% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes placeFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 @media (prefers-reduced-motion: reduce) {
-  .arov__building { animation-duration: 1ms; }
+  .placeload { animation-duration: 1ms; }
+  .placeload__lay, .placeload__edge { animation: none; stroke-dashoffset: 0; }
+  .placeload__floor, .placeload__box { animation: none; }
+  .placeload__start { animation: none; opacity: 1; }
+  .placeload__car { display: none; }
 }
 
 /* Round translucent pads — the 3D race's horn, mute and drift buttons. The AR
