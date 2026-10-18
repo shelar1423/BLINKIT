@@ -74,7 +74,7 @@ const BANDS: Band[] = [
 type SheetId = 'filters' | 'sort' | 'series' | null;
 type ModelId = '3d' | 'regular';
 const MODELS: { id: ModelId; label: string }[] = [
-  { id: '3d', label: '3D' },
+  { id: '3d', label: 'AR' },
   { id: 'regular', label: 'Regular' },
 ];
 type FilterTab = 'model' | 'series' | 'price';

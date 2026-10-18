@@ -5,7 +5,7 @@ import { AGE_RATING, BADGE_TONE, ETA_MINS, rupees, type Product } from '../../da
 import { racerPrice, useRacerDeal } from '../../lib/racerDeal';
 import { RacerLine } from './RacerDealChrome';
 import './racerDeal.css';
-import { IconClock, IconCube, IconHeart, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
+import { IconAR, IconClock, IconHeart, IconLock, IconMinus, IconPlus, IconStar } from '../elements/Icons';
 
 /** How long the rocker takes to tip and settle, and the digit to roll. */
 const TILT_MS = 440;
@@ -309,8 +309,8 @@ export function ProductCard({ product }: { product: Product }) {
         >
           <img src={views[view]} alt={product.name} loading="lazy" />
           {product.glb && (
-            <span className="pcard__3d" title="3D and AR available">
-              <IconCube size={11} /> 3D
+            <span className="pcard__3d" title="View it in AR, or in 3D">
+              <IconAR size={11} /> AR
             </span>
           )}
           {views.length > 1 && (
